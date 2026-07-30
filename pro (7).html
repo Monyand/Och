@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>для ПБД</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0b0b;
+            --panel-bg: #121212;
+            --text-main: #e0e0e0;
+            --accent: #4caf50;
+            --accent-hover: #45a049;
+            --border: #222;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+            --purple: #9c27b0;
+            --nav-width: 220px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            padding-top: 60px;
+            padding-left: calc(var(--nav-width) + 40px);
+            transition: padding-left 0.3s ease;
+        }
+
+        body.sidebar-hidden {
+            padding-left: calc(75px + 40px);
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #fff;
+            margin-top: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #0f0f0f;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .top-bar h1 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        .btn-settings {
+            background: transparent;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-settings:hover {
+            background: #222;
+        }
+
+        /* Бічна навігація */
+        .side-nav {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            width: var(--nav-width);
+            background: #0f0f0f;
+            border-right: 1px solid var(--border);
+            padding: 20px 0;
+            overflow-y: auto;
+            z-index: 900;
+            transition: width 0.3s ease;
+        }
+
+        .side-nav.hidden {
+            width: 75px;
+        }
+
+        .side-nav.hidden .nav-text {
+            display: none;
+        }
+
+        .side-nav.hidden a {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 5px;
+            gap: 5px;
+            text-align: center;
+        }
+
+        .nav-short {
+            font-weight: bold;
+            color: #aaa;
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+
+        .side-nav.hidden .nav-short {
+            margin-right: 0;
+            color: #888;
+        }
+
+        .side-nav a:hover .nav-short,
+        .side-nav a.active .nav-short {
+            color: #fff;
+        }
+
+        .side-nav a {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #aaa;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .side-nav a:hover,
+        .side-nav a.active {
+            background: #181818;
+            color: #fff;
+            border-left-color: var(--accent);
+        }
+
+        .nav-count {
+            background: #2a2a2a;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .nav-count.non-zero {
+            background: var(--accent);
+        }
+
+        .nav-count.hidden {
+            display: none;
+        }
+
+        .settings-panel {
+            display: none;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 30px;
+            transition: 0.3s;
+            scroll-margin-top: 80px;
+        }
+
+        .file-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .file-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 0.85em;
+            color: #aaa;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            background-color: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .btn-action {
+            background-color: #2196f3;
+        }
+
+        .btn-action:hover {
+            background-color: #1e88e5;
+        }
+
+        .report-section {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .constructor-item {
+            background-color: #181818;
+            border-left: 4px solid var(--info);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .constructor-item.warning {
+            border-left-color: var(--warning);
+        }
+
+        .constructor-item.success {
+            border-left-color: var(--accent);
+        }
+
+        .constructor-item.danger {
+            border-left-color: var(--danger);
+            background-color: #2a1111;
+        }
+
+        .constructor-item.uav-item {
+            border-left-color: var(--purple);
+            background-color: #2a1e2e;
+        }
+
+        .constructor-item.manual-card {
+            border-left-style: dashed;
+            border-left-color: #888;
+            background-color: #151515;
+        }
+
+        .constructor-item.has-enemy-cas {
+            background-color: #3b1c1c !important;
+            border-left-color: var(--danger) !important;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+        }
+
+        .constructor-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .constructor-controls label {
+            margin-right: -5px;
+            font-size: 0.85em;
+        }
+
+        .input-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .cat-badge {
+            background-color: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            color: #ccc;
+        }
+
+        .uav-warning {
+            color: #ff8a80;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .final-record {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            background: #181818;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #2f2f2f;
+        }
+
+        .record-text {
+            flex-grow: 1;
+            background: transparent;
+            color: #fff;
+            border: 1px dashed #444;
+            padding: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 15px;
+            border-radius: 4px;
+            line-height: 1.4;
+            min-height: 40px;
+            white-space: pre-wrap;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .loss-cb-group {
+            display: flex;
+            gap: 15px;
+            background: #0f0f0f;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        .loss-cb-group label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #ddd;
+        }
+
+        .loss-details-row {
+            display: none;
+            gap: 10px;
+            margin-top: 5px;
+            padding-left: 10px;
+            border-left: 2px solid #555;
+        }
+
+        .loss-details-row.active {
+            display: flex;
+            align-items: center;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 8px 8px 0 0;
+            background-color: #161616;
+        }
+
+        .section-header:hover {
+            background-color: #1c1c1c;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            pointer-events: none;
+            font-size: 1.1em;
+            color: var(--accent);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-icon {
+            font-size: 18px;
+            color: #aaa;
+            transition: transform 0.3s;
+            pointer-events: none;
+        }
+
+        .panel-body {
+            padding: 20px;
+            display: block;
+        }
+
+        .panel.collapsed .panel-body {
+            display: none;
+        }
+
+        .panel.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .panel.collapsed .section-header {
+            border-radius: 8px;
+            border-bottom: none;
+        }
+
+        .list-header-wrap {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+
+        .list-header-wrap h3 {
+            margin: 0;
+        }
+
+        .total-badge {
+            background: #222;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="top-bar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-settings" style="padding: 5px 10px; font-size: 20px; border: none; outline: none; border-radius: 4px;" onclick="toggleSidebar()" title="Сховати/Показати меню">☰</button>
+            <h1>Генератор звіту для ПБД</h1>
+        </div>
+        <button class="btn-settings" onclick="toggleSettings()">⚙️ Налаштування та Файли</button>
+    </div>
+
+    <!-- Бічне меню -->
+    <div class="side-nav">
+        <a href="#panel-1-2" title="1.2. Знищені цілі"><span class="nav-short">1.2</span> <span class="nav-text">Знищені цілі</span> <span class="nav-count" id="nav-count-1-2">0</span></a>
+        <a href="#panel-3-1-1" title="3.1.1. Бойові зіткнення"><span class="nav-short">3.1.1</span> <span class="nav-text">Бойові зіткнення</span> <span class="nav-count" id="nav-count-3-1-1">0</span></a>
+        <a href="#panel-3-1-5" title="3.1.5. Обстріли"><span class="nav-short">3.1.5</span> <span class="nav-text">Обстріли</span></a>
+        <a href="#panel-3-2-1" title="3.2.1. Вогневі (Піхота)"><span class="nav-short">3.2.1</span> <span class="nav-text">Вогневі (Піхота)</span> <span class="nav-count" id="nav-count-3-2-1">0</span></a>
+        <a href="#panel-3-2-2" title="3.2.2. БпС (Удари/Скиди)"><span class="nav-short">3.2.2</span> <span class="nav-text">БпС (Удари)</span> <span class="nav-count" id="nav-count-3-2-2">0</span></a>
+        <a href="#panel-3-2-3" title="3.2.3. Засобами ОВгП"><span class="nav-short">3.2.3</span> <span class="nav-text">Засоб. ОВгП</span> <span class="nav-count" id="nav-count-3-2-3">0</span></a>
+        <a href="#panel-3-2-7" title="3.2.7. Логістика (БпС)"><span class="nav-short">3.2.7</span> <span class="nav-text">Логістика</span> <span class="nav-count" id="nav-count-3-2-7">0</span></a>
+    </div>
+
+    <div class="container">
+
+        <div id="settings-panel" class="settings-panel active">
+            <h2>Завантаження даних (.xlsx, .xls, .csv)</h2>
+            <div class="file-inputs">
+                <div class="file-group">
+                    <label>Події (events-report)</label>
+                    <input type="file" id="file-events" accept=".xlsx, .xls, .csv">
+                </div>
+                <div class="file-group">
+                    <label>Вогневі задачі (fire-missions)</label>
+                    <input type="file" id="file-fire" accept=".xlsx, .xls, .csv">
+                </div>
+                <div class="file-group">
+                    <label>БпЛА (uav-report)</label>
+                    <input type="file" id="file-uav" accept=".xlsx, .xls, .csv">
+                </div>
+                <div class="file-group">
+                    <label>Назва підрозділу (для шаблонів)</label>
+                    <input type="text" id="unit-name" value="1 мб 111 овмбр">
+                </div>
+            </div>
+
+            <div class="file-group" style="margin-bottom: 20px;">
+                <label>Словник позицій (Формат: Шукана назва = Як виводити)</label>
+                <textarea id="pos-dict" rows="5"
+                    placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;"></textarea>
+                <small style="color:#888;">Програма ігнорує регістр і лапки при пошуку. Зберігається
+                    автоматично.</small>
+            </div>
+
+            <div class="file-group" style="margin-bottom: 20px;">
+                <label>Словник зброї ОВгП за позиціями (Формат: Назва позиції = Зброя)</label>
+                <textarea id="weapon-dict" rows="5"
+                    placeholder="Гниль = УПІК 82 (82мм)&#10;Квадрат= КБА-222 (120мм)&#10;Баран = МП-120 (120мм)"></textarea>
+                <small style="color:#888;">Використовується для заміни загального &quot;міномет&quot; на конкретну
+                    систему озброєння. Зберігається автоматично.</small>
+            </div>
+
+            <button onclick="processFiles()" style="width: 100%; padding: 15px; font-size: 18px;">🔄 Згенерувати всі
+                звіти</button>
+        </div>
+
+        <datalist id="saved-positions"></datalist>
+
+        <div id="reports-container" class="report-section">
+
+            <!-- 1.2 Знищені цілі -->
+            <div class="panel" id="panel-1-2">
+                <div class="section-header" onclick="togglePanel('panel-1-2')">
+                    <h2>1.2. Звіт по знищених цілях (О/С та ФПВ)</h2>
+                    <div class="header-controls">
+                        <button class="btn-action" onclick="event.stopPropagation(); confirmAll('1-2')">✔️ Підтвердити
+                            всі</button>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <p style="color: #aaa; font-size: 0.9em; margin-top: 0; margin-bottom: 20px;">
+                        Сюди потрапляють ТІЛЬКИ знищені ФПВ (оптоволокно) та підтверджені втрати О/С противника
+                        (200/300).
+                    </p>
+                    <div id="report-1-content"></div>
+
+                    <h3 style="margin-top: 30px; color: var(--accent);">Додати вручну:</h3>
+                    <div class="constructor-item manual-card">
+                        <div class="constructor-controls">
+                            <label>Час:</label> <input type="text" id="m1-time" placeholder="12:00:00"
+                                style="width: 130px;">
+                            <label>Поз.:</label> <input type="text" id="m1-pos" list="saved-positions"
+                                placeholder="СП..." style="width: 130px;">
+                            <label>Дія:</label>
+                            <select id="m1-action" style="width: 150px;">
+                                <option value="відкривав вогонь">відкривав вогонь</option>
+                                <option value="наносив ураження">наносив ураження</option>
+                            </select>
+                            <label>Квадрат:</label> <input type="text" id="m1-coords" placeholder="37U..."
+                                style="width: 130px;">
+                        </div>
+                        <div class="constructor-controls" style="margin-top: 10px;">
+                            <label>Ціль:</label>
+                            <select id="m1-target-type" style="width: 180px;" onchange="checkCustomTargetR1(this)">
+                                <option value="os">О/С (особовий склад)</option>
+                                <option value="fpv">ФПВ (оптоволокно)</option>
+                                <option value="custom">Інше (вручну)</option>
+                            </select>
+
+                            <div id="m1-custom-target-group" style="display:none; gap: 10px;">
+                                <input type="text" id="m1-target" placeholder="по чому (ворожій піхоті)"
+                                    style="width: 160px;">
+                                <input type="text" id="m1-t-orig" placeholder="в кінці (В/СЛ ЗС рф)"
+                                    style="width: 140px;">
+                            </div>
+
+                            <label>Рез-т:</label>
+                            <select id="m1-res-type" style="width: 110px;">
+                                <option value="ЗНИЩЕНО">ЗНИЩЕНО</option>
+                                <option value="ПОРАНЕНО">ПОРАНЕНО</option>
+                            </select>
+                            <label>К-сть:</label> <input type="number" id="m1-qty" value="1" style="width: 50px;"
+                                min="1">
+                            <button class="btn-small" onclick="addManualR1()">Додати рядок</button>
+                        </div>
+
+                        <div
+                            style="margin-top: 10px; padding: 10px; border: 1px solid #555; background: transparent; border-radius: 4px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <label
+                                style="color: #ccc; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0;">
+                                <input type="checkbox" id="add-cas-m1-manual">
+                                🩸 Додати втрати (200/300)
+                            </label>
+                            <div style="display: flex; gap: 10px;">
+                                <label style="margin: 0;">200: <input type="number" id="cas-200-m1-manual" value="0"
+                                        style="width: 50px; padding: 4px;" min="0"></label>
+                                <label style="margin: 0;">300: <input type="number" id="cas-300-m1-manual" value="0"
+                                        style="width: 50px; padding: 4px;" min="0"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="list-header-wrap">
+                        <h3>Фінальний список:</h3>
+                        <span class="total-badge" id="count-report-1-list">(Всього: 0)</span>
+                        <button class="btn-small" onclick="copyReportList('report-1-list', this)">Копіювати
+                            список</button>
+                    </div>
+                    <div id="report-1-list"></div>
+                </div>
+            </div>
+
+            <!-- 3.1.1 Бойові зіткнення -->
+            <div class="panel" id="panel-3-1-1">
+                <div class="section-header" onclick="togglePanel('panel-3-1-1')">
+                    <h2>3.1.1. Бойові зіткнення</h2>
+                    <div class="header-controls"><span class="toggle-icon">▼</span></div>
+                </div>
+                <div class="panel-body">
+                    <div class="constructor-item manual-card">
+                        <div class="constructor-controls">
+                            <label>Час (від-до):</label> <input type="text" id="m-assault-time"
+                                placeholder="10.29-10.30" style="width: 100px;">
+                            <label>Напрямок:</label> <input type="text" id="m-assault-dir" placeholder="н.п. Водяне..."
+                                style="width: 140px;">
+                            <label>Позиція:</label> <input type="text" id="m-assault-pos" list="saved-positions"
+                                placeholder="Оберіть..." style="width: 110px;">
+                            <label>Наших на поз.:</label> <input type="number" id="m-assault-own-qty" value="4"
+                                style="width: 50px;" min="1">
+                        </div>
+                        <div class="constructor-controls" style="margin-top: 10px;">
+                            <label>ШГр (О/С):</label> <input type="number" id="m-assault-qty" value="2"
+                                style="width: 50px;" min="1">
+                            <label>Техніка:</label> <input type="text" id="m-assault-veh" value="без підтримки техніки"
+                                style="width: 170px;">
+                        </div>
+                        <div class="constructor-controls" style="margin-top: 10px;">
+                            <label>Наші втрати:</label>
+                            <div
+                                style="display: flex; gap: 10px; background: #2a2a2a; padding: 5px 10px; border-radius: 4px; flex-wrap: wrap;">
+                                <label>200: <input type="number" id="m-assault-fr-200" value="0" style="width:50px;"
+                                        min="0"></label>
+                                <label>300: <input type="number" id="m-assault-fr-300" value="0" style="width:50px;"
+                                        min="0"></label>
+                                <label>Безвісти: <input type="number" id="m-assault-fr-mia" value="0"
+                                        style="width:50px;" min="0"></label>
+                            </div>
+                        </div>
+                        <div class="constructor-controls" style="margin-top: 10px;">
+                            <label>Втрати противника:</label>
+                            <div
+                                style="display: flex; gap: 10px; background: #2a2a2a; padding: 5px 10px; border-radius: 4px;">
+                                <label><input type="checkbox" id="m-assault-en-unk" checked
+                                        onchange="toggleAssaultCas()"> Уточнюються</label>
+                                <label>200: <input type="number" id="m-assault-en-200" value="0" style="width:40px;"
+                                        disabled></label>
+                                <label>300: <input type="number" id="m-assault-en-300" value="0" style="width:40px;"
+                                        disabled></label>
+                            </div>
+                        </div>
+                        <div class="constructor-controls" style="margin-top: 10px;">
+                            <button class="btn-small btn-action" onclick="addManualAssault()">Додати бойове
+                                зіткнення</button>
+                        </div>
+                    </div>
+
+                    <div class="list-header-wrap">
+                        <h3>Фінальний список:</h3>
+                        <span class="total-badge" id="count-report-3-1-1">(Всього: 0)</span>
+                        <button class="btn-small" onclick="copyReportList('report-3-1-1', this)">Копіювати
+                            список</button>
+                    </div>
+                    <div id="report-3-1-1"></div>
+                </div>
+            </div>
+
+            <!-- 3.1.5 Обстріли -->
+            <div class="panel" id="panel-3-1-5">
+                <div class="section-header" onclick="togglePanel('panel-3-1-5')">
+                    <h2>3.1.5. Обстріли противника</h2>
+                    <div class="header-controls">
+                        <span class="total-badge" style="background: #ff9800;">FPV: <span id="shell-fpv">0</span></span>
+                        <span class="total-badge" style="background: #2196f3;">Скиди: <span
+                                id="shell-drop">0</span></span>
+                        <span class="total-badge" style="background: #f44336;">Міномет: <span
+                                id="shell-mortar">0</span></span>
+                        <span class="total-badge" style="background: #9c27b0;">Артилерія: <span
+                                id="shell-art">0</span></span>
+                        <span class="total-badge" style="background: #4caf50;">Стрілецька: <span
+                                id="shell-small">0</span></span>
+                        <button class="btn-action" onclick="event.stopPropagation(); confirmAll('3-1-5')">✔️ Підтвердити
+                            всі</button>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div id="report-2-content"></div>
+
+                    <h3 style="margin-top: 30px; color: var(--warning);">Додати обстріл вручну:</h3>
+                    <div class="constructor-item manual-card">
+                        <div class="constructor-controls">
+                            <label>Час:</label> <input type="text" id="m2-time" placeholder="14:00"
+                                style="width: 130px;">
+                            <label>Поз.:</label> <input type="text" id="m2-pos" list="saved-positions"
+                                placeholder="Оберіть..." style="width: 130px;">
+                            <label>К-сть:</label> <input type="number" id="m2-count" value="1" min="1"
+                                style="width: 50px;">
+                            <label>Зброя:</label>
+                            <select id="m2-weapon" style="width: 240px;" onchange="checkCustomWeapon(this)">
+                                <option value="Удар FPV">Удар FPV</option>
+                                <option value="Удар FPV (оптоволокно)">Удар FPV (оптоволокно)</option>
+                                <option value="Скид з БПЛА">Скид з БПЛА</option>
+                                <option value="Скид горючої суміші з дрона">Скид горючої суміші з дрона</option>
+                                <option value="Обстріл з міномета, 82мм">Обстріл з міномета, 82мм</option>
+                                <option value="Обстріл з міномета, 120мм">Обстріл з міномета, 120мм</option>
+                                <option value="Обстріл з ствольної артилерії">Обстріл з ствольної артилерії</option>
+                                <option value="Стрілецька зброя">Стрілецька зброя</option>
+                                <option value="Підрив на ворожому мінуванні">Підрив на ворожому мінуванні</option>
+                                <option value="Уточнення події">Уточнення події</option>
+                                <option value="CUSTOM">Інше (Вписати вручну)</option>
+                            </select>
+                            <input type="text" id="m2-weapon-custom" placeholder="Впишіть зброю"
+                                style="display:none; width: 150px;">
+                        </div>
+
+                        <div style="margin-top: 10px;">
+                            <label style="margin-bottom: 5px; display:block;">Втрати (можна кілька):</label>
+                            <div class="loss-cb-group">
+                                <label><input type="checkbox" id="m2-cb-200" onchange="toggleLossRow('m2', '200')">
+                                    200</label>
+                                <label><input type="checkbox" id="m2-cb-300" onchange="toggleLossRow('m2', '300')">
+                                    300</label>
+                                <label><input type="checkbox" id="m2-cb-mia" onchange="toggleLossRow('m2', 'mia')">
+                                    Безвісти</label>
+                                <label><input type="checkbox" id="m2-cb-ovt" onchange="toggleLossRow('m2', 'ovt')">
+                                    ОВТ/Майно</label>
+                            </div>
+                            <div id="m2-row-200" class="loss-details-row">
+                                <span style="color:#f44336; font-size:0.85em;">Безповоротні:</span>
+                                <input type="number" id="m2-qty-200" value="1" style="width: 50px;" min="1">
+                                <input type="text" id="m2-det-200" placeholder="Звання, ПІБ" style="width: 250px;">
+                            </div>
+                            <div id="m2-row-300" class="loss-details-row">
+                                <span style="color:#ff9800; font-size:0.85em;">Санітарні:</span>
+                                <input type="number" id="m2-qty-300" value="1" style="width: 50px;" min="1">
+                                <input type="text" id="m2-det-300" placeholder="Звання, ПІБ" style="width: 250px;">
+                            </div>
+                            <div id="m2-row-mia" class="loss-details-row">
+                                <span style="color:#9c27b0; font-size:0.85em;">Зниклі безвісти:</span>
+                                <input type="number" id="m2-qty-mia" value="1" style="width: 50px;" min="1">
+                                <input type="text" id="m2-det-mia" placeholder="Звання, ПІБ" style="width: 250px;">
+                            </div>
+                            <div id="m2-row-ovt" class="loss-details-row">
+                                <span style="color:#2196f3; font-size:0.85em;">Втрати ОВТ:</span>
+                                <select id="m2-status-ovt" style="width: 110px;">
+                                    <option value="знищено">знищено</option>
+                                    <option value="пошкоджено">пошкоджено</option>
+                                </select>
+                                <input type="number" id="m2-qty-ovt" value="1" style="width: 50px;" min="1">
+                                <input type="text" id="m2-det-ovt" placeholder="Назва техніки/майна"
+                                    style="width: 180px;">
+                            </div>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <button class="btn-small" onclick="addManualR2()">Додати рядок</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <div class="list-header-wrap">
+                            <h3 style="color: var(--warning);">Удари FPV:</h3><span class="total-badge"
+                                id="count-report-2-fpv">(Всього: 0)</span><button class="btn-small"
+                                onclick="copyReportList('report-2-fpv', this)">Копіювати</button>
+                        </div>
+                        <div id="report-2-fpv"></div>
+
+                        <div class="list-header-wrap">
+                            <h3 style="color: var(--info);">Скиди з БпЛА:</h3><span class="total-badge"
+                                id="count-report-2-drop">(Всього: 0)</span><button class="btn-small"
+                                onclick="copyReportList('report-2-drop', this)">Копіювати</button>
+                        </div>
+                        <div id="report-2-drop"></div>
+
+                        <div class="list-header-wrap">
+                            <h3 style="color: #ff5722;">Міномети:</h3><span class="total-badge"
+                                id="count-report-2-mortar">(Всього: 0)</span><button class="btn-small"
+                                onclick="copyReportList('report-2-mortar', this)">Копіювати</button>
+                        </div>
+                        <div id="report-2-mortar"></div>
+
+                        <div class="list-header-wrap">
+                            <h3 style="color: #f44336;">Артилерія:</h3><span class="total-badge"
+                                id="count-report-2-art">(Всього: 0)</span><button class="btn-small"
+                                onclick="copyReportList('report-2-art', this)">Копіювати</button>
+                        </div>
+                        <div id="report-2-art"></div>
+
+                        <div class="list-header-wrap">
+                            <h3 style="color: #888;">Інше (Стрілецька, тощо):</h3><span class="total-badge"
+                                id="count-report-2-other">(Всього: 0)</span><button class="btn-small"
+                                onclick="copyReportList('report-2-other', this)">Копіювати</button>
+                        </div>
+                        <div id="report-2-other"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3.2.1 Піхота -->
+            <div class="panel" id="panel-3-2-1">
+                <div class="section-header" onclick="togglePanel('panel-3-2-1')">
+                    <h2>3.2.1. Піхотними підрозділами виконано (Вогневі завдання)</h2>
+                    <div class="header-controls"><span class="toggle-icon">▼</span></div>
+                </div>
+                <div class="panel-body">
+                    <div class="list-header-wrap">
+                        <h3 style="color: #4caf50;">Стрілецька зброя та загальні:</h3>
+                        <span class="total-badge" id="count-report-4-gen">(Всього: 0)</span>
+                        <button class="btn-small" onclick="copyReportList('report-4-gen', this)">Копіювати
+                            список</button>
+                    </div>
+                    <div id="report-4-gen"></div>
+                </div>
+            </div>
+
+            <!-- 3.2.2 БпС (Удари) -->
+            <div class="panel" id="panel-3-2-2">
+                <div class="section-header" onclick="togglePanel('panel-3-2-2')">
+                    <h2>3.2.2. Засобами БпС (Ударні та Скиди)</h2>
+                    <div class="header-controls">
+                        <span class="total-badge" style="background: #ff9800;">FPV: <span id="uav-fpv">0</span></span>
+                        <span class="total-badge" style="background: #e91e63;">Крило: <span id="uav-wing">0</span></span>
+                        <span class="total-badge" style="background: #2196f3;">Скиди: <span id="uav-drop">0</span></span>
+                        <span class="total-badge" style="background: #9c27b0;">Важкі: <span id="uav-heavy">0</span></span>
+                        <button class="btn-action" onclick="event.stopPropagation(); confirmAll('3-2-2')">✔️ Підтвердити
+                            всі</button>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div style="background: #181818; border: 1px solid #333; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="margin: 0; color: var(--accent); font-size: 1.05em;">📊 Статистика вильотів екіпажів (ТЗ):</h3>
+                            <button class="btn-small btn-action" onclick="copyCrewStats(this)">📋 Копіювати статистику</button>
+                        </div>
+                        <textarea id="crew-stats-text" rows="3" style="width: 100%; box-sizing: border-box; background: #101010; color: #fff; border: 1px dashed #444; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 4px; resize: vertical;" placeholder="Тут з'явиться статистика вильотів після завантаження файлу БпЛА..."></textarea>
+                    </div>
+
+                    <div class="list-header-wrap">
+                        <h3 style="color: var(--warning);">Удари FPV:</h3><span class="total-badge"
+                            id="count-report-3-fpv">(Всього: 0)</span><button class="btn-small"
+                            onclick="copyReportList('report-3-fpv', this)">Копіювати</button>
+                    </div>
+                    <div id="report-3-fpv"></div>
+
+                    <div class="list-header-wrap">
+                        <h3 style="color: var(--info);">Скиди з БпЛА:</h3><span class="total-badge"
+                            id="count-report-3-drop">(Всього: 0)</span><button class="btn-small"
+                            onclick="copyReportList('report-3-drop', this)">Копіювати</button>
+                    </div>
+                    <div id="report-3-drop"></div>
+
+                    <div class="list-header-wrap">
+                        <h3 style="color: var(--purple);">Скиди з важких:</h3><span class="total-badge"
+                            id="count-report-3-heavy">(Всього: 0)</span><button class="btn-small"
+                            onclick="copyReportList('report-3-heavy', this)">Копіювати</button>
+                    </div>
+                    <div id="report-3-heavy"></div>
+
+                    <h3 style="margin-top: 30px; color: var(--info);">Додати місію вручну:</h3>
+                    <div class="constructor-item manual-card">
+                        <div class="constructor-controls">
+                            <label>Категорія:</label>
+                            <select id="m3-cat" style="width: 140px;">
+                                <option value="fpv">Удари FPV</option>
+                                <option value="drop">Скиди з БпЛА</option>
+                                <option value="heavy">Важкі бомбери</option>
+                            </select>
+                            <label>Час:</label> <input type="text" id="m3-time" placeholder="15:30:00"
+                                style="width: 110px;">
+                            <label>Поз.:</label> <input type="text" id="m3-pos" list="saved-positions"
+                                placeholder="СтМ..." style="width: 120px;">
+                            <label>Засіб:</label> <input type="text" id="m3-weapon" placeholder="Вампір"
+                                style="width: 140px;">
+                        </div>
+                        <div class="constructor-controls" style="margin-top: 10px;">
+                            <span class="input-wrap"><label>Б/Ч:</label> <input type="text" id="m3-ammo"
+                                    placeholder="Фугасний=1" style="width: 100px;"></span>
+                            <span class="input-wrap"><label>Ціль:</label> <input type="text" id="m3-target"
+                                    placeholder="ОС" style="width: 100px;"></span>
+                            <span class="input-wrap"><label>Квадрат:</label> <input type="text" id="m3-coords"
+                                    placeholder="37U..." style="width: 120px;"></span>
+                            <label>Рез-т:</label> <input type="text" id="m3-result" placeholder="Знищено / Влучання"
+                                style="width: 130px;">
+                            <button class="btn-small" onclick="addManualR3()">Додати рядок</button>
+                        </div>
+
+                        <div
+                            style="margin-top: 10px; padding: 10px; border: 1px solid #555; background: transparent; border-radius: 4px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <label
+                                style="color: #ccc; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0;">
+                                <input type="checkbox" id="add-cas-m3-manual">
+                                🩸 Додати втрати (200/300)
+                            </label>
+                            <div style="display: flex; gap: 10px;">
+                                <label style="margin: 0;">200: <input type="number" id="cas-200-m3-manual" value="0"
+                                        style="width: 50px; padding: 4px;" min="0"></label>
+                                <label style="margin: 0;">300: <input type="number" id="cas-300-m3-manual" value="0"
+                                        style="width: 50px; padding: 4px;" min="0"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3.2.3 ОВгП -->
+            <div class="panel" id="panel-3-2-3">
+                <div class="section-header" onclick="togglePanel('panel-3-2-3')">
+                    <h2>3.2.3. Засобами ОВгП (Міномети, АГС, СПГ, ВКК)</h2>
+                    <div class="header-controls">
+                        <span class="total-badge" style="background: #ff5722;">81мм: <span
+                                id="ammo-81mm">0</span></span>
+                        <span class="total-badge" style="background: #ff9800;">82мм: <span
+                                id="ammo-82mm">0</span></span>
+                        <span class="total-badge" style="background: #f44336;">120мм: <span
+                                id="ammo-120mm">0</span></span>
+                        <span class="total-badge" style="background: #9c27b0;">СПГ: <span id="ammo-spg">0</span></span>
+                        <span class="total-badge" style="background: #2196f3;">АГС: <span id="ammo-ags">0</span></span>
+                        <span class="total-badge" style="background: #4caf50;">МК-19: <span
+                                id="ammo-mk19">0</span></span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="list-header-wrap">
+                        <h3 style="color: #ff9800;">Вогневі завдання ОВгП:</h3>
+                        <span class="total-badge" id="count-report-4-ovgp">(Всього: 0)</span>
+                        <button class="btn-small" onclick="copyReportList('report-4-ovgp', this)">Копіювати
+                            ОВгП</button>
+                    </div>
+                    <div id="report-4-ovgp"></div>
+                </div>
+            </div>
+
+            <!-- 3.2.7 Логістика -->
+            <div class="panel" id="panel-3-2-7">
+                <div class="section-header" onclick="togglePanel('panel-3-2-7')">
+                    <h2>3.2.7. Логістичні задачі (БпС, НРК)</h2>
+                    <div class="header-controls">
+                        <button class="btn-action" onclick="event.stopPropagation(); confirmAll('3-2-7')">✔️ Підтвердити
+                            всі</button>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div style="background: #181818; border: 1px solid #333; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="margin: 0; color: var(--accent); font-size: 1.05em;">📊 Статистика вильотів екіпажів (ТЗ):</h3>
+                            <button class="btn-small btn-action" onclick="copyCrewStats(this)">📋 Копіювати статистику</button>
+                        </div>
+                        <textarea class="crew-stats-textarea" rows="3" style="width: 100%; box-sizing: border-box; background: #101010; color: #fff; border: 1px dashed #444; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 4px; resize: vertical;" placeholder="Тут з'явиться статистика вильотів після завантаження файлу БпЛА..."></textarea>
+                    </div>
+
+                    <div id="report-delivery-content"></div>
+                    <div class="list-header-wrap">
+                        <h3 style="color: var(--accent);">Доставки БпЛА:</h3>
+                        <span class="total-badge" id="count-report-3-delivery">(Всього: 0)</span>
+                        <button class="btn-small" onclick="copyReportList('report-3-delivery', this)">Копіювати
+                            список</button>
+                    </div>
+                    <div id="report-3-delivery"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let eventsData = [];
+        let fireMissionsData = [];
+        let uavData = [];
+        let posMap = {};
+
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, function (match) {
+                const escape = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+                return escape[match];
+            });
+        }
+
+        function toggleSidebar() {
+            document.querySelector('.side-nav').classList.toggle('hidden');
+            document.body.classList.toggle('sidebar-hidden');
+        }
+
+        function toggleSettings() {
+            document.getElementById('settings-panel').classList.toggle('active');
+        }
+
+        function togglePanel(panelId) {
+            document.getElementById(panelId).classList.toggle('collapsed');
+        }
+
+        const numWords = { 1: "ОДИН", 2: "ДВА", 3: "ТРИ", 4: "ЧОТИРИ", 5: "П'ЯТЬ", 6: "ШІСТЬ", 7: "СІМ", 8: "ВІСІМ", 9: "ДЕВ'ЯТЬ", 10: "ДЕСЯТЬ", 11: "ОДИННАДЦЯТЬ", 12: "ДВАНАДЦЯТЬ", 13: "ТРИНАДЦЯТЬ", 14: "ЧОТИРНАДЦЯТЬ", 15: "П'ЯТНАДЦЯТЬ" };
+        function getWordForNumber(num) { let parsed = parseInt(num); return isNaN(parsed) ? num : (numWords[parsed] || parsed); }
+
+        function superClean(str) { return str ? str.toString().toLowerCase().replace(/[^а-яa-zіїєґ0-9]/g, '') : ""; }
+
+        function getCol(row, possibleNames) {
+            for (let key in row) {
+                let cleanKey = key.replace(/^\uFEFF/, '').trim().toLowerCase();
+                if (possibleNames.includes(cleanKey)) {
+                    let val = row[key];
+                    return val !== undefined && val !== null ? val.toString().trim() : '';
+                }
+            }
+            return '';
+        }
+
+        function getTimestamp(timeStr) {
+            if (!timeStr) return 0;
+            let t = timeStr.replace(/\//g, '.');
+            let match = t.match(/(\d{2})\.(\d{2})\.(\d{4}),\s*(\d{2}):(\d{2})(?::(\d{2}))?/);
+            if (match) {
+                return new Date(match[3], match[2] - 1, match[1], match[4], match[5], match[6] || 0).getTime();
+            }
+            return 0;
+        }
+
+        function formatTimeForUI(timeStr) {
+            if (!timeStr) return "";
+            return timeStr.replace(/\//g, '.').trim();
+        }
+
+        function formatTimeForReport(timeStr) {
+            if (!timeStr) return "";
+            let t = timeStr.replace(/\//g, '.');
+            let match = t.match(/(\d{2}\.\d{2}\.\d{4}),\s*(\d{2}):(\d{2})(?::(\d{2}))?/);
+            if (match) {
+                let time = `${match[2]}.${match[3]}`; // HH.MM without seconds
+                let date = match[1]; // DD.MM.YYYY
+                return `${time} ${date}`;
+            }
+            // Fallback: try to extract time and date separately
+            let parts = t.split(', ');
+            if (parts.length >= 2) {
+                let timePart = parts[1].replace(/:\d{2}$/, '').replace(/:/g, '.'); // Remove seconds, replace : with .
+                return `${timePart} ${parts[0]}`;
+            }
+            return t;
+        }
+
+        function dropSeconds(timeStr) {
+            if (!timeStr) return "";
+            let t = timeStr.replace(/\//g, '.');
+            let match = t.match(/(\d{2}\.\d{2}\.\d{4}),\s*(\d{2}:\d{2})/);
+            return match ? `${match[1]}, ${match[2]}` : t.replace(/:\d{2}$/, '').trim();
+        }
+
+        // --- Функції Втрат Противника ---
+        function getCasualties(row) {
+            let c200 = parseInt(getCol(row, ['200'])) || 0;
+            let c200_approx = parseInt(getCol(row, ['~200'])) || 0;
+            let c300 = parseInt(getCol(row, ['300'])) || 0;
+            let c300_approx = parseInt(getCol(row, ['~300'])) || 0;
+            return { t200: c200 + c200_approx, t300: c300 + c300_approx };
+        }
+
+        function buildCasualtiesUI(prefix, suffix, t200, t300) {
+            let hasCas = (t200 > 0 || t300 > 0);
+            let borderCol = hasCas ? 'var(--danger)' : '#555';
+            let bgCol = hasCas ? 'rgba(244, 67, 54, 0.1)' : 'transparent';
+
+            return `
+        <div style="margin-top: 10px; padding: 10px; border: 1px solid ${borderCol}; background: ${bgCol}; border-radius: 4px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <label style="color: ${hasCas ? '#ff8a80' : '#ccc'}; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; margin: 0;">
+                <input type="checkbox" id="add-cas-${prefix}-${suffix}" ${hasCas ? 'checked' : ''}>
+                🩸 Втрати противника (200/300)
+            </label>
+            <div style="display: flex; gap: 10px;">
+                <label style="margin: 0;">200: <input type="number" id="cas-200-${prefix}-${suffix}" value="${t200}" style="width: 50px; padding: 4px;" min="0"></label>
+                <label style="margin: 0;">300: <input type="number" id="cas-300-${prefix}-${suffix}" value="${t300}" style="width: 50px; padding: 4px;" min="0"></label>
+            </div>
+        </div>
+        `;
+        }
+
+        function getCasualtiesText(prefix, suffix) {
+            let cb = document.getElementById(`add-cas-${prefix}-${suffix}`);
+            if (!cb || !cb.checked) return "";
+            let val200 = parseInt(document.getElementById(`cas-200-${prefix}-${suffix}`).value) || 0;
+            let val300 = parseInt(document.getElementById(`cas-300-${prefix}-${suffix}`).value) || 0;
+
+            let parts = [];
+            if (val200 > 0) parts.push(`ЗНИЩЕНО - ${val200} (${getWordForNumber(val200)}) В/СЛ ЗС рф`);
+            if (val300 > 0) parts.push(`ПОРАНЕНО - ${val300} (${getWordForNumber(val300)}) В/СЛ ЗС рф`);
+
+            return parts.length > 0 ? ", " + parts.join(", ") : "";
+        }
+
+        // --- Утиліти ---
+        function isInfantryTarget(t) {
+            let low = t ? t.toString().toLowerCase() : "";
+            return ["в/сл", "о/с", "особов", "піхот", "ос", "жива", "солд", "чоловік", "осіб"].some(kw => low.includes(kw)) || low === 'інше' || low === 'ціль' || low.trim() === '';
+        }
+
+        function standardizeTarget(t) {
+            let low = t ? t.toString().toLowerCase() : "";
+            if (['фпв', 'fpv', 'ждун', 'бпла', 'дрон', 'mavic', 'мавік', 'zala', 'supercam', 'орлан', 'крило'].some(kw => low.includes(kw))) {
+                return { inf: "ФПВ (оптоволокно)", orig: "ФПВ (оптоволокно)", type: "fpv" };
+            } else if (isInfantryTarget(t)) {
+                return { inf: "о/с противника", orig: "В/СЛ ЗС рф", type: "os" };
+            } else {
+                return { inf: formatTargetName(t), orig: t, type: "other" };
+            }
+        }
+
+        function formatTargetName(target) {
+            let t = target ? target.toString().trim() : 'НЕВІДОМА ЦІЛЬ';
+            if (t.toLowerCase() === "інше") return "ворожій цілі";
+            t = t.toLowerCase();
+            t = t.replace(/(^|\s)ворож(ий|а|е|і)(\s|$)/g, "$1ворожому$3");
+            t = t.replace(/(ждун)($|\s|,|\.)/g, "ждуну$2");
+            t = t.replace(/(піхота)($|\s|,|\.)/g, "піхоті$2");
+            t = t.replace(/(розрахунок)($|\s|,|\.)/g, "розрахунку$2");
+            t = t.replace(/(бліндаж)($|\s|,|\.)/g, "бліндажу$2");
+            t = t.replace(/(позиція)($|\s|,|\.)/g, "позиції$2");
+            t = t.replace(/(антена)($|\s|,|\.)/g, "антені$2");
+            t = t.replace(/(камера)($|\s|,|\.)/g, "камері$2");
+            t = t.replace(/(міномет)($|\s|,|\.)/g, "міномету$2");
+            t = t.replace(/(кулемет)($|\s|,|\.)/g, "кулемету$2");
+            if (!t.includes("ворож") && !t.includes("противник") && !t.includes("о/с")) {
+                t = (t.includes("піхоті") || t.includes("позиції") || t.includes("антені") || t.includes("камері") || t.includes("цілі")) ? "ворожій " + t : "ворожому " + t;
+            }
+            return t;
+        }
+
+        let weaponMap = {};
+
+        function buildPosMap() {
+            posMap = {};
+            const dictText = document.getElementById('pos-dict').value;
+            const datalist = document.getElementById('saved-positions');
+            datalist.innerHTML = '';
+
+            const lines = dictText.split('\n');
+            lines.forEach(line => {
+                if (line.includes('=')) {
+                    let parts = line.split('=');
+                    let key = superClean(parts[0]);
+                    let val = parts[1].trim();
+                    if (key && val) {
+                        posMap[key] = val;
+                        let opt = document.createElement('option');
+                        opt.value = val;
+                        datalist.appendChild(opt);
+                    }
+                }
+            });
+        }
+
+        function buildWeaponMap() {
+            weaponMap = {};
+            const dictText = document.getElementById('weapon-dict').value;
+            const lines = dictText.split('\n');
+            lines.forEach(line => {
+                if (line.includes('=')) {
+                    let parts = line.split('=');
+                    let key = superClean(parts[0]);
+                    let val = parts[1].trim();
+                    if (key && val) {
+                        weaponMap[key] = val;
+                    }
+                }
+            });
+        }
+
+        function getPositionFormatted(posName, defaultPrefix = "ВП") {
+            if (!posName || posName.trim() === "") return `${defaultPrefix} "НЕВІДОМА_ПОЗ"`;
+            let key = superClean(posName);
+            if (posMap[key]) return posMap[key];
+            let cleanPos = posName.toString().trim().replace(/^["']|["']$/g, '');
+            return `${defaultPrefix} "${cleanPos}"`;
+        }
+
+        function getPositionWeapon(posName, weaponName) {
+            if (!posName || posName.trim() === "") return null;
+            let keyPos = superClean(posName);
+            let keyWeapon = "";
+            
+            let wLow = weaponName ? weaponName.toLowerCase() : "";
+            if (wLow.includes('міномет') || wLow.includes('мін')) keyWeapon = "міномет";
+            else if (wLow.includes('агс')) keyWeapon = "агс";
+            else if (wLow.includes('спг')) keyWeapon = "спг";
+            else if (wLow.includes('вкк') || wLow.includes('великокаліберн') || wLow.includes('кулемет')) keyWeapon = "вкк";
+            
+            // 1. Спочатку шукаємо точний комбінований ключ, наприклад "валет_міномет" або "валетміномет"
+            if (keyWeapon) {
+                let combinedKey = superClean(`${keyPos}${keyWeapon}`);
+                if (weaponMap[combinedKey]) return weaponMap[combinedKey];
+            }
+            
+            // 2. Якщо комбінованого немає, беремо загальний ключ "валет" (з перевіркою типу)
+            if (weaponMap[keyPos]) {
+                let mappedWeapon = weaponMap[keyPos].toLowerCase();
+                // Запобігаємо перехресному перезапису різних типів озброєння
+                if (keyWeapon === "міномет" && (mappedWeapon.includes('міномет') || mappedWeapon.includes('мін'))) return weaponMap[keyPos];
+                if (keyWeapon === "агс" && mappedWeapon.includes('агс')) return weaponMap[keyPos];
+                if (keyWeapon === "спг" && mappedWeapon.includes('спг')) return weaponMap[keyPos];
+                if (keyWeapon === "вкк" && (mappedWeapon.includes('вкк') || mappedWeapon.includes('кулемет'))) return weaponMap[keyPos];
+                
+                // Якщо у словнику загальна назва типу "КБА-48М" без явного вказання типу, а в Excel міномет:
+                if (!mappedWeapon.includes('міномет') && !mappedWeapon.includes('мін') && !mappedWeapon.includes('агс') && !mappedWeapon.includes('спг') && !mappedWeapon.includes('вкк') && !mappedWeapon.includes('кулемет')) {
+                    return weaponMap[keyPos];
+                }
+            }
+            
+            return null;
+        }
+
+        function parseExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) resolve([]);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+                        resolve(json);
+                    } catch (err) { reject(err); }
+                };
+                reader.onerror = (err) => reject(err);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function processFiles() {
+            if (!document.getElementById('file-events').files[0] || !document.getElementById('file-fire').files[0] || !document.getElementById('file-uav').files[0]) {
+                alert("Завантажте 3 обов'язкові файли."); return;
+            }
+
+            localStorage.setItem('saved-unit-name', document.getElementById('unit-name').value);
+            localStorage.setItem('saved-pos-dict', document.getElementById('pos-dict').value);
+            localStorage.setItem('saved-weapon-dict', document.getElementById('weapon-dict').value);
+
+            try {
+                eventsData = await parseExcelFile(document.getElementById('file-events').files[0]);
+                fireMissionsData = await parseExcelFile(document.getElementById('file-fire').files[0]);
+                uavData = await parseExcelFile(document.getElementById('file-uav').files[0]);
+
+                buildPosMap();
+                buildWeaponMap();
+                document.getElementById('settings-panel').classList.remove('active');
+
+                ['report-1-list', 'report-3-1-1', 'report-2-fpv', 'report-2-drop', 'report-2-mortar', 'report-2-art', 'report-2-other', 'report-3-fpv', 'report-3-drop', 'report-3-heavy', 'report-3-delivery', 'report-4-ovgp', 'report-4-gen'].forEach(id => {
+                    document.getElementById(id).innerHTML = '';
+                    updateCount(id);
+                });
+
+                generateReport1_2(); // О/С та ФПВ
+                generateReport3_1_5(); // Обстріли
+                generateReport3_2_2_and_7(); // БпЛА (Удари + Доставки)
+                generateReport3_2_1_and_3(); // Вогневі (Загальні + ОВгП)
+
+                document.getElementById('reports-container').style.display = 'block';
+            } catch (error) { alert("Помилка парсингу."); console.error(error); }
+        }
+
+        // --- 1.2 ЗНИЩЕНІ ЦІЛІ (Тільки О/С та ФПВ) ---
+        function generateReport1_2() {
+            let html = '';
+            let combined = [];
+
+            function isValidForReport1(target, res, cas) {
+                if (target.includes('мінуван')) return false;
+                let st = standardizeTarget(target);
+                // 1. Якщо це ФПВ-ждун і знищено
+                if (st.type === 'fpv' && res === 'знищено') return true;
+                // 2. Якщо є втрати 200/300
+                if (cas.t200 > 0 || cas.t300 > 0) return true;
+                // 3. Якщо ціль це прямо О/С і статус знищено
+                if (st.type === 'os' && res === 'знищено') return true;
+                return false;
+            }
+
+            fireMissionsData.forEach(r => {
+                const res = getCol(r, ['результат']).toLowerCase();
+                const target = getCol(r, ['ціль']).toLowerCase();
+                let cas = getCasualties(r);
+                if (isValidForReport1(target, res, cas)) combined.push({ src: 'fire', row: r });
+            });
+
+            uavData.forEach(r => {
+                const res = getCol(r, ['результат']).toLowerCase();
+                const target = getCol(r, ['опис цілі', 'ціль']).toLowerCase();
+                let cas = getCasualties(r);
+                if (isValidForReport1(target, res, cas)) combined.push({ src: 'uav', row: r });
+            });
+
+            combined.sort((a, b) => getTimestamp(getCol(a.row, ['час доповіді', 'час події'])) - getTimestamp(getCol(b.row, ['час доповіді', 'час події'])));
+
+            combined.forEach((item, index) => {
+                const row = item.row;
+                const timeRaw = getCol(row, ['час доповіді', 'час події']);
+                const timeUI = formatTimeForReport(timeRaw);
+                const qty = getCol(row, ['кількість']) || "1";
+
+                let cas = getCasualties(row);
+                let highlightClass = (cas.t200 > 0 || cas.t300 > 0) ? 'has-enemy-cas' : '';
+
+                let posRaw = getCol(row, ['позиція']);
+                const timeNoSecSearch = dropSeconds(timeRaw);
+
+                if (!posRaw && item.src === 'fire') {
+                    const reporter = superClean(getCol(row, ['позивний репортера', 'репортер']));
+                    let match = eventsData.find(e => dropSeconds(getCol(e, ['час події'])) === timeNoSecSearch && superClean(getCol(e, ['позивний репортера', 'доповідач'])) === reporter);
+                    if (!match) match = eventsData.find(e => dropSeconds(getCol(e, ['час події'])) === timeNoSecSearch && getCol(e, ['тип події']).toLowerCase().includes('вогнев'));
+                    if (match) posRaw = getCol(match, ['позиція']);
+                }
+                const posFormatted = getPositionFormatted(posRaw, item.src === 'fire' ? "ВП" : "СтМ");
+                const coords = getCol(row, ['початкові координати', 'квадрат', 'кінцеві координати', 'координати']);
+                const targetOriginalRaw = getCol(row, ['опис цілі', 'ціль', 'ціль']) || 'НЕВІДОМА ЦІЛЬ';
+                const stTarget = standardizeTarget(targetOriginalRaw);
+
+                let resTypeSel = getCol(row, ['результат']).toUpperCase().includes("ПОРАНЕН") ? "ПОРАНЕНО" : "ЗНИЩЕНО";
+
+                html += `
+                <div class="constructor-item ${item.src === 'fire' ? 'success' : 'uav-item'} r1-2-item ${highlightClass}" id="r1-item-${index}">
+                    <div style="margin-bottom: 8px;"><strong>Джерело: ${item.src === 'fire' ? 'Піхота' : 'БпЛА'}</strong> ${item.src === 'uav' ? '<span class="uav-warning">⚠️ Перевірте О/С!</span>' : ''}</div>
+                    <div class="constructor-controls">
+                        <label>Час:</label> <input type="text" id="r1-time-${index}" value="${escapeHTML(timeUI)}" style="width: 140px;">
+                        <label>Поз.:</label> <input type="text" id="r1-pos-${index}" value='${escapeHTML(posFormatted)}' style="width: 140px;">
+                        <input type="hidden" id="r1-action-${index}" value="${item.src === 'fire' ? 'відкривав вогонь' : 'наносив ураження'}">
+                        <label>Ціль(на по...):</label> <input type="text" id="r1-target-inf-${index}" value="${escapeHTML(stTarget.inf)}" style="width: 150px;">
+                        <label>Квадрат:</label> <input type="text" id="r1-coords-${index}" value="${escapeHTML(coords)}" style="width: 130px;">
+                    </div>
+                    <div class="constructor-controls" style="margin-top: 10px;">
+                        <label>Рез-т:</label>
+                        <select id="r1-res-type-${index}" style="width: 100px;">
+                            <option value="ЗНИЩЕНО" ${resTypeSel === 'ЗНИЩЕНО' ? 'selected' : ''}>ЗНИЩЕНО</option>
+                            <option value="ПОРАНЕНО" ${resTypeSel === 'ПОРАНЕНО' ? 'selected' : ''}>ПОРАНЕНО</option>
+                            <option value="ВЛУЧАННЯ">ВЛУЧАННЯ</option>
+                        </select>
+                        <label>К-сть:</label> <input type="number" id="r1-qty-${index}" value="${escapeHTML(qty)}" style="width: 50px;" min="1">
+                        <label>Ціль(ориг):</label> <input type="text" id="r1-target-orig-${index}" value="${escapeHTML(stTarget.orig)}" style="width: 120px;">
+                        <button class="btn-small btn-add" onclick="addDestroyedReport(${index})">Додати</button>
+                        <button class="btn-small" style="background-color: #555;" onclick="hideItem('r1-item-${index}')">Сховати</button>
+                    </div>
+                    ${buildCasualtiesUI('r1', index, cas.t200, cas.t300)}
+                </div>
+            `;
+            });
+            document.getElementById('report-1-content').innerHTML = html || '<p>Немає записів ФПВ або втрат О/С.</p>';
+        }
+
+        window.checkCustomTargetR1 = function (sel) {
+            document.getElementById('m1-custom-target-group').style.display = sel.value === 'custom' ? 'flex' : 'none';
+        }
+
+        window.addDestroyedReport = function (index) {
+            const uName = document.getElementById('unit-name').value;
+            const timeFormatted = document.getElementById(`r1-time-${index}`).value;
+            const pos = document.getElementById(`r1-pos-${index}`).value;
+            const tInf = document.getElementById(`r1-target-inf-${index}`).value;
+            const coords = document.getElementById(`r1-coords-${index}`).value;
+            const qty = document.getElementById(`r1-qty-${index}`).value || "1";
+            const tOrig = document.getElementById(`r1-target-orig-${index}`).value;
+            const action = document.getElementById(`r1-action-${index}`).value;
+            const resType = document.getElementById(`r1-res-type-${index}`).value;
+
+            let casText = getCasualtiesText('r1', index);
+            let resultText = "";
+
+            let isInfantry = isInfantryTarget(tOrig) || isInfantryTarget(tInf);
+
+            if (isInfantry) {
+                if (casText !== "") resultText = `результат: ${casText.replace(/^,\s*/, '')}.`;
+                else resultText = `результат: ${resType} - ${qty} (${getWordForNumber(qty)}) ${tOrig}.`;
+            } else {
+                // Ціль не піхота (наприклад бліндаж, фпв). 
+                // Якщо вибрано ВЛУЧАННЯ і є втрати, пишемо "результат: ВЛУЧАННЯ, ЗНИЩЕНО 1..."
+                resultText = `результат: ${resType} - ${qty} (${getWordForNumber(qty)}) ${tOrig}${casText}.`;
+            }
+
+            addRecordToFinal('report-1-list', `${timeFormatted} ${pos} ${uName} ${action} по ${tInf} в районі (${coords}), ${resultText}`);
+            document.getElementById(`r1-item-${index}`).style.opacity = '0.4';
+        }
+
+        window.addManualR1 = function () {
+            const uName = document.getElementById('unit-name').value;
+            const timeRaw = document.getElementById('m1-time').value;
+            const timeFormatted = formatTimeForReport(timeRaw);
+            const pos = document.getElementById('m1-pos').value;
+            const action = document.getElementById('m1-action').value;
+            const coords = document.getElementById('m1-coords').value;
+            const resType = document.getElementById('m1-res-type').value;
+            const qty = document.getElementById('m1-qty').value || "1";
+            const targetType = document.getElementById('m1-target-type').value;
+
+            let tInf = "", tOrig = "";
+            if (targetType === 'os') {
+                tInf = "о/с противника";
+                tOrig = "В/СЛ ЗС рф";
+            } else if (targetType === 'fpv') {
+                tInf = "ФПВ (оптоволокно)";
+                tOrig = "ФПВ (оптоволокно)";
+            } else {
+                tInf = document.getElementById('m1-target').value;
+                tOrig = document.getElementById('m1-t-orig').value;
+            }
+
+            let casText = getCasualtiesText('m1', 'manual');
+            let resultText = "";
+            let isInfantry = isInfantryTarget(tOrig) || isInfantryTarget(tInf);
+
+            if (isInfantry && casText !== "") {
+                resultText = `результат: ${casText.replace(/^,\s*/, '')}.`;
+            } else {
+                resultText = `результат: ${resType} - ${qty} (${getWordForNumber(qty)}) ${tOrig}${casText}.`;
+            }
+
+            addRecordToFinal('report-1-list', `${timeFormatted} ${pos} ${uName} ${action} по ${tInf} в районі (${coords}), ${resultText}`);
+
+            document.getElementById('m1-coords').value = '';
+            document.getElementById('m1-qty').value = '1';
+        }
+
+        // --- 3.1.1 Бойові зіткнення ---
+        window.toggleAssaultCas = function () {
+            let isUnk = document.getElementById('m-assault-en-unk').checked;
+            document.getElementById('m-assault-en-200').disabled = isUnk;
+            document.getElementById('m-assault-en-300').disabled = isUnk;
+        }
+        window.addManualAssault = function () {
+            const time = document.getElementById('m-assault-time').value.trim();
+            const dir = document.getElementById('m-assault-dir').value.trim() || 'НЕВІДОМОГО НАПРЯМКУ';
+            const pos = document.getElementById('m-assault-pos').value;
+            const ownQty = document.getElementById('m-assault-own-qty').value;
+            const qty = document.getElementById('m-assault-qty').value;
+            const veh = document.getElementById('m-assault-veh').value;
+
+            // Втрати наші (включно зі зниклими безвісти)
+            let fr200 = parseInt(document.getElementById('m-assault-fr-200').value) || 0;
+            let fr300 = parseInt(document.getElementById('m-assault-fr-300').value) || 0;
+            let frMia = parseInt(document.getElementById('m-assault-fr-mia').value) || 0;
+            let frLossText = "Втрати о/с відсутні.";
+
+            if (fr200 > 0 || fr300 > 0 || frMia > 0) {
+                let pParts = [];
+                if (fr200 > 0) pParts.push(`безповоротні - ${fr200} (${getWordForNumber(fr200)}) в/сл`);
+                if (fr300 > 0) pParts.push(`санітарні - ${fr300} (${getWordForNumber(fr300)}) в/сл`);
+                if (frMia > 0) pParts.push(`зниклі безвісти - ${frMia} (${getWordForNumber(frMia)}) в/сл`);
+                frLossText = "Втрати: " + pParts.join('; ') + ".";
+            }
+
+            // Втрати їхні
+            let enLossText = "результат: уточнюється.";
+            if (!document.getElementById('m-assault-en-unk').checked) {
+                let v200 = parseInt(document.getElementById('m-assault-en-200').value) || 0;
+                let v300 = parseInt(document.getElementById('m-assault-en-300').value) || 0;
+                let parts = [];
+                if (v200 > 0) parts.push(`ЗНИЩЕНО – ${v200} (${getWordForNumber(v200).toUpperCase()}) В/СЛ ЗС рф`);
+                if (v300 > 0) parts.push(`ПОРАНЕНО – ${v300} (${getWordForNumber(v300).toUpperCase()}) В/СЛ ЗС рф`);
+                if (parts.length > 0) enLossText = "результат: " + parts.join(", ") + ".";
+                else enLossText = "результат: без втрат.";
+            }
+
+            // Формуємо дату (перевіряємо чи юзер вже не ввів її самостійно)
+            let finalPrefix = time;
+            if (!time.match(/\d{2}[./]\d{2}[./]\d{4}/) && !time.includes('-')) {
+                let today = "ДД.ММ.РРРР";
+                if (eventsData.length > 0) {
+                    let dRaw = getCol(eventsData[0], ['час події']);
+                    let match = dRaw.match(/(\d{2})[./](\d{2})[./](\d{4})/);
+                    if (match) today = `${match[1]}.${match[2]}.${match[3]}`;
+                }
+                finalPrefix = `${today}, ${time}`;
+            }
+
+            const text = `${finalPrefix} бойове зіткнення з напрямку ${dir} на ${pos} (${ownQty} в/с), ШГр до ${qty} в/сл противника ${veh}. ${frLossText} Позиція не втрачена. Противник успіху не мав. ${enLossText}`;
+
+            addRecordToFinal('report-3-1-1', text);
+
+            // Очищення полів після додавання
+            document.getElementById('m-assault-fr-200').value = '0';
+            document.getElementById('m-assault-fr-300').value = '0';
+            document.getElementById('m-assault-fr-mia').value = '0';
+        }
+
+        // --- 3.1.5 ОБСТРІЛИ ---
+        function getShellingCategory(typeRaw) {
+            let t = typeRaw.toLowerCase();
+
+            if (t.includes('уточнення')) return { id: 7, name: 'Уточнення події', isRed: true };
+            if (t.includes('почули') || t.includes('виход')) return null;
+
+            if (t.includes('fpv') || t.includes('фпв') || t.includes('камікадзе')) {
+                if (t.includes('оптоволокно')) return { id: 1, name: 'Удар FPV (оптоволокно)' };
+                if (t.includes('крило')) return { id: 1, name: 'Удар FPV (крило)' };
+                return { id: 1, name: 'Удар FPV' };
+            }
+            if (t.includes('горюч')) return { id: 2, name: 'Скид горючої суміші з дрона' };
+            if (t.includes('скид') || t.includes('мавік')) return { id: 2, name: 'Скид з БПЛА' };
+            if (t.includes('важк') || t.includes('бомбер')) return { id: 2, name: 'Скид з важкого бомбера' };
+            if (t.includes('82') || (t.includes('міномет') && t.includes('82'))) return { id: 3, name: 'Обстріл з міномета, 82мм' };
+            if (t.includes('120') || (t.includes('міномет') && t.includes('120'))) return { id: 3, name: 'Обстріл з міномета, 120мм' };
+            if (t.includes('міномет')) return { id: 3, name: 'Обстріл з міномета (калібр уточнюється)' };
+            if (t.includes('арт') || t.includes('сау') || t.includes('152') || t.includes('122') || t.includes('ствольн')) return { id: 4, name: 'Обстріл з ствольної артилерії' };
+            if (t.includes('мін') && t.includes('уван')) return { id: 5, name: 'Підрив на ворожому мінуванні' };
+            if (t.includes('стрілецьк')) return { id: 6, name: 'Стрілецька зброя' };
+
+            return null;
+        }
+
+        function generateReport3_1_5() {
+            let html = '';
+            let shellFpv = 0;
+            let shellDrop = 0;
+            let shellMortar = 0;
+            let shellArt = 0;
+            let shellSmall = 0;
+            let possibleEvents = [];
+
+            eventsData.forEach(e => {
+                const t = getCol(e, ['тип події']).toLowerCase();
+                if (!t || ["виконали вогневе завдання", "виконано завдання", "перевірка статусу"].some(i => t.includes(i))) return;
+                possibleEvents.push(e);
+            });
+
+            possibleEvents.sort((a, b) => getTimestamp(getCol(a, ['час події'])) - getTimestamp(getCol(b, ['час події'])));
+
+            let grouped = [], activeShellings = {};
+
+            possibleEvents.forEach(e => {
+                const typeRaw = getCol(e, ['тип події']);
+                const timeFull = formatTimeForUI(getCol(e, ['час події']));
+                const timeNoSec = dropSeconds(timeFull);
+                const pos = getCol(e, ['позиція']);
+                const notes = getCol(e, ['додаткові нотатки', 'нотатки']);
+
+                if (typeRaw.toLowerCase().includes('припинив') || notes.toLowerCase().includes('припинив')) {
+                    if (activeShellings[pos]) { activeShellings[pos].endTime = timeNoSec; delete activeShellings[pos]; }
+                    return;
+                }
+
+                const cat = getShellingCategory(typeRaw);
+                if (!cat) return;
+
+                if (cat.isRed) {
+                    grouped.push({ id: grouped.length, catId: cat.id, catName: cat.name, startTime: timeFull, endTime: timeNoSec, posRaw: pos, type: typeRaw, notes: notes, count: 1, isRed: true });
+                    return;
+                }
+
+                if (cat.id === 3 || cat.id === 4) {
+                    if (activeShellings[pos] && activeShellings[pos].catId === cat.id) {
+                        activeShellings[pos].endTime = timeNoSec; activeShellings[pos].count++;
+                        if (notes && !activeShellings[pos].notes.includes(notes)) activeShellings[pos].notes += " | " + notes;
+                    } else {
+                        let ng = { id: grouped.length, catId: cat.id, catName: cat.name, startTime: timeFull, endTime: timeNoSec, posRaw: pos, type: cat.name, notes: notes, count: 1 };
+                        grouped.push(ng); activeShellings[pos] = ng;
+                    }
+                } else {
+                    grouped.push({ id: grouped.length, catId: cat.id, catName: cat.name, startTime: timeFull, endTime: timeNoSec, posRaw: pos, type: typeRaw, notes: notes, count: 1 });
+                }
+            });
+
+            grouped.sort((a, b) => a.catId !== b.catId ? a.catId - b.catId : getTimestamp(a.startTime) - getTimestamp(b.startTime)).forEach(g => {
+                let tVal = g.startTime;
+                if (dropSeconds(g.startTime) !== g.endTime) {
+                    let eParts = g.endTime.split(', ');
+                    tVal = `${g.startTime} - ${eParts.length > 1 ? eParts[1] : g.endTime}`;
+                }
+
+                // Count by category (use count for FPV/drops, 1 for others)
+                if (g.catId === 1) shellFpv += g.count;
+                else if (g.catId === 2) shellDrop += g.count;
+                else if (g.catId === 3) shellMortar += 1;
+                else if (g.catId === 4) shellArt += 1;
+                else if (g.catId === 6) shellSmall += 1;
+
+                let itemClass = g.isRed ? "constructor-item danger" : "constructor-item warning";
+
+                html += `
+                <div class="${itemClass} r3-1-5-item" id="r2-item-${g.id}">
+                    <div style="margin-bottom: 8px;"><strong>${escapeHTML(g.catName)}</strong> <span class="cat-badge">Початкова поз: ${escapeHTML(g.posRaw) || 'НЕВІДОМА'}</span> ${g.count > 1 ? `| Згруповано ${g.count} прильотів` : ''}</div>
+                    ${g.notes ? `<div style="font-size:0.85em; color:#aaa; margin-bottom: 8px;">Нотатки: ${escapeHTML(g.notes)}</div>` : ''}
+                    <div class="constructor-controls">
+                        <input type="hidden" id="r2-cat-${g.id}" value="${g.catId}">
+                        <input type="hidden" id="r2-count-${g.id}" value="${g.count}">
+                        <label>Час:</label> <input type="text" id="r2-time-${g.id}" value="${escapeHTML(tVal)}" style="width: 170px;">
+                        <label>Зброя:</label> <input type="text" id="r2-weapon-${g.id}" value="${escapeHTML(g.type)}" style="width: 230px;">
+                        <label>Поз.:</label> <input type="text" id="r2-pos-${g.id}" value='${escapeHTML(getPositionFormatted(g.posRaw, "ВП"))}' style="width: 150px;">
+                        
+                        <div style="width: 100%; margin-top: 10px;">
+                            <label style="margin-bottom: 5px; display:block;">Втрати (можна кілька):</label>
+                            <div class="loss-cb-group">
+                                <label><input type="checkbox" id="r2-cb-200-${g.id}" onchange="toggleLossRow('r2', '200', ${g.id})"> 200</label>
+                                <label><input type="checkbox" id="r2-cb-300-${g.id}" onchange="toggleLossRow('r2', '300', ${g.id})"> 300</label>
+                                <label><input type="checkbox" id="r2-cb-mia-${g.id}" onchange="toggleLossRow('r2', 'mia', ${g.id})"> Безвісти</label>
+                                <label><input type="checkbox" id="r2-cb-ovt-${g.id}" onchange="toggleLossRow('r2', 'ovt', ${g.id})"> ОВТ/Майно</label>
+                            </div>
+                            <div id="r2-row-200-${g.id}" class="loss-details-row">
+                                <span style="color:#f44336; font-size:0.85em;">Безповоротні:</span>
+                                <input type="number" id="r2-qty-200-${g.id}" value="1" style="width: 50px;" min="1">
+                                <input type="text" id="r2-det-200-${g.id}" placeholder="Звання, ПІБ" style="width: 250px;">
+                            </div>
+                            <div id="r2-row-300-${g.id}" class="loss-details-row">
+                                <span style="color:#ff9800; font-size:0.85em;">Санітарні:</span>
+                                <input type="number" id="r2-qty-300-${g.id}" value="1" style="width: 50px;" min="1">
+                                <input type="text" id="r2-det-300-${g.id}" placeholder="Звання, ПІБ" style="width: 250px;">
+                            </div>
+                            <div id="r2-row-mia-${g.id}" class="loss-details-row">
+                                <span style="color:#9c27b0; font-size:0.85em;">Зниклі безвісти:</span>
+                                <input type="number" id="r2-qty-mia-${g.id}" value="1" style="width: 50px;" min="1">
+                                <input type="text" id="r2-det-mia-${g.id}" placeholder="Звання, ПІБ" style="width: 250px;">
+                            </div>
+                            <div id="r2-row-ovt-${g.id}" class="loss-details-row">
+                                <span style="color:#2196f3; font-size:0.85em;">Втрати ОВТ:</span>
+                                <select id="r2-status-ovt-${g.id}" style="width: 110px;">
+                                    <option value="знищено">знищено</option>
+                                    <option value="пошкоджено">пошкоджено</option>
+                                </select>
+                                <input type="number" id="r2-qty-ovt-${g.id}" value="1" style="width: 50px;" min="1">
+                                <input type="text" id="r2-det-ovt-${g.id}" placeholder="Назва техніки/майна" style="width: 180px;">
+                            </div>
+                        </div>
+
+                        <button class="btn-small btn-add" onclick="addShellingReport(${g.id}, false)" style="margin-top:10px;">Додати в звіт</button>
+                        <button class="btn-small" style="background-color: #555; margin-top:10px;" onclick="hideItem('r2-item-${g.id}')">Сховати</button>
+                    </div>
+                </div>
+            `;
+            });
+            document.getElementById('report-2-content').innerHTML = html || '<p>Обстрілів не знайдено.</p>';
+
+            // Update category-specific counters with zero-hiding
+            setBadgeValueAndVisibility('shell-fpv', shellFpv);
+            setBadgeValueAndVisibility('shell-drop', shellDrop);
+            setBadgeValueAndVisibility('shell-mortar', shellMortar);
+            setBadgeValueAndVisibility('shell-art', shellArt);
+            setBadgeValueAndVisibility('shell-small', shellSmall);
+        }
+
+        window.toggleLossRow = function (prefix, type, id = '') {
+            const rowId = id !== '' ? `${prefix}-row-${type}-${id}` : `${prefix}-row-${type}`;
+            const cbId = id !== '' ? `${prefix}-cb-${type}-${id}` : `${prefix}-cb-${type}`;
+            const row = document.getElementById(rowId);
+            if (document.getElementById(cbId).checked) row.classList.add('active');
+            else row.classList.remove('active');
+        }
+
+        window.checkCustomWeapon = function (selectElem) {
+            const input = document.getElementById('m2-weapon-custom');
+            if (selectElem.value === 'CUSTOM') { input.style.display = 'inline-block'; input.focus(); }
+            else { input.style.display = 'none'; }
+        }
+
+        window.addShellingReport = function (id, isManual = false) {
+            let prefix = isManual ? "m2" : "r2";
+            let suffix = isManual ? "" : `-${id}`;
+
+            let wFormatted = "";
+            let catId = 5;
+            let count = 1;
+
+            if (isManual) {
+                let sel = document.getElementById('m2-weapon').value;
+                wFormatted = (sel === 'CUSTOM') ? document.getElementById('m2-weapon-custom').value.trim() : sel;
+                count = parseInt(document.getElementById('m2-count').value) || 1;
+
+                let low = sel.toLowerCase();
+                if (low.includes('fpv')) catId = 1;
+                else if (low.includes('скид')) catId = 2;
+                else if (low.includes('міномет')) catId = 3;
+                else if (low.includes('артилері')) catId = 4;
+                else if (low.includes('мін') && low.includes('уван')) catId = 5;
+                else if (low.includes('стрілецьк')) catId = 6;
+                else catId = 5;
+            } else {
+                wFormatted = document.getElementById(`r2-weapon-${id}`).value.trim();
+                catId = parseInt(document.getElementById(`r2-cat-${id}`).value);
+                count = parseInt(document.getElementById(`r2-count-${id}`).value) || 1;
+            }
+
+            const has200 = document.getElementById(`${prefix}-cb-200${suffix}`).checked;
+            const has300 = document.getElementById(`${prefix}-cb-300${suffix}`).checked;
+            const hasMia = document.getElementById(`${prefix}-cb-mia${suffix}`).checked;
+            const hasOvt = document.getElementById(`${prefix}-cb-ovt${suffix}`).checked;
+
+            let lParts = [];
+            let osText = "без втрат о/с";
+
+            if (has200 || has300 || hasMia) {
+                let pParts = [];
+                if (has200) {
+                    let q = document.getElementById(`${prefix}-qty-200${suffix}`).value;
+                    let d = document.getElementById(`${prefix}-det-200${suffix}`).value;
+                    pParts.push(`безповоротні - ${q} (${getWordForNumber(q)}) в/сл` + (d ? `, ${d}` : ''));
+                }
+                if (has300) {
+                    let q = document.getElementById(`${prefix}-qty-300${suffix}`).value;
+                    let d = document.getElementById(`${prefix}-det-300${suffix}`).value;
+                    pParts.push(`санітарні - ${q} (${getWordForNumber(q)}) в/сл` + (d ? `, ${d}` : ''));
+                }
+                if (hasMia) {
+                    let q = document.getElementById(`${prefix}-qty-mia${suffix}`).value;
+                    let d = document.getElementById(`${prefix}-det-mia${suffix}`).value;
+                    pParts.push(`зниклі безвісти - ${q} (${getWordForNumber(q)}) в/сл` + (d ? `, ${d}` : ''));
+                }
+                osText = "втрати: " + pParts.join('; ');
+            }
+            lParts.push(osText);
+
+            if (hasOvt) {
+                let q = document.getElementById(`${prefix}-qty-ovt${suffix}`).value;
+                let d = document.getElementById(`${prefix}-det-ovt${suffix}`).value;
+                let status = document.getElementById(`${prefix}-status-ovt${suffix}`).value;
+                lParts.push(`втрати майна: ${status} - ${q} (${getWordForNumber(q)}) од.` + (d ? `, ${d}` : ''));
+                lParts.push("інші втрати майна уточнюються");
+            } else {
+                lParts.push("втрати майна уточнюються");
+            }
+
+            const timeFormatted = document.getElementById(`${prefix}-time${suffix}`).value;
+            const pos = document.getElementById(`${prefix}-pos${suffix}`).value;
+
+            let targetList = 'report-2-other';
+            if (catId === 1) targetList = 'report-2-fpv';
+            if (catId === 2) targetList = 'report-2-drop';
+            if (catId === 3) targetList = 'report-2-mortar';
+            if (catId === 4) targetList = 'report-2-art';
+
+            const countText = count > 1 ? ` (${count})` : '';
+            addRecordToFinal(targetList, `${timeFormatted} ${wFormatted}${countText}, по ${pos}, ${lParts.join(', ')}.`);
+            if (!isManual) document.getElementById(`r2-item-${id}`).style.opacity = '0.4';
+        }
+
+        window.addManualR2 = function () {
+            addShellingReport(0, true);
+            document.getElementById('m2-cb-200').checked = false;
+            document.getElementById('m2-cb-300').checked = false;
+            document.getElementById('m2-cb-mia').checked = false;
+            document.getElementById('m2-cb-ovt').checked = false;
+            toggleLossRow('m2', '200'); toggleLossRow('m2', '300'); toggleLossRow('m2', 'mia'); toggleLossRow('m2', 'ovt');
+        }
+
+        function setBadgeValueAndVisibility(id, val) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = val;
+            const badgeSpan = el.closest('.total-badge');
+            if (badgeSpan) {
+                badgeSpan.style.display = (val && val > 0) ? 'inline-block' : 'none';
+            }
+        }
+
+        // --- 3.2.2 БпЛА (Удари) та 3.2.7 (Доставки) ---
+        function getUavCategory(typeRaw, mission) {
+            if (mission.toLowerCase().includes('доставка')) return 'delivery';
+            let t = typeRaw.toLowerCase();
+            if (t.includes('крил') || t.includes('wing') || t.includes('літак')) return 'wing';
+            if (t.includes('fpv') || t.includes('фпв') || t.includes('камікадзе')) return 'fpv';
+            if (t.includes('легк')) return 'drop'; // "Легкий бомбер" відправляємо в звичайні скиди
+            if (t.includes('важк') || t.includes('бомбер') || t.includes('вампір') || t.includes('казжан')) return 'heavy';
+            return 'drop';
+        }
+
+        function generateReport3_2_2_and_7() {
+            let htmlFpv = '';
+            let htmlDrop = '';
+            let htmlHeavy = '';
+            let htmlDeliv = '';
+            let countFpv = 0;
+            let countWing = 0;
+            let countDrop = 0;
+            let countHeavy = 0;
+
+            let missions = uavData.filter(r => {
+                let m = getCol(r, ['місія']).toLowerCase();
+                return m.includes('ударна') || m.includes('доставка');
+            });
+
+            missions.sort((a, b) => getTimestamp(getCol(a, ['час доповіді', 'час події'])) - getTimestamp(getCol(b, ['час доповіді', 'час події'])));
+
+            missions.forEach((row, index) => {
+                const missionRaw = getCol(row, ['місія']);
+                const typeRaw = getCol(row, ['тип засобу']);
+                const crewRaw = getCol(row, ['екіпаж', 'екіпажі', 'розрахунок', 'розрахок', 'тз', 'назва тз', 'оператор', 'позивний', 'позивний репортера', 'репортер', 'доповідач']);
+                const cat = getUavCategory(typeRaw, missionRaw);
+                const timeUI = formatTimeForUI(getCol(row, ['час доповіді', 'час події']));
+                const posFormatted = getPositionFormatted(getCol(row, ['позиція']), "СтМ");
+                const result = getCol(row, ['результат']);
+
+                let cas = getCasualties(row);
+                let highlightClass = (cas.t200 > 0 || cas.t300 > 0) ? 'has-enemy-cas' : '';
+
+                // Count by category
+                if (cat === 'fpv') countFpv++;
+                else if (cat === 'wing') countWing++;
+                else if (cat === 'drop') countDrop++;
+                else if (cat === 'heavy') countHeavy++;
+
+                if (cat === 'delivery') {
+                    htmlDeliv += `
+                    <div class="constructor-item info r3-2-7-item" id="r3-item-${index}">
+                        <div class="constructor-controls">
+                            <input type="hidden" id="r3-cat-${index}" value="delivery">
+                            <input type="hidden" id="r3-crew-${index}" value="${escapeHTML(crewRaw)}">
+                            <label>Час:</label> <input type="text" id="r3-time-${index}" value="${escapeHTML(timeUI)}" style="width: 140px;">
+                            <label>Поз.:</label> <input type="text" id="r3-pos-${index}" value='${escapeHTML(posFormatted)}' style="width: 150px;">
+                            <label>Засіб:</label> <input type="text" id="r3-weapon-${index}" value="${escapeHTML(typeRaw)}" style="width: 180px;">
+                            <label>Рез-т:</label> <input type="text" id="r3-result-${index}" value="${escapeHTML(result)}" style="width: 140px;">
+                            <button class="btn-small btn-add" onclick="addUavReport(${index})">Додати в звіт</button>
+                            <button class="btn-small" style="background-color: #555;" onclick="hideItem('r3-item-${index}')">Сховати</button>
+                        </div>
+                    </div>
+                `;
+                } else {
+                    let ammo = getCol(row, ['бк']);
+                    const target = getCol(row, ['ціль', 'опис цілі']) || 'ОС';
+                    const coords = getCol(row, ['квадрат', 'координати']);
+
+                    const itemHtml = `
+                    <div class="constructor-item info r3-2-2-item ${highlightClass}" id="r3-item-${index}">
+                        <div class="constructor-controls">
+                            <input type="hidden" id="r3-cat-${index}" value="${cat}">
+                            <input type="hidden" id="r3-crew-${index}" value="${escapeHTML(crewRaw)}">
+                            <label>Час:</label> <input type="text" id="r3-time-${index}" value="${escapeHTML(timeUI)}" style="width: 140px;">
+                            <label>Поз.:</label> <input type="text" id="r3-pos-${index}" value='${escapeHTML(posFormatted)}' style="width: 150px;">
+                            <label>Засіб:</label> <input type="text" id="r3-weapon-${index}" value="${escapeHTML(typeRaw)}" style="width: 160px;">
+                        </div>
+                        <div class="constructor-controls" style="margin-top: 10px;">
+                            <label>Б/Ч:</label> <input type="text" id="r3-ammo-${index}" value="${escapeHTML(ammo)}" style="width: 120px;">
+                            <label>Ціль:</label> <input type="text" id="r3-target-${index}" value="${escapeHTML(target)}" style="width: 120px;">
+                            <label>Квадрат:</label> <input type="text" id="r3-coords-${index}" value="${escapeHTML(coords)}" style="width: 130px;">
+                            <label>Рез-т:</label> <input type="text" id="r3-result-${index}" value="${escapeHTML(result)}" style="width: 120px;">
+                            <button class="btn-small btn-add" onclick="addUavReport(${index})">Додати в звіт</button>
+                            <button class="btn-small" style="background-color: #555;" onclick="hideItem('r3-item-${index}')">Сховати</button>
+                        </div>
+                        ${buildCasualtiesUI('r3', index, cas.t200, cas.t300)}
+                    </div>
+                `;
+
+                    if (cat === 'fpv' || cat === 'wing') htmlFpv += itemHtml;
+                    else if (cat === 'heavy') htmlHeavy += itemHtml;
+                    else htmlDrop += itemHtml;
+                }
+            });
+
+            document.getElementById('report-3-fpv').innerHTML = htmlFpv || '<p>Ударів FPV / Крила не знайдено.</p>';
+            document.getElementById('report-3-drop').innerHTML = htmlDrop || '<p>Скидів не знайдено.</p>';
+            document.getElementById('report-3-heavy').innerHTML = htmlHeavy || '<p>Скидів з важких не знайдено.</p>';
+            document.getElementById('report-delivery-content').innerHTML = htmlDeliv || '<p>Доставок не знайдено.</p>';
+
+            // Update category counters with zero-hiding
+            setBadgeValueAndVisibility('uav-fpv', countFpv);
+            setBadgeValueAndVisibility('uav-wing', countWing);
+            setBadgeValueAndVisibility('uav-drop', countDrop);
+            setBadgeValueAndVisibility('uav-heavy', countHeavy);
+
+            updateCrewStatsFromConfirmed();
+        }
+
+        function extractCrewFromRecordText(text) {
+            if (!text || !text.trim()) return '';
+
+            // 1. Прибираємо з початку рядка будь-які дати, час, пробіли, тире та коми
+            let str = text.trim().replace(/^[\d\s./:,\-]+/, '').trim();
+            if (!str) return '';
+
+            // 2. Перша частина речення (до кома / Б/Ч / ціль / результат)
+            let firstPart = str.split(/,|Б\/Ч:|ціль:|результат:/i)[0] || str;
+
+            // 3. Якщо в першій частині є текст у лапках: СтМ "КЕНТ", "ГРУТ" тощо
+            let match = firstPart.match(/["'«»]([^"'«»]+)["'«»]/);
+            if (match && match[1].trim()) {
+                let name = match[1].trim().replace(/^["'«»]|["'«»]$/g, '').trim();
+                name = name.replace(/^(тз|екіпаж|розрахунок)\s+/i, '').trim();
+                if (name && !name.toUpperCase().includes('НЕВІДОМ') && !/^\d+$/.test(name)) {
+                    return name.toUpperCase();
+                }
+            }
+
+            // 4. Якщо лапок немає, прибираємо префікси позицій (СтМ, СП, ВП, ПВ, КСП)
+            let clean = firstPart.replace(/^(стм|сп|вп|пв|ксп)\s+/i, '').trim();
+
+            // Беремо перше слово
+            let firstToken = (clean.split(/\s+/)[0] || '').replace(/[^а-яa-zіїєґ0-9]/gi, '').trim();
+
+            if (firstToken.length >= 2 && !/^\d+$/.test(firstToken)) {
+                let low = firstToken.toLowerCase();
+                const stopWords = ['1мб', '111овмбр', 'результат', 'ціль', 'знищено', 'влучання', 'доставлено', 'удар', 'скид', 'бч'];
+                if (!stopWords.includes(low)) {
+                    return firstToken.toUpperCase();
+                }
+            }
+
+            return '';
+        }
+
+        function updateCrewStatsFromConfirmed() {
+            let crewCounts = {};
+            const containers = ['report-3-fpv', 'report-3-drop', 'report-3-heavy', 'report-3-delivery'];
+
+            containers.forEach(cId => {
+                const container = document.getElementById(cId);
+                if (!container) return;
+                const records = container.querySelectorAll('.final-record');
+                records.forEach(rec => {
+                    const ta = rec.querySelector('.record-text');
+                    const text = ta ? ta.value : '';
+                    const crewName = extractCrewFromRecordText(text);
+
+                    if (crewName) {
+                        let parts = crewName.split(/[,/+\&;]/);
+                        parts.forEach(p => {
+                            let cleaned = p.trim().toUpperCase();
+                            if (cleaned && !/^\d+$/.test(cleaned)) {
+                                crewCounts[cleaned] = (crewCounts[cleaned] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+            });
+
+
+
+            const fixedCrews = ['КЕНТ', 'ГРУТ', 'ПЕГАС', 'БАРАКУДА', 'ЖНЕЦЬ', 'ВОМБАТ'];
+            let resultParts = [];
+
+            // 1. Обов'язкові екіпажі у строгому порядку
+            fixedCrews.forEach(name => {
+                let count = crewCounts[name] || 0;
+                resultParts.push(`${name}: ${count}`);
+            });
+
+            // 2. Будь-які інші підтверджені екіпажі поза списком
+            Object.keys(crewCounts).forEach(name => {
+                if (!fixedCrews.includes(name)) {
+                    resultParts.push(`${name}: ${crewCounts[name]}`);
+                }
+            });
+
+            let valText = `Кількість вильотів ТЗ:\n${resultParts.join(', ')}.`;
+
+            const statsElems = document.querySelectorAll('.crew-stats-textarea, #crew-stats-text');
+            statsElems.forEach(el => {
+                el.value = valText;
+            });
+        }
+
+        window.copyCrewStats = function (btn) {
+            const container = btn.closest('.panel, .panel-body') || document;
+            const textElem = container.querySelector('.crew-stats-textarea, #crew-stats-text') || document.getElementById('crew-stats-text');
+            if (!textElem || !textElem.value.trim()) return alert("Статистика порожня.");
+            navigator.clipboard.writeText(textElem.value.trim()).then(() => {
+                const ob = btn.style.backgroundColor, ot = btn.innerText;
+                btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
+                setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
+            }).catch(e => alert("Помилка: " + e));
+        };
+
+        window.addUavReport = function (i, isManual = false) {
+            let p = isManual ? "m3" : "r3";
+            let s = isManual ? "" : `-${i}`;
+
+            const crewElem = isManual ? document.getElementById('m3-crew') : document.getElementById(`r3-crew-${i}`);
+            const crew = crewElem ? crewElem.value.trim() : '';
+
+            const timeFormatted = document.getElementById(`${p}-time${s}`).value;
+            const pos = document.getElementById(`${p}-pos${s}`).value;
+            const cat = document.getElementById(`${p}-cat${s}`).value;
+            const weapon = document.getElementById(`${p}-weapon${s}`).value;
+            const result = document.getElementById(`${p}-result${s}`).value;
+
+            let text = "";
+            if (cat === 'delivery') {
+                text = `${timeFormatted} ${pos} ${weapon}, результат: ${result}`;
+            } else {
+                const uName = document.getElementById('unit-name').value;
+                const ammo = document.getElementById(`${p}-ammo${s}`).value;
+                const target = document.getElementById(`${p}-target${s}`).value;
+                const coords = document.getElementById(`${p}-coords${s}`).value;
+
+                let casText = getCasualtiesText(p, isManual ? 'manual' : i);
+                // Координати між ціллю та результатом
+                text = `${timeFormatted} ${pos} ${uName} ${weapon}, Б/Ч: ${ammo}, ціль: ${target} (${coords}), результат: ${result}${casText}`;
+            }
+
+            addRecordToFinal(`report-3-${cat}`, text, crew);
+            if (!isManual) document.getElementById(`r3-item-${i}`).style.opacity = '0.4';
+        }
+
+        window.addManualR3 = function () {
+            addUavReport(0, true);
+            document.getElementById('m3-coords').value = '';
+        }
+
+        // --- 3.2.1 Піхота та 3.2.3 ОВгП ---
+        function generateReport3_2_1_and_3() {
+            let ovgpHtml = '';
+            let genHtml = '';
+            let ammo81mm = 0;
+            let ammo82mm = 0;
+            let ammo120mm = 0;
+            let ammoSpg = 0;
+            let ammoAgs = 0;
+            let ammoMk19 = 0;
+            const unitName = document.getElementById('unit-name').value;
+            const ovgpKeywords = ['агс', 'міномет', 'спг', 'великокаліберний кулемет', 'вкк', 'ккв', 'mk-19', 'мк-19'];
+
+            let sortedFire = fireMissionsData.slice().sort((a, b) => getTimestamp(getCol(a, ['час доповіді'])) - getTimestamp(getCol(b, ['час доповіді'])));
+
+            sortedFire.forEach(row => {
+                const timeRaw = getCol(row, ['час доповіді']);
+                const timeNoSecForSearch = dropSeconds(timeRaw);
+
+                const weaponCat = getCol(row, ['категорія зброї']);
+                const weaponName = getCol(row, ['назва зброї']);
+                const target = getCol(row, ['ціль']) || 'Не вказано';
+                const result = getCol(row, ['результат']);
+                const coords = getCol(row, ['кінцеві координати', 'початкові координати', 'квадрат']);
+                const used = getCol(row, ['використано (шт.)', 'витрата зарядів', 'витрата']);
+                const reporter = superClean(getCol(row, ['позивний репортера', 'репортер']));
+
+                let posRaw = getCol(row, ['позиція']);
+                if (!posRaw) {
+                    let match = eventsData.find(e => dropSeconds(getCol(e, ['час події'])) === timeNoSecForSearch && superClean(getCol(e, ['позивний репортера', 'доповідач'])) === reporter);
+                    if (!match) match = eventsData.find(e => dropSeconds(getCol(e, ['час події'])) === timeNoSecForSearch && getCol(e, ['тип події']).toLowerCase().includes('вогнев'));
+                    if (match) posRaw = getCol(match, ['позиція']);
+                }
+
+                const posFormatted = getPositionFormatted(posRaw, "ВП");
+                const isOvgp = ovgpKeywords.some(k => weaponCat.toLowerCase().includes(k) || weaponName.toLowerCase().includes(k));
+
+                // Use new time format for OVGp, old format for infantry
+                const timeFormatted = isOvgp ? formatTimeForReport(timeRaw) : formatTimeForUI(timeRaw);
+
+                // For OVGp, check if we should use weapon from position mapping
+                let finalWeaponName = weaponName;
+                if (isOvgp) {
+                    const posWeapon = getPositionWeapon(posRaw, weaponName);
+                    // If Excel has generic weapon like "міномет" and position has specific weapon, use position weapon
+                    if (posWeapon && (weaponName.toLowerCase().includes('міномет') || weaponName.toLowerCase().includes('агс') || weaponName.toLowerCase().includes('спг'))) {
+                        finalWeaponName = posWeapon;
+                    }
+                }
+
+                let cas = getCasualties(row);
+                let casParts = [];
+                if (cas.t200 > 0) casParts.push(`ЗНИЩЕНО - ${cas.t200} (${getWordForNumber(cas.t200)}) В/СЛ ЗС рф`);
+                if (cas.t300 > 0) casParts.push(`ПОРАНЕНО - ${cas.t300} (${getWordForNumber(cas.t300)}) В/СЛ ЗС рф`);
+                let casText = casParts.length > 0 ? `, втрати противника: ${casParts.join(", ")}` : "";
+
+                let text = "";
+                if (isOvgp) {
+                    // Extract caliber from weapon name (e.g., "міномет 81мм" -> "81мм")
+                    let caliber = "";
+                    const caliberMatch = finalWeaponName.match(/(\d+)\s*мм/i);
+                    if (caliberMatch) caliber = caliberMatch[1] + "мм";
+
+                    const ammoNum = parseInt(used) || 0;
+
+                    // Count ammo for 81mm, 82mm and 120mm mortars
+                    if (caliber === '81мм') {
+                        ammo81mm += ammoNum;
+                    } else if (caliber === '82мм') {
+                        ammo82mm += ammoNum;
+                    } else if (caliber === '120мм') {
+                        ammo120mm += ammoNum;
+                    }
+
+                    // Count ammo for SPG, AGS, MK-19 (fuzzy matching)
+                    const weaponLower = finalWeaponName.toLowerCase();
+
+                    if (weaponLower.includes('спг') || weaponLower.includes('с-п-г') || weaponLower.includes('с п г')) {
+                        ammoSpg += ammoNum;
+                    }
+                    if (weaponLower.includes('агс') || weaponLower.includes('а-г-с') || weaponLower.includes('а г с')) {
+                        ammoAgs += ammoNum;
+                    }
+                    if (weaponLower.includes('мк-19') || weaponLower.includes('мк19') || weaponLower.includes('mk-19') || weaponLower.includes('mk19')) {
+                        ammoMk19 += ammoNum;
+                    }
+
+                    // Remove "ОВгП" from position name for OVGp tasks
+                    let posFormattedClean = posFormatted.replace(/ОВгП/g, '').replace(/ОВГП/g, '').replace(/\s+/g, ' ').trim();
+
+                    // Формат для ОВгП: позиція зброя підрозділ калібр (БК)
+                    text = `${timeFormatted} ${posFormattedClean} ${finalWeaponName} ${unitName} ${caliber} (${used}), ціль: ${target} (${coords}), результат: ${result}${casText}`;
+                } else {
+                    // Формат для піхотної зброї: координати між ціллю та результатом
+                    text = `${timeFormatted} ${posFormatted} ${unitName}, ${weaponName}, ціль: ${target} (${coords}), результат: ${result}${casText}, витрата Б/К: ${used}`;
+                }
+
+                const recordDiv = `<div class="final-record"><textarea class="record-text" rows="2">${text}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${isOvgp ? 'report-4-ovgp' : 'report-4-gen'}');">✖</button></div>`;
+
+                if (isOvgp) ovgpHtml += recordDiv;
+                else genHtml += recordDiv;
+            });
+
+            document.getElementById('report-4-ovgp').innerHTML = ovgpHtml || '';
+            document.getElementById('report-4-gen').innerHTML = genHtml || '';
+            updateCount('report-4-ovgp');
+            updateCount('report-4-gen');
+
+            // Update ammo counters with zero-hiding
+            setBadgeValueAndVisibility('ammo-81mm', ammo81mm);
+            setBadgeValueAndVisibility('ammo-82mm', ammo82mm);
+            setBadgeValueAndVisibility('ammo-120mm', ammo120mm);
+            setBadgeValueAndVisibility('ammo-spg', ammoSpg);
+            setBadgeValueAndVisibility('ammo-ags', ammoAgs);
+            setBadgeValueAndVisibility('ammo-mk19', ammoMk19);
+        }
+
+        // --- СИСТЕМНІ ---
+        window.confirmAll = function (panelClass) {
+            const items = document.querySelectorAll(`.r${panelClass}-item`);
+            items.forEach(item => {
+                if (item.style.display !== 'none' && item.style.opacity !== '0.4') {
+                    const btn = item.querySelector('.btn-add');
+                    if (btn) btn.click();
+                }
+            });
+        }
+
+        window.hideItem = function (id) { document.getElementById(id).style.display = 'none'; }
+
+        window.addRecordToFinal = function (containerId, text, crew = '') {
+            const d = document.createElement('div'); d.className = 'final-record';
+            if (crew) d.setAttribute('data-crew', crew);
+            d.innerHTML = `<textarea class="record-text" rows="2" oninput="updateCount('${containerId}')">${text}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${containerId}');">✖</button>`;
+            document.getElementById(containerId).appendChild(d);
+            updateCount(containerId);
+        }
+
+        function updateShellingHeaderCounters() {
+            const getListCount = (listId, isHitSummed) => {
+                const records = document.getElementById(listId).querySelectorAll('.record-text');
+                if (!isHitSummed) {
+                    return records.length;
+                }
+                let sum = 0;
+                records.forEach(ta => {
+                    const text = ta.value;
+                    const match = text.match(/\s\((\d+)\),\s*по\s/);
+                    if (match) {
+                        sum += parseInt(match[1]) || 1;
+                    } else {
+                        sum += 1;
+                    }
+                });
+                return sum;
+            };
+
+            const fpvCount = getListCount('report-2-fpv', true);
+            const dropCount = getListCount('report-2-drop', true);
+            const mortarCount = getListCount('report-2-mortar', false);
+            const artCount = getListCount('report-2-art', false);
+            const otherCount = getListCount('report-2-other', false);
+
+            setBadgeValueAndVisibility('shell-fpv', fpvCount);
+            setBadgeValueAndVisibility('shell-drop', dropCount);
+            setBadgeValueAndVisibility('shell-mortar', mortarCount);
+            setBadgeValueAndVisibility('shell-art', artCount);
+            setBadgeValueAndVisibility('shell-small', otherCount);
+        }
+
+        window.updateCount = function (containerId) {
+            const countSpan = document.getElementById(`count-${containerId}`);
+            if (countSpan) {
+                const count = document.getElementById(containerId).querySelectorAll('.final-record').length;
+                countSpan.innerText = `(Всього: ${count})`;
+            }
+
+            // If the updated container is one of the shelling lists, update the header counters
+            if (['report-2-fpv', 'report-2-drop', 'report-2-mortar', 'report-2-art', 'report-2-other'].includes(containerId)) {
+                updateShellingHeaderCounters();
+            }
+
+            // If the updated container is one of the UAV lists, update crew stats
+            if (['report-3-fpv', 'report-3-drop', 'report-3-heavy', 'report-3-delivery'].includes(containerId)) {
+                updateCrewStatsFromConfirmed();
+            }
+
+            // Update navigation counters
+            const navCountMap = {
+                'report-1-list': 'nav-count-1-2',
+                'report-3-1-1': 'nav-count-3-1-1',
+                'report-4-gen': 'nav-count-3-2-1',
+                'report-3-fpv': 'nav-count-3-2-2',
+                'report-3-drop': 'nav-count-3-2-2',
+                'report-3-heavy': 'nav-count-3-2-2',
+                'report-4-ovgp': 'nav-count-3-2-3',
+                'report-3-delivery': 'nav-count-3-2-7'
+            };
+
+            const navId = navCountMap[containerId];
+            if (navId) {
+                const navCountSpan = document.getElementById(navId);
+                if (navCountSpan) {
+                    // Count all records in this section
+                    let totalCount = 0;
+                    if (containerId === 'report-3-fpv' || containerId === 'report-3-drop' || containerId === 'report-3-heavy') {
+                        totalCount = document.querySelectorAll('#report-3-fpv .final-record, #report-3-drop .final-record, #report-3-heavy .final-record').length;
+                        // Also update header counters for 3.2.2
+                        document.getElementById('uav-fpv').textContent = document.querySelectorAll('#report-3-fpv .final-record').length;
+                        document.getElementById('uav-drop').textContent = document.querySelectorAll('#report-3-drop .final-record').length;
+                        document.getElementById('uav-heavy').textContent = document.querySelectorAll('#report-3-heavy .final-record').length;
+                    } else {
+                        totalCount = document.getElementById(containerId).querySelectorAll('.final-record').length;
+                    }
+                    navCountSpan.innerText = totalCount;
+                    navCountSpan.classList.toggle('non-zero', totalCount > 0);
+                    navCountSpan.classList.toggle('hidden', totalCount === 0);
+                }
+            }
+        }
+
+        window.copyReportList = function (id, btn) {
+            let t = '';
+            document.getElementById(id).querySelectorAll('.record-text').forEach((ta) => {
+                t += `${ta.value.trim()}\n`;
+            });
+            if (!t.trim()) return alert("Список порожній.");
+            navigator.clipboard.writeText(t.trim()).then(() => {
+                const ob = btn.style.backgroundColor, ot = btn.innerText;
+                btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
+                setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
+            }).catch(e => alert("Помилка: " + e));
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const uNameInput = document.getElementById('unit-name');
+            const posDictInput = document.getElementById('pos-dict');
+            const weaponDictInput = document.getElementById('weapon-dict');
+
+            if (localStorage.getItem('saved-unit-name')) uNameInput.value = localStorage.getItem('saved-unit-name');
+            if (localStorage.getItem('saved-pos-dict')) posDictInput.value = localStorage.getItem('saved-pos-dict');
+            if (localStorage.getItem('saved-weapon-dict')) weaponDictInput.value = localStorage.getItem('saved-weapon-dict');
+
+            uNameInput.addEventListener('input', function () { localStorage.setItem('saved-unit-name', this.value); });
+            posDictInput.addEventListener('input', function () { localStorage.setItem('saved-pos-dict', this.value); });
+            weaponDictInput.addEventListener('input', function () { localStorage.setItem('saved-weapon-dict', this.value); });
+
+            document.addEventListener('input', (e) => {
+                if (e.target && e.target.classList.contains('record-text')) {
+                    updateCrewStatsFromConfirmed();
+                }
+            });
+            document.addEventListener('change', (e) => {
+                if (e.target && e.target.classList.contains('record-text')) {
+                    updateCrewStatsFromConfirmed();
+                }
+            });
+
+            // MutationObserver для відстеження видалення та додавання записів у реальному часі (з Debounce)
+            let observerTimeout;
+            ['report-3-fpv', 'report-3-drop', 'report-3-heavy', 'report-3-delivery'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const observer = new MutationObserver(() => {
+                        clearTimeout(observerTimeout);
+                        observerTimeout = setTimeout(() => {
+                            updateCrewStatsFromConfirmed();
+                        }, 300); // Оновлювати статистику екіпажів не частіше ніж раз на 300мс
+                    });
+                    observer.observe(el, { childList: true, subtree: true });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аналізатор витрати БК</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Стилізація скролбару для краси */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-300 p-4 md:p-8 font-sans selection:bg-blue-500/30">
+    <div class="max-w-5xl mx-auto space-y-6">
+        
+        <header class="mb-6 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">Лічильник витрати БК</h1>
+                <p class="text-slate-400 text-sm">Вставте текст. Дані автоматично зберігаються у вашому браузері.</p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Ліва колонка -->
+            <div class="flex flex-col space-y-3">
+                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden flex flex-col h-[550px]">
+                    <div class="bg-slate-800/80 px-4 py-3 border-b border-slate-700/50 flex justify-between items-center z-10">
+                        <h2 class="font-semibold text-slate-200">Сирі дані (звіти)</h2>
+                        <button id="btn-clear" class="text-slate-400 hover:text-red-400 transition-colors p-1" title="Очистити все">
+                            <i data-lucide="trash-2" class="w-[18px] h-[18px]"></i>
+                        </button>
+                    </div>
+                    <div class="flex flex-1 overflow-hidden relative bg-slate-900/50">
+                        <div id="line-numbers" class="w-12 bg-slate-900/80 text-slate-500 font-mono text-[13px] text-right pt-4 pb-4 pr-3 border-r border-slate-800 overflow-hidden select-none" style="line-height: 1.5rem;">
+                            <!-- Номери рядків будуть тут -->
+                        </div>
+                        <textarea id="input-text" class="flex-1 w-full h-full pt-4 pb-4 px-4 font-mono text-[13px] text-slate-200 bg-transparent resize-none outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500/50 placeholder-slate-600" style="line-height: 1.5rem; white-space: pre;" wrap="off" placeholder="Вставляйте сюди текст..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Панель налаштувань -->
+                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 p-4 flex items-center space-x-3">
+                    <i data-lucide="settings" class="text-slate-500 w-5 h-5"></i>
+                    <label class="flex items-center space-x-3 cursor-pointer select-none group">
+                        <div class="relative flex items-center justify-center">
+                            <input type="checkbox" id="assume-grenade" class="peer appearance-none w-5 h-5 border-2 border-slate-600 rounded bg-slate-800 checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-1 focus:ring-offset-slate-900 transition-all cursor-pointer">
+                            <svg class="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <span class="text-sm text-slate-300 font-medium group-hover:text-slate-200 transition-colors">
+                            Рахувати згадку гранати без вказаної кількості як 1 шт.
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Права колонка -->
+            <div class="flex flex-col space-y-6">
+                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden flex flex-col">
+                    <div class="bg-blue-950/30 px-4 py-3 border-b border-blue-900/50 flex flex-wrap gap-2 justify-between items-center">
+                        <h2 class="font-semibold text-blue-400">Підсумований результат</h2>
+                        <div class="flex space-x-2">
+                            <button id="btn-download" class="flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors bg-slate-800 border border-slate-700 text-blue-400 hover:bg-slate-700 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span class="hidden sm:inline">Завантажити</span>
+                            </button>
+                            <button id="btn-copy" class="flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-slate-800 border border-slate-700 text-blue-400 hover:bg-slate-700 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed">
+                                <i data-lucide="clipboard-copy" class="w-4 h-4" id="copy-icon"></i>
+                                <span class="hidden sm:inline" id="copy-text">Копіювати</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-0 overflow-auto max-h-[500px]">
+                        <table id="results-table" class="w-full text-left border-collapse hidden">
+                            <thead>
+                                <tr class="bg-slate-800/50 border-b border-slate-700/50">
+                                    <th class="px-4 py-3 text-sm font-semibold text-slate-400">Тип боєприпасу</th>
+                                    <th class="px-4 py-3 text-sm font-semibold text-slate-400 w-32 text-right">Кількість</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-body" class="divide-y divide-slate-800/50">
+                                <!-- Результати -->
+                            </tbody>
+                        </table>
+                        
+                        <div id="no-results" class="flex flex-col items-center justify-center py-12 text-slate-600">
+                            <i data-lucide="info" class="w-12 h-12 mb-4 opacity-20"></i>
+                            <p>Немає розпізнаних даних</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Статистика опрацювання -->
+                    <div id="stats-container" class="bg-slate-900/80 px-4 py-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 hidden">
+                        <div class="flex items-center space-x-1.5">
+                            <i data-lucide="file-text" class="w-[14px] h-[14px] text-slate-500"></i>
+                            <span>Опрацьовано рядків з текстом:</span>
+                        </div>
+                        <span id="stats-numbers" class="font-mono font-medium">0 / 0</span>
+                    </div>
+                </div>
+
+                <!-- Блок з помилками -->
+                <div id="errors-container" class="bg-orange-900/20 rounded-xl border border-orange-800/50 p-4 shadow-inner hidden">
+                    <div class="flex items-start space-x-3">
+                        <i data-lucide="alert-triangle" class="text-orange-500 mt-0.5 flex-shrink-0 w-5 h-5"></i>
+                        <div class="w-full overflow-hidden">
+                            <h3 class="text-sm font-bold text-orange-400 mb-1">Потребує уваги (нерозпізнані дані):</h3>
+                            <p class="text-xs text-orange-300/80 mb-2">Ці рядки не вдалося повністю розпізнати (там є невідомий текст, зайві цифри або це пусті пропуски):</p>
+                            <ul id="errors-list" class="text-xs space-y-1 text-orange-300 font-mono bg-orange-950/40 p-2 rounded border border-orange-900/50 max-h-32 overflow-y-auto">
+                                <!-- Помилки -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="text-center text-xs text-slate-600 mt-8">
+            Підтримує: 5.45, 7.62 (x39, x51, x54), 5.56, 12 кал, 12.7 (x99, x108), 40х46, ГХО, Ф1, РГД-5, М67, РГН, ВОГ.
+        </div>
+    </div>
+
+    <script>
+        // Ініціалізація іконок
+        lucide.createIcons();
+
+        // DOM Елементи
+        const inputTextArea = document.getElementById('input-text');
+        const lineNumbersDiv = document.getElementById('line-numbers');
+        const checkboxGrenade = document.getElementById('assume-grenade');
+        const resultsTable = document.getElementById('results-table');
+        const resultsBody = document.getElementById('results-body');
+        const noResults = document.getElementById('no-results');
+        const errorsContainer = document.getElementById('errors-container');
+        const errorsList = document.getElementById('errors-list');
+        const statsContainer = document.getElementById('stats-container');
+        const statsNumbers = document.getElementById('stats-numbers');
+        const btnCopy = document.getElementById('btn-copy');
+        const btnDownload = document.getElementById('btn-download');
+        const copyText = document.getElementById('copy-text');
+
+        // Стан
+        let currentResults = [];
+
+        // Дефолтний текст (додав перевірки нових калібрів та помилок)
+        const defaultText = `10 12*70
+120 шт-5.45х39
+ручна граната Ф1-1шт, ГХО - 2
+200 7.62х54
+100 7.62*54 2 ВОГи 40*46
+150 шт-5.45х39-ф1-2шт
+40Х46 ВОГ 2 шт
+2 шт (ВОГ) 40х46
+200 12.7*99
+150 шт 12.7х108
+5 шт 12.7
+6 шт 12/7
+100 шт 12/7
+100 шт 12*7*99
+50 шт 12-7-108
+2 гранати Ф1
+2 гранати 40х46
+150 шт
+90`;
+
+        // Конфігурація типів БК (порядок дуже важливий: спочатку точні, потім загальні)
+        const ammoConfigs = [
+            // 5.45
+            { id: '5.45', name: '5.45х39 мм', idPattern: '5[.,/]45(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39)?' },
+            // 7.62
+            { id: '7.62x54', name: '7.62х54 мм', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*54' },
+            { id: '7.62x51', name: '7.62х51 мм (NATO)', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:51|52)' },
+            { id: '7.62x39', name: '7.62х39 мм', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39' },
+            { id: '7.62', name: '7.62 мм (неуточнений)', idPattern: '7[.,]62' },
+            // 5.56
+            { id: '5.56', name: '5.56х45 мм (NATO)', idPattern: '5[.,]56(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?' },
+            
+            // Гладкоствол 12х70
+            { id: '12x70', name: '12 калібр (12х70)', idPattern: '12[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*70|12[\\s\\-/]+7(?![0-9])|12[\\s\\-]*кал(?:ібр)?' },
+            
+            // Кулемети 12.7 та 14.5
+            { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99' },
+            { id: '12.7x108', name: '12.7х108 мм (ДШК/Утьос)', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*108' },
+            { id: '12.7', name: '12.7 мм (неуточнений)', idPattern: '12[.,]7' },
+            { id: '14.5', name: '14.5х114 мм (КПВТ)', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?' },
+
+            // Постріли до РПГ та легке піхотне озброєння
+            { id: 'PG7V', name: 'Постріл ПГ-7В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*7[\\s\\-_]*[vвmмsс1]*' },
+            { id: 'OG7V', name: 'Постріл ОГ-7В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]gi?|[oо]гі?)[\\s\\-_]*7[\\s\\-_]*[vвmaма]*' },
+            { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', idPattern: 'rhew[\\s\\-_]*9[\\s\\-_]*ma' },
+            { id: 'PG9V', name: 'Постріл ПГ-9В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*9[\\s\\-_]*[vв]?' },
+            { id: 'BULLSPIKE', name: 'Bullspike AT', idPattern: 'bull?spike(?:[\\s\\-]*at)?' },
+            { id: 'RPV16', name: 'РПВ-16', idPattern: 'рпв(?:[\\s\\-]*16)?(?:[\\s\\-]*01)?' },
+            { id: 'AT4', name: 'АТ-4', idPattern: '(?:ат|at)[\\s\\-]*4(?:[\\s\\-]*(?:cs|кс|сs|сз)[-_\\s]*(?:rs|рс))?' },
+            
+            // 40х46 та ВОГ
+            { id: '40x46', name: '40х46 мм', idPattern: '(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?[\\s\\-]*)?40[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*46(?:[\\s\\-]*\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?)?' },
+            { id: 'GHO', name: 'GHO', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:gho|goh|гхо|гох)[\\s\\-_]*1?\\.?' },
+            { id: 'F1', name: 'Граната Ф-1', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:mle[\\s\\-]*)?(?:ф|f)[- ]?1[aа]?' },
+            { id: 'M67', name: 'Граната М67', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:m[- ]?67|м[- ]?67)' },
+            { id: 'RGN', name: 'Граната РГН', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgn|ргн)[а-яіїєґ]*' },
+            { id: 'RGD5', name: 'Граната РГД-5', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:ргд|rgd)[\\s\\-]*5?' },
+            { id: 'RG42', name: 'Граната РГ-42', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rg|рг)[\\s\\-_]*42' },
+            { id: 'VOG', name: 'ВОГ (17/25)', idPattern: '(?:вог|vog)[а-яіїєґa-z]*[- ]?(?:17|25)?' }
+        ];
+
+        // Завантаження з LocalStorage
+        const savedData = localStorage.getItem('ammoData');
+        inputTextArea.value = savedData !== null ? savedData : defaultText;
+        checkboxGrenade.checked = localStorage.getItem('assumeOneGrenade') === 'true';
+
+        // Синхронізація скролу
+        inputTextArea.addEventListener('scroll', () => {
+            lineNumbersDiv.scrollTop = inputTextArea.scrollTop;
+        });
+
+        // Оновлення номерів рядків
+        function updateLineNumbers() {
+            const linesCount = inputTextArea.value.split('\n').length || 1;
+            let html = '';
+            for (let i = 1; i <= linesCount; i++) {
+                html += `<div>${i}</div>`;
+            }
+            lineNumbersDiv.innerHTML = html;
+        }
+
+        // Головна функція парсингу
+        function parseData() {
+            const text = inputTextArea.value;
+            localStorage.setItem('ammoData', text);
+            localStorage.setItem('assumeOneGrenade', checkboxGrenade.checked);
+            updateLineNumbers();
+
+            if (!text.trim()) {
+                renderUI([], [], 0, 0);
+                return;
+            }
+
+            const lines = text.split('\n');
+            let totals = {};
+            let unparsed = [];
+            let validLinesCount = 0;
+            let successfullyParsedCount = 0;
+            const assumeOne = checkboxGrenade.checked;
+
+            ammoConfigs.forEach(conf => {
+                totals[conf.id] = { name: conf.name, count: 0 };
+            });
+
+            // Роздільники: додано =, ., ;, / та hex-варіант слешу
+            const sep = '[\\s\\-–—:=./;\\\\x5c]*';
+            const unit = '(?:[\\s\\-]*[\\-\\\\/\\s]*шт\\.?|щт\\.?|штук[и]?|гранат[аи]?|грн)?';
+            const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ_])';
+
+            lines.forEach((line, index) => {
+                if (!line.trim()) {
+                    unparsed.push({ lineNum: index + 1, original: line, isEmpty: true });
+                    return;
+                }
+                validLinesCount++;
+                let workingLine = line.toLowerCase();
+                let matchedInLine = false;
+
+                // КРОК 1: Основний парсинг
+                ammoConfigs.forEach(conf => {
+                    const processMatch = (match, p1) => {
+                        const qty = parseInt(p1, 10);
+                        let targetId = conf.id;
+
+                        // Якщо написано просто 12.7 / 12/7 без вказання довжини гільзи:
+                        // кількість <= 25 - це рушниця (12 калібр 12х70), понад 25 - це кулемет Браунінг (12.7х99 мм)
+                        if (targetId === '12.7') {
+                            targetId = qty <= 25 ? '12x70' : '12.7x99';
+                        }
+
+                        totals[targetId].count += qty;
+                        matchedInLine = true;
+                        return ' '; 
+                    };
+
+                    const numFirstRegex = new RegExp(`${numPrefix}(\\d+)\\s*${unit}${sep}(?:${conf.idPattern})`, 'gi');
+                    workingLine = workingLine.replace(numFirstRegex, processMatch);
+
+                    const ammoFirstRegex = new RegExp(`(?:${conf.idPattern})${sep}${numPrefix}(\\d+)\\s*${unit}`, 'gi');
+                    workingLine = workingLine.replace(ammoFirstRegex, processMatch);
+                });
+
+                // КРОК 2: Гранати/постріли без кількості (якщо галочка)
+                if (assumeOne) {
+                    const implicitConfigs = ['GHO', 'F1', 'M67', 'RGN', 'RGD5', 'RG42', 'VOG', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'BULLSPIKE', 'RPV16', 'AT4'];
+                    implicitConfigs.forEach(id => {
+                        const conf = ammoConfigs.find(c => c.id === id);
+                        if (!conf) return;
+                        const regex = new RegExp(`(?:${conf.idPattern})`, 'gi');
+                        workingLine = workingLine.replace(regex, () => {
+                            totals[id].count += 1;
+                            matchedInLine = true;
+                            return ' ';
+                        });
+                    });
+                }
+
+                // КРОК 3: Правило магазинів АК (30, 60, 90, 120 і т.д.) -> йдуть в 5.45
+                const akMagsRegex = new RegExp(`${numPrefix}(30|60|90|120|150|180|210|240|270|300)\\b\\s*${unit}`, 'gi');
+                workingLine = workingLine.replace(akMagsRegex, (match, p1) => {
+                    totals['5.45'].count += parseInt(p1, 10);
+                    matchedInLine = true;
+                    return ' ';
+                });
+
+                if (matchedInLine) {
+                    successfullyParsedCount++;
+                }
+
+                // КРОК 4: Записуємо в помилки якщо нічого не знайдено АБО лишились цифри поза дужками
+                let checkLine = workingLine.replace(/\([^)]*\)/g, ' ');
+                if (!matchedInLine || /\b\d+\b/.test(checkLine)) {
+                    unparsed.push({ lineNum: index + 1, original: line, isEmpty: false });
+                }
+            });
+
+            currentResults = Object.values(totals).filter(item => item.count > 0);
+            renderUI(currentResults, unparsed, successfullyParsedCount, validLinesCount);
+        }
+
+        // Відображення результатів
+        function renderUI(results, unparsed, parsedCount, totalCount) {
+            btnCopy.disabled = results.length === 0;
+            btnDownload.disabled = results.length === 0;
+            if(results.length === 0) {
+                btnCopy.classList.add('opacity-30', 'cursor-not-allowed');
+                btnDownload.classList.add('opacity-30', 'cursor-not-allowed');
+            } else {
+                btnCopy.classList.remove('opacity-30', 'cursor-not-allowed');
+                btnDownload.classList.remove('opacity-30', 'cursor-not-allowed');
+            }
+
+            if (results.length > 0) {
+                let html = '';
+                results.forEach(item => {
+                    const formattedCount = item.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                    html += `
+                        <tr class="hover:bg-slate-800/40 transition-colors">
+                            <td class="px-4 py-3 text-sm font-medium text-slate-300">${item.name}</td>
+                            <td class="px-4 py-3 text-sm font-bold text-slate-100 text-right">
+                                ${formattedCount} <span class="text-slate-500 font-normal text-xs ml-1">шт</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+                resultsBody.innerHTML = html;
+                resultsTable.classList.remove('hidden');
+                noResults.classList.add('hidden');
+            } else {
+                resultsTable.classList.add('hidden');
+                noResults.classList.remove('hidden');
+            }
+
+            if (totalCount > 0) {
+                statsContainer.classList.remove('hidden');
+                statsNumbers.textContent = `${parsedCount} / ${totalCount}`;
+                statsNumbers.className = `font-mono font-medium ${parsedCount === totalCount ? 'text-green-400' : 'text-yellow-500'}`;
+            } else {
+                statsContainer.classList.add('hidden');
+            }
+
+            if (unparsed.length > 0) {
+                let errHtml = '';
+                unparsed.forEach(u => {
+                    const displayOriginal = u.isEmpty ? '<span class="italic opacity-50">(пустий рядок)</span>' : u.original;
+                    errHtml += `
+                        <li class="whitespace-nowrap overflow-x-auto pb-1">
+                            <span class="text-orange-500/70 select-none mr-2">Ряд. ${u.lineNum}:</span> 
+                            ${displayOriginal}
+                        </li>
+                    `;
+                });
+                errorsList.innerHTML = errHtml;
+                errorsContainer.classList.remove('hidden');
+            } else {
+                errorsContainer.classList.add('hidden');
+            }
+        }
+
+        // Слухачі подій
+        inputTextArea.addEventListener('input', parseData);
+        checkboxGrenade.addEventListener('change', parseData);
+
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            if(confirm("Дійсно очистити весь текст?")) {
+                inputTextArea.value = '';
+                parseData();
+            }
+        });
+
+        btnCopy.addEventListener('click', () => {
+            if (currentResults.length === 0) return;
+            let textToCopy = "Витрата БК:\n";
+            currentResults.forEach(r => {
+                const formattedCount = r.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                textToCopy += `${r.name}: ${formattedCount} шт.\n`;
+            });
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                copyText.textContent = "Скопійовано!";
+                btnCopy.classList.add('bg-green-900/30', 'border-green-500/30', 'text-green-400');
+                btnCopy.classList.remove('bg-slate-800', 'border-slate-700', 'text-blue-400');
+                setTimeout(() => {
+                    copyText.textContent = "Копіювати";
+                    btnCopy.classList.remove('bg-green-900/30', 'border-green-500/30', 'text-green-400');
+                    btnCopy.classList.add('bg-slate-800', 'border-slate-700', 'text-blue-400');
+                }, 2000);
+            }).catch(() => {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    copyText.textContent = "Скопійовано!";
+                    setTimeout(() => copyText.textContent = "Копіювати", 2000);
+                } catch (err) {}
+                document.body.removeChild(textArea);
+            });
+        });
+
+        btnDownload.addEventListener('click', () => {
+            if (currentResults.length === 0) return;
+            let textToSave = "ЗВІТ ПО ВИТРАТІ БК:\n" + "=".repeat(30) + "\n\n";
+            currentResults.forEach(r => {
+                const formattedCount = r.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                textToSave += `${r.name}: ${formattedCount} шт.\n`;
+            });
+            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично";
+
+            // \uFEFF гарантує, що Windows правильно прочитає кирилицю
+            const blob = new Blob(["\uFEFF" + textToSave], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "Витрата_БК_Звіт.txt";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+
+        // Перший запуск
+        parseData();
+    </script>
+</body>
+</html>

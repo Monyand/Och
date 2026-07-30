@@ -1,0 +1,2470 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedTactical - Система Обліку</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        tactical: {
+                            50: '#f4f6f0', 100: '#e5ebd9', 200: '#cbdab4', 300: '#a7c185',
+                            400: '#84a65c', 500: '#648840', 600: '#4d6c2f', 700: '#3d5427',
+                            800: '#324522', 900: '#2b3b1f', 950: '#151e0f',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f140c; color: #e5ebd9; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #151e0f; }
+        ::-webkit-scrollbar-thumb { background: #324522; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4d6c2f; }
+        
+        input[type="file"]::file-selector-button {
+            border: none; background: #4d6c2f; color: #f4f6f0; padding: 6px 12px;
+            border-radius: 4px; cursor: pointer; margin-right: 10px; font-size: 12px;
+            font-weight: bold; transition: background 0.2s;
+        }
+        input[type="file"]::file-selector-button:hover { background: #648840; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div id="root" class="flex-1 flex flex-col"></div>
+
+    <script type="text/babel" data-presets="react,env">
+        const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+        const DEFAULT_RANKS = ["Солдат", "Старший солдат", "Молодший сержант", "Сержант", "Старший сержант", "Головний сержант", "Молодший лейтенант", "Лейтенант", "Старший лейтенант", "Капітан", "Майор"];
+        const DEFAULT_UNITS = ["1-ша рота", "2-га рота", "3-тя рота", "Взвод вогневої підтримки", "Розвідвзвод", "Управління батальйону"];
+        const DEFAULT_SECTORS = ["Позиція 'Альфа'", "Позиція 'Браво'", "КСП батальйону", "Точка вивантаження", "Стабпункт"];
+        const DEFAULT_CAUSES = [
+            "Удар FPV", "Удар FPV (оптоволокно)", "Удар FPV (крило)", "Скид з БПЛА", 
+            "Скид горючої суміші з дрона", "Скид з важкого бомбера", "Обстріл з міномета, 82мм", 
+            "Обстріл з міномета, 120мм", "Обстріл з ствольної артилерії", "Підрив на ворожому мінуванні", 
+            "Стрілецька зброя", "Залишив позицію", "Нещасний випадок / Хвороба", "Інше"
+        ];
+
+        const LOSS_TYPES = [
+            "Поранення (300)", "Бойове травмування (300)", "Небойове травмування (300)", 
+            "Загибель (200)", "Небойова смерть (200)", "Зниклий безвісти (ЗБВ)", "СЗЧ", "Дезертирство"
+        ];
+        
+        const isAny300 = (type) => type && type.includes("(300)");
+        const isAwol = (type) => type === "СЗЧ" || type === "Дезертирство";
+        const isAny200 = (type) => type && type.includes("(200)");
+
+        const BODY_REGIONS = [
+            { id: 'head', name: 'Голова', x: 100, y: 35, r: 22 }, { id: 'neck', name: 'Шия', x: 100, y: 65, r: 10 },
+            { id: 'chest', name: 'Грудна клітка', x: 100, y: 105, r: 25 }, { id: 'abdomen', name: 'Живіт/Пах', x: 100, y: 155, r: 20 },
+            { id: 'arm_l', name: 'Ліва рука', x: 55, y: 120, r: 18 }, { id: 'arm_r', name: 'Права рука', x: 145, y: 120, r: 18 },
+            { id: 'leg_l', name: 'Ліва нога', x: 80, y: 220, r: 25 }, { id: 'leg_r', name: 'Права нога', x: 120, y: 220, r: 25 }
+        ];
+
+        const CHART_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'];
+
+        const Icon = ({ name, className }) => {
+            const spanRef = useRef(null);
+            useEffect(() => {
+                if (spanRef.current && window.lucide) {
+                    spanRef.current.innerHTML = '';
+                    const i = document.createElement('i');
+                    i.setAttribute('data-lucide', name);
+                    if (className) i.setAttribute('class', className);
+                    spanRef.current.appendChild(i);
+                    window.lucide.createIcons({ root: spanRef.current, nameAttr: 'data-lucide' });
+                }
+            }, [name, className]);
+            return <span ref={spanRef} style={{ display: 'contents' }}></span>;
+        };
+
+        const ChartComponent = React.memo(({ type, data, options, className, title, showLabels, showPercentages }) => {
+            const chartRef = React.useRef(null);
+            const chartInstance = React.useRef(null);
+
+            React.useEffect(() => {
+                if (chartInstance.current) chartInstance.current.destroy();
+                
+                if (window.ChartDataLabels) Chart.register(window.ChartDataLabels);
+
+                Chart.defaults.color = '#6b7280';
+                Chart.defaults.font.family = 'inherit';
+                Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(21, 30, 15, 0.9)';
+                Chart.defaults.plugins.tooltip.titleColor = '#fff';
+                Chart.defaults.plugins.tooltip.borderColor = '#324522';
+                Chart.defaults.plugins.tooltip.borderWidth = 1;
+
+                const finalOptions = {
+                    responsive: true, maintainAspectRatio: false, ...options,
+                    plugins: {
+                        ...options?.plugins,
+                        datalabels: {
+                            display: showLabels ? function(context) { return context.dataset.data[context.dataIndex] > 0; } : false,
+                            color: '#fff',
+                            font: { weight: 'bold', size: 10 },
+                            textStrokeColor: '#151e0f',
+                            textStrokeWidth: 3,
+                            formatter: function(value, context) {
+                                if (!showPercentages || (title && title.includes('час'))) return value; 
+
+                                let sum = 0;
+                                const chartType = context.chart.config.type;
+                                const isStacked = options?.scales?.x?.stacked || options?.scales?.y?.stacked;
+
+                                if (chartType === 'pie' || chartType === 'doughnut') {
+                                    sum = context.chart.data.datasets[context.datasetIndex].data.reduce((a, b) => a + b, 0);
+                                } else if (isStacked) {
+                                    context.chart.data.datasets.forEach(ds => {
+                                        sum += Number(ds.data[context.dataIndex]) || 0;
+                                    });
+                                } else {
+                                    sum = context.chart.data.datasets[context.datasetIndex].data.reduce((a, b) => a + Number(b), 0);
+                                }
+
+                                if (sum === 0) return '0%';
+                                let pct = (value / sum * 100);
+                                return pct < 1 && pct > 0 ? '<1%' : Math.round(pct) + '%';
+                            }
+                        }
+                    }
+                };
+
+                const ctx = chartRef.current.getContext('2d');
+                chartInstance.current = new Chart(ctx, { type, data, options: finalOptions });
+                
+                return () => { if (chartInstance.current) chartInstance.current.destroy(); }
+            }, [data, options, type, showLabels, showPercentages]);
+
+            const downloadImage = () => {
+                if (chartRef.current) {
+                    const canvas = chartRef.current;
+                    const destCanvas = document.createElement('canvas');
+                    destCanvas.width = canvas.width;
+                    destCanvas.height = canvas.height;
+                    const destCtx = destCanvas.getContext('2d');
+                    
+                    destCtx.fillStyle = '#151e0f'; 
+                    destCtx.fillRect(0, 0, destCanvas.width, destCanvas.height);
+                    destCtx.drawImage(canvas, 0, 0);
+                    
+                    const url = destCanvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.download = (title || 'analytics_chart') + '.png';
+                    link.href = url;
+                    link.click();
+                }
+            };
+
+            const downloadExcel = async () => {
+                if (!chartRef.current || !data || !window.ExcelJS) return;
+                try {
+                    const canvas = chartRef.current;
+                    const destCanvas = document.createElement('canvas');
+                    destCanvas.width = canvas.width;
+                    destCanvas.height = canvas.height;
+                    const destCtx = destCanvas.getContext('2d');
+                    destCtx.fillStyle = '#151e0f'; 
+                    destCtx.fillRect(0, 0, destCanvas.width, destCanvas.height);
+                    destCtx.drawImage(canvas, 0, 0);
+                    const base64Image = destCanvas.toDataURL('image/png');
+
+                    const workbook = new ExcelJS.Workbook();
+                    const cleanTitle = (title || 'Аналітика').replace(/[*?:/\\\[\]]/g, '').slice(0, 30);
+                    const worksheet = workbook.addWorksheet(cleanTitle);
+
+                    worksheet.mergeCells('A1', 'E1');
+                    const titleCell = worksheet.getCell('A1');
+                    titleCell.value = title || 'Аналітична діаграма';
+                    titleCell.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+                    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2B3B1F' } };
+                    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+                    const labels = data.labels || [];
+                    const datasets = data.datasets || [];
+                    
+                    const headerRowValues = ['Показник / Категорія', ...datasets.map(ds => ds.label || 'Значення')];
+                    if (datasets.length > 1) headerRowValues.push('Всього');
+                    
+                    worksheet.addRow([]);
+                    const headerRow = worksheet.addRow(headerRowValues);
+                    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                    headerRow.eachCell(cell => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF324522' } };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    });
+
+                    labels.forEach((label, idx) => {
+                        const rowVals = [label];
+                        let rowSum = 0;
+                        datasets.forEach(ds => {
+                            const val = Number(ds.data[idx]) || 0;
+                            rowVals.push(val);
+                            rowSum += val;
+                        });
+                        if (datasets.length > 1) rowVals.push(rowSum);
+                        const r = worksheet.addRow(rowVals);
+                        r.eachCell((cell, colNumber) => {
+                            if (colNumber > 1) cell.alignment = { horizontal: 'right' };
+                        });
+                    });
+
+                    const imageId = workbook.addImage({
+                        base64: base64Image,
+                        extension: 'png',
+                    });
+
+                    const startRow = labels.length + 5;
+                    worksheet.addImage(imageId, {
+                        tl: { col: 0, row: startRow },
+                        ext: { width: 650, height: 360 }
+                    });
+
+                    worksheet.columns.forEach(column => {
+                        let maxLength = 0;
+                        column.eachCell({ includeEmpty: true }, (cell) => {
+                            const columnLength = cell.value ? cell.value.toString().length : 10;
+                            if (columnLength > maxLength) maxLength = columnLength;
+                        });
+                        column.width = Math.max(maxLength + 4, 16);
+                    });
+
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${cleanTitle}.xlsx`;
+                    link.click();
+                } catch(err) {
+                    console.error("Excel export error:", err);
+                }
+            };
+
+            return (
+                <div className={`relative group ${className}`}>
+                    <canvas ref={chartRef}></canvas>
+                    <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition z-10">
+                        <button onClick={downloadExcel} className="p-1.5 bg-emerald-800 hover:bg-emerald-600 text-emerald-100 rounded border border-emerald-700 shadow-lg" title="Завантажити звіт в Excel (сирі дані + діаграма)">
+                            <Icon name="table" className="w-4 h-4" />
+                        </button>
+                        <button onClick={downloadImage} className="p-1.5 bg-tactical-800 hover:bg-tactical-600 text-tactical-200 hover:text-white rounded border border-tactical-700 shadow-lg" title="Завантажити графік як зображення (PNG)">
+                            <Icon name="download" className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            );
+        }, (prev, next) => {
+            return JSON.stringify(prev.data) === JSON.stringify(next.data) &&
+                   JSON.stringify(prev.options) === JSON.stringify(next.options) &&
+                   prev.type === next.type && prev.showLabels === next.showLabels && prev.showPercentages === next.showPercentages;
+        });
+
+        // --- ДОПОМІЖНІ ФУНКЦІЇ ---
+        const calculateWaitTimeUI = (dateStr) => {
+            const start = new Date(dateStr);
+            const diffMs = new Date() - start;
+            if (diffMs < 0) return "Щойно";
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            return hours >= 24 ? `${Math.floor(hours / 24)}д ${hours % 24}г` : `${hours} год`;
+        };
+
+        const getBadgeColors = (lossType, severity) => {
+            if (lossType === "Загибель (200)") return "bg-zinc-900 text-zinc-300 border-zinc-700";
+            if (lossType === "Небойова смерть (200)") return "bg-stone-900 text-stone-300 border-stone-700";
+            if (lossType === "Зниклий безвісти (ЗБВ)") return "bg-blue-950 text-blue-300 border-blue-800";
+            if (lossType === "СЗЧ") return "bg-fuchsia-950 text-fuchsia-300 border-fuchsia-800";
+            if (lossType === "Дезертирство") return "bg-pink-950 text-pink-300 border-pink-800";
+            if (severity === "Критичний") return "bg-purple-950 text-purple-300 border-purple-800 animate-pulse";
+            if (severity === "Важкий") return "bg-red-950 text-red-400 border-red-800 animate-pulse";
+            if (severity === "Середній") return "bg-amber-950 text-amber-300 border-amber-800";
+            return "bg-emerald-950 text-emerald-300 border-emerald-800";
+        };
+
+        const getLogRowStyle = (action, details) => {
+            const aLow = action.toLowerCase(), dLow = details.toLowerCase();
+            if (aLow.includes("евак") || dLow.includes("евак")) return "bg-blue-950/40 border-blue-900/60 text-blue-200 hover:bg-blue-950/60";
+            if (dLow.includes("200") || dLow.includes("збв") || dLow.includes("сзч") || dLow.includes("дезерт") || dLow.includes("загиб") || dLow.includes("смерть") || aLow.includes("видалення")) return "bg-red-950/40 border-red-900/60 text-red-200 hover:bg-red-950/60";
+            if (dLow.includes("300") || dLow.includes("травм") || dLow.includes("поран") || dLow.includes("важк") || dLow.includes("критич")) return "bg-amber-950/30 border-amber-900/40 text-amber-200 hover:bg-amber-950/50";
+            return "bg-tactical-900/20 border-tactical-800 text-tactical-300 hover:bg-tactical-900/30";
+        };
+        
+        const getInjStrUI = (inj) => {
+            if(!inj) return "";
+            const d = {amputation:'Амп.', rupture:'Розрив', shrapnel:'Уламк.', bullet:'Кульове', fracture:'Перелом', burn:'Опік', akbt:'АКБТ', contusion:'Забій'};
+            let p = [];
+            Object.entries(inj).forEach(([rId, a]) => {
+                let str = Object.keys(a).filter(k=>a[k]).map(k=>d[k]).join(', ');
+                if(str) p.push(`${BODY_REGIONS.find(r=>r.id===rId)?.name||rId}: ${str}`);
+            });
+            return p.join(' | ');
+        };
+
+        // --- УНІВЕРСАЛЬНІ UI КОМПОНЕНТИ ---
+        const FilterSection = ({ title, isOpen, toggle, children }) => (
+            <div className="space-y-1">
+                <div className="flex items-center justify-between cursor-pointer" onClick={toggle}>
+                    <span className="text-[10px] text-tactical-400 font-bold uppercase block">{title}</span>
+                    <Icon name={isOpen ? "chevron-up" : "chevron-down"} className="w-3.5 h-3.5 text-tactical-500" />
+                </div>
+                {isOpen && <div className="mt-1">{children}</div>}
+            </div>
+        );
+
+        const CheckboxList = ({ items, selected, toggle, maxH = true }) => (
+            <div className={`flex flex-col gap-1.5 bg-tactical-900/40 p-2 rounded border border-tactical-800 ${maxH ? 'max-h-32 overflow-y-auto' : ''}`}>
+                {items.map(item => {
+                    const key = typeof item === 'object' ? item.k : item;
+                    const label = typeof item === 'object' ? item.l : item;
+                    return (
+                        <label key={key} className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                            <input type="checkbox" checked={selected.includes(key)} onChange={() => toggle(key)} className="rounded bg-tactical-950 border-tactical-700 text-tactical-500 focus:ring-0 w-3.5 h-3.5" />
+                            <span className="text-tactical-200 line-clamp-1">{label}</span>
+                        </label>
+                    )
+                })}
+            </div>
+        );
+
+        function App() {
+            const [isLoading, setIsLoading] = useState(true);
+            const [soldiers, setSoldiers] = useState([]);
+            const [episodes, setEpisodes] = useState([]);
+            const [logs, setLogs] = useState([]);
+            const logsRef = useRef([]);
+            useEffect(() => { logsRef.current = logs; }, [logs]);
+            const [settings, setSettings] = useState({
+                ranks: DEFAULT_RANKS, units: DEFAULT_UNITS, sectors: DEFAULT_SECTORS, causes: DEFAULT_CAUSES
+            });
+
+            useEffect(() => {
+                const loadData = async () => {
+                    try {
+                        let savedSoldiers = await localforage.getItem('med_soldiers_v3');
+                        if (!savedSoldiers) {
+                            const ls = localStorage.getItem('med_soldiers_v3') || localStorage.getItem('med_soldiers_v2');
+                            savedSoldiers = ls ? JSON.parse(ls) : [];
+                        }
+                        
+                        let savedEpisodes = await localforage.getItem('med_episodes_v3');
+                        if (!savedEpisodes) {
+                            const ls = localStorage.getItem('med_episodes_v3') || localStorage.getItem('med_episodes_v2');
+                            savedEpisodes = ls ? JSON.parse(ls) : [];
+                        }
+                        
+                        let savedLogs = await localforage.getItem('med_logs_v3');
+                        if (!savedLogs) {
+                            const ls = localStorage.getItem('med_logs_v3') || localStorage.getItem('med_logs_v2');
+                            savedLogs = ls ? JSON.parse(ls) : [{ id: 'init', timestamp: new Date().toISOString(), action: 'Система', details: 'База створена' }];
+                        }
+                        
+                        let savedSettings = await localforage.getItem('med_settings_v3');
+                        if (!savedSettings) {
+                            const ls = localStorage.getItem('med_settings_v3') || localStorage.getItem('med_settings_v2');
+                            const oldParsed = ls ? JSON.parse(ls) : {};
+                            savedSettings = {
+                                ranks: oldParsed.ranks || DEFAULT_RANKS, units: oldParsed.units || DEFAULT_UNITS,
+                                sectors: oldParsed.sectors || DEFAULT_SECTORS, causes: oldParsed.causes || DEFAULT_CAUSES
+                            };
+                        }
+
+                        setSoldiers(savedSoldiers || []);
+                        setEpisodes(savedEpisodes || []);
+                        setLogs(savedLogs?.slice(0, 200) || []);
+                        setSettings(savedSettings);
+                        setIsLoading(false);
+                    } catch (e) {
+                        console.error("Помилка завантаження бази", e);
+                        setIsLoading(false);
+                    }
+                };
+                loadData();
+            }, []);
+
+            const [activeTab, setActiveTab] = useState("list");
+            const [showOnlyLatest, setShowOnlyLatest] = useState(true);
+
+            const [filterLossTypes, setFilterLossTypes] = useState([...LOSS_TYPES]);
+            const [filterSeverities, setFilterSeverities] = useState(["Легкий", "Середній", "Важкий", "Критичний"]);
+            const [filterEvacStatuses, setFilterEvacStatuses] = useState(["Не евакуйований", "Евакуйований", "Не потребує евакуації", "В розшуку", "Повернувся"]);
+            const [filterCauses, setFilterCauses] = useState(() => settings.causes);
+            const [searchTerm, setSearchTerm] = useState("");
+            const [filterUdp, setFilterUdp] = useState("all");
+            const [listDateFrom, setListDateFrom] = useState("");
+            const [listDateTo, setListDateTo] = useState("");
+            
+            const [history, setHistory] = useState([]);
+
+            const undoAction = useCallback(() => {
+                setHistory(prev => {
+                    if (prev.length === 0) {
+                        setTimeout(() => triggerNotification("Немає дій для скасування", "error"), 0);
+                        return prev;
+                    }
+                    const lastState = prev[prev.length - 1];
+                    setTimeout(() => {
+                        setSoldiers(lastState.soldiers);
+                        setEpisodes(lastState.episodes);
+                        // Позначаємо закресленими всі логи, що були додані після снапшоту
+                        const topId = lastState.topLogId; // null = до будь-якого логу, undefined = стара запис
+                        setLogs(currentLogs => {
+                            if (topId === undefined) return currentLogs; // стара історія без topLogId
+                            let passedAnchor = (topId === null); // null = всі логи після снапшоту
+                            return currentLogs.map(log => {
+                                if (!passedAnchor) {
+                                    // логи що йдуть до topId (новішіці, бо logs в зворотному порядку) — це і є скасовані
+                                    if (log.id === topId) { passedAnchor = true; return log; }
+                                    return { ...log, undone: true };
+                                }
+                                return log;
+                            });
+                        });
+                        triggerNotification("Останню дію скасовано (Ctrl+Z)", "success");
+                    }, 0);
+                    return prev.slice(0, -1);
+                });
+            }, []);
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.ctrlKey && (e.key === 'z' || e.key === 'Z' || e.key === 'я' || e.key === 'Я' || e.code === 'KeyZ')) {
+                        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+                        e.preventDefault();
+                        undoAction();
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [undoAction]);
+
+            const saveHistory = () => {
+                // Читаємо topLogId через ref — без вкладених setState
+                const topLogId = logsRef.current.length > 0 ? logsRef.current[0].id : null;
+                setHistory(prev => {
+                    const newHist = [...prev, { 
+                        soldiers: JSON.parse(JSON.stringify(soldiers)), 
+                        episodes: JSON.parse(JSON.stringify(episodes)),
+                        topLogId
+                    }];
+                    return newHist.slice(-15);
+                });
+            };
+
+            const [anShowLatest, setAnShowLatest] = useState(true);
+            const [anDateFrom, setAnDateFrom] = useState("");
+            const [anDateTo, setAnDateTo] = useState("");
+            const [anUdp, setAnUdp] = useState("all");
+            const [groupAnalytics, setGroupAnalytics] = useState(false);
+            
+            const [logTimeFrom, setLogTimeFrom] = useState("");
+            const [logTimeTo, setLogTimeTo] = useState("");
+
+            const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+            const [isAddWoundedOpen, setIsAddWoundedOpen] = useState(false);
+            const [isBackupOpen, setIsBackupOpen] = useState(false);
+            const [isEditOpen, setIsEditOpen] = useState(false);
+            const [isClearDbConfirmOpen, setIsClearDbConfirmOpen] = useState(false);
+            const [currentEpisode, setCurrentEpisode] = useState(null);
+            const [confirmDelete, setConfirmDelete] = useState(false);
+
+            const [formSoldierType, setFormSoldierType] = useState("new");
+            const [selectedSoldierId, setSelectedSoldierId] = useState("");
+            const [soldierSearch, setSoldierSearch] = useState("");
+            const [searchMatches, setSearchMatches] = useState([]);
+            
+            const [newSoldierName, setNewSoldierName] = useState("");
+            const [newSoldierCallsign, setNewSoldierCallsign] = useState("");
+            const [newSoldierRank, setNewSoldierRank] = useState("");
+            const [newSoldierUnit, setNewSoldierUnit] = useState("");
+
+            const [episodeDate, setEpisodeDate] = useState("");
+            const [lossType, setLossType] = useState("");
+            const [cause, setCause] = useState("");
+            const [severity, setSeverity] = useState("");
+            const [inUdp, setInUdp] = useState(false);
+            const [actualLoc, setActualLoc] = useState("");
+            const [docLoc, setDocLoc] = useState("");
+            const [notes, setNotes] = useState("");
+            const [injuries, setInjuries] = useState({});
+            
+            const [selectedRegion, setSelectedRegion] = useState("head");
+            const [evacStatus, setEvacStatus] = useState("Не евакуйований");
+            const [awolStatus, setAwolStatus] = useState("В розшуку");
+            const [evacDate, setEvacDate] = useState("");
+            
+            const [hasReport, setHasReport] = useState(false);
+            const [reportDate, setReportDate] = useState("");
+
+            const [weaponStatus, setWeaponStatus] = useState("");
+            const [fOpen, setFOpen] = useState({ dates: true, types: true, sev: true, evac: true, causes: true, udp: true, inj: false, wep: false, rep: false });
+
+            const [filterInjuries, setFilterInjuries] = useState([]);
+            const [filterWeapon, setFilterWeapon] = useState([]);
+            const [filterReport, setFilterReport] = useState("all");
+
+            const [dynFilters, setDynFilters] = useState({ 
+                show200: true, showWound: true, showCombatTr: true, 
+                showNonCombatTr: true, showMIA: true, showAWOL: true, showNonCombatDead: true 
+            });
+            const [showChartLabels, setShowChartLabels] = useState(false);
+            const [showChartPercentages, setShowChartPercentages] = useState(false);
+
+            const [backupPassword, setBackupPassword] = useState("");
+            const [importFile, setImportFile] = useState(null);
+            const [importPassword, setImportPassword] = useState("");
+            const [notification, setNotification] = useState(null);
+            const [newSettingItem, setNewSettingItem] = useState("");
+            const [activeSettingsTab, setActiveSettingsTab] = useState("causes");
+
+            const SEVERITY_COLORS = {
+                'Легкий': '#10b981',
+                'Середній': '#f59e0b',
+                'Важкий': '#ef4444',
+                'Критичний': '#a855f7',
+                'Дані відсутні': '#6b7280'
+            };
+
+            const triggerNotification = (text, type = "success") => {
+                setNotification({ text, type });
+                setTimeout(() => setNotification(null), 4000);
+            };
+
+            useEffect(() => { if (!isLoading) localforage.setItem('med_soldiers_v3', soldiers); }, [soldiers, isLoading]);
+            useEffect(() => { if (!isLoading) localforage.setItem('med_episodes_v3', episodes); }, [episodes, isLoading]);
+            useEffect(() => { if (!isLoading) localforage.setItem('med_logs_v3', logs); }, [logs, isLoading]);
+            useEffect(() => { if (!isLoading) localforage.setItem('med_settings_v3', settings); }, [settings, isLoading]);
+
+            const addLog = (action, details) => {
+                setLogs(prev => [{
+                    id: 'log_' + Date.now() + Math.random().toString(36).substring(7),
+                    timestamp: new Date().toISOString(), action, details
+                }, ...prev].slice(0, 200));
+            };
+
+            const timeFilteredEpisodes = useMemo(() => {
+                return episodes.filter(ep => {
+                    if (!listDateFrom && !listDateTo) return true;
+                    const epDate = new Date(ep.date);
+                    if (listDateFrom && epDate < new Date(listDateFrom)) return false;
+                    if (listDateTo && epDate > new Date(listDateTo)) return false;
+                    return true;
+                });
+            }, [episodes, listDateFrom, listDateTo]);
+
+            const latestEpisodesData = useMemo(() => {
+                const map = new Map();
+                [...timeFilteredEpisodes].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(ep => {
+                    map.set(ep.soldierId, ep);
+                });
+                return Array.from(map.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+            }, [timeFilteredEpisodes]);
+
+            const activeDataSource = showOnlyLatest ? latestEpisodesData : timeFilteredEpisodes;
+
+            const roundTime = (timeStr) => {
+                if(!timeStr) return "00:00";
+                let [h, m] = timeStr.split(':').map(Number);
+                if (m >= 30) h = (h + 1) % 24;
+                return `${h.toString().padStart(2, '0')}:00`;
+            };
+
+            const stats = useMemo(() => {
+                const totalEpisodes = timeFilteredEpisodes.length;
+                const uniqueSoldiersCount = latestEpisodesData.length;
+                
+                const activeEvacNeed300 = latestEpisodesData.filter(e => e.evacStatus === "Не евакуйований" && isAny300(e.lossType)).length;
+                const activeEvacNeed200_MIA = latestEpisodesData.filter(e => e.evacStatus === "Не евакуйований" && (e.lossType === 'Загибель (200)' || e.lossType === 'Небойова смерть (200)' || e.lossType === 'Зниклий безвісти (ЗБВ)')).length;
+                
+                const deadCount = latestEpisodesData.filter(e => e.lossType === 'Загибель (200)' || e.lossType === 'Небойова смерть (200)').length;
+                const miaCount = latestEpisodesData.filter(e => e.lossType === 'Зниклий безвісти (ЗБВ)').length;
+                const awolCount = latestEpisodesData.filter(e => isAwol(e.lossType) && e.awolStatus === 'В розшуку').length;
+                
+                return { totalEpisodes, uniqueSoldiersCount, activeEvacNeed300, activeEvacNeed200_MIA, deadCount, miaCount, awolCount };
+            }, [timeFilteredEpisodes, latestEpisodesData]);
+
+            const evacStats = useMemo(() => {
+                let fromDateStr = anDateFrom ? anDateFrom.substring(0, 10) : ""; 
+                let toDateStr = anDateTo ? anDateTo.substring(0, 10) : "";       
+                
+                let allEpisodes = episodes;
+                if (anShowLatest) {
+                    const map = new Map();
+                    [...episodes].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(ep => map.set(ep.soldierId, ep));
+                    allEpisodes = Array.from(map.values());
+                }
+
+                let actualEvacuatedInPeriod = 0; 
+                let evacWoundedInPeriod = 0;     
+                let evacWoundedBefore = 0;       
+                
+                let totalWoundedInPeriod = 0;    
+                let woundedInPeriodAndEvacuated = 0; 
+                let woundedInPeriodWaiting = 0;  
+                let woundedInPeriodNotNeeded = 0;
+
+                allEpisodes.forEach(ep => {
+                    const isLoss = isAny300(ep.lossType) || isAny200(ep.lossType) || ep.lossType === 'Зниклий безвісти (ЗБВ)';
+                    if (!isLoss) return; 
+
+                    const epDateObj = new Date(ep.date);
+                    const isWoundInPeriod = (!anDateFrom || epDateObj >= new Date(anDateFrom)) && (!anDateTo || epDateObj <= new Date(anDateTo));
+                    
+                    if (isWoundInPeriod) {
+                        totalWoundedInPeriod++;
+                        if (ep.evacStatus === 'Евакуйований') woundedInPeriodAndEvacuated++;
+                        else if (ep.evacStatus === 'Не евакуйований') woundedInPeriodWaiting++;
+                        else if (ep.evacStatus === 'Не потребує евакуації') woundedInPeriodNotNeeded++;
+                    }
+
+                    if (ep.evacStatus === 'Евакуйований' && ep.evacTime) {
+                        const isEvacInPeriod = (!fromDateStr || ep.evacTime >= fromDateStr) && (!toDateStr || ep.evacTime <= toDateStr);
+                        if (isEvacInPeriod) {
+                            actualEvacuatedInPeriod++;
+                            if (isWoundInPeriod) {
+                                evacWoundedInPeriod++;
+                            } else if (fromDateStr && epDateObj < new Date(anDateFrom)) {
+                                evacWoundedBefore++;
+                            }
+                        }
+                    }
+                });
+
+                return { 
+                    actualEvacuatedInPeriod, evacWoundedInPeriod, evacWoundedBefore,
+                    totalWoundedInPeriod, woundedInPeriodAndEvacuated, woundedInPeriodWaiting, woundedInPeriodNotNeeded
+                };
+            }, [episodes, anDateFrom, anDateTo, anShowLatest]);
+
+            const anFilteredEpisodes = useMemo(() => {
+                let filtered = episodes.filter(ep => {
+                    if (anDateFrom && new Date(ep.date) < new Date(anDateFrom)) return false;
+                    if (anDateTo && new Date(ep.date) > new Date(anDateTo)) return false;
+                    if (anUdp !== "all") {
+                        if (anUdp === "yes" && !ep.inUdp) return false;
+                        if (anUdp === "no" && ep.inUdp) return false;
+                    }
+                    return true;
+                });
+                if (anShowLatest) {
+                    const map = new Map();
+                    filtered.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(ep => map.set(ep.soldierId, ep));
+                    filtered = Array.from(map.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+                }
+                return filtered;
+            }, [episodes, anDateFrom, anDateTo, anUdp, anShowLatest]);
+
+            const chartData = useMemo(() => {
+                const anFiltered = anFilteredEpisodes;
+
+                // Ініціалізація карти часу (24 години)
+                const timeMap = {};
+                for (let i = 0; i < 24; i++) {
+                    const hr = i.toString().padStart(2, '0') + ":00";
+                    timeMap[hr] = { '200': 0, 'Неб. смерть': 0, 'Поранення': 0, 'Бойове': 0, 'Небойове': 0, 'ЗБВ': 0, 'СЗЧ': 0, 'Дезертирство': 0 };
+                }
+                
+                let c200 = 0, c200nc = 0, cWound = 0, cCombat = 0, cNonCombat = 0, cMia = 0, cAwol = 0, cDesert = 0;
+                const dGroups = {};
+                const rCounts = {};
+                const uCounts = {};
+                const sevCounts = {};
+                const aLocCounts = {};
+                const aLocSevCounts = {};
+                const aLocCauseCounts = {}; 
+                const activeCausesSet = new Set();
+                
+                const injuryStats = { 'Ампутація':0, 'Розрив':0, 'Уламкове':0, 'Кульове':0, 'Перелом':0, 'Опік':0, 'АКБТ':0, 'Забій':0 };
+
+                const evacDaysSum = { 'Критичний': 0, 'Важкий': 0, 'Середній': 0, 'Легкий': 0, '200 (Тіла)': 0 };
+                const evacDaysCount = { 'Критичний': 0, 'Важкий': 0, 'Середній': 0, 'Легкий': 0, '200 (Тіла)': 0 };
+
+                let evac200 = 0, evac300 = 0, notEvac200 = 0, notEvac300 = 0;
+
+                anFiltered.forEach(d => {
+                    let effType = d.lossType;
+                    if (groupAnalytics) {
+                        if (effType === 'Зниклий безвісти (ЗБВ)') effType = 'Загибель (200)';
+                        if (effType === 'Бойове травмування (300)') effType = 'Поранення (300)';
+                    }
+
+                    const isEp200 = isAny200(effType) || effType === 'Зниклий безвісти (ЗБВ)';
+                    const isEp300 = isAny300(effType);
+                    
+                    if (d.evacStatus === 'Евакуйований') {
+                        if (isEp200) evac200++;
+                        if (isEp300) evac300++;
+                    } else if (d.evacStatus === 'Не евакуйований') {
+                        if (isEp200) notEvac200++;
+                        if (isEp300) notEvac300++;
+                    }
+
+                    const epTime = d.date.split('T')[1] || "00:00"; 
+                    const roundedHhMm = roundTime(epTime.substring(0, 5));
+                    
+                    const day = d.date.split('T')[0];
+                    if (!dGroups[day]) dGroups[day] = { '200': 0, 'Неб. смерть': 0, 'Поранення': 0, 'Бойове': 0, 'Небойове': 0, 'ЗБВ': 0, 'СЗЧ': 0, 'Дезертирство': 0 };
+
+                    let typeKey = '';
+                    if (effType === 'Загибель (200)') { typeKey = '200'; c200++; }
+                    else if (effType === 'Небойова смерть (200)') { typeKey = 'Неб. смерть'; c200nc++; }
+                    else if (effType === 'Поранення (300)') { typeKey = 'Поранення'; cWound++; }
+                    else if (effType === 'Бойове травмування (300)') { typeKey = 'Бойове'; cCombat++; }
+                    else if (effType === 'Небойове травмування (300)') { typeKey = 'Небойове'; cNonCombat++; }
+                    else if (effType === 'Зниклий безвісти (ЗБВ)') { typeKey = 'ЗБВ'; cMia++; }
+                    else if (effType === 'СЗЧ') { typeKey = 'СЗЧ'; cAwol++; }
+                    else if (effType === 'Дезертирство') { typeKey = 'Дезертирство'; cDesert++; }
+
+                    if (typeKey) {
+                        if (timeMap[roundedHhMm]) timeMap[roundedHhMm][typeKey]++;
+                        dGroups[day][typeKey]++;
+                    }
+
+                    const soldier = soldiers.find(s => s.id === d.soldierId);
+                    const unit = d.unit || (soldier && soldier.unit ? soldier.unit : 'Невідомо');
+                    const causeStr = d.cause || 'Не вказано';
+                    if (d.cause) activeCausesSet.add(d.cause);
+                    
+                    if (!uCounts[unit]) uCounts[unit] = { '200':0, 'Неб. смерть':0, 'Поранення':0, 'Бойове':0, 'Небойове':0, 'ЗБВ':0, 'СЗЧ':0, 'Дезертирство':0 };
+                    if (typeKey) uCounts[unit][typeKey]++;
+
+                    if (!rCounts[causeStr]) rCounts[causeStr] = { '200':0, 'Неб. смерть':0, 'Поранення':0, 'Бойове':0, 'Небойове':0, 'ЗБВ':0, 'СЗЧ':0, 'Дезертирство':0 };
+                    if (typeKey) rCounts[causeStr][typeKey]++;
+
+                    if (isAny300(d.lossType) && d.severity) sevCounts[d.severity] = (sevCounts[d.severity] || 0) + 1;
+                    
+                    const loc = d.actualLoc || 'Не вказано';
+                    
+                    if (!aLocCounts[loc]) aLocCounts[loc] = { '200':0, 'Неб. смерть':0, 'Поранення':0, 'Бойове':0, 'Небойове':0, 'ЗБВ':0, 'СЗЧ':0, 'Дезертирство':0 };
+                    if (typeKey) aLocCounts[loc][typeKey]++;
+
+                    if (isAny300(d.lossType) && d.severity) {
+                        if (!aLocSevCounts[loc]) aLocSevCounts[loc] = { 'Легкий':0, 'Середній':0, 'Важкий':0, 'Критичний':0 };
+                        aLocSevCounts[loc][d.severity]++;
+                    }
+
+                    if (!aLocCauseCounts[loc]) aLocCauseCounts[loc] = {};
+                    if (!aLocCauseCounts[loc][causeStr]) aLocCauseCounts[loc][causeStr] = 0;
+                    aLocCauseCounts[loc][causeStr]++;
+
+                    if (d.injuries) {
+                        let epInjs = { 'Ампутація':false, 'Розрив':false, 'Уламкове':false, 'Кульове':false, 'Перелом':false, 'Опік':false, 'АКБТ':false, 'Забій':false };
+                        Object.values(d.injuries).forEach(reg => {
+                            if(reg.amputation) epInjs['Ампутація'] = true;
+                            if(reg.rupture) epInjs['Розрив'] = true;
+                            if(reg.shrapnel) epInjs['Уламкове'] = true;
+                            if(reg.bullet) epInjs['Кульове'] = true;
+                            if(reg.fracture) epInjs['Перелом'] = true;
+                            if(reg.burn) epInjs['Опік'] = true;
+                            if(reg.akbt) epInjs['АКБТ'] = true;
+                            if(reg.contusion) epInjs['Забій'] = true;
+                        });
+                        Object.keys(epInjs).forEach(k => { if(epInjs[k]) injuryStats[k]++; });
+                    }
+
+                    if (d.evacStatus === "Евакуйований" && d.evacTime) {
+                        const epDate = new Date(d.date.split('T')[0]); 
+                        const evDate = new Date(d.evacTime);
+                        let diffDays = Math.max(0, Math.floor((evDate - epDate) / (1000 * 60 * 60 * 24)));
+
+                        if (isAny200(d.lossType)) {
+                            evacDaysSum['200 (Тіла)'] += diffDays;
+                            evacDaysCount['200 (Тіла)']++;
+                        } else if (isAny300(d.lossType) && d.lossType !== 'Небойове травмування (300)') {
+                            if (d.severity && evacDaysSum[d.severity] !== undefined) {
+                                evacDaysSum[d.severity] += diffDays;
+                                evacDaysCount[d.severity]++;
+                            }
+                        }
+                    }
+                });
+
+                const activeDates = Object.keys(dGroups).sort();
+                if (activeDates.length > 0) {
+                    // Визначаємо початок і кінець в мілісекундах (в UTC для уникнення зсувів часового поясу)
+                    const startMs = new Date(activeDates[0] + "T00:00:00Z").getTime();
+                    const endMs = new Date(activeDates[activeDates.length - 1] + "T00:00:00Z").getTime();
+                    
+                    // Крокуємо по 24 години (86400000 мс)
+                    for (let t = startMs; t <= endMs; t += 86400000) {
+                        const dateStr = new Date(t).toISOString().split('T')[0];
+                        // Якщо дати немає в масиві, створюємо її з нульовими показниками
+                        if (!dGroups[dateStr]) {
+                            dGroups[dateStr] = { '200': 0, 'Неб. смерть': 0, 'Поранення': 0, 'Бойове': 0, 'Небойове': 0, 'ЗБВ': 0, 'СЗЧ': 0, 'Дезертирство': 0 };
+                        }
+                    }
+                }
+
+                const sortByTotal = (obj) => {
+                    return Object.keys(obj).sort((a, b) => {
+                        const sumA = Object.values(obj[a]).reduce((acc, val) => acc + val, 0);
+                        const sumB = Object.values(obj[b]).reduce((acc, val) => acc + val, 0);
+                        return sumB - sumA;
+                    });
+                };
+
+                const evacLabels = ['Критичний', 'Важкий', 'Середній', 'Легкий', '200 (Тіла)'];
+                const evacChartDataConfig = {
+                    labels: evacLabels,
+                    datasets: [{
+                        label: 'Середній час (днів)',
+                        data: evacLabels.map(l => evacDaysCount[l] > 0 ? (evacDaysSum[l] / evacDaysCount[l]).toFixed(1) : 0),
+                        backgroundColor: ['#a855f7', '#ef4444', '#f59e0b', '#10b981', '#71717a'],
+                        borderRadius: 4
+                    }]
+                };
+
+                const evacStatusData = {
+                    labels: ['Евакуйовані', 'В черзі (Не евак.)'],
+                    datasets: [
+                        { label: '200 / ЗБВ', data: [evac200, notEvac200], backgroundColor: '#71717a' },
+                        { label: '300 (Всі)', data: [evac300, notEvac300], backgroundColor: '#ef4444' }
+                    ]
+                };
+
+                const sortedLocs = sortByTotal(aLocCounts);
+                const activeCauses = Array.from(activeCausesSet);
+                
+                const causeColors = {};
+                settings.causes.forEach((c, i) => { causeColors[c] = CHART_COLORS[i % CHART_COLORS.length]; });
+                let extraIdx = settings.causes.length;
+                activeCauses.forEach(c => {
+                    if (!causeColors[c]) { causeColors[c] = CHART_COLORS[extraIdx % CHART_COLORS.length]; extraIdx++; }
+                });
+
+                const locCauseDatasets = activeCauses.map((cause) => ({
+                    label: cause,
+                    data: sortedLocs.map(l => aLocCauseCounts[l][cause] || 0),
+                    backgroundColor: causeColors[cause]
+                }));
+
+                const sortedReasons = sortByTotal(rCounts);
+
+                return {
+                    totalEpisodes: anFiltered.length,
+                    time: { labels: Object.keys(timeMap).sort(), timeMap },
+                    types: { c200, c200nc, cWound, cCombat, cNonCombat, cMia, cAwol, cDesert },
+                    dynamics: { dates: Object.keys(dGroups).sort(), dGroups },
+                    units: { labels: sortByTotal(uCounts), data: uCounts },
+                    reasons: { labels: sortedReasons, data: rCounts },
+                    severity: Object.keys(sevCounts).length ? sevCounts : { 'Дані відсутні': 1 },
+                    actLocs: { labels: sortedLocs, data: aLocCounts },
+                    actLocsSev: { labels: sortByTotal(aLocSevCounts), data: aLocSevCounts },
+                    locCause: { labels: sortedLocs, datasets: locCauseDatasets },
+                    injuryStats,
+                    evacChartDataConfig,
+                    evacStatusData,
+                    causeColors
+                };
+            }, [anFilteredEpisodes, soldiers, groupAnalytics]);
+
+            const handleExportAnalyticsExcel = async () => {
+                if (typeof ExcelJS === 'undefined') {
+                    triggerNotification("Бібліотека ExcelJS ще не завантажилась. Перевірте з'єднання з Інтернетом.", "error");
+                    return;
+                }
+                const workbook = new ExcelJS.Workbook();
+                workbook.creator = 'MedTactical';
+                workbook.lastModifiedBy = 'System';
+                workbook.created = new Date();
+                
+                const sheet1 = workbook.addWorksheet('Загальна статистика');
+                sheet1.columns = [
+                    { header: 'Всього епізодів', key: 'total', width: 20 },
+                    { header: 'Бойові (200)', key: 'c200', width: 15 },
+                    { header: 'Небойові (200)', key: 'c200nc', width: 15 },
+                    { header: 'Поранення (300)', key: 'cWound', width: 20 },
+                    { header: 'Бойові травми', key: 'cCombat', width: 15 },
+                    { header: 'Небойові травми', key: 'cNonCombat', width: 20 },
+                    { header: 'ЗБВ', key: 'cMia', width: 10 },
+                    { header: 'СЗЧ', key: 'cAwol', width: 10 },
+                    { header: 'Дезертирство', key: 'cDesert', width: 15 }
+                ];
+                sheet1.getRow(1).font = { bold: true };
+                sheet1.addRow({
+                    total: chartData.totalEpisodes, c200: chartData.types.c200, c200nc: chartData.types.c200nc,
+                    cWound: chartData.types.cWound, cCombat: chartData.types.cCombat, cNonCombat: chartData.types.cNonCombat,
+                    cMia: chartData.types.cMia, cAwol: chartData.types.cAwol, cDesert: chartData.types.cDesert
+                });
+
+                const sheet2 = workbook.addWorksheet('Дані для графіків');
+                sheet2.columns = [
+                    { header: 'Тип втрати', key: 'tL', width: 20 }, { header: 'К-сть', key: 'tC', width: 10 }, { header: '', key: 's1', width: 5 },
+                    { header: 'Підрозділ', key: 'uL', width: 25 }, { header: 'К-сть', key: 'uC', width: 10 }, { header: '', key: 's2', width: 5 },
+                    { header: 'Причина', key: 'cL', width: 25 }, { header: 'К-сть', key: 'cC', width: 10 }, { header: '', key: 's3', width: 5 },
+                    { header: 'Час доби', key: 'timeL', width: 15 }, { header: 'К-сть', key: 'timeC', width: 10 }
+                ];
+                sheet2.getRow(1).font = { bold: true };
+
+                const tL = ['Бойові (200)', 'Небойові (200)', 'Бойові (300)', 'Небойові (300)', 'Поранення', 'ЗБВ', 'СЗЧ', 'Дезертирство'];
+                const tC = [chartData.types.c200, chartData.types.c200nc, chartData.types.cCombat, chartData.types.cNonCombat, chartData.types.cWound, chartData.types.cMia, chartData.types.cAwol, chartData.types.cDesert];
+                const uL = chartData.units.labels || [];
+                const cL = chartData.reasons.labels || [];
+                const timeL = chartData.time.labels || [];
+
+                const maxR = Math.max(tL.length, uL.length, cL.length, timeL.length);
+                for (let i = 0; i < maxR; i++) {
+                    const u = uL[i];
+                    let uVal = '';
+                    if (u && chartData.units.data[u]) {
+                        const d = chartData.units.data[u];
+                        uVal = d['200']+d['Неб. смерть']+d['Поранення']+d['Бойове']+d['Небойове']+d['ЗБВ']+d['СЗЧ']+d['Дезертирство'];
+                    }
+                    sheet2.addRow({
+                        tL: tL[i] || '', tC: tC[i] !== undefined ? tC[i] : '',
+                        uL: u || '', uC: uVal,
+                        cL: cL[i] || '', cC: cL[i] ? chartData.reasons.data[cL[i]] : '',
+                        timeL: timeL[i] || '', timeC: timeL[i] ? chartData.time.timeMap[timeL[i]] : ''
+                    });
+                }
+
+                const sheet3 = workbook.addWorksheet('Детальний реєстр');
+                sheet3.columns = [
+                    { header: 'Дата/Час', key: 'date', width: 15 },
+                    { header: 'Звання', key: 'rank', width: 15 },
+                    { header: 'ПІБ', key: 'name', width: 25 },
+                    { header: 'Позивний', key: 'callsign', width: 15 },
+                    { header: 'Підрозділ', key: 'unit', width: 20 },
+                    { header: 'Тип втрати', key: 'lossType', width: 20 },
+                    { header: 'Важкість', key: 'severity', width: 15 },
+                    { header: 'Причина', key: 'cause', width: 20 },
+                    { header: 'Фактичне місце', key: 'loc', width: 25 },
+                    { header: 'Евакуація / СЗЧ', key: 'status', width: 20 },
+                    { header: 'Зброя', key: 'weapon', width: 15 },
+                    { header: 'Рапорт', key: 'report', width: 20 },
+                    { header: 'Травми', key: 'inj', width: 35 }
+                ];
+                sheet3.getRow(1).font = { bold: true };
+
+                anFilteredEpisodes.forEach(ep => {
+                    const s = soldiers.find(x => x.id === ep.soldierId) || {};
+                    sheet3.addRow({
+                        date: ep.date.replace('T', ' '),
+                        rank: s.rank || '',
+                        name: s.name || '',
+                        callsign: s.callsign || '',
+                        unit: s.unit || '',
+                        lossType: ep.lossType || '',
+                        severity: ep.severity || '',
+                        cause: ep.cause || '',
+                        loc: ep.actualLoc || '',
+                        status: isAwol(ep.lossType) ? (ep.awolStatus || '') : (ep.evacStatus || ''),
+                        weapon: ep.weaponStatus || '-',
+                        report: ep.hasReport ? `Складено (${ep.reportDate || "-"})` : "Ні",
+                        inj: getInjStrUI(ep.injuries)
+                    });
+                });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `Analytics_Report_${new Date().toLocaleDateString('en-CA')}.xlsx`;
+                link.click();
+            };
+
+            const toggleFilterItem = (list, setList, item) => {
+                if (list.includes(item)) setList(list.filter(i => i !== item));
+                else setList([...list, item]);
+            };
+
+            const resetAllFilters = () => {
+                setSearchTerm("");
+                setFilterLossTypes([...LOSS_TYPES]);
+                setFilterSeverities(["Легкий", "Середній", "Важкий", "Критичний"]);
+                setFilterEvacStatuses(["Не евакуйований", "Евакуйований", "Не потребує евакуації", "В розшуку", "Повернувся"]);
+                setFilterCauses(settings.causes);
+                setFilterUdp("all");
+                setFilterInjuries([]);
+                setFilterWeapon([]);
+                setFilterReport("all");
+                setListDateFrom("");
+                setListDateTo("");
+            };
+
+            const resetAnalyticsFilters = () => {
+                setAnDateFrom(""); setAnDateTo(""); setAnUdp("all"); setAnShowLatest(true); setGroupAnalytics(false);
+            };
+
+            const filteredList = useMemo(() => {
+                return activeDataSource.filter(episode => {
+                    const soldier = soldiers.find(s => s.id === episode.soldierId);
+                    if (!soldier) return false;
+
+                    const searchStr = `${soldier.name} ${soldier.callsign} ${episode.actualLoc}`.toLowerCase();
+                    const matchSearch = searchStr.includes(searchTerm.toLowerCase());
+                    const matchLoss = filterLossTypes.includes(episode.lossType);
+                    const matchSeverity = isAny300(episode.lossType) ? filterSeverities.includes(episode.severity) : true;
+                    const currentStatus = isAwol(episode.lossType) ? episode.awolStatus : episode.evacStatus;
+                    const matchEvac = filterEvacStatuses.includes(currentStatus);
+                    const matchCause = filterCauses.includes(episode.cause);
+                    const matchUdp = filterUdp === "all" ? true : (filterUdp === "yes" ? episode.inUdp : !episode.inUdp);
+                    
+                    const matchWeapon = filterWeapon.length === 0 || filterWeapon.includes(episode.weaponStatus || "Не вказано");
+                    const matchReport = filterReport === "all" ? true : (filterReport === "yes" ? episode.hasReport : !episode.hasReport);
+                    const matchInjury = filterInjuries.length === 0 || (
+                        isAny300(episode.lossType) && filterInjuries.some(injKey => 
+                            episode.injuries && Object.values(episode.injuries).some(region => region[injKey])
+                        )
+                    );
+
+                    return matchSearch && matchLoss && matchSeverity && matchEvac && matchCause && matchUdp && matchWeapon && matchReport && matchInjury;
+                }).sort((a, b) => new Date(b.date) - new Date(a.date));
+            }, [activeDataSource, soldiers, searchTerm, filterLossTypes, filterSeverities, filterEvacStatuses, filterCauses, filterUdp, filterWeapon, filterReport, filterInjuries]);
+
+            const filteredLogs = useMemo(() => {
+                return logs.filter(log => {
+                    if (!logTimeFrom && !logTimeTo) return true;
+                    const logDate = new Date(log.timestamp);
+                    if (logTimeFrom && logDate < new Date(logTimeFrom)) return false;
+                    if (logTimeTo && logDate > new Date(logTimeTo)) return false;
+                    return true;
+                });
+            }, [logs, logTimeFrom, logTimeTo]);
+
+            const handleOpenAddWounded = (preselectedSoldierId = null) => {
+                if (preselectedSoldierId) {
+                    const s = soldiers.find(x => x.id === preselectedSoldierId);
+                    if (s) {
+                        setSelectedSoldierId(s.id);
+                        setSearchMatches([]);
+                        setNewSoldierName(s.name);
+                        setNewSoldierCallsign(s.callsign);
+                        setNewSoldierRank(s.rank);
+                        setNewSoldierUnit(s.unit);
+                    }
+                } else {
+                    setSelectedSoldierId("");
+                    setSearchMatches([]);
+                    setNewSoldierName("");
+                    setNewSoldierCallsign("");
+                    setNewSoldierRank("");
+                    setNewSoldierUnit("");
+                }
+                
+                setEpisodeDate("");
+                setLossType("");
+                setCause("");
+                setSeverity("");
+                setInUdp(false);
+                setActualLoc("");
+                setDocLoc("");
+                setNotes("");
+                setInjuries({});
+                setEvacStatus("Не евакуйований");
+                setAwolStatus("В розшуку");
+                setEvacDate(""); 
+                setHasReport(false);
+                setReportDate("");
+                setWeaponStatus("");
+                
+                setIsAddWoundedOpen(true);
+            };
+
+            const handleSmartInput = (field, value) => {
+                if (field === 'name') setNewSoldierName(value);
+                if (field === 'callsign') setNewSoldierCallsign(value);
+                setSelectedSoldierId(""); // clear selected id if user manually types
+                
+                const queryName = field === 'name' ? value : newSoldierName;
+                const queryCall = field === 'callsign' ? value : newSoldierCallsign;
+                
+                if (queryName.trim().length > 1 || queryCall.trim().length > 1) {
+                    const matches = soldiers.filter(s => {
+                        const mName = queryName.trim() && s.name.toLowerCase().includes(queryName.trim().toLowerCase());
+                        const mCall = queryCall.trim() && s.callsign.toLowerCase().includes(queryCall.trim().toLowerCase());
+                        return mName || mCall;
+                    });
+                    setSearchMatches(matches);
+                } else {
+                    setSearchMatches([]);
+                }
+            };
+
+            const selectExistingSoldier = (s) => {
+                setSelectedSoldierId(s.id);
+                setSearchMatches([]);
+                setNewSoldierName(s.name);
+                setNewSoldierCallsign(s.callsign);
+                setNewSoldierRank(s.rank);
+                setNewSoldierUnit(s.unit);
+            };
+
+            const clearSelectedSoldier = () => {
+                setSelectedSoldierId("");
+                setNewSoldierName("");
+                setNewSoldierCallsign("");
+                setNewSoldierRank("");
+                setNewSoldierUnit("");
+            };
+
+            const toggleInjuryType = (regionId, type) => {
+                setInjuries(prev => {
+                    const regionObj = prev[regionId] || { amputation: false, rupture: false, shrapnel: false, bullet: false, fracture: false, burn: false, akbt: false, contusion: false };
+                    return { ...prev, [regionId]: { ...regionObj, [type]: !regionObj[type] } };
+                });
+            };
+
+            const hasAnyInjury = (regionId) => {
+                const reg = injuries && injuries[regionId];
+                if (!reg) return false;
+                return reg.amputation || reg.rupture || reg.shrapnel || reg.bullet || reg.fracture || reg.burn || reg.akbt || reg.contusion;
+            };
+
+            const handleSaveWounded = (e) => {
+                e.preventDefault();
+                
+                if(!episodeDate) return triggerNotification("Вкажіть точну дату та час події", "error");
+                if(!lossType) return triggerNotification("Оберіть тип події", "error");
+                if(!cause) return triggerNotification("Оберіть причину", "error");
+                if(isAny300(lossType) && !severity) return triggerNotification("Оберіть важкість", "error");
+
+                saveHistory();
+
+                let finalSoldierId = selectedSoldierId;
+
+                if (!finalSoldierId) {
+                    const exactMatch = soldiers.find(s => 
+                        s.name.trim().toLowerCase() === newSoldierName.trim().toLowerCase() && 
+                        s.callsign.trim().toLowerCase() === newSoldierCallsign.trim().toLowerCase()
+                    );
+                    if (exactMatch) finalSoldierId = exactMatch.id;
+                }
+
+                if (!finalSoldierId) {
+                    if (!newSoldierName.trim() || !newSoldierCallsign.trim() || !newSoldierUnit) {
+                        return triggerNotification("ПІБ, Позивний та Підрозділ є обов'язковими (Звання - за бажанням)", "error");
+                    }
+                    
+                    const duplicateCallsign = soldiers.find(s => s.callsign.trim().toLowerCase() === newSoldierCallsign.trim().toLowerCase() && newSoldierCallsign.trim().length > 0);
+                    if (duplicateCallsign) {
+                        return triggerNotification("Увага! Такий позивний вже існує в базі, але ПІБ відрізняється. Перевірте дані.", "error");
+                    }
+
+                    const newSoldierId = 'sol_' + Date.now();
+                    const newSoldierObj = { id: newSoldierId, name: newSoldierName.trim(), callsign: newSoldierCallsign.trim(), rank: newSoldierRank || "Не вказано", unit: newSoldierUnit };
+                    setSoldiers(prev => [...prev, newSoldierObj]);
+                    finalSoldierId = newSoldierId;
+                    addLog("Новий в/сл", `Створено: ${newSoldierRank || ""} ${newSoldierName} «${newSoldierCallsign}»`);
+                } else {
+                    setSoldiers(prev => prev.map(s => {
+                        if (s.id === finalSoldierId) {
+                            return { ...s, rank: newSoldierRank || s.rank, unit: newSoldierUnit || s.unit };
+                        }
+                        return s;
+                    }));
+                }
+
+                const existingEpisodes = episodes.filter(ep => ep.soldierId === finalSoldierId).sort((a,b) => new Date(b.date) - new Date(a.date));
+                if (existingEpisodes.length > 0) {
+                    const lastEp = existingEpisodes[0];
+                    if (isAny200(lastEp.lossType)) return triggerNotification("Боєць зафіксований як 200. Нових подій додавати не можна.", "error");
+                }
+
+                const soldierObj = soldiers.find(s => s.id === finalSoldierId) || { callsign: newSoldierCallsign };
+                const is300 = isAny300(lossType);
+                const todayStrDate = new Date().toLocaleDateString('en-CA');
+
+                const newEpisode = {
+                    id: 'ep_' + Date.now(),
+                    soldierId: finalSoldierId, date: episodeDate, lossType, cause,
+                    severity: is300 ? severity : null,
+                    rank: newSoldierRank || soldierObj.rank || "Не вказано",
+                    unit: newSoldierUnit || soldierObj.unit || "Не вказано",
+                    inUdp, actualLoc, docLoc,
+                    injuries: is300 ? injuries : {},
+                    notes, evacStatus, awolStatus, weaponStatus,
+                    evacTime: (evacStatus === 'Евакуйований' || awolStatus === 'Повернувся') ? (evacDate || todayStrDate) : "",
+                    hasReport, reportDate: hasReport ? (reportDate || todayStrDate) : ""
+                };
+
+                setEpisodes(prev => [newEpisode, ...prev]);
+                addLog("Нова подія", `Зафіксовано ${lossType} у в/сл "${soldierObj.callsign}". Причина: ${cause}.`);
+                
+                setIsAddWoundedOpen(false);
+                triggerNotification("Запис успішно додано");
+            };
+
+            const handleStartEdit = (episode) => {
+                const soldier = soldiers.find(s => s.id === episode.soldierId);
+                setCurrentEpisode(episode);
+                setSelectedSoldierId(episode.soldierId);
+                setSoldierSearch(soldier ? `${soldier.name} «${soldier.callsign}»` : "");
+                setSearchMatches([]);
+                setNewSoldierName(soldier?.name || "");
+                setNewSoldierCallsign(soldier?.callsign || "");
+                setNewSoldierRank(soldier?.rank || "");
+                setNewSoldierUnit(soldier?.unit || "");
+                setEpisodeDate(episode.date);
+                setLossType(episode.lossType || "");
+                setCause(episode.cause || "");
+                setSeverity(episode.severity || "");
+                setInUdp(episode.inUdp);
+                setActualLoc(episode.actualLoc || "");
+                setDocLoc(episode.docLoc || "");
+                setNotes(episode.notes || "");
+                setInjuries(episode.injuries || {});
+                setEvacStatus(episode.evacStatus || "Не евакуйований");
+                setAwolStatus(episode.awolStatus || "В розшуку");
+                
+                let evT = episode.evacTime || "";
+                if (evT.length > 10) evT = evT.split('T')[0];
+                setEvacDate(evT);
+                
+                setHasReport(episode.hasReport || false);
+                setReportDate(episode.reportDate || "");
+                setWeaponStatus(episode.weaponStatus || "");
+                setConfirmDelete(false);
+                setIsEditOpen(true);
+            };
+
+            const handleUpdateWounded = (e) => {
+                e.preventDefault();
+                if (!currentEpisode) return;
+
+                if(!episodeDate) return triggerNotification("Вкажіть точну дату та час події", "error");
+                if(!lossType) return triggerNotification("Оберіть тип події", "error");
+                if(!cause) return triggerNotification("Оберіть причину", "error");
+                if(isAny300(lossType) && !severity) return triggerNotification("Оберіть важкість", "error");
+                if (!newSoldierUnit || !newSoldierName || !newSoldierCallsign) return triggerNotification("ПІБ, Позивний та Підрозділ є обов'язковими", "error");
+
+                saveHistory();
+
+                const original = episodes.find(ep => ep.id === currentEpisode.id);
+                const is300 = isAny300(lossType);
+                const todayStrDate = new Date().toLocaleDateString('en-CA');
+                
+                const updatedEpisode = {
+                    ...currentEpisode,
+                    date: episodeDate, lossType, cause,
+                    severity: is300 ? severity : null,
+                    rank: newSoldierRank || original?.rank || "Не вказано",
+                    unit: newSoldierUnit || original?.unit || "Не вказано",
+                    inUdp, actualLoc, docLoc,
+                    injuries: is300 ? injuries : {},
+                    notes, evacStatus, awolStatus, weaponStatus,
+                    evacTime: (evacStatus === 'Евакуйований' || awolStatus === 'Повернувся') ? (evacDate || todayStrDate) : "",
+                    hasReport, reportDate: hasReport ? (reportDate || todayStrDate) : ""
+                };
+
+                setEpisodes(prev => prev.map(ep => ep.id === currentEpisode.id ? updatedEpisode : ep));
+                setSoldiers(prev => prev.map(s => s.id === currentEpisode.soldierId ? {
+                    ...s, name: newSoldierName, callsign: newSoldierCallsign, rank: newSoldierRank, unit: newSoldierUnit
+                } : s));
+
+                let changes = [];
+                if (original) {
+                    if (original.evacStatus !== evacStatus) changes.push(`евакуацію змінено з "${original.evacStatus}" на "${evacStatus}"`);
+                    if (original.lossType !== lossType) changes.push(`тип втрати змінено з "${original.lossType}" на "${lossType}"`);
+                }
+
+                const detailsText = changes.length > 0 ? `Зміни: ${changes.join(', ')}` : `Оновлено загальні дані картки`;
+                addLog("Редагування", `Оновлено дані для в/сл: ${newSoldierName} («${newSoldierCallsign}»). ${detailsText}`);
+                
+                setIsEditOpen(false); setCurrentEpisode(null);
+                triggerNotification("Запис оновлено");
+            };
+
+            const handleDeleteEpisode = () => {
+                saveHistory();
+                setEpisodes(prev => prev.filter(ep => ep.id !== currentEpisode.id));
+                addLog("Видалення", `Видалено запис для в/сл: ${newSoldierName} («${newSoldierCallsign}»)`);
+                setIsEditOpen(false); setCurrentEpisode(null);
+                triggerNotification("Запис видалено");
+            };
+
+            const handleClearDatabase = () => {
+                saveHistory();
+                setSoldiers([]); setEpisodes([]);
+                setLogs([{ id: 'init', timestamp: new Date().toISOString(), action: 'Система', details: 'Базу повністю очищено користувачем' }]);
+                setIsClearDbConfirmOpen(false); setIsBackupOpen(false);
+                triggerNotification("Базу успішно очищено!", "success");
+            };
+
+            const handleExport = () => {
+                if (!backupPassword) return triggerNotification("Введіть пароль!", "error");
+                try {
+                    const rawJson = JSON.stringify({ soldiers, episodes, logs, settings });
+                    const encrypted = CryptoJS.AES.encrypt(rawJson, backupPassword).toString();
+                    const link = document.createElement('a');
+                    link.download = `med_backup_${new Date().toISOString().slice(0,10)}.enc`;
+                    link.href = URL.createObjectURL(new Blob([encrypted], { type: 'text/plain' }));
+                    link.click();
+                    addLog("Експорт", "Створено шифрований бекап бази");
+                    triggerNotification("Бекап скачано!");
+                } catch (e) { triggerNotification("Помилка: " + e.message, "error"); }
+            };
+
+            const handleFileChange = (e) => { if (e.target.files && e.target.files[0]) setImportFile(e.target.files[0]); };
+
+            const handleImport = () => {
+                if (!importFile || !importPassword) return triggerNotification("Оберіть файл та введіть пароль", "error");
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const encryptedContent = e.target.result;
+                        const decrypted = CryptoJS.AES.decrypt(encryptedContent.trim(), importPassword).toString(CryptoJS.enc.Utf8);
+                        if (!decrypted) throw new Error("Невірний пароль");
+                        const parsed = JSON.parse(decrypted);
+                        if (parsed.soldiers && parsed.episodes) {
+                            saveHistory();
+                            setSoldiers(parsed.soldiers); setEpisodes(parsed.episodes);
+                            if (parsed.logs) setLogs(parsed.logs.slice(0, 200));
+                            if (parsed.settings) setSettings(parsed.settings);
+                            addLog("Імпорт", "Базу успішно відновлено з файлу");
+                            triggerNotification("Дані успішно імпортовано!");
+                            setIsBackupOpen(false); setImportFile(null); setImportPassword("");
+                        } else throw new Error("Пошкоджений або невірний файл");
+                    } catch (err) { triggerNotification("Помилка: " + (err.message || "Невірний пароль або файл"), "error"); }
+                };
+                reader.readAsText(importFile);
+            };
+
+            const addSettingItem = () => {
+                if (!newSettingItem.trim()) return;
+                const item = newSettingItem.trim();
+                setSettings(prev => ({ ...prev, [activeSettingsTab]: [...(prev[activeSettingsTab] || []), item] }));
+                if (activeSettingsTab === "causes") setFilterCauses(prev => [...prev, item]);
+                setNewSettingItem("");
+            };
+
+            const removeSettingItem = (item) => {
+                setSettings(prev => ({ ...prev, [activeSettingsTab]: prev[activeSettingsTab].filter(i => i !== item) }));
+                if (activeSettingsTab === "causes") setFilterCauses(prev => prev.filter(i => i !== item));
+            };
+
+            const triageEpisodes = useMemo(() => {
+                return latestEpisodesData.filter(ep => ep.evacStatus === "Не евакуйований" && !isAwol(ep.lossType));
+            }, [latestEpisodesData]);
+
+            const triageCounts = useMemo(() => {
+                let crit = 0, heavy = 0, med = 0, light = 0, other = 0;
+                triageEpisodes.forEach(ep => {
+                    if (ep.severity === 'Критичний') crit++;
+                    else if (ep.severity === 'Важкий') heavy++;
+                    else if (ep.severity === 'Середній') med++;
+                    else if (ep.severity === 'Легкий') light++;
+                    else other++;
+                });
+                return { crit, heavy, med, light, other };
+            }, [triageEpisodes]);
+
+            const quickEvacuate = (episode) => {
+                saveHistory();
+                const todayStrDate = new Date().toLocaleDateString('en-CA');
+                const updated = { ...episode, evacStatus: 'Евакуйований', evacTime: todayStrDate };
+                setEpisodes(prev => prev.map(ep => ep.id === episode.id ? updated : ep));
+                const soldier = soldiers.find(s => s.id === episode.soldierId);
+                addLog("Евакуація", `Швидка евакуація підтверджена: ${soldier?.name} («${soldier?.callsign}»)` );
+                triggerNotification("Евакуацію успішно оформлено");
+            };
+
+            const renderTriageCard = (ep) => {
+                const soldier = soldiers.find(s => s.id === ep.soldierId) || {};
+                const waitStr = calculateWaitTimeUI(ep.date);
+                const injStr = getInjStrUI(ep.injuries);
+                const displayUnit = ep.unit || soldier.unit || '';
+                
+                return (
+                    <div key={ep.id} className="bg-tactical-950/90 border border-tactical-800 p-3 rounded-lg shadow-lg flex flex-col gap-2 relative overflow-hidden group">
+                        <div className={`absolute top-0 left-0 w-1.5 h-full ${
+                            ep.severity === 'Критичний' ? 'bg-purple-500 animate-pulse' : 
+                            ep.severity === 'Важкий' ? 'bg-red-500' :
+                            ep.severity === 'Середній' ? 'bg-amber-500' :
+                            ep.severity === 'Легкий' ? 'bg-emerald-500' : 'bg-zinc-500'
+                        }`}></div>
+                        <div className="pl-3 flex justify-between items-start">
+                            <div>
+                                <div className="text-sm font-black text-white leading-none mb-1">«{soldier.callsign}»</div>
+                                <div className="text-[10px] text-tactical-400 font-mono">{displayUnit}</div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-xs font-bold text-tactical-200 bg-tactical-900 border border-tactical-700 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                    <Icon name="clock" className="w-3 h-3 text-tactical-500" /> {waitStr}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="pl-3 flex flex-col gap-1 mt-1">
+                            <div className="text-[10px] text-tactical-300"><span className="font-bold text-tactical-500">Локація:</span> {ep.actualLoc || 'Не вказано'}</div>
+                            {isAny300(ep.lossType) ? (
+                                <div className="text-[10px] text-red-300/90 line-clamp-2" title={injStr}><span className="font-bold text-red-500/80">Травми:</span> {injStr || 'Не вказано'}</div>
+                            ) : (
+                                <div className="text-[10px] text-zinc-400 font-bold uppercase">{ep.lossType}</div>
+                            )}
+                        </div>
+                        <div className="pl-3 mt-2 flex gap-2">
+                            {ep.lossType === 'Зниклий безвісти (ЗБВ)' ? (
+                                <button onClick={() => triggerNotification("Щоб евакуювати тіло ЗБВ, спершу змініть статус на 'Загибель (200)' через вікно редагування", "error")} className="flex-1 py-1.5 bg-zinc-900 hover:bg-red-950 hover:border-red-800 text-zinc-400 hover:text-red-400 text-[10px] font-bold rounded border border-zinc-700 transition flex justify-center items-center gap-1">
+                                    <Icon name="alert-triangle" className="w-3 h-3" /> Статус ЗБВ
+                                </button>
+                            ) : (
+                                <button onClick={() => quickEvacuate(ep)} className="flex-1 py-1.5 bg-tactical-800 hover:bg-emerald-800 hover:border-emerald-700 text-tactical-200 hover:text-white text-[10px] font-bold rounded border border-tactical-700 transition flex justify-center items-center gap-1">
+                                    <Icon name="check-circle" className="w-3 h-3" /> Евакуйовано
+                                </button>
+                            )}
+                            <button onClick={() => handleStartEdit(ep)} className="px-2 py-1.5 bg-tactical-900 hover:bg-tactical-700 text-tactical-400 hover:text-white rounded border border-tactical-800 transition">
+                                <Icon name="edit" className="w-3 h-3" />
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const locChartHeight = Math.max(300, chartData.actLocs.labels.length * 28);
+
+            if (isLoading) {
+                return (
+                    <div className="flex-1 flex items-center justify-center bg-tactical-950 text-tactical-400">
+                        <div className="text-center space-y-4">
+                            <Icon name="loader-2" className="w-8 h-8 animate-spin mx-auto text-tactical-500" />
+                            <div className="font-mono text-sm uppercase font-bold tracking-widest text-tactical-300">Завантаження бази...</div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex-1 flex flex-col">
+                    <header className="border-b border-tactical-800 bg-tactical-950 px-4 py-2 shadow-lg">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                                <div className="text-tactical-400"><Icon name="cross" className="w-6 h-6" /></div>
+                                <div>
+                                    <h1 className="text-base font-bold text-white flex items-center gap-2 leading-tight">
+                                        MED-TACTICAL
+                                        <span className="text-[10px] bg-tactical-800 text-tactical-300 border border-tactical-600 px-1.5 rounded uppercase font-bold">Система Обліку</span>
+                                    </h1>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                                {activeTab === "analytics" && (
+                                    <button onClick={handleExportAnalyticsExcel} className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-emerald-100 font-bold border border-emerald-600 rounded transition flex items-center gap-1.5 text-xs mr-2 shadow">
+                                        <Icon name="table" className="w-4 h-4" /> Експорт (Excel)
+                                    </button>
+                                )}
+                                <button onClick={() => handleOpenAddWounded(null)} className="px-3 py-1.5 bg-tactical-500 hover:bg-tactical-400 text-tactical-950 font-bold rounded shadow transition flex items-center gap-1.5 text-xs">
+                                    <Icon name="plus" className="w-4 h-4" /> Створити запис
+                                </button>
+                                <button onClick={() => setIsSettingsOpen(true)} className="px-2.5 py-1.5 bg-tactical-800 hover:bg-tactical-700 text-tactical-200 border border-tactical-600 rounded transition text-xs">
+                                    <Icon name="settings" className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => setIsBackupOpen(true)} className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded transition text-xs">
+                                    <Icon name="shield-alert" className="w-4 h-4" /> База та Бекап
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="bg-tactical-900 border-b border-tactical-800 px-4 shrink-0 overflow-x-auto">
+                        <div className="max-w-7xl mx-auto flex gap-4 md:gap-6 text-xs font-bold font-mono uppercase tracking-wider whitespace-nowrap">
+                            <button onClick={() => setActiveTab("list")} className={`py-3 border-b-2 transition ${activeTab === "list" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Журнал / Реєстр</button>
+                            <button onClick={() => setActiveTab("triage")} className={`py-3 border-b-2 transition flex items-center gap-1.5 ${activeTab === "triage" ? "border-amber-500 text-amber-500" : "border-transparent text-tactical-600 hover:text-amber-500/70"}`}>
+                                <Icon name="clock-3" className="w-3.5 h-3.5"/> Черга: 
+                                <div className="flex gap-0.5 ml-1">
+                                    {triageCounts.crit > 0 && <span className="bg-purple-500/20 text-purple-400 border border-purple-500/50 text-[10px] px-1 rounded-sm" title="Критичні">К:{triageCounts.crit}</span>}
+                                    {triageCounts.heavy > 0 && <span className="bg-red-500/20 text-red-400 border border-red-500/50 text-[10px] px-1 rounded-sm" title="Важкі">В:{triageCounts.heavy}</span>}
+                                    {triageCounts.med > 0 && <span className="bg-amber-500/20 text-amber-400 border border-amber-500/50 text-[10px] px-1 rounded-sm" title="Середні">С:{triageCounts.med}</span>}
+                                    {triageCounts.light > 0 && <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 text-[10px] px-1 rounded-sm" title="Легкі">Л:{triageCounts.light}</span>}
+                                    {triageCounts.other > 0 && <span className="bg-zinc-500/20 text-zinc-400 border border-zinc-500/50 text-[10px] px-1 rounded-sm" title="Інші (200, ЗБВ)">І:{triageCounts.other}</span>}
+                                    {triageEpisodes.length === 0 && <span className="text-[10px] text-tactical-500 px-1">0</span>}
+                                </div>
+                            </button>
+                            <button onClick={() => setActiveTab("analytics")} className={`py-3 border-b-2 transition ${activeTab === "analytics" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Аналітика подій</button>
+                            <button onClick={() => setActiveTab("logs")} className={`py-3 border-b-2 transition ${activeTab === "logs" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Лог змін</button>
+                        </div>
+                    </div>
+
+                    {notification && (
+                        <div className="fixed top-16 right-4 z-[100] animate-bounce">
+                            <div className={`px-4 py-2 rounded shadow-xl border flex items-center gap-2 text-xs font-semibold ${notification.type === 'error' ? 'bg-red-950/90 border-red-700 text-red-200' : 'bg-tactical-900/90 border-tactical-500 text-tactical-200'}`}>
+                                <span>{notification.text}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <main className="flex-1 max-w-7xl w-full mx-auto p-4 overflow-hidden flex flex-col md:flex-row gap-4">
+                        
+                        {(activeTab === "list" || activeTab === "analytics") && (
+                            <div className="w-full md:w-64 flex flex-col gap-3 shrink-0 overflow-y-auto max-h-[80vh] md:max-h-none pr-1">
+                                
+                                <div className="bg-tactical-950/60 border border-tactical-800 p-3 rounded-lg">
+                                    <div className="text-[10px] text-tactical-400 uppercase font-bold mb-2">Загальна Статистика</div>
+                                    <div className="grid grid-cols-2 gap-2 text-center mb-2">
+                                        <div className="bg-tactical-900/50 p-1.5 rounded border border-tactical-800">
+                                            <div className="text-[9px] text-tactical-400">Унікальних в/сл</div>
+                                            <div className="text-lg font-black text-white">{stats.uniqueSoldiersCount}</div>
+                                        </div>
+                                        <div className="bg-tactical-900/50 p-1.5 rounded border border-tactical-800">
+                                            <div className="text-[9px] text-tactical-400">Епізодів за період</div>
+                                            <div className="text-lg font-black text-tactical-300">{stats.totalEpisodes}</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-[10px] space-y-1 mt-3">
+                                        <div className="flex justify-between border-b border-tactical-800/50 pb-1">
+                                            <span className="text-red-400 flex items-center gap-1"><Icon name="ambulance" className="w-3 h-3" /> Евак. (300):</span>
+                                            <span className="font-bold text-red-400">{stats.activeEvacNeed300}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-tactical-800/50 py-1">
+                                            <span className="text-amber-500 flex items-center gap-1"><Icon name="package" className="w-3 h-3" /> Евак. (200/ЗБВ):</span>
+                                            <span className="font-bold text-amber-500">{stats.activeEvacNeed200_MIA}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-tactical-800/50 py-1">
+                                            <span className="text-tactical-400">Всі 200 (Загибель/Смерть):</span>
+                                            <span className="font-bold text-white">{stats.deadCount}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-tactical-800/50 py-1">
+                                            <span className="text-blue-400">ЗБВ:</span>
+                                            <span className="font-bold text-white">{stats.miaCount}</span>
+                                        </div>
+                                        <div className="flex justify-between py-1">
+                                            <span className="text-fuchsia-400">СЗЧ / Дезерт. (в розшуку):</span>
+                                            <span className="font-bold text-white">{stats.awolCount}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {activeTab === "list" && (
+                                    <div className="bg-tactical-950/60 border border-tactical-800 p-3 rounded-lg space-y-3">
+                                        <div className="text-[10px] text-tactical-400 uppercase font-bold flex items-center justify-between">
+                                            Фільтри Журналу
+                                            <label className="flex items-center gap-1 cursor-pointer text-tactical-300 hover:text-white" title="Показувати тільки один (останній) актуальний стан бійця">
+                                                <input type="checkbox" checked={showOnlyLatest} onChange={(e) => setShowOnlyLatest(e.target.checked)} className="rounded bg-tactical-900 border-tactical-700 text-tactical-500 focus:ring-0 w-3 h-3"/>
+                                                <span className="text-[9px]">Лише актуальні</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <FilterSection title="Період події" isOpen={fOpen.dates} toggle={() => setFOpen(p=>({...p, dates: !p.dates}))}>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <input type="date" value={listDateFrom} onChange={(e) => setListDateFrom(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-1.5 py-1 text-[10px] text-white focus:outline-none" title="Від дати" />
+                                                <input type="date" value={listDateTo} onChange={(e) => setListDateTo(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-1.5 py-1 text-[10px] text-white focus:outline-none" title="До дати" />
+                                            </div>
+                                        </FilterSection>
+
+                                        <input type="text" placeholder="Пошук (ПІБ, позивний)..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white placeholder-tactical-600 focus:outline-none" />
+                                        
+                                        <FilterSection title="Тип втрати" isOpen={fOpen.types} toggle={() => setFOpen(p=>({...p, types: !p.types}))}>
+                                            <CheckboxList items={LOSS_TYPES} selected={filterLossTypes} toggle={(v) => toggleFilterItem(filterLossTypes, setFilterLossTypes, v)} />
+                                        </FilterSection>
+
+                                        {filterLossTypes.some(t => isAny300(t)) && (
+                                            <FilterSection title="Важкість (всі 300)" isOpen={fOpen.sev} toggle={() => setFOpen(p=>({...p, sev: !p.sev}))}>
+                                                <CheckboxList items={["Легкий", "Середній", "Важкий", "Критичний"]} selected={filterSeverities} toggle={(v) => toggleFilterItem(filterSeverities, setFilterSeverities, v)} maxH={false} />
+                                            </FilterSection>
+                                        )}
+                                        
+                                        <FilterSection title="Статус Евакуації / СЗЧ" isOpen={fOpen.evac} toggle={() => setFOpen(p=>({...p, evac: !p.evac}))}>
+                                            <CheckboxList items={["Не евакуйований", "Евакуйований", "Не потребує евакуації", "В розшуку", "Повернувся"]} selected={filterEvacStatuses} toggle={(v) => toggleFilterItem(filterEvacStatuses, setFilterEvacStatuses, v)} maxH={false} />
+                                        </FilterSection>
+
+                                        <FilterSection title="Причина події" isOpen={fOpen.causes} toggle={() => setFOpen(p=>({...p, causes: !p.causes}))}>
+                                            <CheckboxList items={settings.causes} selected={filterCauses} toggle={(v) => toggleFilterItem(filterCauses, setFilterCauses, v)} />
+                                        </FilterSection>
+
+                                        <FilterSection title="Типи травм" isOpen={fOpen.inj} toggle={() => setFOpen(p=>({...p, inj: !p.inj}))}>
+                                            <CheckboxList items={[{k:'amputation', l:'Ампутація'}, {k:'rupture', l:'Розрив'}, {k:'shrapnel', l:'Уламкове'}, {k:'bullet', l:'Кульове'}, {k:'fracture', l:'Перелом'}, {k:'burn', l:'Опік'}, {k:'akbt', l:'АКБТ'}, {k:'contusion', l:'Забій'}]} selected={filterInjuries} toggle={(v) => toggleFilterItem(filterInjuries, setFilterInjuries, v)} />
+                                        </FilterSection>
+
+                                        <FilterSection title="Статус зброї" isOpen={fOpen.wep} toggle={() => setFOpen(p=>({...p, wep: !p.wep}))}>
+                                            <CheckboxList items={["втрачена", "знищена", "знаходиться у підрозділі", "знаходиться на позиції", "СЗЧ/Дезертирство зі зброєю", "Не вказано"]} selected={filterWeapon} toggle={(v) => toggleFilterItem(filterWeapon, setFilterWeapon, v)} maxH={false} />
+                                        </FilterSection>
+
+                                        <FilterSection title="Складено рапорт" isOpen={fOpen.rep} toggle={() => setFOpen(p=>({...p, rep: !p.rep}))}>
+                                            <select value={filterReport} onChange={(e) => setFilterReport(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1 text-xs text-tactical-200 focus:outline-none mt-1">
+                                                <option value="all">Всі записи</option>
+                                                <option value="yes">Рапорт складено</option>
+                                                <option value="no">Без рапорту</option>
+                                            </select>
+                                        </FilterSection>
+
+                                        <select value={filterUdp} onChange={(e) => setFilterUdp(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-2 py-1.5 text-xs text-tactical-200 focus:outline-none">
+                                            <option value="all">УПД: Всі</option>
+                                            <option value="yes">Тільки під час УПД</option>
+                                            <option value="no">Без УПД</option>
+                                        </select>
+                                        <button onClick={resetAllFilters} className="w-full py-1.5 bg-tactical-800 hover:bg-tactical-700 text-tactical-300 text-xs font-semibold rounded border border-tactical-700 transition">Скинути фільтри журналу</button>
+                                    </div>
+                                )}
+
+                                {activeTab === "analytics" && (
+                                    <div className="bg-tactical-950/60 border border-tactical-800 p-3 rounded-lg space-y-3 border-l-2 border-l-emerald-500">
+                                        <div className="text-[10px] text-emerald-500 uppercase font-bold flex items-center justify-between">
+                                            Фільтри Аналітики
+                                            <label className="flex items-center gap-1 cursor-pointer text-tactical-300 hover:text-white" title="Показувати тільки останній стан бійця">
+                                                <input type="checkbox" checked={anShowLatest} onChange={(e) => setAnShowLatest(e.target.checked)} className="rounded bg-tactical-900 border-tactical-700 text-emerald-500 focus:ring-emerald-500 w-3 h-3"/>
+                                                <span className="text-[9px]">Лише актуальні</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <div className="bg-tactical-900/40 p-2 rounded border border-tactical-800">
+                                            <label className="flex items-start gap-2 cursor-pointer">
+                                                <input type="checkbox" checked={groupAnalytics} onChange={(e) => setGroupAnalytics(e.target.checked)} className="mt-0.5 rounded bg-tactical-950 border-tactical-700 text-emerald-500 focus:ring-emerald-500 w-3.5 h-3.5"/>
+                                                <span className="text-[10px] text-tactical-200 font-bold leading-tight">Об'єднати: <br/><span className="text-tactical-400 font-normal">200 + ЗБВ<br/>Поранення + Бойові тр.</span></span>
+                                            </label>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] text-tactical-400 font-bold uppercase block" title="Це дата саме ПОДІЇ, а не дата евакуації">Період події (Точний)</span>
+                                            <div className="space-y-2">
+                                                <input type="datetime-local" value={anDateFrom} onChange={(e) => setAnDateFrom(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-1.5 py-1 text-[10px] text-white focus:outline-none" title="Від дати та часу" />
+                                                <input type="datetime-local" value={anDateTo} onChange={(e) => setAnDateTo(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-1.5 py-1 text-[10px] text-white focus:outline-none" title="До дати та часу" />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] text-tactical-400 font-bold uppercase block">Участь в УПД</span>
+                                            <select value={anUdp} onChange={(e) => setAnUdp(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-2 py-1.5 text-xs text-tactical-200 focus:outline-none">
+                                                <option value="all">УПД: Всі випадки</option>
+                                                <option value="yes">Тільки під час УПД</option>
+                                                <option value="no">Без УПД</option>
+                                            </select>
+                                        </div>
+                                        <button onClick={resetAnalyticsFilters} className="w-full py-1.5 bg-tactical-800 hover:bg-tactical-700 text-tactical-300 text-xs font-semibold rounded border border-tactical-700 transition">Скинути фільтри аналітики</button>
+                                    </div>
+                                )}
+                                
+                                {activeTab === "analytics" && (
+                                    <div className="bg-cyan-950/30 border border-cyan-900/50 p-3 rounded-lg shadow-sm border-l-2 border-l-cyan-500">
+                                        <div className="text-[10px] text-cyan-400 uppercase font-bold flex items-center gap-1.5 mb-2">
+                                            <Icon name="truck" className="w-3.5 h-3.5" /> Звіт з евакуації за період
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <div>
+                                                <div className="text-xs text-cyan-100" title="Всі евакуйовані за обрані дати (незалежно від дати поранення)">Всього вивезено (факт): <span className="font-bold text-sm text-cyan-400">{evacStats.actualEvacuatedInPeriod}</span></div>
+                                                <div className="text-[9px] text-cyan-300/70 pl-2 border-l border-cyan-800/50 mt-1 space-y-0.5">
+                                                    <div title="Поранені та евакуйовані в цьому ж періоді">З них поранені в цей період: <span className="font-bold text-cyan-200">{evacStats.evacWoundedInPeriod}</span></div>
+                                                    <div title="Евакуйовані зараз, але поранені до початку обраного періоду">Поранені в минулі періоди: <span className="font-bold text-cyan-200">{evacStats.evacWoundedBefore}</span></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="border-t border-cyan-900/50 pt-2">
+                                                <div className="text-xs text-tactical-200" title="Кількість 200/300/ЗБВ, що виникли в цей період">Втрати періоду (200/300/ЗБВ): <span className="font-bold text-sm text-white">{evacStats.totalWoundedInPeriod}</span></div>
+                                                <div className="text-[9px] text-tactical-400 pl-2 border-l border-tactical-700/50 mt-1 space-y-0.5">
+                                                    <div title="Скільки з цих нових втрат вже евакуйовано">Вже евакуйовано: <span className="font-bold text-emerald-400">{evacStats.woundedInPeriodAndEvacuated}</span></div>
+                                                    <div title="Скільки з цих нових втрат досі не евакуйовані">Очікують (в черзі): <span className="font-bold text-red-400">{evacStats.woundedInPeriodWaiting}</span></div>
+                                                    {evacStats.woundedInPeriodNotNeeded > 0 && (
+                                                        <div title="Скільки з нових втрат не потребують евакуації">Не потребують евак.: <span className="font-bold text-tactical-400">{evacStats.woundedInPeriodNotNeeded}</span></div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ТАБ: ЖУРНАЛ */}
+                        {activeTab === "list" && (
+                            <div className="flex-1 bg-tactical-950/30 border border-tactical-800/60 rounded-lg p-2 overflow-y-auto flex flex-col gap-2 relative">
+                                <div className="flex justify-between items-center text-tactical-300 text-[10px] font-bold uppercase mb-1 border-b border-tactical-800/50 pb-2 px-1">
+                                    <span>Відображено записів: <span className="text-white text-sm bg-tactical-800 px-1.5 py-0.5 rounded shadow-sm">{filteredList.length}</span></span>
+                                </div>
+                                {filteredList.length === 0 ? (
+                                    <div className="m-auto text-center text-tactical-500 text-xs py-10">Жодного запису не знайдено за вашими фільтрами</div>
+                                ) : (
+                                    filteredList.map((episode) => {
+                                        const soldier = soldiers.find(s => s.id === episode.soldierId) || { name: 'Невідомо', callsign: '', rank: '', unit: '' };
+                                        const badgeClass = getBadgeColors(episode.lossType, episode.severity);
+                                        const isEvac = episode.evacStatus === "Евакуйований";
+                                        const injStr = getInjStrUI(episode.injuries);
+                                        
+                                        let evacDisplay = episode.evacStatus;
+                                        if (isAwol(episode.lossType)) evacDisplay = episode.awolStatus;
+                                        else if ((isEvac || episode.awolStatus === "Повернувся") && episode.evacTime) {
+                                            const eDate = new Date(episode.evacTime);
+                                            if(!isNaN(eDate.getTime())) {
+                                                const formatted = eDate.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                                                evacDisplay = `Евак. (${formatted})`;
+                                            }
+                                        }
+
+                                        const displayRank = episode.rank || soldier.rank || '';
+                                        const displayUnit = episode.unit || soldier.unit || '';
+
+                                        return (
+                                            <div key={episode.id} className="bg-tactical-950/80 border border-tactical-800 hover:border-tactical-600 rounded p-2.5 flex flex-col sm:flex-row justify-between gap-3 group transition-colors">
+                                                <div className="flex-1">
+                                                    <div className="flex items-baseline gap-2 mb-1">
+                                                        <span className="text-white font-bold text-sm">
+                                                            <span className="text-tactical-400 text-[10px] font-mono mr-2 border border-tactical-700 bg-tactical-900 px-1.5 py-0.5 rounded shadow-sm relative -top-px">{displayRank}</span>
+                                                            {soldier.name}
+                                                        </span>
+                                                        <span className="text-tactical-400 text-xs font-mono">«{soldier.callsign}»</span>
+                                                    </div>
+                                                    <div className="text-[10px] text-tactical-500 font-mono">
+                                                        {displayUnit} | Подія: {episode.date.replace('T', ' ')}
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 border-l border-tactical-800 pl-3">
+                                                    <div className="text-[10px] text-tactical-400 mb-1 line-clamp-1"><span className="font-semibold text-tactical-300">Причина:</span> {episode.cause}</div>
+                                                    <div className="text-[10px] text-tactical-400 mb-1 flex flex-wrap gap-x-2 gap-y-0.5">
+                                                        <span><span className="font-semibold text-tactical-300">Факт:</span> {episode.actualLoc || "-"}</span>
+                                                        <span className="border-l border-tactical-700 pl-2"><span className="font-semibold text-tactical-300">Док:</span> {episode.docLoc || "-"}</span>
+                                                    </div>
+                                                    {injStr && (
+                                                        <div className="text-[9px] text-red-300/80 mt-1 line-clamp-1 cursor-default" title={injStr}>
+                                                            <span className="font-semibold text-red-400/80">Травми:</span> {injStr}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                                        {episode.inUdp && <span className="inline-block text-[9px] bg-red-950/50 text-red-400 border border-red-900/50 px-1.5 py-0.5 rounded font-semibold">Під час УПД</span>}
+                                                        {episode.hasReport && <span className="inline-block text-[9px] bg-blue-950/50 text-blue-400 border border-blue-900/50 px-1.5 py-0.5 rounded font-semibold flex items-center gap-1"><Icon name="file-check-2" className="w-2.5 h-2.5" /> Рапорт</span>}
+                                                        
+                                                        {episode.weaponStatus && (
+                                                            <span className={`inline-block text-[9px] border px-1.5 py-0.5 rounded font-semibold flex items-center gap-1 ${
+                                                                episode.weaponStatus === "СЗЧ/Дезертирство зі зброєю" ? "bg-red-950/50 text-red-400 border-red-900/50" : 
+                                                                episode.weaponStatus === "знаходиться у підрозділі" ? "bg-blue-950/50 text-blue-400 border-blue-900/50" :
+                                                                "bg-amber-950/50 text-amber-500 border-amber-900/50"
+                                                            }`}>
+                                                                <Icon name="crosshair" className="w-2.5 h-2.5" /> Зброя: {episode.weaponStatus}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-1.5 w-32 shrink-0 border-l border-tactical-800 pl-3 relative">
+                                                    <span className={`text-[9px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded border text-center w-full ${badgeClass}`}>
+                                                        {isAny300(episode.lossType) ? `${episode.lossType.split(' ')[0]} (${episode.severity})` : episode.lossType.split(' ')[0]}
+                                                    </span>
+                                                    <span className={`text-[9px] font-bold px-1.5 py-1 rounded border text-center w-full ${isEvac || episode.awolStatus === "Повернувся" ? 'bg-emerald-950 text-emerald-400 border-emerald-900' : 'bg-red-950 text-red-400 border-red-900'}`}>
+                                                        {evacDisplay}
+                                                    </span>
+                                                    <button onClick={() => handleStartEdit(episode)} className="absolute top-1/2 -left-8 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 bg-tactical-800 hover:bg-tactical-700 text-white rounded transition shadow-lg" title="Редагувати запис">
+                                                        <Icon name="edit" className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )
+                                    })
+                                )}
+                            </div>
+                        )}
+
+                        {/* ТАБ: ЧЕРГА ЕВАКУАЦІЇ (TRIAGE) */}
+                        {activeTab === "triage" && (
+                            <div className="flex-1 overflow-y-auto pb-6 relative">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-full items-start">
+                                    <div className="bg-red-950/10 border border-red-900/30 rounded-xl flex flex-col h-full min-h-[300px]">
+                                        <div className="p-3 border-b border-red-900/30 bg-red-950/40 rounded-t-xl shrink-0 flex items-center justify-between">
+                                            <span className="font-black text-red-500 text-xs uppercase flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div> ЧЕРВОНА ЗОНА</span>
+                                            <span className="text-[10px] text-red-300/80 font-bold">Критичні / Важкі</span>
+                                        </div>
+                                        <div className="p-2 flex-1 overflow-y-auto space-y-2">
+                                            {triageEpisodes.filter(ep => ep.severity === 'Критичний' || ep.severity === 'Важкий').map(renderTriageCard)}
+                                            {triageEpisodes.filter(ep => ep.severity === 'Критичний' || ep.severity === 'Важкий').length === 0 && <div className="text-center text-red-900/50 text-xs py-8">Порожньо</div>}
+                                        </div>
+                                    </div>
+                                    <div className="bg-amber-950/10 border border-amber-900/30 rounded-xl flex flex-col h-full min-h-[300px]">
+                                        <div className="p-3 border-b border-amber-900/30 bg-amber-950/40 rounded-t-xl shrink-0 flex items-center justify-between">
+                                            <span className="font-black text-amber-500 text-xs uppercase flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500"></div> ЖОВТА ЗОНА</span>
+                                            <span className="text-[10px] text-amber-300/80 font-bold">Середні</span>
+                                        </div>
+                                        <div className="p-2 flex-1 overflow-y-auto space-y-2">
+                                            {triageEpisodes.filter(ep => ep.severity === 'Середній').map(renderTriageCard)}
+                                            {triageEpisodes.filter(ep => ep.severity === 'Середній').length === 0 && <div className="text-center text-amber-900/50 text-xs py-8">Порожньо</div>}
+                                        </div>
+                                    </div>
+                                    <div className="bg-emerald-950/10 border border-emerald-900/30 rounded-xl flex flex-col h-full min-h-[300px]">
+                                        <div className="p-3 border-b border-emerald-900/30 bg-emerald-950/40 rounded-t-xl shrink-0 flex items-center justify-between">
+                                            <span className="font-black text-emerald-500 text-xs uppercase flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> ЗЕЛЕНА ЗОНА</span>
+                                            <span className="text-[10px] text-emerald-300/80 font-bold">Легкі</span>
+                                        </div>
+                                        <div className="p-2 flex-1 overflow-y-auto space-y-2">
+                                            {triageEpisodes.filter(ep => ep.severity === 'Легкий').map(renderTriageCard)}
+                                            {triageEpisodes.filter(ep => ep.severity === 'Легкий').length === 0 && <div className="text-center text-emerald-900/50 text-xs py-8">Порожньо</div>}
+                                        </div>
+                                    </div>
+                                    <div className="bg-zinc-950/30 border border-zinc-800 rounded-xl flex flex-col h-full min-h-[300px]">
+                                        <div className="p-3 border-b border-zinc-800 bg-zinc-900/50 rounded-t-xl shrink-0 flex items-center justify-between">
+                                            <span className="font-black text-zinc-400 text-xs uppercase flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-zinc-500"></div> ЧОРНА ЗОНА</span>
+                                            <span className="text-[10px] text-zinc-500 font-bold">200 / ЗБВ</span>
+                                        </div>
+                                        <div className="p-2 flex-1 overflow-y-auto space-y-2">
+                                            {triageEpisodes.filter(ep => isAny200(ep.lossType) || ep.lossType === 'Зниклий безвісти (ЗБВ)').map(renderTriageCard)}
+                                            {triageEpisodes.filter(ep => isAny200(ep.lossType) || ep.lossType === 'Зниклий безвісти (ЗБВ)').length === 0 && <div className="text-center text-zinc-800 text-xs py-8">Порожньо</div>}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ТАБ: АНАЛІТИКА */}
+                        {activeTab === "analytics" && (
+                            <div className="flex-1 overflow-y-auto space-y-6 pb-6">
+                                <div className="bg-tactical-950/80 border border-tactical-800 rounded-xl p-3 shadow-sm flex flex-wrap items-center justify-center gap-4 sticky top-0 z-10">
+                                    <span className="text-[10px] text-tactical-400 font-bold uppercase mr-2"><Icon name="eye" className="w-3 h-3 inline" /> Відображати:</span>
+                                    <label className="flex items-center gap-1 cursor-pointer select-none text-zinc-300 text-xs font-bold"><input type="checkbox" checked={dynFilters.show200} onChange={e => setDynFilters(p => ({...p, show200: e.target.checked}))} className="bg-tactical-950 border-tactical-700 focus:ring-0 w-3.5 h-3.5 rounded"/> Бойові 200</label>
+                                    <label className="flex items-center gap-1 cursor-pointer select-none text-stone-400 text-xs font-bold"><input type="checkbox" checked={dynFilters.showNonCombatDead} onChange={e => setDynFilters(p => ({...p, showNonCombatDead: e.target.checked}))} className="bg-tactical-950 border-tactical-700 focus:ring-0 w-3.5 h-3.5 rounded"/> Небойові 200</label>
+                                    <label className="flex items-center gap-1 cursor-pointer select-none text-red-400 text-xs font-bold"><input type="checkbox" checked={dynFilters.showWound} onChange={e => setDynFilters(p => ({...p, showWound: e.target.checked}))} className="bg-tactical-950 border-tactical-700 focus:ring-0 w-3.5 h-3.5 rounded"/> Поранення</label>
+                                    <label className="flex items-center gap-1 cursor-pointer select-none text-amber-500 text-xs font-bold"><input type="checkbox" checked={dynFilters.showCombatTr} onChange={e => setDynFilters(p => ({...p, showCombatTr: e.target.checked}))} className="bg-tactical-950 border-tactical-700 focus:ring-0 w-3.5 h-3.5 rounded"/> Бойові тр.</label>
+                                    <label className="flex items-center gap-1 cursor-pointer select-none text-yellow-300 text-xs font-bold"><input type="checkbox" checked={dynFilters.showNonCombatTr} onChange={e => setDynFilters(p => ({...p, showNonCombatTr: e.target.checked}))} className="bg-tactical-950 border-tactical-700 focus:ring-0 w-3.5 h-3.5 rounded"/> Небойові тр.</label>
+                                    <label className="flex items-center gap-1 cursor-pointer select-none text-blue-400 text-xs font-bold"><input type="checkbox" checked={dynFilters.showMIA} onChange={e => setDynFilters(p => ({...p, showMIA: e.target.checked}))} className="bg-tactical-950 border-tactical-700 focus:ring-0 w-3.5 h-3.5 rounded"/> ЗБВ</label>
+                                    <label className="flex items-center gap-1 cursor-pointer select-none text-fuchsia-400 text-xs font-bold"><input type="checkbox" checked={dynFilters.showAWOL} onChange={e => setDynFilters(p => ({...p, showAWOL: e.target.checked}))} className="bg-tactical-950 border-tactical-700 focus:ring-0 w-3.5 h-3.5 rounded"/> СЗЧ / Дезерт.</label>
+                                    
+                                    <label className="flex items-center gap-1 cursor-pointer select-none text-emerald-400 text-xs font-bold border-l border-tactical-800 pl-4 ml-2"><input type="checkbox" checked={showChartLabels} onChange={e => setShowChartLabels(e.target.checked)} className="bg-tactical-950 border-tactical-700 text-emerald-500 focus:ring-0 w-3.5 h-3.5 rounded shadow-sm"/> Цифри</label>
+                                    <label className={`flex items-center gap-1 cursor-pointer select-none text-xs font-bold ${showChartLabels ? 'text-emerald-400' : 'text-tactical-600'}`}><input type="checkbox" checked={showChartPercentages} onChange={e => setShowChartPercentages(e.target.checked)} disabled={!showChartLabels} className="bg-tactical-950 border-tactical-700 text-emerald-500 focus:ring-0 w-3.5 h-3.5 rounded shadow-sm disabled:opacity-50"/> у %</label>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-6 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="p-1.5 bg-indigo-950/50 rounded-lg"><Icon name="timer" className="w-4 h-4 text-indigo-400" /></div>
+                                            <h3 className="font-bold text-white text-sm">Середній час евакуації (у днях)</h3>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Середній_час_евакуації" showLabels={showChartLabels} showPercentages={false}
+                                            className="flex-1 min-h-[250px] w-full relative" type="bar"
+                                            data={chartData.evacChartDataConfig}
+                                            options={{ plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#1f2937' }, title: { display: true, text: 'Дні', color: '#9ca3af' } } } }}
+                                        />
+                                    </div>
+
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-6 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="p-1.5 bg-cyan-950/50 rounded-lg"><Icon name="truck" className="w-4 h-4 text-cyan-400" /></div>
+                                            <h3 className="font-bold text-white text-sm">Прогрес евакуації</h3>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Прогрес_евакуації" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                            className="flex-1 min-h-[250px] w-full relative" type="bar"
+                                            data={chartData.evacStatusData}
+                                            options={{ plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#1f2937' }, ticks: { precision: 0 } } } }}
+                                        />
+                                    </div>
+
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-12 flex flex-col">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 bg-emerald-950/50 rounded-lg"><Icon name="clock" className="w-4 h-4 text-emerald-500" /></div>
+                                                <h3 className="font-bold text-white text-sm">Втрати за часом доби (заокруглено до години)</h3>
+                                            </div>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Втрати_за_часом_доби" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                            className="flex-1 min-h-[280px] w-full relative" type="line" 
+                                            data={{
+                                                labels: chartData.time.labels,
+                                                datasets: [
+                                                    ...(dynFilters.show200 ? [{ label: 'Загиблі (200)', data: chartData.time.labels.map(t => chartData.time.timeMap[t]['200']), borderColor: '#71717a', backgroundColor: '#71717a', tension: 0.2, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showNonCombatDead ? [{ label: 'Неб. смерть', data: chartData.time.labels.map(t => chartData.time.timeMap[t]['Неб. смерть']), borderColor: '#57534e', backgroundColor: '#57534e', tension: 0.2, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showWound ? [{ label: 'Поранення', data: chartData.time.labels.map(t => chartData.time.timeMap[t]['Поранення']), borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.2, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showCombatTr ? [{ label: 'Бойові травми', data: chartData.time.labels.map(t => chartData.time.timeMap[t]['Бойове']), borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.2, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showNonCombatTr ? [{ label: 'Небойові травми', data: chartData.time.labels.map(t => chartData.time.timeMap[t]['Небойове']), borderColor: '#fde047', backgroundColor: '#fde047', tension: 0.2, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showMIA ? [{ label: 'ЗБВ', data: chartData.time.labels.map(t => chartData.time.timeMap[t]['ЗБВ']), borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.2, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showAWOL ? [
+                                                        { label: 'СЗЧ', data: chartData.time.labels.map(t => chartData.time.timeMap[t]['СЗЧ']), borderColor: '#c026d3', backgroundColor: '#c026d3', tension: 0.2, borderWidth: 2, pointRadius: 2 },
+                                                        { label: 'Дезертирство', data: chartData.time.labels.map(t => chartData.time.timeMap[t]['Дезертирство']), borderColor: '#db2777', backgroundColor: '#db2777', tension: 0.2, borderWidth: 2, pointRadius: 2 }
+                                                    ] : [])
+                                                ]
+                                            }}
+                                            options={{ plugins: { tooltip: { mode: 'index', intersect: false }, legend: { labels: { color: '#9ca3af' }, position: 'top' } }, scales: { x: { grid: { color: '#1f2937' } }, y: { grid: { color: '#1f2937' }, ticks: { precision: 0 } } } }}
+                                        />
+                                    </div>
+
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-12 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="p-1.5 bg-blue-950/50 rounded-lg"><Icon name="trending-up" className="w-4 h-4 text-blue-500" /></div>
+                                            <h3 className="font-bold text-white text-sm">Хронологічна динаміка (по днях)</h3>
+                                            <span className="ml-auto text-xs text-tactical-500 bg-tactical-950 px-2 py-1 rounded border border-tactical-800 shadow-inner">Днів: {chartData.dynamics.dates.length}</span>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Хронологічна_динаміка" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                            className="flex-1 min-h-[300px] w-full relative" type="line"
+                                            data={{
+                                                labels: chartData.dynamics.dates.map(d => {
+                                                    const p = d.split('-');
+                                                    return p.length === 3 ? `${p[2]}.${p[1]}` : d;
+                                                }),
+                                                datasets: [
+                                                    ...(dynFilters.show200 ? [{ label: 'Загиблі (200)', data: chartData.dynamics.dates.map(d => chartData.dynamics.dGroups[d]['200']), borderColor: '#71717a', borderDash: [2, 2], backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showNonCombatDead ? [{ label: 'Неб. смерть', data: chartData.dynamics.dates.map(d => chartData.dynamics.dGroups[d]['Неб. смерть']), borderColor: '#57534e', borderDash: [2, 2], backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showWound ? [{ label: 'Поранення', data: chartData.dynamics.dates.map(d => chartData.dynamics.dGroups[d]['Поранення']), borderColor: '#ef4444', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showCombatTr ? [{ label: 'Бойові травми', data: chartData.dynamics.dates.map(d => chartData.dynamics.dGroups[d]['Бойове']), borderColor: '#f59e0b', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showNonCombatTr ? [{ label: 'Небойові травми', data: chartData.dynamics.dates.map(d => chartData.dynamics.dGroups[d]['Небойове']), borderColor: '#fde047', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showMIA ? [{ label: 'ЗБВ', data: chartData.dynamics.dates.map(d => chartData.dynamics.dGroups[d]['ЗБВ']), borderColor: '#3b82f6', borderDash: [3, 3], backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 2 }] : []),
+                                                    ...(dynFilters.showAWOL ? [
+                                                        { label: 'СЗЧ', data: chartData.dynamics.dates.map(d => chartData.dynamics.dGroups[d]['СЗЧ']), borderColor: '#c026d3', borderDash: [3, 3], backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 2 },
+                                                        { label: 'Дезертирство', data: chartData.dynamics.dates.map(d => chartData.dynamics.dGroups[d]['Дезертирство']), borderColor: '#db2777', borderDash: [3, 3], backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, pointRadius: 2 }
+                                                    ] : [])
+                                                ]
+                                            }}
+                                            options={{ scales: { x: { grid: { color: '#1f2937' } }, y: { grid: { color: '#1f2937' }, ticks: { precision: 0 }, beginAtZero: true } }, plugins: { legend: { labels: { color: '#9ca3af' } } } }}
+                                        />
+                                    </div>
+
+                                    {/* ПАРА 1: Локації (Статус) + Структура */}
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-8 flex flex-col overflow-hidden">
+                                        <div className="flex items-center gap-2 mb-4 shrink-0">
+                                            <div className="p-1.5 bg-tactical-800 rounded-lg"><Icon name="map-pin" className="w-4 h-4 text-tactical-300" /></div>
+                                            <h3 className="font-bold text-white text-sm">Фактичне місце (за статусом втрат)</h3>
+                                        </div>
+                                        <div className="overflow-y-auto pr-2">
+                                            <div style={{ height: `${locChartHeight}px` }} className="w-full relative">
+                                                <ChartComponent 
+                                                    title="Локації_за_статусом" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                                    className="w-full h-full" type="bar"
+                                                    data={{
+                                                        labels: chartData.actLocs.labels,
+                                                        datasets: [
+                                                            { label: 'Бойові 200', data: chartData.actLocs.labels.map(l => chartData.actLocs.data[l]['200']), backgroundColor: '#71717a' },
+                                                            { label: 'Небойові 200', data: chartData.actLocs.labels.map(l => chartData.actLocs.data[l]['Неб. смерть']), backgroundColor: '#57534e' },
+                                                            { label: 'Поранення', data: chartData.actLocs.labels.map(l => chartData.actLocs.data[l]['Поранення']), backgroundColor: '#ef4444' },
+                                                            { label: 'Бойові', data: chartData.actLocs.labels.map(l => chartData.actLocs.data[l]['Бойове']), backgroundColor: '#f59e0b' },
+                                                            { label: 'Небойові', data: chartData.actLocs.labels.map(l => chartData.actLocs.data[l]['Небойове']), backgroundColor: '#fde047' },
+                                                            { label: 'ЗБВ', data: chartData.actLocs.labels.map(l => chartData.actLocs.data[l]['ЗБВ']), backgroundColor: '#3b82f6' },
+                                                            { label: 'СЗЧ', data: chartData.actLocs.labels.map(l => chartData.actLocs.data[l]['СЗЧ']), backgroundColor: '#c026d3' },
+                                                            { label: 'Дезертирство', data: chartData.actLocs.labels.map(l => chartData.actLocs.data[l]['Дезертирство']), backgroundColor: '#db2777' }
+                                                        ]
+                                                    }}
+                                                    options={{ indexAxis: 'y', plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', axis: 'y', intersect: false } }, scales: { x: { stacked: true, grid: { color: '#1f2937' }, ticks: { precision: 0 } }, y: { stacked: true, grid: { display: false }, ticks: { autoSkip: false } } } }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-4 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="p-1.5 bg-red-950/50 rounded-lg"><Icon name="pie-chart" className="w-4 h-4 text-red-500" /></div>
+                                            <h3 className="font-bold text-white text-sm">Структура втрат</h3>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Структура_втрат" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                            className="flex-1 min-h-[250px] w-full relative flex items-center justify-center" type="doughnut"
+                                            data={{
+                                                labels: [
+                                                    ...(dynFilters.show200 ? ['Бойові 200'] : []), ...(dynFilters.showNonCombatDead ? ['Небойові 200'] : []),
+                                                    ...(dynFilters.showWound ? ['Поранення'] : []), ...(dynFilters.showCombatTr ? ['Бойові тр.'] : []), 
+                                                    ...(dynFilters.showNonCombatTr ? ['Небойові тр.'] : []), ...(dynFilters.showMIA ? ['ЗБВ'] : []), 
+                                                    ...(dynFilters.showAWOL ? ['СЗЧ', 'Дезертирство'] : [])
+                                                ],
+                                                datasets: [{
+                                                    data: [
+                                                        ...(dynFilters.show200 ? [chartData.types.c200] : []), ...(dynFilters.showNonCombatDead ? [chartData.types.c200nc] : []),
+                                                        ...(dynFilters.showWound ? [chartData.types.cWound] : []), ...(dynFilters.showCombatTr ? [chartData.types.cCombat] : []), 
+                                                        ...(dynFilters.showNonCombatTr ? [chartData.types.cNonCombat] : []), ...(dynFilters.showMIA ? [chartData.types.cMia] : []), 
+                                                        ...(dynFilters.showAWOL ? [chartData.types.cAwol, chartData.types.cDesert] : [])
+                                                    ],
+                                                    backgroundColor: [
+                                                        ...(dynFilters.show200 ? ['#71717a'] : []), ...(dynFilters.showNonCombatDead ? ['#57534e'] : []),
+                                                        ...(dynFilters.showWound ? ['#ef4444'] : []), ...(dynFilters.showCombatTr ? ['#f59e0b'] : []), 
+                                                        ...(dynFilters.showNonCombatTr ? ['#fde047'] : []), ...(dynFilters.showMIA ? ['#3b82f6'] : []), 
+                                                        ...(dynFilters.showAWOL ? ['#c026d3', '#db2777'] : [])
+                                                    ],
+                                                    borderColor: '#151e0f', borderWidth: 3, hoverOffset: 4
+                                                }]
+                                            }}
+                                            options={{ cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } } }}
+                                        />
+                                    </div>
+
+                                    {/* ПАРА 2: Локації (Важкість) + Важкість */}
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-8 flex flex-col overflow-hidden">
+                                        <div className="flex items-center gap-2 mb-4 shrink-0">
+                                            <div className="p-1.5 bg-tactical-800 rounded-lg"><Icon name="activity" className="w-4 h-4 text-amber-500" /></div>
+                                            <h3 className="font-bold text-white text-sm">Фактичне місце (за важкістю 300-х)</h3>
+                                        </div>
+                                        <div className="overflow-y-auto pr-2">
+                                            <div style={{ height: `${locChartHeight}px` }} className="w-full relative">
+                                                <ChartComponent 
+                                                    title="Локації_за_важкістю" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                                    className="w-full h-full" type="bar"
+                                                    data={{
+                                                        labels: chartData.actLocsSev.labels,
+                                                        datasets: [
+                                                            { label: 'Легкий', data: chartData.actLocsSev.labels.map(l => chartData.actLocsSev.data[l]['Легкий']), backgroundColor: '#10b981' },
+                                                            { label: 'Середній', data: chartData.actLocsSev.labels.map(l => chartData.actLocsSev.data[l]['Середній']), backgroundColor: '#f59e0b' },
+                                                            { label: 'Важкий', data: chartData.actLocsSev.labels.map(l => chartData.actLocsSev.data[l]['Важкий']), backgroundColor: '#ef4444' },
+                                                            { label: 'Критичний', data: chartData.actLocsSev.labels.map(l => chartData.actLocsSev.data[l]['Критичний']), backgroundColor: '#a855f7' }
+                                                        ]
+                                                    }}
+                                                    options={{ indexAxis: 'y', plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', axis: 'y', intersect: false } }, scales: { x: { stacked: true, grid: { color: '#1f2937' }, ticks: { precision: 0 } }, y: { stacked: true, grid: { display: false }, ticks: { autoSkip: false } } } }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-4 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="p-1.5 bg-purple-950/50 rounded-lg"><Icon name="heart-pulse" className="w-4 h-4 text-purple-500" /></div>
+                                            <h3 className="font-bold text-white text-sm">Важкість (Всі 300-ті)</h3>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Важкість" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                            className="flex-1 min-h-[250px] w-full relative flex items-center justify-center" type="doughnut"
+                                            data={{
+                                                labels: Object.keys(chartData.severity),
+                                                datasets: [{ 
+                                                    data: Object.values(chartData.severity), 
+                                                    backgroundColor: Object.keys(chartData.severity).map(k => SEVERITY_COLORS[k] || '#6b7280'), 
+                                                    borderColor: '#151e0f', 
+                                                    borderWidth: 3 
+                                                }]
+                                            }}
+                                            options={{ cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } } }}
+                                        />
+                                    </div>
+
+                                    {/* ПАРА 3: Локації (Причини) + Причини (Бублик) */}
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-8 flex flex-col overflow-hidden">
+                                        <div className="flex items-center gap-2 mb-4 shrink-0">
+                                            <div className="p-1.5 bg-tactical-800 rounded-lg"><Icon name="crosshair" className="w-4 h-4 text-red-500" /></div>
+                                            <h3 className="font-bold text-white text-sm">Фактичне місце (за зброєю / причиною ураження)</h3>
+                                        </div>
+                                        <div className="overflow-y-auto pr-2">
+                                            <div style={{ height: `${locChartHeight}px` }} className="w-full relative">
+                                                <ChartComponent 
+                                                    title="Локації_за_причинами" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                                    className="w-full h-full" type="bar"
+                                                    data={chartData.locCause}
+                                                    options={{ indexAxis: 'y', plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 15 } }, tooltip: { mode: 'index', axis: 'y', intersect: false } }, scales: { x: { stacked: true, grid: { color: '#1f2937' }, ticks: { precision: 0 } }, y: { stacked: true, grid: { display: false }, ticks: { autoSkip: false } } } }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-4 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="p-1.5 bg-amber-950/50 rounded-lg"><Icon name="zap" className="w-4 h-4 text-amber-500" /></div>
+                                            <h3 className="font-bold text-white text-sm">Причини подій</h3>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Причини_подій" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                            className="flex-1 min-h-[250px] w-full relative flex items-center justify-center" type="doughnut"
+                                            data={{
+                                                labels: chartData.reasons.labels,
+                                                datasets: [{
+                                                    data: chartData.reasons.labels.map(r => {
+                                                        const d = chartData.reasons.data[r];
+                                                        return d['200'] + d['Неб. смерть'] + d['Поранення'] + d['Бойове'] + d['Небойове'] + d['ЗБВ'] + d['СЗЧ'] + d['Дезертирство'];
+                                                    }),
+                                                    backgroundColor: chartData.reasons.labels.map(r => chartData.causeColors[r]),
+                                                    borderColor: '#151e0f', borderWidth: 3
+                                                }]
+                                            }}
+                                            options={{ cutout: '60%', plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } } }}
+                                        />
+                                    </div>
+
+                                    {/* Інші графіки */}
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-6 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="p-1.5 bg-blue-950/50 rounded-lg"><Icon name="shield" className="w-4 h-4 text-blue-400" /></div>
+                                            <h3 className="font-bold text-white text-sm">Втрати по підрозділах</h3>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Втрати_по_підрозділах" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                            className="flex-1 min-h-[260px] w-full relative" type="bar"
+                                            data={{
+                                                labels: chartData.units.labels,
+                                                datasets: [
+                                                    { label: 'Бойові 200', data: chartData.units.labels.map(u => chartData.units.data[u]['200']), backgroundColor: '#71717a' },
+                                                    { label: 'Небойові 200', data: chartData.units.labels.map(u => chartData.units.data[u]['Неб. смерть']), backgroundColor: '#57534e' },
+                                                    { label: 'Поранення', data: chartData.units.labels.map(u => chartData.units.data[u]['Поранення']), backgroundColor: '#ef4444' },
+                                                    { label: 'Бойові', data: chartData.units.labels.map(u => chartData.units.data[u]['Бойове']), backgroundColor: '#f59e0b' },
+                                                    { label: 'Небойові', data: chartData.units.labels.map(u => chartData.units.data[u]['Небойове']), backgroundColor: '#fde047' },
+                                                    { label: 'ЗБВ', data: chartData.units.labels.map(u => chartData.units.data[u]['ЗБВ']), backgroundColor: '#3b82f6' },
+                                                    { label: 'СЗЧ', data: chartData.units.labels.map(u => chartData.units.data[u]['СЗЧ']), backgroundColor: '#c026d3' },
+                                                    { label: 'Дезертирство', data: chartData.units.labels.map(u => chartData.units.data[u]['Дезертирство']), backgroundColor: '#db2777' }
+                                                ]
+                                            }}
+                                            options={{ plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#1f2937' }, ticks: { precision: 0 } } } }}
+                                        />
+                                    </div>
+
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-6 flex flex-col">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="p-1.5 bg-red-950/50 rounded-lg"><Icon name="activity" className="w-4 h-4 text-red-400" /></div>
+                                            <h3 className="font-bold text-white text-sm">Типи травм (по епізодах)</h3>
+                                        </div>
+                                        <ChartComponent 
+                                            title="Типи_травм" showLabels={showChartLabels} showPercentages={showChartPercentages}
+                                            className="flex-1 min-h-[260px] w-full relative" type="bar"
+                                            data={{
+                                                labels: Object.keys(chartData.injuryStats),
+                                                datasets: [{ label: 'К-ть епізодів', data: Object.values(chartData.injuryStats), backgroundColor: '#ef4444', borderRadius: 4 }]
+                                            }}
+                                            options={{ plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45 } }, y: { grid: { color: '#1f2937' }, ticks: { precision: 0 } } } }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ТАБ: ЛОГИ */}
+                        {activeTab === "logs" && (
+                            <div className="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
+                                <div className="w-full md:w-64 bg-tactical-950/60 border border-tactical-800 p-3 rounded-lg shrink-0 flex flex-col gap-3">
+                                    <div className="text-[10px] text-tactical-400 uppercase font-bold">Фільтр логів за часом</div>
+                                    <div className="space-y-2">
+                                        <input type="datetime-local" value={logTimeFrom} onChange={(e) => setLogTimeFrom(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-2 py-1 text-[10px] text-white font-mono focus:outline-none" />
+                                        <input type="datetime-local" value={logTimeTo} onChange={(e) => setLogTimeTo(e.target.value)} className="w-full bg-tactical-900 border border-tactical-800 rounded px-2 py-1 text-[10px] text-white font-mono focus:outline-none" />
+                                    </div>
+                                    {(logTimeFrom || logTimeTo) && (
+                                        <button onClick={() => { setLogTimeFrom(""); setLogTimeTo(""); }} className="w-full py-1 bg-tactical-800 hover:bg-tactical-700 text-[10px] text-tactical-300 rounded transition">Очистити часовий фільтр</button>
+                                    )}
+                                </div>
+                                <div className="flex-1 bg-tactical-950/30 border border-tactical-800/60 rounded-lg p-3 overflow-y-auto space-y-2 relative">
+                                    {filteredLogs.length === 0 ? (
+                                        <div className="m-auto text-center text-tactical-500 text-xs py-10">Немає записів за цей період</div>
+                                    ) : (
+                                        filteredLogs.map(log => (
+                                            <div key={log.id} className={`border p-3 rounded-lg flex flex-col gap-1 transition-all relative ${log.undone ? 'opacity-40 bg-zinc-950/60 border-zinc-800/40' : getLogRowStyle(log.action, log.details)}`}>
+                                                {log.undone && (
+                                                    <div className="absolute top-1.5 left-2 flex items-center gap-1.5">
+                                                        <span className="text-[9px] font-bold text-zinc-500 bg-zinc-900/80 border border-zinc-700/50 px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-1">
+                                                            <Icon name="undo-2" className="w-2.5 h-2.5" /> скасовано
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className={`flex justify-between items-center text-[10px] opacity-80 border-b border-white/5 pb-1 ${log.undone ? 'mt-4' : ''}`}>
+                                                    <span className={`font-mono ${log.undone ? 'line-through text-zinc-500' : ''}`}>{log.timestamp.replace('T', ' ').substring(0, 19)}</span>
+                                                    <span className={`font-black uppercase tracking-wider ${log.undone ? 'line-through text-zinc-500' : ''}`}>{log.action}</span>
+                                                </div>
+                                                <p className={`text-xs pt-1 leading-relaxed ${log.undone ? 'line-through text-zinc-500' : ''}`}>{log.details}</p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* МОДАЛЬНІ ВІКНА */}
+                    {(isAddWoundedOpen || isEditOpen) && (
+                        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+                            <form onSubmit={isEditOpen ? handleUpdateWounded : handleSaveWounded} className="bg-tactical-950 border border-tactical-800 w-full max-w-5xl max-h-[95vh] rounded-xl flex flex-col shadow-2xl">
+                                <div className="px-4 py-3 bg-tactical-900 border-b border-tactical-800 flex justify-between items-center shrink-0">
+                                    <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                                        <Icon name="file-text" className="w-4 h-4 text-tactical-400" /> {isEditOpen ? 'Редагування та статус запису' : 'Створення нового запису'}
+                                    </h3>
+                                    <button type="button" onClick={() => {setIsAddWoundedOpen(false); setIsEditOpen(false);}} className="text-tactical-500 hover:text-white"><Icon name="x" className="w-5 h-5" /></button>
+                                </div>
+
+                                <div className="p-4 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5">
+                                    <div className="lg:col-span-4 space-y-4">
+                                        <div className="bg-tactical-900/40 border border-tactical-800 p-3 rounded-lg space-y-3 relative">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="text-[10px] text-tactical-400 font-bold uppercase">Анкетні дані бійця</label>
+                                                {selectedSoldierId && <span className="text-[9px] text-emerald-400 flex items-center gap-1 bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-800/50"><Icon name="check-circle" className="w-3 h-3" /> Прив'язано до бази</span>}
+                                            </div>
+                                            <div className="relative space-y-3">
+                                                <input type="text" placeholder="ПІБ повністю..." value={newSoldierName} onChange={(e) => handleSmartInput('name', e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white placeholder-tactical-600 focus:outline-none focus:border-tactical-500" />
+                                                <input type="text" placeholder="Позивний..." value={newSoldierCallsign} onChange={(e) => handleSmartInput('callsign', e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white placeholder-tactical-600 focus:outline-none focus:border-tactical-500" />
+                                                
+                                                {searchMatches.length > 0 && !selectedSoldierId && !isEditOpen && (
+                                                    <div className="absolute z-20 w-full top-7 bg-tactical-900 border border-tactical-700 rounded shadow-2xl max-h-48 overflow-y-auto">
+                                                        <div className="text-[9px] text-tactical-400 uppercase font-bold p-2 border-b border-tactical-800 bg-tactical-950">Знайдені збіги (клікніть для вибору)</div>
+                                                        {searchMatches.map(s => (
+                                                            <div key={s.id} onClick={() => selectExistingSoldier(s)} className="p-2 border-b border-tactical-800 hover:bg-tactical-800 cursor-pointer text-xs">
+                                                                <div className="font-bold text-white">{s.name} <span className="text-tactical-400">«{s.callsign}»</span></div>
+                                                                <div className="text-[10px] text-tactical-500">{s.rank} | {s.unit}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <select value={newSoldierRank} onChange={(e) => setNewSoldierRank(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white">
+                                                    <option value="">-- Звання (Необов'язково) --</option>
+                                                    {settings.ranks.map((r, i) => <option key={i} value={r}>{r}</option>)}
+                                                </select>
+                                                <select value={newSoldierUnit} onChange={(e) => setNewSoldierUnit(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-tactical-500">
+                                                    <option value="">-- Підрозділ --</option>
+                                                    {settings.units.map((u, i) => <option key={i} value={u}>{u}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-tactical-900/40 border border-tactical-800 p-3 rounded-lg space-y-3">
+                                            <div>
+                                                <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Тип події</label>
+                                                <select value={lossType} onChange={(e) => {
+                                                    const newType = e.target.value;
+                                                    if (isEditOpen && currentEpisode) {
+                                                        const oldType = currentEpisode.lossType;
+                                                        if (isAny300(oldType) && (isAny200(newType) || newType === 'Зниклий безвісти (ЗБВ)')) {
+                                                            setHasReport(false);
+                                                            setWeaponStatus("");
+                                                        }
+                                                    }
+                                                    setLossType(newType);
+                                                }} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-sm font-bold text-white">
+                                                    <option value="">-- Оберіть тип події --</option>
+                                                    {LOSS_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                                                </select>
+                                            </div>
+                                            
+                                            {isAny300(lossType) && (
+                                                <div>
+                                                    <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Важкість ураження</label>
+                                                    <select value={severity} onChange={(e) => setSeverity(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white">
+                                                        <option value="">-- Оберіть важкість --</option>
+                                                        <option value="Легкий">Легкий</option>
+                                                        <option value="Середній">Середній</option>
+                                                        <option value="Важкий">Важкий</option>
+                                                        <option value="Критичний">Критичний</option>
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Причина події</label>
+                                                <select value={cause} onChange={(e) => setCause(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white">
+                                                    <option value="">-- Оберіть причину --</option>
+                                                    {settings.causes.map((c, i) => <option key={i} value={c}>{c}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="lg:col-span-4 space-y-4">
+                                        <div className="bg-tactical-900/40 border border-tactical-800 p-3 rounded-lg space-y-3">
+                                            <div>
+                                                <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Час події</label>
+                                                <input type="datetime-local" value={episodeDate} onChange={(e) => setEpisodeDate(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs font-mono text-white" />
+                                            </div>
+                                            
+                                            <label className="flex items-center gap-2 text-xs font-bold text-red-400 border border-red-900/50 bg-red-950/20 p-2 rounded cursor-pointer select-none">
+                                                <input type="checkbox" checked={inUdp} onChange={(e) => setInUdp(e.target.checked)} className="bg-tactical-950 border-tactical-700 text-red-600 rounded focus:ring-0" />
+                                                Отримано під час УПД
+                                            </label>
+
+                                            <div>
+                                                <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Фактичне місце отримання</label>
+                                                <input list="locs-list" placeholder="Оберіть або введіть своє..." value={actualLoc} onChange={(e) => setActualLoc(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Документальне місце</label>
+                                                <input list="locs-list" placeholder="Оберіть або введіть своє..." value={docLoc} onChange={(e) => setDocLoc(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white" />
+                                                <datalist id="locs-list">
+                                                    {settings.sectors.map((s, i) => <option key={i} value={s}/>)}
+                                                </datalist>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Опис / Нотатки</label>
+                                                <textarea rows="2" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white"></textarea>
+                                            </div>
+                                        </div>
+
+                                        {!isAwol(lossType) && lossType !== "Зниклий безвісти (ЗБВ)" && (
+                                            <div className="bg-tactical-900/40 border border-tactical-800 p-3 rounded-lg space-y-3">
+                                                <div>
+                                                    <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Статус евакуації</label>
+                                                    <select value={evacStatus} onChange={(e) => setEvacStatus(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white">
+                                                        <option value="Не евакуйований">Не евакуйований</option>
+                                                        <option value="Евакуйований">Евакуйований</option>
+                                                        <option value="Не потребує евакуації">Не потребує евакуації</option>
+                                                    </select>
+                                                </div>
+                                                {evacStatus === "Евакуйований" && (
+                                                    <div>
+                                                        <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Дата евакуації (по замовч. = сьогодні)</label>
+                                                        <input type="date" value={evacDate} onChange={(e) => setEvacDate(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs font-mono text-white" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {isAwol(lossType) && (
+                                            <div className="bg-fuchsia-950/20 border border-fuchsia-900/50 p-3 rounded-lg space-y-3">
+                                                <div>
+                                                    <label className="text-[10px] text-fuchsia-400 font-bold uppercase block mb-1">Статус {lossType}</label>
+                                                    <select value={awolStatus} onChange={(e) => setAwolStatus(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white">
+                                                        <option value="В розшуку">В розшуку</option>
+                                                        <option value="Повернувся">Повернувся</option>
+                                                    </select>
+                                                </div>
+                                                {awolStatus === "Повернувся" && (
+                                                    <div>
+                                                        <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Дата повернення (по замовч. = сьогодні)</label>
+                                                        <input type="date" value={evacDate} onChange={(e) => setEvacDate(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs font-mono text-white" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="bg-tactical-900/40 border border-tactical-800 p-3 rounded-lg space-y-3">
+                                            <label className="flex items-center gap-2 text-xs font-semibold text-tactical-200 cursor-pointer select-none">
+                                                <input type="checkbox" checked={hasReport} onChange={(e) => {
+                                                    setHasReport(e.target.checked);
+                                                    if(!e.target.checked) setWeaponStatus("");
+                                                }} className="rounded bg-tactical-950 border-tactical-700 text-tactical-500 focus:ring-0 w-3.5 h-3.5"/> 
+                                                Складено рапорт
+                                            </label>
+                                            {hasReport && (
+                                                <div className="space-y-3 pl-6 border-l-2 border-tactical-800 mt-2">
+                                                    <div>
+                                                        <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1">Дата рапорту (якщо пусто = сьогодні)</label>
+                                                        <input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs font-mono text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-tactical-400 font-bold uppercase block mb-1 flex items-center gap-1"><Icon name="crosshair" className="w-3 h-3" /> Статус зброї</label>
+                                                        <select value={weaponStatus} onChange={(e) => setWeaponStatus(e.target.value)} className="w-full bg-tactical-950 border border-tactical-800 rounded px-2 py-1.5 text-xs text-white">
+                                                            <option value="">-- Все ок / Не вказувати --</option>
+                                                            <option value="втрачена">Втрачена</option>
+                                                            <option value="знищена">Знищена</option>
+                                                            <option value="знаходиться у підрозділі">Знаходиться у підрозділі</option>
+                                                            <option value="знаходиться на позиції">Знаходиться на позиції</option>
+                                                            <option value="СЗЧ/Дезертирство зі зброєю">СЗЧ/Дезертирство зі зброєю</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {isAny300(lossType) ? (
+                                        <div className="lg:col-span-4 bg-tactical-900/20 border border-tactical-800 rounded-lg p-3 flex flex-col items-center">
+                                            <span className="text-[10px] font-bold uppercase text-tactical-400 mb-2">Локалізація травм (Тіло)</span>
+                                            <div className="relative w-[140px] aspect-[1/2] border border-tactical-800/40 rounded bg-tactical-950/80 p-1 mb-4">
+                                                <svg viewBox="0 0 200 350" className="w-full h-full text-tactical-700">
+                                                    <circle cx="100" cy="35" r="18" fill={hasAnyInjury('head') ? '#ef4444' : '#4d6c2f'} stroke="#e5ebd9" onClick={() => setSelectedRegion('head')} className="cursor-pointer hover:opacity-80"/>
+                                                    <rect x="94" y="53" width="12" height="15" rx="3" fill={hasAnyInjury('neck') ? '#ef4444' : '#4d6c2f'} stroke="#e5ebd9" onClick={() => setSelectedRegion('neck')} className="cursor-pointer hover:opacity-80"/>
+                                                    <path d="M75,68 L125,68 L120,135 L80,135 Z" fill={hasAnyInjury('chest') ? '#ef4444' : '#4d6c2f'} stroke="#e5ebd9" onClick={() => setSelectedRegion('chest')} className="cursor-pointer hover:opacity-80"/>
+                                                    <path d="M80,135 L120,135 L115,180 L85,180 Z" fill={hasAnyInjury('abdomen') ? '#ef4444' : '#4d6c2f'} stroke="#e5ebd9" onClick={() => setSelectedRegion('abdomen')} className="cursor-pointer hover:opacity-80"/>
+                                                    <path d="M72,70 L55,75 L45,140 L55,145 L68,100 Z" fill={hasAnyInjury('arm_l') ? '#ef4444' : '#4d6c2f'} stroke="#e5ebd9" onClick={() => setSelectedRegion('arm_l')} className="cursor-pointer hover:opacity-80"/>
+                                                    <path d="M128,70 L145,75 L155,140 L145,145 L132,100 Z" fill={hasAnyInjury('arm_r') ? '#ef4444' : '#4d6c2f'} stroke="#e5ebd9" onClick={() => setSelectedRegion('arm_r')} className="cursor-pointer hover:opacity-80"/>
+                                                    <path d="M83,180 L70,320 L92,320 L98,220 Z" fill={hasAnyInjury('leg_l') ? '#ef4444' : '#4d6c2f'} stroke="#e5ebd9" onClick={() => setSelectedRegion('leg_l')} className="cursor-pointer hover:opacity-80"/>
+                                                    <path d="M117,180 L130,320 L108,320 L102,220 Z" fill={hasAnyInjury('leg_r') ? '#ef4444' : '#4d6c2f'} stroke="#e5ebd9" onClick={() => setSelectedRegion('leg_r')} className="cursor-pointer hover:opacity-80"/>
+                                                </svg>
+                                            </div>
+                                            <div className="w-full bg-tactical-950 p-2 rounded border border-tactical-800">
+                                                <div className="text-[10px] font-bold text-white uppercase border-b border-tactical-800 pb-1 mb-2">Зона: {BODY_REGIONS.find(r => r.id === selectedRegion)?.name}</div>
+                                                <div className="grid grid-cols-2 gap-1.5">
+                                                    {[{key:'amputation', label:'Ампутація'}, {key:'rupture', label:'Розрив'}, {key:'shrapnel', label:'Уламкове'}, {key:'bullet', label:'Кульове'}, {key:'fracture', label:'Перелом'}, {key:'burn', label:'Опік'}, {key:'akbt', label:'АКБТ'}, {key:'contusion', label:'Забій'}].map(i => (
+                                                        <label key={i.key} className="flex justify-between items-center p-1.5 border border-tactical-800 rounded bg-tactical-900/50 text-[10px] cursor-pointer select-none">
+                                                            <span>{i.label}</span>
+                                                            <input type="checkbox" checked={injuries[selectedRegion]?.[i.key] || false} onChange={() => toggleInjuryType(selectedRegion, i.key)} className="rounded bg-tactical-950 border-tactical-700 text-red-600 focus:ring-0 w-3.5 h-3.5"/>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="lg:col-span-4 bg-zinc-900/20 border border-zinc-800/50 rounded-lg p-3 flex flex-col items-center justify-center text-zinc-500 text-xs text-center">
+                                            <Icon name="info" className="w-10 h-10 mb-2 opacity-50" />
+                                            Для обраного типу події травми не фіксуються
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div className="px-4 py-3 bg-tactical-900/80 border-t border-tactical-800 flex items-center justify-between shrink-0">
+                                    <div>
+                                        {isEditOpen && (
+                                            confirmDelete ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-red-400 font-bold">Дійсно видалити з реєстру?</span>
+                                                    <button type="button" onClick={handleDeleteEpisode} className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded">Так, видалити</button>
+                                                    <button type="button" onClick={() => setConfirmDelete(false)} className="px-3 py-1 bg-tactical-800 hover:bg-tactical-700 text-white text-xs rounded transition">Скасувати</button>
+                                                </div>
+                                            ) : (
+                                                <button type="button" onClick={() => setConfirmDelete(true)} className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900/80 text-red-400 border border-red-900/50 text-xs font-bold rounded transition">Видалити запис</button>
+                                            )
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button type="button" onClick={() => {setIsAddWoundedOpen(false); setIsEditOpen(false);}} className="px-4 py-1.5 bg-tactical-800 hover:bg-tactical-700 text-tactical-200 text-xs font-bold rounded">Скасувати</button>
+                                        <button type="submit" className="px-5 py-1.5 bg-tactical-500 hover:bg-tactical-400 text-tactical-950 text-xs font-bold rounded shadow-lg">{isEditOpen ? 'Оновити' : 'Зберегти'}</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {isSettingsOpen && (
+                        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur flex items-center justify-center p-4">
+                            <div className="bg-tactical-950 border border-tactical-800 w-full max-w-md rounded-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                                <div className="px-4 py-3 bg-tactical-900 border-b border-tactical-800 flex justify-between items-center shrink-0">
+                                    <h3 className="font-bold text-white text-sm"><Icon name="settings" className="w-4 h-4 inline mr-1" /> Класифікатори довідників</h3>
+                                    <button onClick={() => setIsSettingsOpen(false)} className="text-tactical-500 hover:text-white"><Icon name="x" className="w-4 h-4" /></button>
+                                </div>
+                                <div className="flex border-b border-tactical-800 text-[10px] font-bold uppercase shrink-0">
+                                    {[{k:'causes', l:'Причини'}, {k:'ranks', l:'Звання'}, {k:'units', l:'Підрозд.'}, {k:'sectors', l:'Позиції'}].map(t => (
+                                        <button key={t.k} onClick={() => setActiveSettingsTab(t.k)} className={`flex-1 py-2 text-center transition ${activeSettingsTab === t.k ? 'bg-tactical-900 text-tactical-200 border-b-2 border-tactical-500' : 'text-tactical-600'}`}>{t.l}</button>
+                                    ))}
+                                </div>
+                                <div className="p-4 flex-1 overflow-hidden flex flex-col gap-3">
+                                    <div className="flex gap-2 shrink-0">
+                                        <input type="text" value={newSettingItem} onChange={(e) => setNewSettingItem(e.target.value)} placeholder="Нове значення..." className="flex-1 bg-tactical-900 border border-tactical-700 rounded px-2 py-1 text-xs text-white outline-none" />
+                                        <button onClick={addSettingItem} className="px-3 py-1 bg-tactical-600 hover:bg-tactical-500 text-tactical-950 text-xs font-bold rounded">Додати</button>
+                                    </div>
+                                    <div className="flex-1 border border-tactical-800 bg-tactical-900/30 rounded overflow-y-auto">
+                                        {(settings[activeSettingsTab] || []).map((item, idx) => (
+                                            <div key={idx} className="flex justify-between items-center p-2 border-b border-tactical-800/50 text-xs text-tactical-200">
+                                                <span>{item}</span>
+                                                <button onClick={() => removeSettingItem(item)} className="text-red-500 hover:text-red-400"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {isBackupOpen && (
+                        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur flex items-center justify-center p-4">
+                            <div className="bg-tactical-950 border border-tactical-800 w-full max-w-lg rounded-xl overflow-hidden shadow-2xl">
+                                <div className="px-4 py-3 bg-tactical-900 border-b border-tactical-800 flex justify-between items-center">
+                                    <h3 className="font-bold text-white text-sm"><Icon name="shield" className="w-4 h-4 inline mr-1 text-amber-500" /> Управління базою та Бекапи</h3>
+                                    <button onClick={() => setIsBackupOpen(false)} className="text-tactical-500 hover:text-white"><Icon name="x" className="w-4 h-4" /></button>
+                                </div>
+                                <div className="p-4 space-y-6">
+                                    <div className="space-y-2 border-b border-tactical-800 pb-4">
+                                        <div className="text-xs font-bold text-emerald-400 uppercase">Створити резервну копію (Експорт)</div>
+                                        <input type="password" value={backupPassword} onChange={(e)=>setBackupPassword(e.target.value)} placeholder="Придумайте пароль для захисту файлу..." className="w-full bg-tactical-900 border border-tactical-700 rounded px-2 py-1.5 text-xs text-white outline-none focus:border-tactical-500" />
+                                        <button onClick={handleExport} className="w-full py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded text-xs transition">Завантажити зашифрований .enc файл</button>
+                                    </div>
+                                    <div className="space-y-2 border-b border-tactical-800 pb-4">
+                                        <div className="text-xs font-bold text-blue-400 uppercase">Відновити з файлу (Імпорт)</div>
+                                        <div className="flex items-center w-full bg-tactical-900 border border-tactical-700 rounded p-1">
+                                            <input type="file" accept=".enc" onChange={handleFileChange} className="w-full text-xs text-tactical-300 outline-none file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-tactical-800 file:text-tactical-200 hover:file:bg-tactical-700 cursor-pointer" />
+                                        </div>
+                                        <input type="password" value={importPassword} onChange={(e)=>setImportPassword(e.target.value)} placeholder="Пароль для розшифрування файлу..." className="w-full bg-tactical-900 border border-tactical-700 rounded px-2 py-1.5 text-xs text-white outline-none focus:border-tactical-500" />
+                                        <button onClick={handleImport} className="w-full py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded text-xs transition">Розшифрувати та відновити базу</button>
+                                    </div>
+                                    <div className="space-y-2 pt-2">
+                                        <div className="text-xs font-bold text-red-500 uppercase flex items-center gap-1"><Icon name="alert-triangle" className="w-4 h-4" /> Небезпечна зона</div>
+                                        <button onClick={() => setIsClearDbConfirmOpen(true)} className="w-full py-1.5 bg-red-950 hover:bg-red-900 border border-red-800 text-red-400 font-bold rounded text-xs transition">Повністю очистити поточну базу</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {isClearDbConfirmOpen && (
+                        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4">
+                            <div className="bg-red-950 border border-red-800 w-full max-w-sm rounded-lg overflow-hidden shadow-2xl p-5 text-center">
+                                <Icon name="alert-octagon" className="w-12 h-12 text-red-500 mx-auto mb-3" />
+                                <h3 className="font-bold text-white text-lg mb-2">УВАГА! Очищення бази</h3>
+                                <p className="text-xs text-red-200 mb-6">
+                                    Це безповоротно видалить всіх військовослужбовців, події та логи. Ви впевнені, що хочете продовжити?
+                                </p>
+                                <div className="flex gap-3 justify-center">
+                                    <button onClick={() => setIsClearDbConfirmOpen(false)} className="px-4 py-2 bg-tactical-800 hover:bg-tactical-700 text-white text-xs font-bold rounded transition">Скасувати</button>
+                                    <button onClick={handleClearDatabase} className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded transition shadow-lg shadow-red-900">Так, очистити все</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

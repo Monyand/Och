@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Парсер БЧС в DOCX</title>
+    <!-- SheetJS для читання Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- docx для створення Word файлів -->
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <!-- JSZip для створення архіву -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #2d2d2d;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        h2 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .settings-panel {
+            background: #383838;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+
+        .settings-panel h3 {
+            margin-top: 0;
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #64b5f6;
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+        }
+
+        .grid-settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="number"] {
+            padding: 8px;
+            background: #222;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .input-group input[type="text"] {
+            text-transform: uppercase;
+        }
+
+        /* Стилі для вибору статусів */
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .btn-preset {
+            width: auto;
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #444;
+            color: #eee;
+            border: 1px solid #666;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-preset:hover {
+            background: #64b5f6;
+            color: #111;
+            border-color: #64b5f6;
+        }
+
+        .btn-preset-accent {
+            background: #1976D2;
+            border-color: #2196F3;
+            color: white;
+        }
+
+        .btn-preset-accent:hover {
+            background: #2196F3;
+            color: white;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: flex-start;
+            font-size: 13px;
+            cursor: pointer;
+            color: #ddd;
+            line-height: 1.3;
+        }
+
+        .checkbox-label input {
+            margin-right: 8px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .checkbox-label:hover {
+            color: #fff;
+        }
+
+        .file-upload-wrapper {
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #3d3d3d;
+            border: 1px dashed #777;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        input[type="file"]:hover {
+            border-color: #2196F3;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #1976D2;
+        }
+
+        #status {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 24px;
+            word-wrap: break-word;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Генератор звітів з таблиць БЧС</h2>
+        <p class="subtitle">Матричний парсер (автоматично знаходить колонки за їх назвами у шапці)</p>
+
+        <div class="settings-panel">
+            <h3>⚙️ Базові налаштування (Літери з Excel)</h3>
+            <div class="grid-settings">
+                <div class="input-group">
+                    <label>Колонка "Звання" (напр. F)</label>
+                    <input type="text" id="colRank" value="C" maxlength="2">
+                </div>
+                <div class="input-group">
+                    <label>Колонка "ПІБ" (напр. G)</label>
+                    <input type="text" id="colName" value="E" maxlength="2">
+                </div>
+                <div class="input-group">
+                    <label>Колонка "Посада/Підрозділ" (напр. AG)</label>
+                    <input type="text" id="colPosition" value="B" maxlength="2">
+                </div>
+                <div class="input-group">
+                    <label>Рядок з назвами статусів (№)</label>
+                    <input type="number" id="rowHeaders" value="2" min="1" max="10">
+                </div>
+                <div class="input-group">
+                    <label>Рядок, де починаються люди (№)</label>
+                    <input type="number" id="rowDataStart" value="4" min="2" max="20">
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-panel">
+            <h3>🎯 Які статуси виокремлювати в Word файли?</h3>
+            <div class="preset-buttons">
+                <button type="button" class="btn-preset btn-preset-accent" onclick="setPreset('set1')">⚔️ Набір 1
+                    (Забезпечення БД, РОБ, ВОП/РОП)</button>
+                <button type="button" class="btn-preset btn-preset-accent" onclick="setPreset('set2')">📋 Набір 2 (Все
+                    інше)</button>
+                <button type="button" class="btn-preset" onclick="setPreset('all')">☑️ Обрати все</button>
+                <button type="button" class="btn-preset" onclick="setPreset('none')">⬜ Очистити</button>
+            </div>
+            <div class="checkbox-grid" id="statusCheckboxes">
+                <!-- Сюди генеруються чекбокси -->
+            </div>
+        </div>
+
+        <div class="file-upload-wrapper">
+            <label for="upload" style="display:block; margin-bottom:8px; font-weight:bold;">Завантажте файли БЧС (.xlsx,
+                .csv):</label>
+            <input type="file" id="upload" accept=".xlsx, .xls, .csv, .ods" multiple />
+        </div>
+
+        <button onclick="processFiles()">Згенерувати документи (ZIP)</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Повний список статусів з вашого запиту
+        const ALL_STATUSES = [
+            "Забезпечення БД", "РОБ", "ВОП, РОП", "ОУВ, ОСУВ, ОТУ",
+            "Відряд. Інші в/ч виконання", "Відряд. Інші види ЗСУ",
+            "ППД ЛЬВІВ (встрою)", "Лікування до 10 діб", "Лікування ТРИВАЛЕ",
+            "Відпустка щорічна", "Відпустка ЗДОРОВ'Я", "Відрядження",
+            "Відновлення боєздатності", "Підрозділи що формуються",
+            "Стратегічний резерв", "Безвісти зниклі", "СЗЧ", "Полон", "200"
+        ];
+
+        const SET_1 = ["Забезпечення БД", "РОБ", "ВОП, РОП"];
+
+        function setPreset(type) {
+            const checkboxes = document.querySelectorAll('input[name="statusFilter"]');
+            checkboxes.forEach(cb => {
+                if (type === 'set1') {
+                    cb.checked = SET_1.includes(cb.value);
+                } else if (type === 'set2') {
+                    cb.checked = !SET_1.includes(cb.value);
+                } else if (type === 'all') {
+                    cb.checked = true;
+                } else if (type === 'none') {
+                    cb.checked = false;
+                }
+            });
+        }
+
+        // Генеруємо чекбокси при завантаженні
+        window.onload = () => {
+            const grid = document.getElementById('statusCheckboxes');
+            ALL_STATUSES.forEach(status => {
+                const label = document.createElement('label');
+                label.className = 'checkbox-label';
+                // Ставимо галочки за замовчуванням на критичні
+                const isChecked = ["СЗЧ", "200", "Полон", "Безвісти зниклі", "Лікування ТРИВАЛЕ"].includes(status) ? "checked" : "";
+                label.innerHTML = `<input type="checkbox" name="statusFilter" value="${status}" ${isChecked}> ${status}`;
+                grid.appendChild(label);
+            });
+        };
+
+        // Конвертер літери колонки в індекс
+        function letterToIndex(letter) {
+            let str = String(letter).toUpperCase().replace(/[^A-Z]/g, '');
+            if (!str) return 0;
+            let index = 0;
+            for (let i = 0; i < str.length; i++) {
+                index = index * 26 + (str.charCodeAt(i) - 64);
+            }
+            return index - 1; // 0-based
+        }
+
+        // Очищення стрічок (для порівняння заголовків з переносами рядків в Excel)
+        function cleanString(str) {
+            if (str === undefined || str === null) return "";
+            return String(str).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+        }
+
+        function createDocxCell(text, isHeader = false) {
+            const safeText = (text !== undefined && text !== null) ? String(text) : "";
+            return new docx.TableCell({
+                children: [
+                    new docx.Paragraph({
+                        children: [new docx.TextRun({ text: safeText, bold: isHeader, size: 22 })],
+                        alignment: isHeader ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT
+                    })
+                ]
+            });
+        }
+
+        function readFileAsync(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(new Uint8Array(e.target.result));
+                reader.onerror = e => reject(e);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function processFiles() {
+            const fileInput = document.getElementById('upload');
+            const statusDiv = document.getElementById('status');
+
+            if (typeof docx === 'undefined') {
+                statusDiv.innerHTML = '<span style="color:#ff5252;">Помилка: Бібліотека DOCX не завантажилась.</span>';
+                return;
+            }
+
+            const selectedStatuses = Array.from(document.querySelectorAll('input[name="statusFilter"]:checked')).map(cb => cb.value);
+
+            if (selectedStatuses.length === 0) {
+                statusDiv.innerHTML = '<span style="color:#ffd740;">Оберіть хоча б один статус для парсингу!</span>';
+                return;
+            }
+            if (!fileInput.files.length) {
+                statusDiv.innerHTML = '<span style="color:#ff5252;">Завантажте хоча б один файл!</span>';
+                return;
+            }
+
+            const rankIdx = letterToIndex(document.getElementById('colRank').value);
+            const nameIdx = letterToIndex(document.getElementById('colName').value);
+            const posIdx = letterToIndex(document.getElementById('colPosition').value);
+
+            // Excel рядки зазвичай нумеруються з 1, масиви в JS - з 0
+            const headerRowIdx = parseInt(document.getElementById('rowHeaders').value) - 1;
+            const dataStartIdx = parseInt(document.getElementById('rowDataStart').value) - 1;
+
+            statusDiv.innerHTML = '<span class="spinner"></span> <span style="color:#2196F3;">Аналіз таблиць та пошук колонок...</span>';
+
+            // Структура для збереження результатів: { "СЗЧ": [ {rank, name, pos}, ... ], "200": [ ... ] }
+            const statusData = {};
+            selectedStatuses.forEach(s => statusData[s] = []);
+
+            try {
+                for (let file of fileInput.files) {
+                    const data = await readFileAsync(file);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    // Читаємо як масив масивів
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+
+                    if (json.length <= headerRowIdx) continue;
+
+                    const headerRow = json[headerRowIdx];
+
+                    // Шукаємо індекси колонок для кожного обраного статусу
+                    const statusColumnMap = {};
+                    selectedStatuses.forEach(targetStatus => {
+                        const cleanTarget = cleanString(targetStatus);
+                        // Проходимось по шапці, шукаємо співпадіння
+                        for (let c = 0; c < headerRow.length; c++) {
+                            if (cleanString(headerRow[c]) === cleanTarget) {
+                                statusColumnMap[targetStatus] = c;
+                                break;
+                            }
+                        }
+                    });
+
+                    // Проходимо по людях (починаючи з вказаного рядка)
+                    for (let rowIndex = dataStartIdx; rowIndex < json.length; rowIndex++) {
+                        const row = json[rowIndex];
+                        if (!row) continue;
+
+                        const name = String(row[nameIdx] || "").trim();
+                        // Якщо немає ПІБ - пропускаємо рядок
+                        if (!name || name === "0" || name.toLowerCase().includes("разом")) continue;
+
+                        const rank = String(row[rankIdx] || "").trim();
+                        const position = String(row[posIdx] || "").trim();
+
+                        // Перевіряємо кожен обраний статус
+                        for (const [statusName, colIndex] of Object.entries(statusColumnMap)) {
+                            const cellValue = String(row[colIndex] || "").trim();
+                            // Якщо в клітинці є щось крім пустоти або нуля (напр. "1", "+", "так")
+                            if (cellValue && cellValue !== "0" && cellValue !== "-") {
+                                statusData[statusName].push({
+                                    rank: rank,
+                                    name: name,
+                                    position: position,
+                                    sourceFile: file.name
+                                });
+                            }
+                        }
+                    }
+                }
+
+                statusDiv.innerHTML = '<span class="spinner"></span> <span style="color:#2196F3;">Генерація окремих Word документів...</span>';
+
+                const zip = new JSZip();
+                let filesAdded = 0;
+                const docPromises = [];
+
+                // Створюємо документ для кожного статусу, де є люди
+                for (const [statusName, peopleArray] of Object.entries(statusData)) {
+                    if (peopleArray.length === 0) continue;
+
+                    let tableRows = [];
+
+                    // Шапка таблиці в Word
+                    tableRows.push(new docx.TableRow({
+                        children: [
+                            createDocxCell('№', true),
+                            createDocxCell('Звання', true),
+                            createDocxCell('ПІБ', true),
+                            createDocxCell('Підрозділ / Посада', true),
+                            createDocxCell('Завдання які виконувались', true)
+                        ]
+                    }));
+
+                    let counter = 1;
+                    for (const person of peopleArray) {
+                        tableRows.push(new docx.TableRow({
+                            children: [
+                                createDocxCell(counter),
+                                createDocxCell(person.rank),
+                                createDocxCell(person.name),
+                                createDocxCell(person.position),
+                                createDocxCell(statusName)
+                            ]
+                        }));
+                        counter++;
+                    }
+
+                    const doc = new docx.Document({
+                        creator: "БЧС Парсер",
+                        sections: [{
+                            properties: {
+                                page: { margin: { top: 1000, right: 1000, bottom: 1000, left: 1000 } }
+                            },
+                            children: [
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({ text: `Список особового складу: `, size: 24 }),
+                                        new docx.TextRun({ text: statusName.toUpperCase(), bold: true, size: 28 })
+                                    ],
+                                    alignment: docx.AlignmentType.CENTER,
+                                    spacing: { after: 300 }
+                                }),
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({ text: `Всього осіб: ${peopleArray.length}`, size: 20, italics: true })
+                                    ],
+                                    alignment: docx.AlignmentType.RIGHT,
+                                    spacing: { after: 200 }
+                                }),
+                                new docx.Table({
+                                    rows: tableRows,
+                                    width: { size: 100, type: docx.WidthType.PERCENTAGE }
+                                })
+                            ]
+                        }]
+                    });
+
+                    const promise = docx.Packer.toBlob(doc).then(blob => {
+                        // Очищаємо назву файлу від заборонених символів
+                        const safeFileName = statusName.replace(/[\\/*?:"<>|]/g, "_");
+                        zip.file(`Список_${safeFileName}.docx`, blob);
+                        filesAdded++;
+                    });
+
+                    docPromises.push(promise);
+                }
+
+                await Promise.all(docPromises);
+
+                if (filesAdded > 0) {
+                    statusDiv.innerHTML = '<span class="spinner"></span> <span style="color:#2196F3;">Завантаження ZIP архіву...</span>';
+
+                    const zipBlob = await zip.generateAsync({ type: "blob" });
+
+                    const url = window.URL.createObjectURL(zipBlob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    // Додаємо дату до назви архіву
+                    const today = new Date().toLocaleDateString('uk-UA').replace(/\./g, '-');
+                    a.download = `Звіти_БЧС_${today}.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    statusDiv.innerHTML = `<span style="color:#4CAF50;">✅ Готово! Знайдено людей у ${filesAdded} статусах. Архів завантажено.</span>`;
+                } else {
+                    statusDiv.innerHTML = `<span style="color:#ffd740;">За обраними статусами людей не знайдено (можливо, не співпали назви колонок).</span>`;
+                }
+
+            } catch (error) {
+                console.error("Помилка:", error);
+                statusDiv.innerHTML = `<span style="color:#ff5252;">Сталася помилка: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+
+</html>
