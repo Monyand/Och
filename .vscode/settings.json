@@ -1,0 +1,5 @@
+{
+    "github.copilot.chat.commitMessagePrompt": "Always write commit messages in Ukrainian language. Завжди генеруй опис коміту українською мовою.",
+    "github.copilot.chat.commitMessageGeneration.prompt": "Always write commit messages in Ukrainian language. Завжди генеруй опис коміту українською мовою.",
+    "git.commitMessageInstructions": "Always write commit messages in Ukrainian language. Завжди пиши заголовок та опис коміту українською мовою."
+}
