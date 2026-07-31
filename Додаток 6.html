@@ -1104,10 +1104,10 @@
                                     <div class="flex items-center gap-2 group">
                                         <div class="w-1.5 h-1.5 rounded-full bg-indigo-400 dark:bg-indigo-500 shrink-0"></div>
                                         <input type="text" value="${escapeHtml(child.name)}" 
-                                            onchange="updateChildItemName(${rIdx}, ${iIdx}, ${cIdx}, this.value)"
+                                            onchange="updateSubItemName(${rIdx}, ${iIdx}, ${cIdx}, this.value)"
                                             class="flex-1 px-2.5 py-1 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-md text-slate-800 dark:text-slate-100 placeholder-slate-400"
                                             placeholder='БП / СП (напр., "БП Дакота")'>
-                                        <button type="button" onclick="deleteChildItem(${rIdx}, ${iIdx}, ${cIdx})"
+                                        <button type="button" onclick="deleteSubItem(${rIdx}, ${iIdx}, ${cIdx})"
                                             class="text-slate-400 hover:text-red-500 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20" title="Видалити БП">
                                             ✕
                                         </button>
