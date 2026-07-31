@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="uk" class="transition-colors duration-200">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мульти-агрегатор періодів ротації</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-track { background: #1e293b; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        .drop-zone { transition: all 0.2s ease; }
+        .drop-zone.dragover { transform: scale(1.02); border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .row-expanded { background-color: #f8fafc; }
+        .dark .row-expanded { background-color: rgba(30, 41, 59, 0.5); }
+        .chevron { transition: transform 0.2s ease; }
+        .row-expanded .chevron { transform: rotate(180deg); }
+        
+        /* Запобігання горизонтальному скролу */
+        .break-word-safe { word-break: break-word; overflow-wrap: break-word; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 min-h-screen text-slate-800 dark:text-slate-200 font-sans p-4 md:p-6 transition-colors duration-200">
+    <div class="max-w-[1500px] mx-auto space-y-4">
+        
+        <!-- Header -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-5 border border-slate-200 dark:border-slate-700 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-1">Аналізатор безперервної ротації</h1>
+                <p class="text-slate-600 dark:text-slate-400 text-sm max-w-3xl">
+                    Лічильник показує кількість днів <b class="text-blue-600 dark:text-blue-400">без перерви</b>. Стан обнуляється, якщо боєць має пропуск у датах, потрапляє на позицію з виключень (ППД, лікарня) або якщо його не було в останніх завантажених списках.
+                </p>
+                <div class="mt-2 flex gap-4 text-xs font-medium">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> 50-59 днів</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> 60+ днів</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 w-full xl:w-auto flex-wrap justify-end">
+                
+                <button id="settingsBtn" class="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 rounded-xl text-sm font-semibold transition-colors border border-indigo-200 dark:border-indigo-500/20 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Налаштування (Ігнор)
+                </button>
+
+                <button id="themeToggleBtn" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors shadow-sm" title="Тема">
+                    <svg id="themeIconLight" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="themeIconDark" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="block"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <button id="clearBtn" class="bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors border border-red-200 dark:border-red-500/20 hidden shadow-sm">
+                    Очистити дані
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            
+            <!-- Left Panel: Input -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col h-[78vh] lg:col-span-1">
+                <div class="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 rounded-t-2xl">
+                    <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Завантаження
+                    </h2>
+                </div>
+                
+                <div class="p-4 flex-1 flex flex-col">
+                    <div id="dropZone" class="drop-zone border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 min-h-[200px]">
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200 text-center">Перетягніть файли</p>
+                        <p class="text-[10px] text-slate-500 text-center mt-1">.xlsx, .docx</p>
+                        <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .docx" multiple>
+                    </div>
+
+                    <div id="loadingIndicator" class="hidden mt-4 text-center">
+                        <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
+                        <p class="text-xs font-medium text-slate-700 dark:text-slate-300" id="loadingText">Обробка...</p>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 mt-2">
+                            <div id="progressBar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex-1 overflow-auto border border-slate-100 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 p-2 hidden" id="logContainer">
+                        <ul id="fileLog" class="space-y-1 text-[10px]"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Output -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col h-[78vh] lg:col-span-4">
+                <div class="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 rounded-t-2xl flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                            Таблиця результатів
+                        </h2>
+                        <p id="statsText" class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Очікування...</p>
+                    </div>
+                    <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Завантажити Excel
+                    </button>
+                </div>
+                
+                <div class="flex-1 overflow-auto p-0 relative">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-slate-50 dark:bg-slate-900/50 sticky top-0 border-b border-slate-200 dark:border-slate-700 shadow-sm z-10 text-xs">
+                            <tr>
+                                <th class="py-2 px-2 font-semibold text-slate-500 w-[5%] text-center border-r border-slate-200 dark:border-slate-700">№</th>
+                                <th class="py-2 px-2 font-semibold text-slate-500 w-[12%] border-r border-slate-200 dark:border-slate-700">Звання</th>
+                                
+                                <th class="py-2 px-2 font-semibold text-slate-500 w-[18%] border-r border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="window.handleSort('name')">
+                                    <div class="flex items-center justify-between">ПІБ <span id="sort-name" class="text-slate-300">↕</span></div>
+                                </th>
+                                
+                                <th class="py-2 px-2 font-semibold text-slate-500 w-[20%] border-r border-slate-200 dark:border-slate-700">Посада</th>
+                                
+                                <th class="py-2 px-2 font-semibold text-slate-500 w-[30%] border-r border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="window.handleSort('locations')">
+                                    <div class="flex items-center justify-between">Локації <span id="sort-locations" class="text-slate-300">↕</span></div>
+                                </th>
+                                
+                                <th class="py-2 px-1 font-semibold text-slate-500 w-[10%] text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="window.handleSort('days')">
+                                    <div class="flex items-center justify-center gap-1">Безперервно <span id="sort-days" class="text-slate-300">↕</span></div>
+                                </th>
+                                <th class="w-[5%]"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50 text-xs">
+                            <tr><td colspan="7" class="py-20 text-center text-slate-400 italic">Перетягніть файли</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Settings -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-300" id="settingsModalContent">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-white">Налаштування фільтрів</h3>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-3">
+                <p class="text-sm text-slate-600 dark:text-slate-400">
+                    Вставте сюди позиції або статуси (наприклад з Excel), які потрібно <b>ігнорувати</b> при підрахунку безперервних днів. Кожне слово/фраза з нового рядка або через кому.
+                </p>
+                <textarea id="ignoreTextArea" rows="6" placeholder="ППД&#10;Відпустка&#10;Лікарня&#10;СЗЧ" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"></textarea>
+            </div>
+            <div class="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-b-2xl">
+                <button id="cancelModalBtn" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Скасувати</button>
+                <button id="saveSettingsBtn" class="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm">Зберегти і перерахувати</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальні змінні та функції для UI
+        let database = new Map();
+        let successDatesCount = new Set();
+        let tableDataForExport = [];
+        let globalMaxDateStr = null; // Глобальна максимальна дата серед усіх файлів
+        let currentSort = { col: 'days', asc: false };
+
+        window.toggleDetails = function(personId) {
+            const row = document.getElementById(`row-${personId}`);
+            const details = document.getElementById(`details-${personId}`);
+            if (details.classList.contains('hidden')) {
+                details.classList.remove('hidden');
+                row.classList.add('row-expanded');
+            } else {
+                details.classList.add('hidden');
+                row.classList.remove('row-expanded');
+            }
+        };
+
+        window.handleSort = function(col) {
+            if (currentSort.col === col) {
+                currentSort.asc = !currentSort.asc;
+            } else {
+                currentSort.col = col;
+                currentSort.asc = (col === 'name' || col === 'locations'); // За замовчуванням текст по зростанню, числа по спаданню
+            }
+            if(database.size > 0) window.renderTableFunc();
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const progressBar = document.getElementById('progressBar');
+            const loadingText = document.getElementById('loadingText');
+            const logContainer = document.getElementById('logContainer');
+            const fileLog = document.getElementById('fileLog');
+            const resultTableBody = document.getElementById('resultTableBody');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            const statsText = document.getElementById('statsText');
+            const clearBtn = document.getElementById('clearBtn');
+            
+            // Налаштування (Модальне вікно)
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsModal = document.getElementById('settingsModal');
+            const settingsModalContent = document.getElementById('settingsModalContent');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const cancelModalBtn = document.getElementById('cancelModalBtn');
+            const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+            const ignoreTextArea = document.getElementById('ignoreTextArea');
+
+            // Завантаження збережених фільтрів
+            const savedFilters = localStorage.getItem('ignoredStatuses');
+            if(savedFilters) {
+                ignoreTextArea.value = savedFilters;
+            } else {
+                ignoreTextArea.value = "ППД\nВідпустка\nЛікарня\nСЗЧ\nСЗЧ/ППД";
+            }
+
+            function openModal() {
+                settingsModal.classList.remove('hidden');
+                setTimeout(() => {
+                    settingsModal.classList.remove('opacity-0');
+                    settingsModalContent.classList.remove('scale-95');
+                }, 10);
+            }
+
+            function closeModal() {
+                settingsModal.classList.add('opacity-0');
+                settingsModalContent.classList.add('scale-95');
+                setTimeout(() => settingsModal.classList.add('hidden'), 300);
+            }
+
+            settingsBtn.onclick = openModal;
+            closeModalBtn.onclick = closeModal;
+            cancelModalBtn.onclick = closeModal;
+            saveSettingsBtn.onclick = () => {
+                localStorage.setItem('ignoredStatuses', ignoreTextArea.value);
+                closeModal();
+                if(database.size > 0) window.renderTableFunc();
+            };
+
+            // Теми
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            function updateThemeIcons() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.getElementById('themeIconLight').classList.remove('hidden');
+                    document.getElementById('themeIconDark').classList.add('hidden');
+                } else {
+                    document.getElementById('themeIconLight').classList.add('hidden');
+                    document.getElementById('themeIconDark').classList.remove('hidden');
+                }
+            }
+            updateThemeIcons();
+            themeToggleBtn.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                updateThemeIcons();
+            });
+
+            // Drag & Drop
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) processFiles(e.dataTransfer.files);
+            });
+            fileInput.addEventListener('change', (e) => {
+                if(e.target.files.length) processFiles(e.target.files);
+            });
+
+            clearBtn.addEventListener('click', () => {
+                if(confirm("Очистити всі результати?")) {
+                    database.clear();
+                    successDatesCount.clear();
+                    globalMaxDateStr = null;
+                    fileLog.innerHTML = '';
+                    logContainer.classList.add('hidden');
+                    clearBtn.classList.add('hidden');
+                    fileInput.value = '';
+                    window.renderTableFunc();
+                }
+            });
+
+            // Експорт в Excel
+            exportExcelBtn.addEventListener('click', () => {
+                const ws_data = [
+                    ["№", "Звання", "ПІБ", "Посада", "Всі локації", "Періоди детально (Дати: Статус)", "Днів безперервно (Активний стрік)"]
+                ];
+                
+                tableDataForExport.forEach((row, i) => {
+                    const cleanRank = row.latestRank.replace(/\n|\r/g, ' ');
+                    const cleanPos = row.latestPosition.replace(/\n|\r/g, ' ');
+                    const allLocs = row.details.uniqueStatuses.join(', ');
+                    const periodsString = row.details.periods.map(p => `[${formatDateDisplay(p.start)}-${formatDateDisplay(p.end)}: ${p.status} (${p.rank}, ${p.position})${p.isIgnored ? ' - Ігнор' : ''}]`).join('; ');
+                    
+                    ws_data.push([
+                        i + 1, cleanRank, row.name, cleanPos, allLocs, periodsString, row.details.currentStreak
+                    ]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Ротації");
+                
+                const wscols = [{wch:5}, {wch:15}, {wch:30}, {wch:30}, {wch:40}, {wch:60}, {wch:15}];
+                ws['!cols'] = wscols;
+
+                const dateStr = new Date().toLocaleDateString('uk-UA').replace(/\./g, '_');
+                XLSX.writeFile(wb, `Звіт_ротацій_${dateStr}.xlsx`);
+            });
+
+            async function processFiles(files) {
+                const filesArray = Array.from(files);
+                if (filesArray.length === 0) return;
+
+                dropZone.style.display = 'none';
+                loadingIndicator.classList.remove('hidden');
+                logContainer.classList.remove('hidden');
+                clearBtn.classList.remove('hidden');
+
+                let current = 0;
+                const total = filesArray.length;
+
+                for (const file of filesArray) {
+                    current++;
+                    loadingText.textContent = `Читання файлу ${current}/${total}...`;
+                    progressBar.style.width = `${(current / total) * 100}%`;
+                    await processSingleFile(file);
+                }
+
+                loadingIndicator.classList.add('hidden');
+                dropZone.style.display = 'flex';
+                fileInput.value = ''; 
+                
+                window.renderTableFunc();
+            }
+
+            function processSingleFile(file) {
+                return new Promise((resolve) => {
+                    const extractedDate = extractDateFromFilename(file.name);
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (!extractedDate) {
+                        logMessage(`❌ "${file.name}" — Немає дати`, 'text-red-500');
+                        return resolve(); 
+                    }
+
+                    // Оновлюємо глобальну максимальну дату
+                    if (!globalMaxDateStr || extractedDate > globalMaxDateStr) {
+                        globalMaxDateStr = extractedDate;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = async function(evt) {
+                        try {
+                            let rows = [];
+                            if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+                                const workbook = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
+                                rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
+                            } else if (fileExtension === 'docx') {
+                                const result = await mammoth.convertToHtml({arrayBuffer: evt.target.result});
+                                const doc = new DOMParser().parseFromString(result.value, 'text/html');
+                                const tables = doc.querySelectorAll('table');
+                                if (tables.length > 0) {
+                                    tables.forEach(t => t.querySelectorAll('tr').forEach(tr => rows.push(Array.from(tr.querySelectorAll('td, th')).map(td => td.textContent.trim()))));
+                                }
+                            }
+
+                            let colMap = { rank: -1, name: -1, position: -1, status: -1 };
+                            for (let i = 0; i < Math.min(15, rows.length); i++) {
+                                const row = rows[i];
+                                if (!row) continue;
+                                for (let j = 0; j < row.length; j++) {
+                                    const cell = String(row[j]).toLowerCase().replace(/\s+/g, '');
+                                    if (cell.includes('звання')) colMap.rank = j;
+                                    if (cell.includes('піб') || cell.includes('прізвище')) colMap.name = j;
+                                    if (cell.includes('посада')) colMap.position = j;
+                                    if (cell.includes('статус') || cell.includes('локація') || cell.includes('завдання')) colMap.status = j;
+                                }
+                                if (colMap.name !== -1) break;
+                            }
+
+                            if (colMap.name === -1) {
+                                const maxCols = Math.max(...rows.slice(0, 15).map(r => r ? r.length : 0));
+                                if (maxCols >= 4) { colMap.rank = 1; colMap.name = 2; colMap.position = 3; colMap.status = 4; } 
+                                else { colMap.name = 0; }
+                            }
+
+                            let namesFound = 0;
+                            for (let i = 0; i < rows.length; i++) {
+                                if (!rows[i] || rows[i].length === 0) continue;
+                                const cellName = String(rows[i][colMap.name] || '').trim();
+                                
+                                if (cellName && !cellName.toLowerCase().includes('піб') && !/^\d+$/.test(cellName)) {
+                                    const rawName = cellName.replace(/^\d+[\.\)]\s*/, '').replace(/\s+/g, ' ').trim();
+                                    
+                                    if (rawName.length > 3 && !rawName.toLowerCase().includes('звання')) {
+                                        const rank = colMap.rank !== -1 ? String(rows[i][colMap.rank] || '').trim() : 'Не вказано';
+                                        const position = colMap.position !== -1 ? String(rows[i][colMap.position] || '').trim() : 'Не вказано';
+                                        const status = (colMap.status !== -1 ? String(rows[i][colMap.status] || '').trim() : '') || 'Не вказано';
+
+                                        // Нормалізуємо ключ для дедуплікації ПІБ та апострофів
+                                        const normalizedKey = rawName.toLowerCase().replace(/['’‘`ʼ]/g, "'");
+
+                                        // Формат для відображення: Кожне Слово З Великої
+                                        const displayFullName = rawName.split(' ').map(word => {
+                                            if (word.includes('.')) return word.toUpperCase();
+                                            return word.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-');
+                                        }).join(' ').replace(/['’‘`ʼ]/g, "'");
+
+                                        if (!database.has(normalizedKey)) {
+                                            database.set(normalizedKey, { name: displayFullName, records: new Map() });
+                                        }
+
+                                        const person = database.get(normalizedKey);
+                                        const existing = person.records.get(extractedDate);
+                                        let finalStatus = status;
+                                        
+                                        if (existing && existing.status !== status && !existing.status.includes(status)) {
+                                            finalStatus = existing.status + ' + ' + status;
+                                        }
+
+                                        person.records.set(extractedDate, { 
+                                            status: finalStatus,
+                                            rank: rank,
+                                            position: position
+                                        });
+                                        namesFound++;
+                                    }
+                                }
+                            }
+
+                            if(namesFound > 0) {
+                                successDatesCount.add(extractedDate);
+                                logMessage(`✅ ${formatDateDisplay(extractedDate)} (${namesFound} осіб)`, 'text-emerald-600 dark:text-emerald-400');
+                            }
+                        } catch (err) {
+                            logMessage(`❌ Помилка: ${file.name}`, 'text-red-500');
+                        }
+                        resolve();
+                    };
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            function extractDateFromFilename(filename) {
+                const m1 = filename.match(/(\d{4})[.\-_](\d{1,2})[.\-_](\d{1,2})/);
+                if (m1) return `${m1[1]}-${m1[2].padStart(2, '0')}-${m1[3].padStart(2, '0')}`;
+                const m2 = filename.match(/(\d{1,2})[.\-_](\d{1,2})[.\-_](\d{2,4})/);
+                if (m2) return `${m2[3].length===2?'20'+m2[3]:m2[3]}-${m2[2].padStart(2, '0')}-${m2[1].padStart(2, '0')}`;
+                return null;
+            }
+
+            // Підрахунок періодів та стріку
+            function buildDetailedPeriods(recordsMap, ignoredKeywords = []) {
+                if (recordsMap.size === 0) return { periods: [], currentStreak: 0, uniqueStatuses: [] };
+
+                const sortedDates = Array.from(recordsMap.keys()).sort();
+                const latestPersonDate = sortedDates[sortedDates.length - 1];
+                const periods = [];
+                let currentPeriod = null;
+                const uniqueStatuses = new Set();
+
+                for (let i = 0; i < sortedDates.length; i++) {
+                    const dateStr = sortedDates[i];
+                    const record = recordsMap.get(dateStr);
+                    const statusStr = record.status;
+                    const rankStr = record.rank;
+                    const posStr = record.position;
+                    const statusLow = statusStr.toLowerCase();
+                    
+                    const isIgnored = ignoredKeywords.length > 0 && ignoredKeywords.some(kw => statusLow.includes(kw));
+                    if(statusStr !== 'Не вказано' && !isIgnored) uniqueStatuses.add(statusStr);
+
+                    if (!currentPeriod) {
+                        currentPeriod = { start: dateStr, end: dateStr, status: statusStr, rank: rankStr, position: posStr, days: 1, isIgnored: isIgnored };
+                    } else {
+                        const diffDays = Math.round((new Date(dateStr) - new Date(currentPeriod.end)) / 86400000);
+
+                        if (diffDays === 1 && currentPeriod.status === statusStr && currentPeriod.isIgnored === isIgnored && currentPeriod.rank === rankStr && currentPeriod.position === posStr) {
+                            currentPeriod.end = dateStr;
+                            currentPeriod.days++;
+                        } else {
+                            periods.push(currentPeriod);
+                            currentPeriod = { start: dateStr, end: dateStr, status: statusStr, rank: rankStr, position: posStr, days: 1, isIgnored: isIgnored };
+                        }
+                    }
+                }
+                if (currentPeriod) periods.push(currentPeriod);
+
+                // Рахуємо поточний стрік 
+                let currentStreak = 0;
+                let isGloballyInactive = false;
+
+                // ПЕРЕВІРКА НА ВИБУТТЯ: Якщо остання дата бійця відстає від глобальної більше ніж на 1 день
+                if (globalMaxDateStr) {
+                    const gapToGlobalMax = Math.round((new Date(globalMaxDateStr) - new Date(latestPersonDate)) / 86400000);
+                    if (gapToGlobalMax > 1) {
+                        isGloballyInactive = true;
+                    }
+                }
+
+                // Рахуємо дні тільки якщо він НЕ вибув глобально
+                if (!isGloballyInactive && periods.length > 0) {
+                    for (let i = periods.length - 1; i >= 0; i--) {
+                        const p = periods[i];
+                        if (p.isIgnored) break;
+                        if (i < periods.length - 1) {
+                            const nextP = periods[i + 1];
+                            const gap = Math.round((new Date(nextP.start) - new Date(p.end)) / 86400000);
+                            if (gap > 1) break; // Розрив у власній історії
+                        }
+                        currentStreak += p.days;
+                    }
+                }
+
+                return {
+                    periods,
+                    currentStreak,
+                    uniqueStatuses: Array.from(uniqueStatuses),
+                    isGloballyInactive // Прапорець для відображення в UI
+                };
+            }
+
+            window.renderTableFunc = function() {
+                const ignoredKeywords = ignoreTextArea.value.split(/[\n,;]+/).map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+                
+                ['name', 'locations', 'days'].forEach(col => {
+                    const el = document.getElementById(`sort-${col}`);
+                    if(el) el.textContent = currentSort.col === col ? (currentSort.asc ? '↑' : '↓') : '↕';
+                    if(el) el.className = currentSort.col === col ? 'text-blue-500 font-bold ml-1' : 'text-slate-300 ml-1';
+                });
+
+                if (database.size === 0) {
+                    resultTableBody.innerHTML = `<tr><td colspan="7" class="py-20 text-center text-slate-400">Немає даних</td></tr>`;
+                    statsText.textContent = '';
+                    exportExcelBtn.classList.add('hidden');
+                    return;
+                }
+
+                let tableData = [];
+                for (let [normalizedKey, personData] of database) {
+                    const sortedDates = Array.from(personData.records.keys()).sort();
+                    const latestDate = sortedDates[sortedDates.length - 1];
+                    const latestRecord = personData.records.get(latestDate);
+
+                    tableData.push({
+                        name: personData.name,
+                        latestRank: latestRecord.rank,
+                        latestPosition: latestRecord.position,
+                        details: buildDetailedPeriods(personData.records, ignoredKeywords)
+                    });
+                }
+
+                tableData.sort((a, b) => {
+                    let valA, valB;
+                    if (currentSort.col === 'name') { valA = a.name; valB = b.name; }
+                    else if (currentSort.col === 'locations') { valA = a.details.uniqueStatuses.join(''); valB = b.details.uniqueStatuses.join(''); }
+                    else if (currentSort.col === 'days') { valA = a.details.currentStreak; valB = b.details.currentStreak; }
+                    
+                    if (valA < valB) return currentSort.asc ? -1 : 1;
+                    if (valA > valB) return currentSort.asc ? 1 : -1;
+                    return 0;
+                });
+
+                tableDataForExport = tableData;
+                resultTableBody.innerHTML = '';
+
+                tableData.forEach((row, idx) => {
+                    const personId = `p-${idx}`;
+                    const details = row.details;
+                    const formattedRank = row.latestRank.replace(/\s+/g, '<br>');
+
+                    let statusHtml = details.uniqueStatuses.length > 0 
+                        ? `<div class="flex flex-wrap gap-1">${details.uniqueStatuses.map(s => `<span class="bg-slate-200 dark:bg-slate-700/80 rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight max-w-[120px] truncate" title="${s}">${s}</span>`).join('')}</div>`
+                        : '<span class="text-slate-400 italic text-xs">Немає</span>';
+
+                    let daysClass = "text-slate-800 dark:text-slate-200 font-bold bg-slate-100 dark:bg-slate-800";
+                    if (details.currentStreak >= 60) daysClass = "text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/40 border border-red-300 dark:border-red-800 font-black animate-pulse";
+                    else if (details.currentStreak >= 50) daysClass = "text-orange-700 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/40 border border-orange-300 dark:border-orange-800 font-bold";
+                    else if (details.isGloballyInactive) daysClass = "text-slate-400 bg-transparent border-slate-200 dark:border-slate-700 opacity-60"; // Візуально гасимо тих, хто вибув
+
+                    const trMain = document.createElement('tr');
+                    trMain.id = `row-${personId}`;
+                    trMain.className = `cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all border-b border-slate-100 dark:border-slate-700/50 group ${details.isGloballyInactive ? 'opacity-70' : ''}`;
+                    trMain.onclick = () => toggleDetails(personId);
+                    
+                    trMain.innerHTML = `
+                        <td class="py-2 px-2 text-slate-400 text-center border-r border-slate-100 dark:border-slate-700/50">${idx + 1}</td>
+                        <td class="py-2 px-2 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-700/50 leading-tight break-word-safe">${formattedRank}</td>
+                        <td class="py-2 px-2 font-bold text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-700/50 break-word-safe">
+                            ${row.name}
+                            ${details.isGloballyInactive ? '<br><span class="text-[9px] text-red-500 font-normal">Вибув зі списків</span>' : ''}
+                        </td>
+                        <td class="py-2 px-2 text-slate-500 dark:text-slate-400 text-[11px] border-r border-slate-100 dark:border-slate-700/50 leading-tight">${row.latestPosition}</td>
+                        <td class="py-1 px-2 border-r border-slate-100 dark:border-slate-700/50">${statusHtml}</td>
+                        <td class="py-2 px-1 text-center border-r border-slate-100 dark:border-slate-700/50">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded border ${daysClass}">${details.currentStreak}</span>
+                        </td>
+                        <td class="py-2 px-1 text-center text-slate-300 group-hover:text-blue-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron mx-auto"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </td>
+                    `;
+
+                    const trDetails = document.createElement('tr');
+                    trDetails.id = `details-${personId}`;
+                    trDetails.className = 'hidden bg-slate-50/80 dark:bg-slate-900/40 border-b border-slate-200 dark:border-slate-700 shadow-inner';
+                    
+                    let periodsHtml = details.periods.map((p, pIdx) => {
+                        let isPartOfStreak = false;
+                        if (!p.isIgnored && !details.isGloballyInactive) {
+                            let gapFound = false;
+                            for(let k = pIdx; k < details.periods.length; k++){
+                                if(details.periods[k].isIgnored) { gapFound = true; break; }
+                                if(k < details.periods.length - 1) {
+                                    const gap = Math.round((new Date(details.periods[k+1].start) - new Date(details.periods[k].end)) / 86400000);
+                                    if(gap > 1) { gapFound = true; break; }
+                                }
+                            }
+                            isPartOfStreak = !gapFound;
+                        }
+
+                        return `
+                        <div class="flex flex-col md:flex-row md:items-center justify-between p-2.5 ${p.isIgnored ? 'bg-slate-100 dark:bg-slate-800/30 opacity-50' : (isPartOfStreak ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/30' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700/50')} rounded border mb-1.5 shadow-sm text-xs">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono ${isPartOfStreak ? 'text-blue-700 dark:text-blue-400 font-bold' : 'text-slate-600 dark:text-slate-400'}">
+                                        ${formatDateDisplay(p.start)} - ${formatDateDisplay(p.end)}
+                                    </span>
+                                    <span class="${p.isIgnored ? 'line-through' : 'font-semibold text-slate-700 dark:text-slate-300'}">${p.status}</span>
+                                    ${p.isIgnored ? '<span class="px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[9px] uppercase">Ігнор/Скидання</span>' : ''}
+                                </div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                                    ${p.rank} &bull; ${p.position}
+                                </div>
+                            </div>
+                            <span class="${isPartOfStreak ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-500'} self-end md:self-auto mt-1 md:mt-0">
+                                ${p.days} дн.
+                            </span>
+                        </div>
+                    `}).join('');
+
+                    trDetails.innerHTML = `<td colspan="7" class="p-3 pl-8 md:pl-12"><div class="max-w-4xl">${periodsHtml}</div></td>`;
+
+                    resultTableBody.appendChild(trMain);
+                    resultTableBody.appendChild(trDetails);
+                });
+
+                statsText.textContent = `ПІБ: ${database.size} | Дат: ${successDatesCount.size} | Остання дата: ${formatDateDisplay(globalMaxDateStr)}`;
+                exportExcelBtn.classList.remove('hidden');
+            }
+
+            function formatDateDisplay(dateStr) {
+                if (!dateStr) return '';
+                const [y, m, d] = dateStr.split('-');
+                return `${d}.${m}.${y.slice(2)}`;
+            }
+
+            function logMessage(msg, colorClass) {
+                const li = document.createElement('li');
+                li.className = `${colorClass}`;
+                li.textContent = msg;
+                fileLog.appendChild(li);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
