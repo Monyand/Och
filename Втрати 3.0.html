@@ -12,9 +12,9 @@
                 extend: {
                     colors: {
                         tactical: {
-                            50: '#f4f6f0', 100: '#e5ebd9', 200: '#cbdab4', 300: '#a7c185',
-                            400: '#84a65c', 500: '#648840', 600: '#4d6c2f', 700: '#3d5427',
-                            800: '#324522', 900: '#2b3b1f', 950: '#151e0f',
+                            50: '#f6f7f6', 100: '#e3e7e4', 200: '#c5ccc7', 300: '#9fa8a1',
+                            400: '#7a857d', 500: '#5c685f', 600: '#465049', 700: '#38403a',
+                            800: '#2d332e', 900: '#262b27', 950: '#141815',
                         },
                     }
                 }
@@ -53,7 +53,7 @@
     <div id="root" class="flex-1 flex flex-col"></div>
 
     <script type="text/babel" data-presets="react,env">
-        const { useState, useEffect, useMemo, useRef, useCallback } = React;
+        const { useState, useEffect, useMemo, useRef, useCallback, startTransition } = React;
 
         const DEFAULT_RANKS = ["Солдат", "Старший солдат", "Молодший сержант", "Сержант", "Старший сержант", "Головний сержант", "Молодший лейтенант", "Лейтенант", "Старший лейтенант", "Капітан", "Майор"];
         const DEFAULT_UNITS = ["1-ша рота", "2-га рота", "3-тя рота", "Взвод вогневої підтримки", "Розвідвзвод", "Управління батальйону"];
@@ -305,6 +305,14 @@
             if (dLow.includes("200") || dLow.includes("збв") || dLow.includes("сзч") || dLow.includes("дезерт") || dLow.includes("загиб") || dLow.includes("смерть") || aLow.includes("видалення")) return "bg-red-950/40 border-red-900/60 text-red-200 hover:bg-red-950/60";
             if (dLow.includes("300") || dLow.includes("травм") || dLow.includes("поран") || dLow.includes("важк") || dLow.includes("критич")) return "bg-amber-950/30 border-amber-900/40 text-amber-200 hover:bg-amber-950/50";
             return "bg-tactical-900/20 border-tactical-800 text-tactical-300 hover:bg-tactical-900/30";
+        };
+
+        const formatLogTime = (isoStr) => {
+            try {
+                const d = new Date(isoStr);
+                const pad = n => String(n).padStart(2, '0');
+                return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${String(d.getFullYear()).slice(2)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            } catch { return isoStr.replace('T',' ').substring(0,19); }
         };
         
         const getInjStrUI = (inj) => {
@@ -611,47 +619,108 @@
                     allEpisodes = Array.from(map.values());
                 }
 
-                let actualEvacuatedInPeriod = 0; 
-                let evacWoundedInPeriod = 0;     
-                let evacWoundedBefore = 0;       
+                let actualEvacTotal = 0, actualEvac300 = 0, actualEvac200 = 0;
+                let evacPeriod300 = 0, evacPeriod200 = 0;
+                let evacBefore300 = 0, evacBefore200 = 0;
                 
-                let totalWoundedInPeriod = 0;    
-                let woundedInPeriodAndEvacuated = 0; 
-                let woundedInPeriodWaiting = 0;  
-                let woundedInPeriodNotNeeded = 0;
+                let totalPeriod300 = 0, totalPeriod200 = 0;
+                let periodEvacuated300 = 0, periodEvacuated200 = 0;
+                let periodWaiting300 = 0, periodWaiting200 = 0;
+                
+                let globalWaiting300 = 0, globalWaiting200 = 0;
+                let globalWaitingCritHeavy = 0;
+                let sumEvacTimeDays = 0, countEvacTime = 0;
 
                 allEpisodes.forEach(ep => {
+                    const epDateStr = ep.date.substring(0, 10);
+                    if (toDateStr && epDateStr > toDateStr) return; // Ignore future episodes
+
                     const isLoss = isAny300(ep.lossType) || isAny200(ep.lossType) || ep.lossType === 'Зниклий безвісти (ЗБВ)';
                     if (!isLoss) return; 
+
+                    let okUdp = anUdp === "all" ? true : (anUdp === "yes" ? ep.inUdp : !ep.inUdp);
+                    if (!okUdp) return;
+
+                    const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : ep.lossType;
+                    const is300 = isAny300(effType);
+                    const is200 = isAny200(effType) || effType === 'Зниклий безвісти (ЗБВ)';
 
                     const epDateObj = new Date(ep.date);
                     const isWoundInPeriod = (!anDateFrom || epDateObj >= new Date(anDateFrom)) && (!anDateTo || epDateObj <= new Date(anDateTo));
                     
-                    if (isWoundInPeriod) {
-                        totalWoundedInPeriod++;
-                        if (ep.evacStatus === 'Евакуйований') woundedInPeriodAndEvacuated++;
-                        else if (ep.evacStatus === 'Не евакуйований') woundedInPeriodWaiting++;
-                        else if (ep.evacStatus === 'Не потребує евакуації') woundedInPeriodNotNeeded++;
+                    let isHistoricallyEvacuated = ep.evacStatus === 'Евакуйований';
+                    let epEvacTimeStr = ep.evacTime ? ep.evacTime.substring(0, 10) : "";
+                    if (toDateStr && epEvacTimeStr && epEvacTimeStr > toDateStr) {
+                        isHistoricallyEvacuated = false;
                     }
 
-                    if (ep.evacStatus === 'Евакуйований' && ep.evacTime) {
-                        const isEvacInPeriod = (!fromDateStr || ep.evacTime >= fromDateStr) && (!toDateStr || ep.evacTime <= toDateStr);
+                    let historicalEvacStatus = ep.evacStatus;
+                    if (historicalEvacStatus === 'Евакуйований' && toDateStr && epEvacTimeStr && epEvacTimeStr > toDateStr) {
+                        historicalEvacStatus = 'Не евакуйований';
+                    }
+
+                    if (historicalEvacStatus === 'Не евакуйований') {
+                        if (is300) {
+                            globalWaiting300++;
+                            if (ep.severity === 'Критичний' || ep.severity === 'Важкий') {
+                                globalWaitingCritHeavy++;
+                            }
+                        } else if (is200) {
+                            globalWaiting200++;
+                        }
+                    }
+
+                    if (isWoundInPeriod) {
+                        if (is300) {
+                            totalPeriod300++;
+                            if (historicalEvacStatus === 'Евакуйований') periodEvacuated300++;
+                            else if (historicalEvacStatus === 'Не евакуйований') periodWaiting300++;
+                        } else if (is200) {
+                            totalPeriod200++;
+                            if (historicalEvacStatus === 'Евакуйований') periodEvacuated200++;
+                            else if (historicalEvacStatus === 'Не евакуйований') periodWaiting200++;
+                        }
+                    }
+
+                    if (isHistoricallyEvacuated && epEvacTimeStr) {
+                        const isEvacInPeriod = (!fromDateStr || epEvacTimeStr >= fromDateStr) && (!toDateStr || epEvacTimeStr <= toDateStr);
                         if (isEvacInPeriod) {
-                            actualEvacuatedInPeriod++;
+                            actualEvacTotal++;
+                            if (is300) actualEvac300++;
+                            if (is200) actualEvac200++;
+                            
                             if (isWoundInPeriod) {
-                                evacWoundedInPeriod++;
+                                if (is300) evacPeriod300++;
+                                if (is200) evacPeriod200++;
                             } else if (fromDateStr && epDateObj < new Date(anDateFrom)) {
-                                evacWoundedBefore++;
+                                if (is300) evacBefore300++;
+                                if (is200) evacBefore200++;
+                            }
+
+                            if (ep.date) {
+                                const msDiff = new Date(epEvacTimeStr) - epDateObj;
+                                if (msDiff >= 0) {
+                                    sumEvacTimeDays += msDiff / (1000 * 60 * 60 * 24);
+                                    countEvacTime++;
+                                }
                             }
                         }
                     }
                 });
 
+                let avgEvacTimeDays = countEvacTime > 0 ? (sumEvacTimeDays / countEvacTime).toFixed(1) : 0;
+                let evacSuccessRate = totalPeriod300 + totalPeriod200 > 0 ? Math.round(((periodEvacuated300 + periodEvacuated200) / (totalPeriod300 + totalPeriod200)) * 100) : 0;
+
                 return { 
-                    actualEvacuatedInPeriod, evacWoundedInPeriod, evacWoundedBefore,
-                    totalWoundedInPeriod, woundedInPeriodAndEvacuated, woundedInPeriodWaiting, woundedInPeriodNotNeeded
+                    actualEvacTotal, actualEvac300, actualEvac200,
+                    evacPeriod300, evacPeriod200,
+                    evacBefore300, evacBefore200,
+                    totalPeriod300, periodEvacuated300, periodWaiting300,
+                    totalPeriod200, periodEvacuated200, periodWaiting200,
+                    globalWaiting300, globalWaiting200, globalWaitingCritHeavy,
+                    avgEvacTimeDays, evacSuccessRate
                 };
-            }, [episodes, anDateFrom, anDateTo, anShowLatest]);
+            }, [episodes, anDateFrom, anDateTo, anUdp, anShowLatest, groupAnalytics]);
 
             const anFilteredEpisodes = useMemo(() => {
                 let filtered = episodes.filter(ep => {
@@ -874,6 +943,178 @@
                     causeColors
                 };
             }, [anFilteredEpisodes, soldiers, groupAnalytics]);
+
+            const soldierHistory = useMemo(() => {
+                if (!selectedSoldierId) return [];
+                return episodes
+                    .filter(ep => ep.soldierId === selectedSoldierId && (!currentEpisode || ep.id !== currentEpisode.id))
+                    .sort((a, b) => new Date(b.date) - new Date(a.date));
+            }, [selectedSoldierId, currentEpisode, episodes]);
+
+            const handleExportAnalyticsText = () => {
+                let fromDateStr = anDateFrom ? anDateFrom.substring(0, 10) : ""; 
+                let toDateStr = anDateTo ? anDateTo.substring(0, 10) : "";
+
+                const deadEps = [];
+                const miaEps = [];
+                const woundedEps = [];
+                const periodWoundedEvacEps = [];
+                const periodWoundedNotEvacEps = [];
+                
+                const deadCauses = {};
+                let udpCount = 0;
+                let broCount = 0;
+                const sevCounts = { 'Легкий': 0, 'Середній': 0, 'Важкий': 0, 'Критичний': 0 };
+                const injCounts = {};
+                const woundCauses = {};
+                
+                const injDict = {amputation:'Ампутація', rupture:'Розрив', shrapnel:'Уламкове', bullet:'Кульове', fracture:'Перелом', burn:'Опік', akbt:'АКБТ', contusion:'Забій'};
+                
+                anFilteredEpisodes.forEach(ep => {
+                    const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : ep.lossType;
+                    
+                    const isDead = isAny200(effType);
+                    const isMia = effType === 'Зниклий безвісти (ЗБВ)';
+                    const isWounded = isAny300(effType);
+                    
+                    if (isDead) {
+                        deadEps.push(ep);
+                        deadCauses[ep.cause || "Інше"] = (deadCauses[ep.cause || "Інше"] || 0) + 1;
+                    } else if (isMia) {
+                        miaEps.push(ep);
+                    } else if (isWounded) {
+                        woundedEps.push(ep);
+                        if (ep.inUdp) udpCount++; else broCount++;
+                        sevCounts[ep.severity || 'Легкий'] = (sevCounts[ep.severity || 'Легкий'] || 0) + 1;
+                        woundCauses[ep.cause || "Інше"] = (woundCauses[ep.cause || "Інше"] || 0) + 1;
+                        
+                        if (ep.injuries) {
+                            Object.values(ep.injuries).forEach(r => {
+                                Object.entries(r).forEach(([k, v]) => {
+                                    if (v && injDict[k]) injCounts[injDict[k]] = (injCounts[injDict[k]] || 0) + 1;
+                                });
+                            });
+                        }
+                        
+                        let evDateStr = ep.evacTime ? ep.evacTime.substring(0, 10) : "";
+                        let evacuatedInPeriod = false;
+                        if (ep.evacStatus === 'Евакуйований' && evDateStr) {
+                            let okFrom = !fromDateStr || evDateStr >= fromDateStr;
+                            let okTo = !toDateStr || evDateStr <= toDateStr;
+                            if (okFrom && okTo) evacuatedInPeriod = true;
+                        }
+                        
+                        if (evacuatedInPeriod) periodWoundedEvacEps.push(ep);
+                        else periodWoundedNotEvacEps.push(ep);
+                    }
+                });
+
+                let allEps = episodes;
+                if (anShowLatest) {
+                    const map = new Map();
+                    [...episodes].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(ep => map.set(ep.soldierId, ep));
+                    allEps = Array.from(map.values());
+                }
+
+                const actualEvacWoundedEps = [];
+                const actualEvacDeadEps = [];
+                const globalNotEvacWoundedEps = [];
+                const globalNotEvacDeadEps = [];
+
+                allEps.forEach(ep => {
+                    const epDateStr = ep.date.substring(0, 10);
+                    if (toDateStr && epDateStr > toDateStr) return; // Ignore future episodes relative to this report period
+
+                    const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : ep.lossType;
+                    const isWounded = isAny300(effType);
+                    const isDead = isAny200(effType) || effType === 'Зниклий безвісти (ЗБВ)';
+
+                    let okUdp = anUdp === "all" ? true : (anUdp === "yes" ? ep.inUdp : !ep.inUdp);
+                    if (okUdp) {
+                        let isHistoricallyEvacuated = ep.evacStatus === 'Евакуйований';
+                        let epEvacTimeStr = ep.evacTime ? ep.evacTime.substring(0, 10) : "";
+                        if (toDateStr && epEvacTimeStr && epEvacTimeStr > toDateStr) {
+                            isHistoricallyEvacuated = false;
+                        }
+
+                        if (isHistoricallyEvacuated && epEvacTimeStr) {
+                            let okFrom = !fromDateStr || epEvacTimeStr >= fromDateStr;
+                            let okTo = !toDateStr || epEvacTimeStr <= toDateStr;
+                            if (okFrom && okTo) {
+                                if (isWounded) actualEvacWoundedEps.push(ep);
+                                if (isDead) actualEvacDeadEps.push(ep);
+                            }
+                        }
+
+                        let historicalEvacStatus = ep.evacStatus;
+                        if (historicalEvacStatus === 'Евакуйований' && toDateStr && epEvacTimeStr && epEvacTimeStr > toDateStr) {
+                            historicalEvacStatus = 'Не евакуйований';
+                        }
+
+                        if (historicalEvacStatus === 'Не евакуйований') {
+                            if (isWounded) globalNotEvacWoundedEps.push(ep);
+                            if (isDead) globalNotEvacDeadEps.push(ep);
+                        }
+                    }
+                });
+
+                const getCallsigns = (eps) => {
+                    if (!eps.length) return "";
+                    const calls = eps.map(e => {
+                        const s = soldiers.find(s => s.id === e.soldierId);
+                        return s ? (s.callsign || s.name || "Невідомо") : "Невідомо";
+                    });
+                    const uniqueCalls = [...new Set(calls)].filter(Boolean);
+                    if (!uniqueCalls.length) return "";
+                    return ` (позивні: ${uniqueCalls.join(', ')})`;
+                };
+                
+                let report = `Наші втрати:\n`;
+                report += `Безповоротні – ${deadEps.length} в/сл.${getCallsigns(deadEps)}`;
+                if (deadEps.length > 0) {
+                    report += `, з них:\n`;
+                    Object.entries(deadCauses).forEach(([cause, count]) => {
+                        report += `${count} в/сл. – ${cause};\n`;
+                    });
+                } else {
+                    report += `\n`;
+                }
+                
+                report += `\nЗниклі безвісти – ${miaEps.length}${getCallsigns(miaEps)}\n\n`;
+                
+                report += `Поранено – ${woundedEps.length}${getCallsigns(woundedEps)}`;
+                if (woundedEps.length > 0) {
+                    report += `, з них:\n`;
+                    report += `    • На УПД – ${udpCount}; БРО – ${broCount};\n`;
+                    let sevStr = [];
+                    if (sevCounts['Легкий']) sevStr.push(`Легкі – ${sevCounts['Легкий']}`);
+                    if (sevCounts['Середній']) sevStr.push(`Середні – ${sevCounts['Середній']}`);
+                    if (sevCounts['Важкий']) sevStr.push(`Важкі – ${sevCounts['Важкий']}`);
+                    if (sevCounts['Критичний']) sevStr.push(`Критичні – ${sevCounts['Критичний']}`);
+                    report += `    • ${sevStr.join(', ')};\n`;
+                    report += `    • Евакуйовано – ${periodWoundedEvacEps.length}${getCallsigns(periodWoundedEvacEps)}, не евакуйовано – ${periodWoundedNotEvacEps.length}${getCallsigns(periodWoundedNotEvacEps)};\n`;
+                    
+                    let injStr = Object.entries(injCounts).map(([k, v]) => `${k} – ${v}`).join(', ');
+                    if (injStr) report += `    • ${injStr};\n`;
+                    
+                    let wcStr = Object.entries(woundCauses).map(([k, v]) => `${k} – ${v}`).join(', ');
+                    if (wcStr) report += `    • ${wcStr}\n`;
+                } else {
+                     report += `\n`;
+                }
+
+                report += `\nПроведено евакуацію:\n`;
+                const activeCritCount = globalNotEvacWoundedEps.filter(e => e.severity === 'Критичний' || e.severity === 'Важкий').length;
+                report += `    • Поранених – ${actualEvacWoundedEps.length} в/сл, залишається неевакуйованих поранених – ${globalNotEvacWoundedEps.length} в/сл. (з них ${activeCritCount} в/сл. потребують першочергової евакуації)\n`;
+                report += `    • Тіла – ${actualEvacDeadEps.length}${getCallsigns(actualEvacDeadEps)}, залишається неевакуйованих тіл – ${globalNotEvacDeadEps.length}${getCallsigns(globalNotEvacDeadEps)}.\n`;
+
+                navigator.clipboard.writeText(report).then(() => {
+                    triggerNotification("Текстовий звіт скопійовано в буфер обміну!", "success");
+                }).catch(err => {
+                    console.error(err);
+                    triggerNotification("Не вдалося скопіювати звіт", "error");
+                });
+            };
 
             const handleExportAnalyticsExcel = async () => {
                 if (typeof ExcelJS === 'undefined') {
@@ -1456,9 +1697,14 @@
                             
                             <div className="flex items-center gap-2">
                                 {activeTab === "analytics" && (
-                                    <button onClick={handleExportAnalyticsExcel} className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-emerald-100 font-bold border border-emerald-600 rounded transition flex items-center gap-1.5 text-xs mr-2 shadow">
-                                        <Icon name="table" className="w-4 h-4" /> Експорт (Excel)
-                                    </button>
+                                    <>
+                                        <button onClick={handleExportAnalyticsText} className="px-3 py-1.5 bg-blue-800 hover:bg-blue-700 text-blue-100 font-bold border border-blue-600 rounded transition flex items-center gap-1.5 text-xs mr-2 shadow" title="Згенерувати текстовий звіт в буфер обміну">
+                                            <Icon name="file-text" className="w-4 h-4" /> Звіт (Текст)
+                                        </button>
+                                        <button onClick={handleExportAnalyticsExcel} className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-emerald-100 font-bold border border-emerald-600 rounded transition flex items-center gap-1.5 text-xs mr-2 shadow">
+                                            <Icon name="table" className="w-4 h-4" /> Експорт (Excel)
+                                        </button>
+                                    </>
                                 )}
                                 <button onClick={() => handleOpenAddWounded(null)} className="px-3 py-1.5 bg-tactical-500 hover:bg-tactical-400 text-tactical-950 font-bold rounded shadow transition flex items-center gap-1.5 text-xs">
                                     <Icon name="plus" className="w-4 h-4" /> Створити запис
@@ -1475,8 +1721,8 @@
 
                     <div className="bg-tactical-900 border-b border-tactical-800 px-4 shrink-0 overflow-x-auto">
                         <div className="max-w-7xl mx-auto flex gap-4 md:gap-6 text-xs font-bold font-mono uppercase tracking-wider whitespace-nowrap">
-                            <button onClick={() => setActiveTab("list")} className={`py-3 border-b-2 transition ${activeTab === "list" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Журнал / Реєстр</button>
-                            <button onClick={() => setActiveTab("triage")} className={`py-3 border-b-2 transition flex items-center gap-1.5 ${activeTab === "triage" ? "border-amber-500 text-amber-500" : "border-transparent text-tactical-600 hover:text-amber-500/70"}`}>
+                            <button onClick={() => startTransition(() => setActiveTab("list"))} className={`py-3 border-b-2 transition ${activeTab === "list" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Журнал / Реєстр</button>
+                            <button onClick={() => startTransition(() => setActiveTab("triage"))} className={`py-3 border-b-2 transition flex items-center gap-1.5 ${activeTab === "triage" ? "border-amber-500 text-amber-500" : "border-transparent text-tactical-600 hover:text-amber-500/70"}`}>
                                 <Icon name="clock-3" className="w-3.5 h-3.5"/> Черга: 
                                 <div className="flex gap-0.5 ml-1">
                                     {triageCounts.crit > 0 && <span className="bg-purple-500/20 text-purple-400 border border-purple-500/50 text-[10px] px-1 rounded-sm" title="Критичні">К:{triageCounts.crit}</span>}
@@ -1487,8 +1733,8 @@
                                     {triageEpisodes.length === 0 && <span className="text-[10px] text-tactical-500 px-1">0</span>}
                                 </div>
                             </button>
-                            <button onClick={() => setActiveTab("analytics")} className={`py-3 border-b-2 transition ${activeTab === "analytics" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Аналітика подій</button>
-                            <button onClick={() => setActiveTab("logs")} className={`py-3 border-b-2 transition ${activeTab === "logs" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Лог змін</button>
+                            <button onClick={() => startTransition(() => setActiveTab("analytics"))} className={`py-3 border-b-2 transition ${activeTab === "analytics" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Аналітика подій</button>
+                            <button onClick={() => startTransition(() => setActiveTab("logs"))} className={`py-3 border-b-2 transition ${activeTab === "logs" ? "border-tactical-400 text-tactical-200" : "border-transparent text-tactical-600 hover:text-tactical-400"}`}>Лог змін</button>
                         </div>
                     </div>
 
@@ -1640,31 +1886,9 @@
                                 )}
                                 
                                 {activeTab === "analytics" && (
-                                    <div className="bg-cyan-950/30 border border-cyan-900/50 p-3 rounded-lg shadow-sm border-l-2 border-l-cyan-500">
-                                        <div className="text-[10px] text-cyan-400 uppercase font-bold flex items-center gap-1.5 mb-2">
-                                            <Icon name="truck" className="w-3.5 h-3.5" /> Звіт з евакуації за період
-                                        </div>
-                                        
-                                        <div className="space-y-2">
-                                            <div>
-                                                <div className="text-xs text-cyan-100" title="Всі евакуйовані за обрані дати (незалежно від дати поранення)">Всього вивезено (факт): <span className="font-bold text-sm text-cyan-400">{evacStats.actualEvacuatedInPeriod}</span></div>
-                                                <div className="text-[9px] text-cyan-300/70 pl-2 border-l border-cyan-800/50 mt-1 space-y-0.5">
-                                                    <div title="Поранені та евакуйовані в цьому ж періоді">З них поранені в цей період: <span className="font-bold text-cyan-200">{evacStats.evacWoundedInPeriod}</span></div>
-                                                    <div title="Евакуйовані зараз, але поранені до початку обраного періоду">Поранені в минулі періоди: <span className="font-bold text-cyan-200">{evacStats.evacWoundedBefore}</span></div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="border-t border-cyan-900/50 pt-2">
-                                                <div className="text-xs text-tactical-200" title="Кількість 200/300/ЗБВ, що виникли в цей період">Втрати періоду (200/300/ЗБВ): <span className="font-bold text-sm text-white">{evacStats.totalWoundedInPeriod}</span></div>
-                                                <div className="text-[9px] text-tactical-400 pl-2 border-l border-tactical-700/50 mt-1 space-y-0.5">
-                                                    <div title="Скільки з цих нових втрат вже евакуйовано">Вже евакуйовано: <span className="font-bold text-emerald-400">{evacStats.woundedInPeriodAndEvacuated}</span></div>
-                                                    <div title="Скільки з цих нових втрат досі не евакуйовані">Очікують (в черзі): <span className="font-bold text-red-400">{evacStats.woundedInPeriodWaiting}</span></div>
-                                                    {evacStats.woundedInPeriodNotNeeded > 0 && (
-                                                        <div title="Скільки з нових втрат не потребують евакуації">Не потребують евак.: <span className="font-bold text-tactical-400">{evacStats.woundedInPeriodNotNeeded}</span></div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div className="bg-tactical-950/30 border border-tactical-800/50 p-3 rounded-lg shadow-sm">
+                                        <div className="text-[10px] text-tactical-400 font-bold mb-1">ПІДКАЗКА</div>
+                                        <div className="text-xs text-tactical-200">Звіт з евакуації тепер доступний в основній панелі графіків для більшої інформативності.</div>
                                     </div>
                                 )}
                             </div>
@@ -1835,17 +2059,59 @@
                                         />
                                     </div>
 
-                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-6 flex flex-col">
+                                    <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-6 flex flex-col relative overflow-hidden group">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500"></div>
                                         <div className="flex items-center gap-2 mb-4">
                                             <div className="p-1.5 bg-cyan-950/50 rounded-lg"><Icon name="truck" className="w-4 h-4 text-cyan-400" /></div>
-                                            <h3 className="font-bold text-white text-sm">Прогрес евакуації</h3>
+                                            <h3 className="font-bold text-white text-sm">Розширений звіт з евакуації за період</h3>
                                         </div>
-                                        <ChartComponent 
-                                            title="Прогрес_евакуації" showLabels={showChartLabels} showPercentages={showChartPercentages}
-                                            className="flex-1 min-h-[250px] w-full relative" type="bar"
-                                            data={chartData.evacStatusData}
-                                            options={{ plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#1f2937' }, ticks: { precision: 0 } } } }}
-                                        />
+                                        
+                                        <div className="grid grid-cols-2 gap-4 flex-1">
+                                            <div className="bg-tactical-900/40 rounded-lg p-4 border border-tactical-800 flex flex-col justify-center">
+                                                <div className="text-[10px] text-tactical-400 font-bold uppercase mb-1">Фактично евакуйовано</div>
+                                                <div className="text-4xl font-bold text-cyan-400 mb-2">{evacStats.actualEvacTotal}</div>
+                                                <div className="space-y-1.5 text-[11px] text-tactical-300 border-t border-tactical-800/50 pt-2">
+                                                    <div className="flex justify-between" title="Поранені та евакуйовані в цьому ж періоді">
+                                                        <span>З цього періоду:</span>
+                                                        <span className="font-bold text-cyan-200">300: {evacStats.evacPeriod300} / 200: {evacStats.evacPeriod200}</span>
+                                                    </div>
+                                                    <div className="flex justify-between" title="Евакуйовані зараз, але поранені раніше">
+                                                        <span>З минулих періодів:</span>
+                                                        <span className="font-bold text-cyan-200">300: {evacStats.evacBefore300} / 200: {evacStats.evacBefore200}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-tactical-900/40 rounded-lg p-4 border border-tactical-800 flex flex-col justify-center relative">
+                                                <div className="absolute top-4 right-4 text-right">
+                                                    <div className="text-[10px] font-bold text-tactical-500 uppercase">Успішність</div>
+                                                    <div className={`text-lg font-bold ${evacStats.evacSuccessRate > 50 ? 'text-emerald-400' : 'text-red-400'}`}>{evacStats.evacSuccessRate}%</div>
+                                                </div>
+                                                <div className="text-[10px] text-tactical-400 font-bold uppercase mb-1">Втрати цього періоду</div>
+                                                <div className="text-2xl font-bold text-white mb-2">Всього: {evacStats.totalPeriod300 + evacStats.totalPeriod200}</div>
+                                                <div className="space-y-1.5 text-[11px] text-tactical-300 border-t border-tactical-800/50 pt-2">
+                                                    <div className="flex justify-between" title="Вже вивезені">
+                                                        <span>Вже евакуйовано:</span>
+                                                        <span className="font-bold text-emerald-400">300: {evacStats.periodEvacuated300} / 200: {evacStats.periodEvacuated200}</span>
+                                                    </div>
+                                                    <div className="flex justify-between" title="Все ще чекають">
+                                                        <span>Очікують евакуації:</span>
+                                                        <span className="font-bold text-red-400">300: {evacStats.periodWaiting300} / 200: {evacStats.periodWaiting200}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-red-950/20 rounded-lg p-4 border border-red-900/30 col-span-2 flex justify-between items-center">
+                                                <div>
+                                                    <div className="text-[11px] text-red-400 font-bold uppercase mb-1 flex items-center gap-1.5"><Icon name="alert-triangle" className="w-3.5 h-3.5"/> Глобальна черга на евакуацію</div>
+                                                    <div className="text-[10px] text-tactical-400">Всі, хто залишався неевакуйованим на момент кінця вказаного періоду.</div>
+                                                </div>
+                                                <div className="text-right border-l border-red-900/30 pl-4">
+                                                    <div className="font-bold text-white text-sm whitespace-nowrap mb-0.5">300: <span className="text-red-400 text-lg">{evacStats.globalWaiting300}</span> <span className="text-[9px] text-tactical-500 font-normal">({evacStats.globalWaitingCritHeavy} важкі)</span></div>
+                                                    <div className="font-bold text-white text-sm whitespace-nowrap">200: <span className="text-tactical-300 text-lg">{evacStats.globalWaiting200}</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="bg-tactical-950/60 border border-tactical-800 rounded-xl p-5 shadow-sm lg:col-span-12 flex flex-col">
@@ -2130,7 +2396,7 @@
                                                     </div>
                                                 )}
                                                 <div className={`flex justify-between items-center text-[10px] opacity-80 border-b border-white/5 pb-1 ${log.undone ? 'mt-4' : ''}`}>
-                                                    <span className={`font-mono ${log.undone ? 'line-through text-zinc-500' : ''}`}>{log.timestamp.replace('T', ' ').substring(0, 19)}</span>
+                                                    <span className={`font-mono ${log.undone ? 'line-through text-zinc-500' : ''}`}>{formatLogTime(log.timestamp)}</span>
                                                     <span className={`font-black uppercase tracking-wider ${log.undone ? 'line-through text-zinc-500' : ''}`}>{log.action}</span>
                                                 </div>
                                                 <p className={`text-xs pt-1 leading-relaxed ${log.undone ? 'line-through text-zinc-500' : ''}`}>{log.details}</p>
@@ -2187,6 +2453,26 @@
                                                 </select>
                                             </div>
                                         </div>
+
+                                        {soldierHistory.length > 0 && (
+                                            <div className="bg-tactical-900/40 border border-tactical-800 p-3 rounded-lg space-y-2">
+                                                <label className="text-[10px] text-tactical-400 font-bold uppercase flex items-center gap-1.5"><Icon name="history" className="w-3.5 h-3.5" /> Історія епізодів бійця</label>
+                                                <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                                                    {soldierHistory.map(h => (
+                                                        <div key={h.id} className="bg-tactical-950 border border-tactical-800/60 p-2 rounded text-xs flex justify-between items-start gap-2 hover:bg-tactical-900/50 transition cursor-pointer" title="Натисніть для переходу до запису" onClick={() => handleStartEdit(h)}>
+                                                            <div>
+                                                                <div className="text-white font-bold">{h.lossType}</div>
+                                                                <div className="text-[9px] text-tactical-400 mt-0.5">{h.date.replace('T', ' ')}</div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                {isAny300(h.lossType) && <div className="text-[10px] text-amber-500/90">{h.severity || 'Невідомо'}</div>}
+                                                                <div className={`text-[10px] mt-0.5 ${h.evacStatus === 'Евакуйований' ? 'text-emerald-500/90' : 'text-red-400/90'}`}>{h.evacStatus}</div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div className="bg-tactical-900/40 border border-tactical-800 p-3 rounded-lg space-y-3">
                                             <div>
