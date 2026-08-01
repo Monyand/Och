@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>для ПБД</title>
+    <title>Звіт ПБД</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -495,7 +495,9 @@
 
     <div class="top-bar">
         <div style="display: flex; align-items: center; gap: 15px;">
-            <button class="btn-settings" style="padding: 5px 10px; font-size: 20px; border: none; outline: none; border-radius: 4px;" onclick="toggleSidebar()" title="Сховати/Показати меню">☰</button>
+            <button class="btn-settings"
+                style="padding: 5px 10px; font-size: 20px; border: none; outline: none; border-radius: 4px;"
+                onclick="toggleSidebar()" title="Сховати/Показати меню">☰</button>
             <h1>Генератор звіту для ПБД</h1>
         </div>
         <button class="btn-settings" onclick="toggleSettings()">⚙️ Налаштування та Файли</button>
@@ -503,13 +505,20 @@
 
     <!-- Бічне меню -->
     <div class="side-nav">
-        <a href="#panel-1-2" title="1.2. Знищені цілі"><span class="nav-short">1.2</span> <span class="nav-text">Знищені цілі</span> <span class="nav-count" id="nav-count-1-2">0</span></a>
-        <a href="#panel-3-1-1" title="3.1.1. Бойові зіткнення"><span class="nav-short">3.1.1</span> <span class="nav-text">Бойові зіткнення</span> <span class="nav-count" id="nav-count-3-1-1">0</span></a>
-        <a href="#panel-3-1-5" title="3.1.5. Обстріли"><span class="nav-short">3.1.5</span> <span class="nav-text">Обстріли</span></a>
-        <a href="#panel-3-2-1" title="3.2.1. Вогневі (Піхота)"><span class="nav-short">3.2.1</span> <span class="nav-text">Вогневі (Піхота)</span> <span class="nav-count" id="nav-count-3-2-1">0</span></a>
-        <a href="#panel-3-2-2" title="3.2.2. БпС (Удари/Скиди)"><span class="nav-short">3.2.2</span> <span class="nav-text">БпС (Удари)</span> <span class="nav-count" id="nav-count-3-2-2">0</span></a>
-        <a href="#panel-3-2-3" title="3.2.3. Засобами ОВгП"><span class="nav-short">3.2.3</span> <span class="nav-text">Засоб. ОВгП</span> <span class="nav-count" id="nav-count-3-2-3">0</span></a>
-        <a href="#panel-3-2-7" title="3.2.7. Логістика (БпС)"><span class="nav-short">3.2.7</span> <span class="nav-text">Логістика</span> <span class="nav-count" id="nav-count-3-2-7">0</span></a>
+        <a href="#panel-1-2" title="1.2. Знищені цілі"><span class="nav-short">1.2</span> <span class="nav-text">Знищені
+                цілі</span> <span class="nav-count" id="nav-count-1-2">0</span></a>
+        <a href="#panel-3-1-1" title="3.1.1. Бойові зіткнення"><span class="nav-short">3.1.1</span> <span
+                class="nav-text">Бойові зіткнення</span> <span class="nav-count" id="nav-count-3-1-1">0</span></a>
+        <a href="#panel-3-1-5" title="3.1.5. Обстріли"><span class="nav-short">3.1.5</span> <span
+                class="nav-text">Обстріли</span></a>
+        <a href="#panel-3-2-1" title="3.2.1. Вогневі (Піхота)"><span class="nav-short">3.2.1</span> <span
+                class="nav-text">Вогневі (Піхота)</span> <span class="nav-count" id="nav-count-3-2-1">0</span></a>
+        <a href="#panel-3-2-2" title="3.2.2. БпС (Удари/Скиди)"><span class="nav-short">3.2.2</span> <span
+                class="nav-text">БпС (Удари)</span> <span class="nav-count" id="nav-count-3-2-2">0</span></a>
+        <a href="#panel-3-2-3" title="3.2.3. Засобами ОВгП"><span class="nav-short">3.2.3</span> <span
+                class="nav-text">Засоб. ОВгП</span> <span class="nav-count" id="nav-count-3-2-3">0</span></a>
+        <a href="#panel-3-2-7" title="3.2.7. Логістика (БпС)"><span class="nav-short">3.2.7</span> <span
+                class="nav-text">Логістика</span> <span class="nav-count" id="nav-count-3-2-7">0</span></a>
     </div>
 
     <div class="container">
@@ -860,21 +869,30 @@
                     <h2>3.2.2. Засобами БпС (Ударні та Скиди)</h2>
                     <div class="header-controls">
                         <span class="total-badge" style="background: #ff9800;">FPV: <span id="uav-fpv">0</span></span>
-                        <span class="total-badge" style="background: #e91e63;">Крило: <span id="uav-wing">0</span></span>
-                        <span class="total-badge" style="background: #2196f3;">Скиди: <span id="uav-drop">0</span></span>
-                        <span class="total-badge" style="background: #9c27b0;">Важкі: <span id="uav-heavy">0</span></span>
+                        <span class="total-badge" style="background: #e91e63;">Крило: <span
+                                id="uav-wing">0</span></span>
+                        <span class="total-badge" style="background: #2196f3;">Скиди: <span
+                                id="uav-drop">0</span></span>
+                        <span class="total-badge" style="background: #9c27b0;">Важкі: <span
+                                id="uav-heavy">0</span></span>
                         <button class="btn-action" onclick="event.stopPropagation(); confirmAll('3-2-2')">✔️ Підтвердити
                             всі</button>
                         <span class="toggle-icon">▼</span>
                     </div>
                 </div>
                 <div class="panel-body">
-                    <div style="background: #181818; border: 1px solid #333; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <h3 style="margin: 0; color: var(--accent); font-size: 1.05em;">📊 Статистика вильотів екіпажів (ТЗ):</h3>
-                            <button class="btn-small btn-action" onclick="copyCrewStats(this)">📋 Копіювати статистику</button>
+                    <div
+                        style="background: #181818; border: 1px solid #333; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="margin: 0; color: var(--accent); font-size: 1.05em;">📊 Статистика вильотів
+                                екіпажів (ТЗ):</h3>
+                            <button class="btn-small btn-action" onclick="copyCrewStats(this)">📋 Копіювати
+                                статистику</button>
                         </div>
-                        <textarea id="crew-stats-text" rows="3" style="width: 100%; box-sizing: border-box; background: #101010; color: #fff; border: 1px dashed #444; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 4px; resize: vertical;" placeholder="Тут з'явиться статистика вильотів після завантаження файлу БпЛА..."></textarea>
+                        <textarea id="crew-stats-text" rows="3"
+                            style="width: 100%; box-sizing: border-box; background: #101010; color: #fff; border: 1px dashed #444; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 4px; resize: vertical;"
+                            placeholder="Тут з'явиться статистика вильотів після завантаження файлу БпЛА..."></textarea>
                     </div>
 
                     <div class="list-header-wrap">
@@ -984,12 +1002,18 @@
                     </div>
                 </div>
                 <div class="panel-body">
-                    <div style="background: #181818; border: 1px solid #333; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <h3 style="margin: 0; color: var(--accent); font-size: 1.05em;">📊 Статистика вильотів екіпажів (ТЗ):</h3>
-                            <button class="btn-small btn-action" onclick="copyCrewStats(this)">📋 Копіювати статистику</button>
+                    <div
+                        style="background: #181818; border: 1px solid #333; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="margin: 0; color: var(--accent); font-size: 1.05em;">📊 Статистика вильотів
+                                екіпажів (ТЗ):</h3>
+                            <button class="btn-small btn-action" onclick="copyCrewStats(this)">📋 Копіювати
+                                статистику</button>
                         </div>
-                        <textarea class="crew-stats-textarea" rows="3" style="width: 100%; box-sizing: border-box; background: #101010; color: #fff; border: 1px dashed #444; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 4px; resize: vertical;" placeholder="Тут з'явиться статистика вильотів після завантаження файлу БпЛА..."></textarea>
+                        <textarea class="crew-stats-textarea" rows="3"
+                            style="width: 100%; box-sizing: border-box; background: #101010; color: #fff; border: 1px dashed #444; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 4px; resize: vertical;"
+                            placeholder="Тут з'явиться статистика вильотів після завантаження файлу БпЛА..."></textarea>
                     </div>
 
                     <div id="report-delivery-content"></div>
@@ -1219,19 +1243,19 @@
             if (!posName || posName.trim() === "") return null;
             let keyPos = superClean(posName);
             let keyWeapon = "";
-            
+
             let wLow = weaponName ? weaponName.toLowerCase() : "";
             if (wLow.includes('міномет') || wLow.includes('мін')) keyWeapon = "міномет";
             else if (wLow.includes('агс')) keyWeapon = "агс";
             else if (wLow.includes('спг')) keyWeapon = "спг";
             else if (wLow.includes('вкк') || wLow.includes('великокаліберн') || wLow.includes('кулемет')) keyWeapon = "вкк";
-            
+
             // 1. Спочатку шукаємо точний комбінований ключ, наприклад "валет_міномет" або "валетміномет"
             if (keyWeapon) {
                 let combinedKey = superClean(`${keyPos}${keyWeapon}`);
                 if (weaponMap[combinedKey]) return weaponMap[combinedKey];
             }
-            
+
             // 2. Якщо комбінованого немає, беремо загальний ключ "валет" (з перевіркою типу)
             if (weaponMap[keyPos]) {
                 let mappedWeapon = weaponMap[keyPos].toLowerCase();
@@ -1240,13 +1264,13 @@
                 if (keyWeapon === "агс" && mappedWeapon.includes('агс')) return weaponMap[keyPos];
                 if (keyWeapon === "спг" && mappedWeapon.includes('спг')) return weaponMap[keyPos];
                 if (keyWeapon === "вкк" && (mappedWeapon.includes('вкк') || mappedWeapon.includes('кулемет'))) return weaponMap[keyPos];
-                
+
                 // Якщо у словнику загальна назва типу "КБА-48М" без явного вказання типу, а в Excel міномет:
                 if (!mappedWeapon.includes('міномет') && !mappedWeapon.includes('мін') && !mappedWeapon.includes('агс') && !mappedWeapon.includes('спг') && !mappedWeapon.includes('вкк') && !mappedWeapon.includes('кулемет')) {
                     return weaponMap[keyPos];
                 }
             }
-            
+
             return null;
         }
 
