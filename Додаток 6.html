@@ -797,9 +797,15 @@
             <!-- Футер модального вікна -->
             <div
                 class="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0">
-                <span class="text-xs text-gray-400 dark:text-gray-500 hidden sm:inline-block">
-                    💡 Всі зміни зберігаються у пам'яті браузера (LocalStorage)
-                </span>
+                <div class="flex gap-2 items-center flex-wrap">
+                    <button type="button" onclick="openSettingsExportModal()" class="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 font-bold py-1.5 px-3 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer" title="Заберегти зашифрований файл налаштувань з паролем">
+                        🔒 Експорт .enc
+                    </button>
+                    <button type="button" onclick="triggerSettingsImport()" class="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-bold py-1.5 px-3 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer" title="Завантажити налаштування із зашифрованого файлу .enc">
+                        🔓 Імпорт .enc
+                    </button>
+                    <input type="file" id="settingsFileInput" accept=".enc" class="hidden" onchange="handleSettingsFileSelected(event)" />
+                </div>
                 <div class="flex gap-3 ml-auto">
                     <button onclick="closeSettings()"
                         class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 font-medium py-2 px-4 rounded-lg shadow-sm focus:outline-none transition-colors text-sm">
@@ -814,6 +820,60 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: Пароль для Експорту Налаштувань -->
+    <div id="modal-settings-export-pwd" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm transition-opacity p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border dark:border-gray-700">
+            <div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30">
+                <h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
+                    🔒 Експорт налаштувань (.enc)
+                </h3>
+                <button onclick="closeSettingsExportModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <form onsubmit="executeSettingsExport(event)" class="p-6 space-y-4">
+                <p class="text-xs text-gray-600 dark:text-gray-300 bg-indigo-50/50 dark:bg-indigo-950/30 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/40">
+                    Введіть пароль для зашифрування файлу налаштувань (автозаміни, ієрархія РОПів, обов'язкові звітні підрозділи). Без пароля відкрити файл буде неможливо!
+                </p>
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">Пароль шифрування</label>
+                    <input required type="password" id="settings-export-pwd" class="w-full px-3.5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Введіть пароль..." />
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeSettingsExportModal()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-sm font-medium">Скасувати</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold shadow-md transition-colors flex items-center gap-1.5">
+                        <span>🔒 Завантажити .enc</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: Пароль для Імпорту Налаштувань -->
+    <div id="modal-settings-import-pwd" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm transition-opacity p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border dark:border-gray-700">
+            <div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30">
+                <h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
+                    🔓 Розшифровка та імпорт налаштувань
+                </h3>
+                <button onclick="closeSettingsImportModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <form onsubmit="executeSettingsImport(event)" class="p-6 space-y-4">
+                <p class="text-xs text-gray-600 dark:text-gray-300 bg-emerald-50/50 dark:bg-emerald-950/30 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/40">
+                    Файл розпізнано як зашифровані налаштування Додатку 6. Введіть пароль для розшифрування та відновлення конфігурації.
+                </p>
+                <div class="space-y-1">
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">Пароль розшифрування</label>
+                    <input required type="password" id="settings-import-pwd" class="w-full px-3.5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Введіть пароль..." />
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeSettingsImportModal()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-sm font-medium">Скасувати</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-md transition-colors flex items-center gap-1.5">
+                        <span>🔓 Застосувати налаштування</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -839,131 +899,8 @@
                 </button>
             </div>
 
-            <div class="p-6 overflow-y-auto space-y-6 text-sm text-gray-700 dark:text-gray-300">
-                
-                <!-- Версія 1.2.2 -->
-                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border-l-4 border-blue-500 border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2.5">
-                        <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>🚀 Версія 1.2.2</span>
-                            <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-700">Поточна</span>
-                        </h4>
-                        <span class="text-xs font-mono text-gray-400">02.08.2026</span>
-                    </div>
-
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">
-                            <span>⚙️ Логіка обробки даних</span>
-                        </div>
-                        <ul class="space-y-1.5 text-xs md:text-sm text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
-                            <li><b>Збереження ручних редагувань при видаленні файлів</b>: відтепер ручне редагування даних військовослужбовця закріплює ці зміни. При видаленні оригінального файлу ваші правки залишаються у програмі. А якщо завантажити файл наново — система виявить розбіжності та підсвітить їх як дублікати.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Версія 1.2.1 -->
-                <div class="bg-gray-50/50 dark:bg-gray-900/30 rounded-xl p-4 border-l-4 border-gray-400 dark:border-gray-600 border border-gray-200 dark:border-gray-700/60 space-y-4 opacity-90">
-                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2.5">
-                        <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>Версія 1.2.1</span>
-                        </h4>
-                        <span class="text-xs font-mono text-gray-400">02.08.2026</span>
-                    </div>
-
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
-                            <span>🎨 Покращення UI та зручності (UX)</span>
-                        </div>
-                        <ul class="space-y-1.5 text-xs md:text-sm text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
-                            <li><b>Швидке закриття модальних вікон</b>: додано обробник клавіші <code>Escape</code> (Esc) для вікон Налаштувань, Changelog та Редагування.</li>
-                            <li><b>Закриття кліком по фону (Backdrop)</b>: клік по затемненій області навколо будь-якого модального вікна закриває його.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Версія 1.2.0 -->
-                <div class="bg-gray-50/50 dark:bg-gray-900/30 rounded-xl p-4 border-l-4 border-gray-400 dark:border-gray-600 border border-gray-200 dark:border-gray-700/60 space-y-4 opacity-90">
-                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2.5">
-                        <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>Версія 1.2.0</span>
-                        </h4>
-                        <span class="text-xs font-mono text-gray-400">02.08.2026</span>
-                    </div>
-
-                    <!-- Розділ: Новий функціонал -->
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                            <span>✨ Новий функціонал</span>
-                        </div>
-                        <ul class="space-y-2 text-xs md:text-sm pl-2">
-                            <li class="space-y-1">
-                                <div><b>Модуль контролю обов'язкових звітів (<code>checkMissingFiles</code>)</b>:</div>
-                                <div class="text-xs text-gray-600 dark:text-gray-400 pl-3 border-l-2 border-blue-200 dark:border-blue-900/50 space-y-1">
-                                    <div>• Автоматичний аналіз завантажених документів на наявність усіх очікуваних звітів підрозділів.</div>
-                                    <div>• Динамічний блок сповіщень <b><code>missingFilesAlert</code></b>:</div>
-                                    <div class="pl-2 space-y-0.5">
-                                        <div>🟢 <span class="text-emerald-700 dark:text-emerald-400 font-medium">Зелений стан</span> — всі підрозділи подали звіти.</div>
-                                        <div>🚨 <span class="text-amber-700 dark:text-amber-400 font-medium">Янтарно-червоний стан</span> — підсвічує відсутні звіти з бейджами ⚠️.</div>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="space-y-1">
-                                <div><b>Налаштування «Обов'язкові файли»</b>:</div>
-                                <div class="text-xs text-gray-600 dark:text-gray-400 pl-3 border-l-2 border-blue-200 dark:border-blue-900/50">
-                                    Нова 5-та вкладка у налаштуваннях (<code>kw-required-units</code>) для редагування списку очікуваних підрозділів зі збереженням у <code>localStorage</code> (<code>required_units</code>).
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Розділ: Покращення верстки та UI -->
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
-                            <span>🎨 Покращення верстки та UI</span>
-                        </div>
-                        <ul class="space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
-                            <li><b>Оптимізація модального вікна налаштувань</b>: початкову висоту полів зменшено з <code>rows="12"</code> до <code>rows="7"</code> із внутрішнім скролом (<code>max-h-60</code>). Усунуто вертикальний скрол всього вікна.</li>
-                            <li><b>Приховування скролбару вкладок</b>: додано класи <code>[scrollbar-width:none]</code> для панелі вкладок, зменшено відступи для компактності.</li>
-                        </ul>
-                    </div>
-
-                    <!-- Розділ: Система версіонування -->
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wide">
-                            <span>📋 Система версіонування</span>
-                        </div>
-                        <ul class="space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
-                            <li>Впроваджено файл <code>CHANGELOG.md</code> та додано цей інтерактивний віджет версій у шапку програми.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Версія 1.1.0 -->
-                <div class="bg-gray-50/50 dark:bg-gray-900/30 rounded-xl p-4 border-l-4 border-gray-400 dark:border-gray-600 border border-gray-200 dark:border-gray-700/60 space-y-2 opacity-85">
-                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/60 pb-2">
-                        <h4 class="font-bold text-base text-gray-900 dark:text-white">Версія 1.1.0</h4>
-                        <span class="text-xs font-mono text-gray-400">28.07.2026</span>
-                    </div>
-                    <ul class="space-y-1 text-xs text-gray-600 dark:text-gray-300 list-disc list-inside">
-                        <li><b>Візуальний конструктор ієрархії РОПів та ВОПів</b> для зручного налаштування структури Додатку 2.</li>
-                        <li><b>Модуль перевірки Чорного списку бійців (СЗЧ)</b> з автоматичним попередженням про порушників.</li>
-                        <li><b>Імпорт посад та звань</b> із додаткових файлів Word.</li>
-                    </ul>
-                </div>
-
-                <!-- Версія 1.0.0 -->
-                <div class="bg-gray-50/30 dark:bg-gray-900/20 rounded-xl p-4 border-l-4 border-gray-300 dark:border-gray-700 border border-gray-200 dark:border-gray-700/40 space-y-2 opacity-70">
-                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/40 pb-2">
-                        <h4 class="font-bold text-base text-gray-900 dark:text-white">Версія 1.0.0</h4>
-                        <span class="text-xs font-mono text-gray-400">15.07.2026</span>
-                    </div>
-                    <ul class="space-y-1 text-xs text-gray-600 dark:text-gray-400 list-disc list-inside">
-                        <li><b>Базове сортування бійців</b> по 3 списках виплат (170 тис. грн / 100 тис. грн / 30 тис. грн).</li>
-                        <li><b>Автоматична перевірка дублікатів</b> та пошук описок у ПІБ.</li>
-                        <li><b>Експорт готових зведених звітів</b> у формати Excel (<code>.xlsx</code>) із форматуванням.</li>
-                    </ul>
-                </div>
-
+            <div id="changelogModalList" class="p-6 overflow-y-auto space-y-6 text-sm text-gray-700 dark:text-gray-300">
+                <!-- Динамічний рендеринг з масиву APP_CHANGELOG -->
             </div>
 
             <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-xs text-gray-400">
@@ -978,7 +915,149 @@
     </div>
 
     <script>
+        // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
+        const APP_CHANGELOG = [
+            {
+                version: "1.2.2",
+                date: "02.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "⚙️ Логіка обробки даних",
+                        color: "indigo",
+                        items: [
+                            "<b>Збереження ручних редагувань при видаленні файлів</b>: відтепер ручне редагування даних військовослужбовця закріплює ці зміни (<code>isManualEdit = true</code>). При видаленні оригінального файлу ваші правки залишаються у програмі. Якщо завантажити файл наново — система виявить розбіжності та підсвітить їх як дублікати."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.2.1",
+                date: "02.08.2026",
+                sections: [
+                    {
+                        title: "🎨 Покращення UI та зручності (UX)",
+                        color: "amber",
+                        items: [
+                            "<b>Швидке закриття модальних вікон</b>: додано обробник клавіші <code>Escape</code> (Esc) для вікон Налаштувань, Changelog та Редагування.",
+                            "<b>Закриття кліком по фону (Backdrop)</b>: клік по затемненій області навколо будь-якого модального вікна закриває його."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.2.0",
+                date: "01.08.2026",
+                sections: [
+                    {
+                        title: "✨ Новий функціонал",
+                        color: "blue",
+                        items: [
+                            "<b>Модуль контролю обов'язкових звітів (<code>checkMissingFiles</code>)</b>: автоматичний аналіз завантажених документів на наявність усіх очікуваних звітів підрозділів з підсвічуванням у <code>missingFilesAlert</code>.",
+                            "<b>Налаштування «Обов'язкові файли»</b>: нова вкладка у налаштуваннях (<code>kw-required-units</code>) зі збереженням у <code>localStorage</code>."
+                        ]
+                    },
+                    {
+                        title: "🎨 Покращення верстки та UI",
+                        color: "amber",
+                        items: [
+                            "<b>Оптимізація вікна налаштувань</b>: початкову висоту полів зменшено з <code>rows=\"12\"</code> до <code>rows=\"7\"</code> з внутрішнім скролом.",
+                            "<b>Приховування скролбару вкладок</b>: додано класи <code>[scrollbar-width:none]</code>."
+                        ]
+                    },
+                    {
+                        title: "📋 Система версіонування",
+                        color: "purple",
+                        items: [
+                            "Впроваджено проєктний <code>CHANGELOG.md</code> та модальне вікно оновлень."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.1.0",
+                date: "28.07.2026",
+                sections: [
+                    {
+                        title: "🚀 Базові можливості",
+                        color: "blue",
+                        items: [
+                            "<b>Візуальний конструктор ієрархії РОПів та ВОПів</b> для зручного налаштування структури Додатку 2.",
+                            "<b>Модуль перевірки Чорного списку бійців (СЗЧ)</b> з автоматичним попередженням про порушників.",
+                            "<b>Імпорт посад та звань</b> із додаткових файлів Word."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.0.0",
+                date: "15.07.2026",
+                sections: [
+                    {
+                        title: "🎉 Перший реліз",
+                        color: "purple",
+                        items: [
+                            "<b>Базове сортування бійців</b> по 3 списках виплат (170 тис. грн / 100 тис. грн / 30 тис. грн).",
+                            "<b>Автоматична перевірка дублікатів</b> та пошук описок у ПІБ.",
+                            "<b>Експорт готових зведених звітів</b> у формати Excel (<code>.xlsx</code>) із форматуванням."
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        function renderChangelogModal() {
+            const container = document.getElementById('changelogModalList');
+            if (!container) return;
+
+            let html = '';
+            APP_CHANGELOG.forEach(item => {
+                const borderClass = item.isCurrent ? 'border-l-4 border-blue-500' : 'border-l-4 border-gray-400 dark:border-gray-600 opacity-90';
+                const currentBadge = item.isCurrent 
+                    ? `<span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-700">Поточна</span>` 
+                    : '';
+
+                html += `
+                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 ${borderClass} border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2.5">
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                            <span>🚀 Версія ${item.version}</span>
+                            ${currentBadge}
+                        </h4>
+                        <span class="text-xs font-mono text-gray-400">${item.date}</span>
+                    </div>
+                    <div class="space-y-3">
+                `;
+
+                item.sections.forEach(sec => {
+                    const textColor = sec.color === 'indigo' ? 'text-indigo-600 dark:text-indigo-400' :
+                                      sec.color === 'amber' ? 'text-amber-600 dark:text-amber-400' :
+                                      sec.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
+                                      'text-purple-600 dark:text-purple-400';
+
+                    html += `
+                        <div class="space-y-1.5">
+                            <div class="flex items-center gap-1.5 text-xs font-bold ${textColor} uppercase tracking-wide">
+                                <span>${sec.title}</span>
+                            </div>
+                            <ul class="space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
+                                ${sec.items.map(it => `<li>${it}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
         function openChangelogModal() {
+            renderChangelogModal();
             document.getElementById('changelogModal').classList.remove('hidden');
         }
         function closeChangelogModal() {
@@ -1317,6 +1396,198 @@
                         </div>
                     </div>
                 `;
+            }
+        }
+
+        // ─── КРИПТОГРАФІЯ ТА ЕКСПОРТ/ІМПОРТ НАЛАШТУВАНЬ (.enc) ─────────────────
+        let pendingImportSettingsContent = '';
+
+        async function deriveCryptoKey(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+            );
+            return crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+            );
+        }
+
+        async function encryptSettings(plainText, password) {
+            const enc = new TextEncoder();
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveCryptoKey(password, salt);
+            const encrypted = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv }, key, enc.encode(plainText)
+            );
+            const combined = new Uint8Array(salt.byteLength + iv.byteLength + encrypted.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.byteLength);
+            combined.set(new Uint8Array(encrypted), salt.byteLength + iv.byteLength);
+            
+            let binary = '';
+            for (let i = 0; i < combined.byteLength; i++) {
+                binary += String.fromCharCode(combined[i]);
+            }
+            return 'DODATOK6_ENC_V1:' + btoa(binary);
+        }
+
+        async function decryptSettings(encString, password) {
+            if (!encString.startsWith('DODATOK6_ENC_V1:')) {
+                throw new Error('FORMAT_ERROR');
+            }
+            const base64Data = encString.split('DODATOK6_ENC_V1:')[1];
+            const raw = atob(base64Data);
+            const combined = new Uint8Array(new ArrayBuffer(raw.length));
+            for (let i = 0; i < raw.length; i++) combined[i] = raw.charCodeAt(i);
+            
+            const salt = combined.slice(0, 16);
+            const iv = combined.slice(16, 28);
+            const encrypted = combined.slice(28);
+            
+            const key = await deriveCryptoKey(password, salt);
+            const decrypted = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv }, key, encrypted
+            );
+            const dec = new TextDecoder();
+            return dec.decode(decrypted);
+        }
+
+        function openSettingsExportModal() {
+            document.getElementById('settings-export-pwd').value = '';
+            document.getElementById('modal-settings-export-pwd').classList.remove('hidden');
+        }
+
+        function closeSettingsExportModal() {
+            document.getElementById('modal-settings-export-pwd').classList.add('hidden');
+        }
+
+        function closeSettingsImportModal() {
+            pendingImportSettingsContent = '';
+            document.getElementById('modal-settings-import-pwd').classList.add('hidden');
+        }
+
+        async function executeSettingsExport(e) {
+            e.preventDefault();
+            const pwd = document.getElementById('settings-export-pwd').value;
+            if (!pwd) return alert('Введіть пароль!');
+
+            if (typeof currentRopMode !== 'undefined' && currentRopMode === 'visual') {
+                syncTextFromRop();
+            }
+
+            const settingsPayload = {
+                app: "Додаток 6",
+                version: "1.2.2",
+                timestamp: new Date().toISOString(),
+                settings: {
+                    keywords_btgr: document.getElementById('kw-btgr').value,
+                    keywords_zab: document.getElementById('kw-zab').value,
+                    valid_tasks: document.getElementById('kw-valid-tasks').value,
+                    replace_rules: document.getElementById('kw-replace-rules').value,
+                    rop_hierarchy: document.getElementById('kw-rop-hierarchy').value,
+                    required_units: document.getElementById('kw-required-units').value
+                }
+            };
+
+            closeSettingsExportModal();
+
+            try {
+                const jsonStr = JSON.stringify(settingsPayload, null, 2);
+                const encStr = await encryptSettings(jsonStr, pwd);
+
+                const blob = new Blob([encStr], { type: 'application/octet-stream' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `Settings_Dodatok6_${new Date().toISOString().slice(0, 10)}.enc`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            } catch (err) {
+                console.error(err);
+                alert('Помилка при шифруванні файлу!');
+            }
+        }
+
+        function triggerSettingsImport() {
+            const fileInput = document.getElementById('settingsFileInput');
+            fileInput.value = '';
+            fileInput.click();
+        }
+
+        function handleSettingsFileSelected(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                const content = ev.target.result;
+                if (!content.startsWith('DODATOK6_ENC_V1:')) {
+                    alert('Помилка! Це не зашифрований файл налаштувань Додатку 6.');
+                    return;
+                }
+                pendingImportSettingsContent = content;
+                document.getElementById('settings-import-pwd').value = '';
+                document.getElementById('modal-settings-import-pwd').classList.remove('hidden');
+            };
+            reader.readAsText(file);
+        }
+
+        async function executeSettingsImport(e) {
+            e.preventDefault();
+            const pwd = document.getElementById('settings-import-pwd').value;
+            if (!pwd || !pendingImportSettingsContent) return;
+
+            try {
+                const decJsonStr = await decryptSettings(pendingImportSettingsContent, pwd);
+                const data = JSON.parse(decJsonStr);
+
+                if (!data.settings) throw new Error('NO_SETTINGS');
+
+                const s = data.settings;
+                if (s.keywords_btgr !== undefined) {
+                    document.getElementById('kw-btgr').value = s.keywords_btgr;
+                    localStorage.setItem('keywords_btgr', s.keywords_btgr);
+                }
+                if (s.keywords_zab !== undefined) {
+                    document.getElementById('kw-zab').value = s.keywords_zab;
+                    localStorage.setItem('keywords_zab', s.keywords_zab);
+                }
+                if (s.valid_tasks !== undefined) {
+                    document.getElementById('kw-valid-tasks').value = s.valid_tasks;
+                    localStorage.setItem('valid_tasks', s.valid_tasks);
+                }
+                if (s.replace_rules !== undefined) {
+                    document.getElementById('kw-replace-rules').value = s.replace_rules;
+                    localStorage.setItem('replace_rules', s.replace_rules);
+                }
+                if (s.rop_hierarchy !== undefined) {
+                    document.getElementById('kw-rop-hierarchy').value = s.rop_hierarchy;
+                    localStorage.setItem('rop_hierarchy', s.rop_hierarchy);
+                }
+                if (s.required_units !== undefined) {
+                    document.getElementById('kw-required-units').value = s.required_units;
+                    localStorage.setItem('required_units', s.required_units);
+                }
+
+                syncRopFromText();
+                updateSettingsBadges();
+                closeSettingsImportModal();
+
+                if (btgrData.length > 0 || broData.length > 0 || zabData.length > 0) {
+                    reassignCategories();
+                    checkInvalidTasks();
+                }
+                checkMissingFiles();
+
+                alert('✅ Налаштування успішно розшифровано та застосовано!');
+            } catch (err) {
+                console.error(err);
+                if (err.message === 'FORMAT_ERROR') {
+                    alert('Помилка! Невірний формат файлу або він згенерований для іншої програми.');
+                } else {
+                    alert('Помилка! Невірний пароль або пошкоджений файл.');
+                }
             }
         }
 

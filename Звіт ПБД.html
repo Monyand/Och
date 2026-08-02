@@ -560,6 +560,16 @@
                     систему озброєння. Зберігається автоматично.</small>
             </div>
 
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                <button type="button" onclick="openSettingsExportModal()" style="background-color: #2563eb; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;" title="Заберегти зашифрований файл налаштувань Звіту ПБД">
+                    🔒 Експорт налаштувань (.enc)
+                </button>
+                <button type="button" onclick="triggerSettingsImport()" style="background-color: #059669; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;" title="Завантажити налаштування Звіту ПБД із зашифрованого файлу">
+                    🔓 Імпорт налаштувань (.enc)
+                </button>
+                <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
+            </div>
+
             <button onclick="processFiles()" style="width: 100%; padding: 15px; font-size: 18px;">🔄 Згенерувати всі
                 звіти</button>
         </div>
@@ -2326,7 +2336,201 @@
                 }
             });
         });
+
+        // ─── КРИПТОГРАФІЯ ТА ЕКСПОРТ/ІМПОРТ НАЛАШТУВАНЬ ЗВІТУ ПБД (.enc) ───────
+        let pendingImportSettingsContent = '';
+
+        async function deriveCryptoKey(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+            );
+            return crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+            );
+        }
+
+        async function encryptSettings(plainText, password) {
+            const enc = new TextEncoder();
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveCryptoKey(password, salt);
+            const encrypted = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv }, key, enc.encode(plainText)
+            );
+            const combined = new Uint8Array(salt.byteLength + iv.byteLength + encrypted.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.byteLength);
+            combined.set(new Uint8Array(encrypted), salt.byteLength + iv.byteLength);
+            
+            let binary = '';
+            for (let i = 0; i < combined.byteLength; i++) {
+                binary += String.fromCharCode(combined[i]);
+            }
+            return 'ZVIT_PBD_ENC_V1:' + btoa(binary);
+        }
+
+        async function decryptSettings(encString, password) {
+            if (!encString.startsWith('ZVIT_PBD_ENC_V1:')) {
+                throw new Error('FORMAT_ERROR');
+            }
+            const base64Data = encString.split('ZVIT_PBD_ENC_V1:')[1];
+            const raw = atob(base64Data);
+            const combined = new Uint8Array(new ArrayBuffer(raw.length));
+            for (let i = 0; i < raw.length; i++) combined[i] = raw.charCodeAt(i);
+            
+            const salt = combined.slice(0, 16);
+            const iv = combined.slice(16, 28);
+            const encrypted = combined.slice(28);
+            
+            const key = await deriveCryptoKey(password, salt);
+            const decrypted = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv }, key, encrypted
+            );
+            const dec = new TextDecoder();
+            return dec.decode(decrypted);
+        }
+
+        function openSettingsExportModal() {
+            document.getElementById('settings-export-pwd').value = '';
+            document.getElementById('modal-settings-export-pwd').style.display = 'flex';
+        }
+
+        function closeSettingsExportModal() {
+            document.getElementById('modal-settings-export-pwd').style.display = 'none';
+        }
+
+        function closeSettingsImportModal() {
+            pendingImportSettingsContent = '';
+            document.getElementById('modal-settings-import-pwd').style.display = 'none';
+        }
+
+        async function executeSettingsExport(e) {
+            e.preventDefault();
+            const pwd = document.getElementById('settings-export-pwd').value;
+            if (!pwd) return alert('Введіть пароль!');
+
+            const settingsPayload = {
+                app: "Звіт ПБД",
+                version: "1.0.0",
+                timestamp: new Date().toISOString(),
+                settings: {
+                    "saved-unit-name": document.getElementById('unit-name').value,
+                    "saved-pos-dict": document.getElementById('pos-dict').value,
+                    "saved-weapon-dict": document.getElementById('weapon-dict').value
+                }
+            };
+
+            closeSettingsExportModal();
+
+            try {
+                const jsonStr = JSON.stringify(settingsPayload, null, 2);
+                const encStr = await encryptSettings(jsonStr, pwd);
+
+                const blob = new Blob([encStr], { type: 'application/octet-stream' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `Settings_ZvitPBD_${new Date().toISOString().slice(0, 10)}.enc`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            } catch (err) {
+                console.error(err);
+                alert('Помилка при шифруванні файлу!');
+            }
+        }
+
+        function triggerSettingsImport() {
+            const fileInput = document.getElementById('settingsFileInput');
+            fileInput.value = '';
+            fileInput.click();
+        }
+
+        function handleSettingsFileSelected(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                const content = ev.target.result;
+                if (!content.startsWith('ZVIT_PBD_ENC_V1:')) {
+                    alert('Помилка! Це не зашифрований файл налаштувань Звіту ПБД.');
+                    return;
+                }
+                pendingImportSettingsContent = content;
+                document.getElementById('settings-import-pwd').value = '';
+                document.getElementById('modal-settings-import-pwd').style.display = 'flex';
+            };
+            reader.readAsText(file);
+        }
+
+        async function executeSettingsImport(e) {
+            e.preventDefault();
+            const pwd = document.getElementById('settings-import-pwd').value;
+            if (!pwd || !pendingImportSettingsContent) return;
+
+            try {
+                const decJsonStr = await decryptSettings(pendingImportSettingsContent, pwd);
+                const data = JSON.parse(decJsonStr);
+
+                if (!data.settings) throw new Error('NO_SETTINGS');
+
+                const s = data.settings;
+                if (s['saved-unit-name'] !== undefined) {
+                    document.getElementById('unit-name').value = s['saved-unit-name'];
+                    localStorage.setItem('saved-unit-name', s['saved-unit-name']);
+                }
+                if (s['saved-pos-dict'] !== undefined) {
+                    document.getElementById('pos-dict').value = s['saved-pos-dict'];
+                    localStorage.setItem('saved-pos-dict', s['saved-pos-dict']);
+                }
+                if (s['saved-weapon-dict'] !== undefined) {
+                    document.getElementById('weapon-dict').value = s['saved-weapon-dict'];
+                    localStorage.setItem('saved-weapon-dict', s['saved-weapon-dict']);
+                }
+
+                closeSettingsImportModal();
+                alert('✅ Налаштування Звіту ПБД успішно розшифровано та застосовано!');
+            } catch (err) {
+                console.error(err);
+                if (err.message === 'FORMAT_ERROR') {
+                    alert('Помилка! Невірний формат файлу або він згенерований для іншої програми.');
+                } else {
+                    alert('Помилка! Невірний пароль або пошкоджений файл.');
+                }
+            }
+        }
     </script>
+
+    <!-- МОДАЛКА: Експорт налаштувань Звіт ПБД -->
+    <div id="modal-settings-export-pwd" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; padding: 20px; color: #fff;">
+            <h3 style="margin-top: 0; font-size: 18px; color: #60a5fa;">🔒 Експорт налаштувань Звіту ПБД (.enc)</h3>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Введіть пароль для шифрування словника позицій, словника зброї та назви підрозділу. Без пароля відкрити файл буде неможливо!</p>
+            <form onsubmit="executeSettingsExport(event)">
+                <input required type="password" id="settings-export-pwd" placeholder="Пароль шифрування..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 15px; font-size: 14px;" />
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" onclick="closeSettingsExportModal()" style="padding: 8px 14px; background: #333; color: #ccc; border: none; border-radius: 6px; cursor: pointer;">Скасувати</button>
+                    <button type="submit" style="padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🔒 Завантажити .enc</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА: Імпорт налаштувань Звіт ПБД -->
+    <div id="modal-settings-import-pwd" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; padding: 20px; color: #fff;">
+            <h3 style="margin-top: 0; font-size: 18px; color: #34d399;">🔓 Розшифровка та імпорт (.enc)</h3>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Файл розпізнано як налаштування Звіту ПБД. Введіть пароль для розшифрування та застосування словників.</p>
+            <form onsubmit="executeSettingsImport(event)">
+                <input required type="password" id="settings-import-pwd" placeholder="Пароль розшифрування..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 15px; font-size: 14px;" />
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" onclick="closeSettingsImportModal()" style="padding: 8px 14px; background: #333; color: #ccc; border: none; border-radius: 6px; cursor: pointer;">Скасувати</button>
+                    <button type="submit" style="padding: 8px 16px; background: #059669; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🔓 Застосувати</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 
 </html>

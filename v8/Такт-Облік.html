@@ -1,0 +1,2778 @@
+<!DOCTYPE html>
+<html lang="uk" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТАКТ-ОБЛІК</title>
+    
+    <!-- Локальні ресурси (100% Air-Gapped Офлайн) -->
+    <script src="tailwind.js"></script>
+    <script src="lucide.js"></script>
+    <script src="xlsx.js"></script>
+
+    <script>
+        // Ініціалізація налаштувань Tailwind (Графітова тема)
+        setTimeout(() => {
+            if (typeof tailwind !== 'undefined') tailwind.config = { 
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            // Перетворюємо стандартні кольори на графітові (Gunmetal/Zinc)
+                            gray: tailwind.colors.zinc,
+                            slate: tailwind.colors.zinc
+                        }
+                    }
+                }
+            };
+        }, 10);
+    </script>
+
+    <style>
+        /* Системні шрифти не потребують інтернету і виглядають сучасно на будь-якій ОС */
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+        #sidebar { transition: width 0.3s ease; }
+        .sidebar-collapsed { width: 5rem !important; }
+        .sidebar-collapsed .sidebar-text { display: none; }
+        .sidebar-collapsed .justify-between { justify-content: center; }
+        
+        /* Стилі для бейджа ротацій у згорнутому стані меню */
+        .sidebar-collapsed #nav-rotations { position: relative; }
+        .sidebar-collapsed #rotations-badge { 
+            position: absolute; 
+            top: 6px; 
+            right: 8px; 
+            padding: 2px 5px; 
+            font-size: 10px; 
+            line-height: 1;
+        }
+
+        .modal-overlay { display: none; align-items: center; justify-content: center; }
+        i[data-lucide] { display: inline-block; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden transition-colors duration-200">
+
+    <!-- ПАНЕЛЬ ПОМИЛКИ ОФЛАЙНУ -->
+    <div id="offline-setup-warning" style="display: none; max-width: 650px; margin: 5vh auto; padding: 30px; background: #fff; border: 2px solid #ef4444; border-radius: 12px; color: #111827; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <h2 style="color: #dc2626; margin-top: 0; font-size: 24px;">⚠️ Відсутні файли дизайну</h2>
+        <p style="font-size: 16px; line-height: 1.5;">Програма працює в офлайн-режимі, але не може знайти файли стилів. Щоб інтерфейс був зручним, виконайте <b>один раз</b> наступні кроки:</p>
+        
+        <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: monospace; font-size: 14px;">
+            <b>Структура вашої папки має бути такою:</b><br><br>
+            📂 Моя_Папка_Облік<br>
+            ┣ 📄 index.html <span style="color: #6b7280;">(цей файл)</span><br>
+            ┣ 📄 tailwind.js <span style="color: #6b7280;">(дизайн)</span><br>
+            ┣ 📄 lucide.js <span style="color: #6b7280;">(іконки)</span><br>
+            ┗ 📄 xlsx.js <span style="color: #6b7280;">(Excel звіти)</span>
+        </div>
+        
+        <p style="font-size: 15px;"><b>Де їх взяти?</b> Коли з'явиться інтернет, перейдіть за цими посиланнями, натисніть <b>Ctrl+S</b> <i>(або Права кнопка миші ➔ Зберегти як...)</i> і збережіть їх поруч з файлом <b>index.html</b>:</p>
+        <ul style="line-height: 1.8; font-size: 15px;">
+            <li><a href="https://cdn.tailwindcss.com" target="_blank" style="color: #2563eb; font-weight: bold;">https://cdn.tailwindcss.com</a> (зберегти як <b style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">tailwind.js</b>)</li>
+            <li><a href="https://unpkg.com/lucide@latest" target="_blank" style="color: #2563eb; font-weight: bold;">https://unpkg.com/lucide@latest</a> (зберегти як <b style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">lucide.js</b>)</li>
+            <li><a href="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" target="_blank" style="color: #2563eb; font-weight: bold;">https://cdn.jsdelivr.net/.../xlsx.bundle.js</a> (зберегти як <b style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">xlsx.js</b>)</li>
+        </ul>
+        <button onclick="location.reload()" style="margin-top: 20px; background: #ef4444; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; width: 100%;">Я все завантажив, оновити сторінку</button>
+    </div>
+
+    <!-- Обгортка основного додатку -->
+    <div id="app-wrapper" class="h-screen flex flex-col md:flex-row">
+        
+        <div id="toast" class="fixed top-4 right-4 bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-xl hidden z-[70] transition-opacity flex items-center space-x-2">
+            <i data-lucide="check" class="w-5 h-5"></i><span id="toast-msg" class="font-medium"></span>
+        </div>
+
+        <button id="floating-undo-btn" onclick="handleUndo()" class="fixed bottom-3 right-3 bg-slate-800 text-white px-5 py-3 rounded-full shadow-2xl z-[70] hidden items-center space-x-2 hover:bg-slate-700 transition-all border border-slate-600 cursor-pointer">
+            <i data-lucide="undo-2" class="w-5 h-5"></i><span class="font-bold">Скасувати дію</span>
+        </button>
+
+        <div id="modal-confirm" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay p-4 z-[80]">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 text-center border dark:border-gray-700">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4"><i data-lucide="alert-triangle" class="h-6 w-6 text-red-600 dark:text-red-400"></i></div>
+                <h3 id="confirm-msg" class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 whitespace-pre-wrap">Ви впевнені?</h3>
+                <div class="flex justify-center space-x-3">
+                    <button onclick="closeModal('modal-confirm')" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors font-medium">Скасувати</button>
+                    <button id="confirm-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium shadow-sm">Підтвердити</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="sidebar" class="w-full md:w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 flex flex-col shadow-xl z-10 shrink-0 h-auto md:h-full">
+            <div class="p-4 flex items-center justify-between bg-slate-950/50 min-h-[72px]">
+                <div class="flex items-center space-x-3 overflow-hidden">
+                    <i data-lucide="shield-check" class="text-emerald-500 w-8 h-8 shrink-0"></i>
+                    <div class="sidebar-text">
+                        <h1 class="text-xl font-bold text-white leading-tight">ТАКТ-ОБЛІК</h1>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <span class="text-[9px] text-emerald-400 uppercase tracking-widest font-bold border border-emerald-500/30 bg-emerald-500/10 px-1 rounded inline-block">SECURE OFFLINE</span>
+                            <button onclick="openChangelogModal()" class="text-[10px] text-emerald-400 font-bold border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/30 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-1" title="Натисніть для перегляду історії оновлень">
+                                <span>📋 v1.0.0</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white hidden md:block shrink-0 p-1"><i data-lucide="menu" class="w-5 h-5"></i></button>
+            </div>
+            <nav class="flex-1 p-3 space-y-2 overflow-y-auto custom-scrollbar">
+                <button id="nav-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors bg-emerald-600 text-white" title="Зведення"><i data-lucide="activity" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Зведення</span></button>
+                <button id="nav-personnel" onclick="switchTab('personnel')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Списки"><i data-lucide="users" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Списки</span></button>
+                <button id="nav-positions" onclick="switchTab('positions')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Позиції"><i data-lucide="map" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Позиції</span></button>
+                <button id="nav-rotations" onclick="switchTab('rotations')" class="w-full flex items-center justify-between px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Планові ротації">
+                    <div class="flex items-center space-x-3"><i data-lucide="refresh-cw" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Ротації</span></div>
+                    <span id="rotations-badge" class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">0</span>
+                </button>
+                <button id="nav-journal" onclick="switchTab('journal')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Журнал виходів"><i data-lucide="book-open" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Журнал виходів</span></button>
+            </nav>
+            <div class="p-3 bg-slate-800/50 dark:bg-slate-900 mt-auto border-t border-slate-700/50 space-y-2">
+                <button onclick="toggleDarkMode()" class="w-full flex items-center space-x-3 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm transition-colors justify-center md:justify-start" title="Темна/Світла тема"><i data-lucide="moon" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Тема інтерфейсу</span></button>
+                
+                <div class="flex items-center space-x-1">
+                    <button onclick="openExportModal()" class="flex-1 flex items-center space-x-3 px-3 py-2 bg-emerald-700/50 hover:bg-emerald-600 text-emerald-100 rounded-lg text-sm transition-colors justify-center md:justify-start border border-emerald-600/50" title="Експорт зашифрованої копії">
+                        <i data-lucide="lock" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Створити бекап</span>
+                    </button>
+                    <button onclick="openBackupSettingsModal()" class="p-2 bg-emerald-700/50 hover:bg-emerald-600 text-emerald-100 rounded-lg border border-emerald-600/50 transition-colors shrink-0" title="Розклад нагадувань">
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <label class="w-full flex items-center space-x-3 px-3 py-2 border border-slate-600 text-slate-400 hover:bg-slate-700 hover:text-white rounded-lg text-sm cursor-pointer transition-colors justify-center md:justify-start" title="Відновити дані">
+                    <i data-lucide="file-key-2" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Відновити з бекапу</span>
+                    <input type="file" accept=".enc,.json" onchange="handleFileSelect(event)" class="hidden"/>
+                </label>
+                <button onclick="wipeAllDataPrompt()" class="w-full flex items-center space-x-3 px-3 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-300 rounded-lg text-sm transition-colors justify-center md:justify-start border border-red-900/50 mt-4" title="Повністю очистити всі дані з пристрою">
+                    <i data-lucide="bomb" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Очистити базу</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col w-full h-full relative overflow-hidden">
+            
+            <!-- БАНЕР НАГАДУВАННЯ ПРО БЕКАП -->
+            <div id="backup-reminder-banner" class="hidden bg-red-600 text-white px-4 py-3 shadow-md z-40 shrink-0 flex-col sm:flex-row justify-between items-center gap-3 animate-pulse">
+                <div class="flex items-center space-x-2 font-bold text-sm sm:text-base">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i>
+                    <span>УВАГА! Настав час планового резервного копіювання бази!</span>
+                </div>
+                <button onclick="openExportModal()" class="bg-white text-red-600 hover:bg-red-50 px-4 py-1.5 rounded-lg shadow-sm text-sm font-bold w-full sm:w-auto transition-colors whitespace-nowrap">Зробити бекап</button>
+            </div>
+
+            <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 w-full">
+                <div class="max-w-7xl mx-auto">
+
+                    <!-- TAB: DASHBOARD -->
+                    <div id="tab-dashboard" class="space-y-6 block">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b dark:border-gray-700 pb-2 gap-4">
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Бойове зведення</h2>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="exportDetailedReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors shadow-sm text-sm"><i data-lucide="file-text" class="w-4 h-4"></i><span class="hidden sm:inline">Детальний звіт (Бойові)</span></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+                            <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center space-x-3 lg:space-x-4"><div class="p-2 lg:p-3 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-lg"><i data-lucide="users" class="w-5 h-5 lg:w-6 lg:h-6"></i></div><div><p class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 font-medium">Всього списком</p><p id="stat-total" class="text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">0</p></div></div>
+                            <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl shadow-sm border border-green-200 dark:border-green-800/50 flex items-center space-x-3 lg:space-x-4"><div class="p-2 lg:p-3 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-lg"><i data-lucide="shield" class="w-5 h-5 lg:w-6 lg:h-6"></i></div><div><p class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 font-medium">В строю</p><p id="stat-combat" class="text-xl lg:text-2xl font-bold text-green-700 dark:text-green-400">0</p></div></div>
+                            
+                            <!-- ВІДЖЕТ НА БОЙОВИХ -->
+                            <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 lg:p-6 rounded-xl shadow-sm border border-indigo-200 dark:border-indigo-800/50 flex items-center space-x-3 lg:space-x-4 col-span-2 md:col-span-1"><div class="p-2 lg:p-3 bg-indigo-200 dark:bg-indigo-800/40 text-indigo-700 dark:text-indigo-400 rounded-lg"><i data-lucide="swords" class="w-5 h-5 lg:w-6 lg:h-6"></i></div><div><p class="text-xs lg:text-sm text-indigo-600 dark:text-indigo-300 font-bold uppercase">В полі (Бойові)</p><p id="stat-field" class="text-xl lg:text-2xl font-black text-indigo-800 dark:text-indigo-400">0</p></div></div>
+                            
+                            <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl shadow-sm border border-orange-200 dark:border-orange-800/50 flex items-center space-x-3 lg:space-x-4"><div class="p-2 lg:p-3 bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 rounded-lg"><i data-lucide="heart-pulse" class="w-5 h-5 lg:w-6 lg:h-6"></i></div><div><p class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 font-medium">300 (Поранені)</p><p id="stat-wia" class="text-xl lg:text-2xl font-bold text-orange-700 dark:text-orange-400">0</p></div></div>
+                            <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl shadow-sm border border-red-200 dark:border-red-800/50 flex items-center space-x-3 lg:space-x-4"><div class="p-2 lg:p-3 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg"><i data-lucide="crosshair" class="w-5 h-5 lg:w-6 lg:h-6"></i></div><div><p class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 font-medium">200 (Загиблі)</p><p id="stat-kia" class="text-xl lg:text-2xl font-bold text-red-700 dark:text-red-400">0</p></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                <div class="bg-gray-50 dark:bg-gray-800/80 px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2"><i data-lucide="map-pin" class="w-5 h-5 text-gray-500"></i><h3 class="font-semibold text-gray-800 dark:text-white">Розподіл сил (Тільки бойові)</h3></div>
+                                <div class="p-0 overflow-y-auto max-h-96 custom-scrollbar"><table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"><tbody id="stat-positions-table" class="divide-y divide-gray-100 dark:divide-gray-700/50"></tbody></table></div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                                <div class="bg-gray-50 dark:bg-gray-800/80 px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-2 shrink-0"><i data-lucide="history" class="w-5 h-5 text-gray-500"></i><h3 class="font-semibold text-gray-800 dark:text-white">Останні події (Лог 100)</h3></div>
+                                <div class="p-0 overflow-y-auto max-h-96 custom-scrollbar flex-1"><ul id="log-list" class="divide-y divide-gray-100 dark:divide-gray-700/50"></ul></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                <div class="bg-indigo-50 dark:bg-indigo-900/30 px-6 py-4 border-b border-indigo-100 dark:border-indigo-800/50 flex items-center space-x-2"><i data-lucide="layers" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i><h3 class="font-semibold text-indigo-900 dark:text-indigo-300">О/С на бойових (По підрозділах)</h3></div>
+                                <div class="p-0 overflow-y-auto max-h-80 custom-scrollbar"><table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/50"><tbody id="stat-units-table" class="divide-y divide-gray-100 dark:divide-gray-700/50"></tbody></table></div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                                <div class="bg-blue-50 dark:bg-blue-900/30 px-6 py-4 border-b border-blue-100 dark:border-blue-800/50 flex items-center space-x-2 shrink-0"><i data-lucide="briefcase" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i><h3 class="font-semibold text-blue-900 dark:text-blue-300">О/С на бойових (По завданнях)</h3></div>
+                                <div class="p-0 overflow-y-auto max-h-80 custom-scrollbar flex-1"><table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/50"><tbody id="stat-tasks-table" class="divide-y divide-gray-100 dark:divide-gray-700/50"></tbody></table></div>
+                            </div>
+                        </div>
+                        <!-- ВІДЖЕТ РОТАЦІЙ НА ДАШБОРДІ -->
+                        <div id="dashboard-rotations-widget" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="font-bold text-gray-800 dark:text-white flex items-center"><i data-lucide="refresh-cw" class="w-5 h-5 mr-2 text-indigo-500"></i>Активні ротації</h3>
+                                <button onclick="switchTab('rotations')" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Перейти ➔</button>
+                            </div>
+                            <div id="widget-rotations-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: PERSONNEL -->
+                    <div id="tab-personnel" class="space-y-4 hidden flex flex-col h-full">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 border-b dark:border-gray-700 pb-4 shrink-0">
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Особовий склад</h2>
+                            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                                <button onclick="openAllNotesModal()" id="btn-all-notes" class="bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 px-3 py-2 rounded-lg flex items-center space-x-2 text-sm font-bold border border-gray-300 dark:border-gray-600 transition-colors shadow-sm"><i data-lucide="message-square" class="w-4 h-4"></i><span class="hidden sm:inline">Всі примітки</span><span id="all-notes-badge" class="bg-gray-600 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-1 hidden">0</span></button>
+                                <button onclick="openModal('modal-bulk-unit')" class="bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm border border-slate-700 shadow-sm"><i data-lucide="building" class="w-4 h-4"></i><span class="hidden sm:inline">Масовий підрозділ</span></button>
+                                <button onclick="openModal('modal-bulk-status')" class="bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm border border-slate-700 shadow-sm"><i data-lucide="users-2" class="w-4 h-4"></i><span class="hidden sm:inline">Масовий статус</span></button>
+                                <button onclick="openModal('modal-import')" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm border border-slate-800 shadow-sm"><i data-lucide="file-text" class="w-4 h-4"></i><span class="hidden xl:inline">Імпорт (Excel)</span></button>
+                                <button onclick="openSoldierModal()" class="bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm font-bold border border-slate-900 shadow-sm"><i data-lucide="plus" class="w-4 h-4"></i><span class="hidden sm:inline">Додати бійця</span></button>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col gap-3 shrink-0">
+                            <div class="flex flex-col lg:flex-row gap-4 items-center w-full">
+                                <div class="relative flex-1 w-full">
+                                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="Пошук (ПІБ, позивний)..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/>
+                                    <i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4"></i>
+                                </div>
+                                <div class="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                                    <select id="filter-unit" onchange="resetPageAndRender()" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white min-w-[150px]"><option value="all">Всі підрозділи</option></select>
+                                    <select id="filter-pos" onchange="resetPageAndRender()" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white min-w-[150px]"><option value="all">Всі локації</option></select>
+                                    <select id="filter-status" onchange="resetPageAndRender()" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white min-w-[150px]"><option value="all">Всі статуси</option></select>
+                                </div>
+                            </div>
+                            <!-- QUICK FILTER CHIPS -->
+                            <div id="quick-filter-chips" class="flex flex-wrap gap-1.5 w-full pt-1 border-t dark:border-gray-700/60">
+                                <button onclick="setQuickStatusFilter('all')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-emerald-600 text-white border-emerald-500 shadow-xs cursor-pointer" data-status="all">
+                                    Всі <span id="chip-count-all" class="ml-1 opacity-80">(0)</span>
+                                </button>
+                                <button onclick="setQuickStatusFilter('ok')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-emerald-500/20 cursor-pointer" data-status="ok">
+                                    🛡️ В строю <span id="chip-count-ok" class="ml-1 opacity-80">(0)</span>
+                                </button>
+                                <button onclick="setQuickStatusFilter('combat')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-blue-500/20 cursor-pointer" data-status="combat">
+                                    ⚔️ На бойових <span id="chip-count-combat" class="ml-1 opacity-80">(0)</span>
+                                </button>
+                                <button onclick="setQuickStatusFilter('300')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-red-500/20 cursor-pointer" data-status="300">
+                                    🏥 300 / Поранені <span id="chip-count-300" class="ml-1 opacity-80">(0)</span>
+                                </button>
+                                <button onclick="setQuickStatusFilter('sick')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-yellow-500/20 cursor-pointer" data-status="sick">
+                                    🤒 Хворі / Травма <span id="chip-count-sick" class="ml-1 opacity-80">(0)</span>
+                                </button>
+                                <button onclick="setQuickStatusFilter('detached')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-indigo-500/20 cursor-pointer" data-status="detached">
+                                    ✈️ Відрив <span id="chip-count-detached" class="ml-1 opacity-80">(0)</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1">
+                            <div class="overflow-x-auto flex-1 custom-scrollbar">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-800/80 sticky top-0 z-10">
+                                        <tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ПІБ / Позивний</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Підрозділ</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Локація / Позиція</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Дії</th></tr>
+                                    </thead>
+                                    <tbody id="personnel-tbody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                                </table>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-800/80 px-6 py-3 border-t dark:border-gray-700 flex items-center justify-between shrink-0">
+                                <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                                    <span class="hidden sm:inline">Показувати:</span>
+                                    <select id="per-page" onchange="changePerPage()" class="p-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"><option value="25">25</option><option value="50" selected>50</option><option value="100">100</option><option value="all">Всі</option></select>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <span id="page-info" class="text-sm text-gray-600 dark:text-gray-300 font-medium hidden sm:inline"></span>
+                                    <div class="flex space-x-1">
+                                        <button onclick="prevPage()" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border dark:border-gray-600"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                                        <button onclick="nextPage()" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 border dark:border-gray-600"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: POSITIONS -->
+                    <div id="tab-positions" class="space-y-6 hidden">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b dark:border-gray-700 pb-4 gap-4">
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
+                                Карта бойових позицій
+                                <span class="bg-indigo-100 text-indigo-800 text-sm font-bold px-2 py-1 rounded-lg border border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800 flex items-center shadow-sm" title="Особового складу на бойових">
+                                    <i data-lucide="swords" class="w-4 h-4 mr-1.5"></i><span id="pos-combat-count-badge">0</span>
+                                </span>
+                            </h2>
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <button onclick="toggleSortingLock()" id="btn-lock-sort" class="bg-gray-100 dark:bg-gray-800 text-gray-500 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-lg flex items-center text-sm transition-colors flex-1 sm:flex-none justify-center">
+                                    <i data-lucide="lock" class="w-4 h-4 mr-2"></i><span>Закріплено</span>
+                                </button>
+                                <button onclick="openPositionModal()" class="bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 text-white px-4 py-2 rounded-lg flex items-center space-x-2 text-sm flex-1 sm:flex-none justify-center"><i data-lucide="plus" class="w-4 h-4"></i><span>Додати локацію</span></button>
+                            </div>
+                        </div>
+                        <div id="positions-container" class="space-y-8"></div>
+                    </div>
+                    <!-- TAB: ROTATIONS -->
+                    <div id="tab-rotations" class="space-y-4 hidden flex flex-col h-full">
+                        <div class="flex justify-between items-center border-b dark:border-gray-700 pb-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i data-lucide="refresh-cw" class="w-6 h-6 text-indigo-600"></i>Планові ротації</h2>
+                                <p class="text-sm text-gray-500">Контроль замін особового складу на позиціях</p>
+                            </div>
+                            <button onclick="openRotationModal()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 text-sm shadow-sm border border-slate-600 transition-colors"><i data-lucide="plus" class="w-4 h-4"></i><span>Створити план</span></button>
+                        </div>
+                        <div id="rotations-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto custom-scrollbar pb-10"></div>
+                    </div>
+
+                    <!-- TAB: JOURNAL -->
+                    <div id="tab-journal" class="space-y-4 hidden flex flex-col h-full">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b dark:border-gray-700 pb-4 shrink-0 gap-4">
+                            <div><h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i data-lucide="book-open" class="w-6 h-6 text-indigo-600"></i>Журнал виходів</h2><p class="text-sm text-gray-500">Фіксація часу перебування поза ППД</p></div>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="exportJournalExcel()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm transition-colors shadow-sm"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i><span class="hidden sm:inline">В Excel</span></button>
+                                <button onclick="clearJournal()" class="bg-red-50 dark:bg-red-900/30 text-red-600 hover:bg-red-100 px-3 py-2 rounded-lg flex items-center space-x-2 text-sm font-medium border border-transparent dark:border-red-800"><i data-lucide="trash" class="w-4 h-4"></i><span class="hidden sm:inline">Очистити старі</span></button>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-3 items-center shrink-0">
+                            <div class="relative flex-1 w-full">
+                                <input type="text" id="journal-search" oninput="handleJournalSearch()" placeholder="Пошук (ПІБ, позивний)..." class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/>
+                                <i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4"></i>
+                            </div>
+                            <select id="journal-filter" onchange="renderJournal()" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white w-full sm:w-auto"><option value="all">Всі записи</option><option value="active">Зараз на позиціях</option><option value="history">Тільки історія</option></select>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex-1 flex flex-col">
+                            <div class="overflow-x-auto flex-1 custom-scrollbar">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-800/80 sticky top-0 z-10">
+                                        <tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Боєць / Позивний</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Позиція</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Захід (Час)</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Повернення / Перехід</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Тривалість</th></tr>
+                                    </thead>
+                                    <tbody id="journal-tbody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATALISTS -->
+    <datalist id="pos-datalist"></datalist>
+    <datalist id="rop-datalist"></datalist>
+    <datalist id="unit-datalist"></datalist>
+
+    <!-- MODALS -->
+    <!-- Модалки для шифрування -->
+    <div id="modal-export-password" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30"><h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center"><i data-lucide="lock" class="w-5 h-5 mr-2"></i>Пароль резервної копії</h3><button onclick="closeModal('modal-export-password')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="executeEncryptedExport(event)" class="p-6 space-y-4"><div class="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 p-3 rounded-lg text-xs border border-yellow-200 dark:border-yellow-800/50">Придумайте пароль. Файл буде зашифровано алгоритмом AES-256. <b>Без цього пароля дані відновити неможливо!</b></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Пароль для файлу</label><input required type="password" id="export-pwd" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeModal('modal-export-password')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center"><i data-lucide="download" class="w-4 h-4 mr-2"></i>Завантажити</button></div></form></div></div>
+    <div id="modal-import-password" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30"><h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center"><i data-lucide="key" class="w-5 h-5 mr-2"></i>Введіть пароль</h3><button onclick="closeImportPasswordModal()" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="executeEncryptedImport(event)" class="p-6 space-y-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Пароль розшифровки</label><input required type="password" id="import-pwd" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeImportPasswordModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center"><i data-lucide="unlock" class="w-4 h-4 mr-2"></i>Відновити</button></div></form></div></div>
+    
+    <!-- Існуючі модалки -->
+    <div id="modal-bulk-status" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30"><h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center space-x-2"><i data-lucide="users-2" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i><span>Масовий статус</span></h3><button onclick="closeModal('modal-bulk-status')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-4"><div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-4 rounded-lg text-sm border border-blue-100 dark:border-blue-800/50 mb-2"><p>Вставте список ПІБ (по одному на рядок), ПІБ має точно збігатися з базою.</p></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Новий статус</label><select id="bulk-status-select" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Список ПІБ</label><textarea id="bulk-names" class="w-full h-40 p-3 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm whitespace-pre bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea></div></div><div class="px-6 py-4 border-t dark:border-gray-700 flex justify-end space-x-2 bg-gray-50 dark:bg-gray-800/80"><button onclick="closeModal('modal-bulk-status')" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button onclick="submitBulkStatus()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center"><i data-lucide="check-circle-2" class="w-4 h-4 mr-2"></i>Застосувати</button></div></div></div>
+    
+    <div id="modal-bulk-unit" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-purple-50 dark:bg-purple-900/30"><h3 class="font-bold text-lg text-purple-900 dark:text-purple-300 flex items-center space-x-2"><i data-lucide="building" class="w-5 h-5 text-purple-600 dark:text-purple-400"></i><span>Масовий підрозділ</span></h3><button onclick="closeModal('modal-bulk-unit')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-4"><div class="bg-purple-50 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 p-4 rounded-lg text-sm border border-purple-100 dark:border-purple-800/50 mb-2"><p>Вставте список ПІБ. <b>Якщо бійця немає в базі, його буде створено автоматично</b>.</p></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Новий підрозділ</label><input type="text" id="bulk-unit-input" list="unit-datalist" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Введіть назву або оберіть..."/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Список ПІБ (по одному на рядок)</label><textarea id="bulk-unit-names" class="w-full h-40 p-3 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm whitespace-pre bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Іванов Іван Іванович..."></textarea></div></div><div class="px-6 py-4 border-t dark:border-gray-700 flex justify-end space-x-2 bg-gray-50 dark:bg-gray-800/80"><button onclick="closeModal('modal-bulk-unit')" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button onclick="submitBulkUnit()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center"><i data-lucide="check-circle-2" class="w-4 h-4 mr-2"></i>Застосувати</button></div></div></div>
+    
+    <div id="modal-import" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80"><h3 class="font-bold text-lg text-gray-800 dark:text-white">Імпорт з Excel</h3><button onclick="closeModal('modal-import')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-4"><div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-4 rounded-lg text-sm border border-blue-100 dark:border-blue-800/50"><p>Колонки: ПІБ ➔ ПІДРОЗДІЛ ➔ ЗВАННЯ ➔ ПОЗИВНИЙ</p></div><textarea id="import-text" class="w-full h-48 p-3 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm whitespace-pre bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea></div><div class="px-6 py-4 border-t dark:border-gray-700 flex justify-end space-x-2 bg-gray-50 dark:bg-gray-800/80"><button onclick="closeModal('modal-import')" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button onclick="submitImport()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center"><i data-lucide="check" class="w-4 h-4 mr-2"></i>Імпортувати</button></div></div></div>
+    
+    <div id="modal-soldier" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80"><h3 id="soldier-modal-title" class="font-bold text-lg text-gray-800 dark:text-white">Додати бійця</h3><button type="button" onclick="closeModal('modal-soldier')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveSoldier(event)" class="p-6 space-y-4"><input type="hidden" id="s-id"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">ПІБ *</label><input required type="text" id="s-fullname" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="grid grid-cols-2 gap-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Позивний</label><input type="text" id="s-callsign" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Звання</label><select id="s-rank" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Підрозділ</label><input type="text" id="s-unit" list="unit-datalist" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div id="s-init-block" class="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border dark:border-gray-700 mt-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Поч. позиція</label><input type="text" id="s-pos-input" list="pos-datalist" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Статус</label><select id="s-status" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div></div><div class="pt-4 flex justify-between"><div><button type="button" id="s-delete-btn" onclick="deleteSoldier()" style="display:none;" class="text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg flex items-center space-x-1"><i data-lucide="trash-2" class="w-4 h-4"></i><span>Видалити</span></button></div><div class="space-x-2 flex"><button type="button" onclick="closeModal('modal-soldier')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Зберегти</button></div></div></form></div></div>
+    
+    <div id="modal-move" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30"><h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center space-x-2"><i data-lucide="arrow-right-left" class="w-5 h-5"></i><span id="move-modal-title">Рух</span></h3><button type="button" onclick="closeModal('modal-move')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveMove(event)" class="p-6 space-y-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Новий Статус</label><div id="move-status-grid" class="grid grid-cols-2 gap-2"></div></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-2"><span>Нова Локація</span><div class="flex items-center gap-2"><button type="button" onclick="setMoveToPPD()" class="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-200 transition-colors font-bold shadow-sm flex items-center" title="Швидко перемістити в першу небойову позицію"><i data-lucide="home" class="w-3 h-3 mr-1"></i>В ППД</button><span class="text-[10px] text-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 px-2 py-0.5 rounded border">Поточна: <span id="m-current-pos-label" class="font-bold"></span></span></div></label><input type="text" id="m-pos-input" list="pos-datalist" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-lg font-medium"/></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Завдання</label><select id="m-task" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Примітка</label><input type="text" id="m-notes" placeholder="Введіть щоб зберегти, або зітріть щоб видалити..." class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeModal('modal-move')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4"></i><span>Зберегти</span></button></div></form></div></div>
+    
+    <div id="modal-position" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80 shrink-0"><h3 id="pos-modal-title" class="font-bold text-lg text-gray-800 dark:text-white">Нова позиція</h3><button type="button" onclick="closeModal('modal-position')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="savePosition(event)" class="p-6 overflow-y-auto custom-scrollbar space-y-6"><input type="hidden" id="p-id"><div class="space-y-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Назва позиції *</label><input required type="text" id="p-name" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="grid grid-cols-2 gap-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Група</label><input type="text" id="p-rop" list="rop-datalist" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Тип локації</label><select id="p-type" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" onchange="autoSelectIcon()"></select></div></div><div class="space-y-2 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase flex justify-between"><span>Іконка</span></label><input type="hidden" id="p-icon" value="crosshair"><div id="p-icon-grid" class="grid grid-cols-5 sm:grid-cols-9 gap-2"></div></div></div><div class="border-t dark:border-gray-700 pt-4"><div class="flex justify-between items-center mb-3"><label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase flex items-center"><i data-lucide="package" class="w-4 h-4 mr-1"></i>ОВТ та Майно</label><button type="button" onclick="addEquipmentRow()" class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg px-2 py-1.5 flex items-center"><i data-lucide="plus" class="w-3 h-3 mr-1"></i>Додати</button></div><div id="p-equipment-list" class="space-y-2"></div></div><div class="pt-6 border-t dark:border-gray-700 flex justify-between items-center shrink-0"><div><button type="button" id="p-delete-btn" onclick="delPos()" style="display:none;" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 px-3 py-2 rounded-lg flex items-center space-x-1"><i data-lucide="trash-2" class="w-4 h-4"></i><span>Видалити</span></button></div><div class="flex space-x-2"><button type="button" onclick="closeModal('modal-position')" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white rounded-lg">Зберегти</button></div></div></form></div></div>
+    
+    <div id="modal-equipment-view" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80"><h3 id="eq-view-title" class="font-bold text-lg text-gray-800 dark:text-white flex items-center"><i data-lucide="package" class="w-5 h-5 mr-2"></i>ОВТ</h3><button onclick="closeModal('modal-equipment-view')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6"><ul id="eq-view-list" class="space-y-2"></ul></div><div class="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-end"><button onclick="closeModal('modal-equipment-view')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-medium text-gray-800 dark:text-white">Закрити</button></div></div></div>
+    
+    <!-- МОДАЛКА: Перегляд Примітки -->
+    <div id="modal-note-view" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/30"><h3 id="note-view-title" class="font-bold text-lg text-blue-900 dark:text-blue-300 flex items-center"><i data-lucide="info" class="w-5 h-5 mr-2"></i>Примітка</h3><button onclick="closeModal('modal-note-view')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-3"><p id="note-view-text" class="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap font-medium"></p><p id="note-view-date" class="text-[11px] text-gray-50 flex items-center bg-gray-100 dark:bg-gray-700/50 p-2 rounded"><i data-lucide="clock" class="w-3 h-3 mr-1 text-gray-400"></i><span id="note-view-date-text"></span></p></div><div class="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-between items-center"><button id="note-delete-btn" class="px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 rounded-lg flex items-center text-sm font-bold transition-colors"><i data-lucide="trash-2" class="w-4 h-4 mr-1"></i>Видалити</button><button onclick="closeModal('modal-note-view')" class="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg text-sm font-bold transition-colors">Закрити</button></div></div></div>
+
+    <!-- ДОДАНО: Модалка "Всі примітки" -->
+    <div id="modal-all-notes" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/30 shrink-0"><h3 class="font-bold text-lg text-blue-900 dark:text-blue-300 flex items-center space-x-2"><i data-lucide="message-square" class="w-5 h-5"></i><span>Всі активні примітки</span><span id="all-notes-modal-badge" class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full ml-2">0</span></h3><button onclick="closeModal('modal-all-notes')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-0 overflow-y-auto flex-1 custom-scrollbar bg-gray-50/50 dark:bg-gray-800/50"><ul id="all-notes-list" class="divide-y divide-gray-200 dark:divide-gray-700"></ul></div><div class="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-end shrink-0"><button onclick="closeModal('modal-all-notes')" class="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg text-sm font-bold transition-colors">Закрити</button></div></div></div>
+
+    <div id="modal-add-to-pos" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30 shrink-0"><h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center space-x-2"><i data-lucide="user-plus" class="w-5 h-5"></i><span id="add-to-pos-title">Додати на позицію</span></h3><button onclick="closeModal('modal-add-to-pos')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-4 border-b dark:border-gray-700 shrink-0 bg-gray-50 dark:bg-gray-800/80"><div class="relative w-full"><input type="text" id="add-to-pos-search" oninput="handleAddToPosSearch()" placeholder="Пошук..." class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/><i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4"></i></div></div><div class="p-0 overflow-y-auto flex-1 custom-scrollbar min-h-[400px]"><ul id="add-to-pos-results" class="divide-y divide-gray-100 dark:divide-gray-700/50"></ul></div><div class="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-end shrink-0"><button onclick="closeModal('modal-add-to-pos')" class="px-4 py-2 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg">Закрити</button></div></div></div>
+    
+    <div id="modal-group-edit" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80"><h3 class="font-bold text-lg text-gray-800 dark:text-white">Налаштування групи</h3><button onclick="closeModal('modal-group-edit')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveGroupEdit(event)" class="p-6 space-y-4"><input type="hidden" id="g-old-name"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Нова назва групи</label><input required type="text" id="g-new-name" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="pt-4 flex justify-between items-center"><button type="button" onclick="deleteGroupPrompt()" class="text-red-500 hover:bg-red-900/30 px-3 py-2 rounded-lg flex items-center space-x-1 font-medium"><i data-lucide="trash-2" class="w-4 h-4"></i><span>Видалити</span></button><div class="flex space-x-2"><button type="button" onclick="closeModal('modal-group-edit')" class="px-4 py-2 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Зберегти</button></div></div></form></div></div>
+    
+    <div id="modal-journal-edit" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80"><h3 class="font-bold text-lg text-gray-800 dark:text-white">Час</h3><button onclick="closeModal('modal-journal-edit')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveJournalEdit(event)" class="p-6 space-y-4"><input type="hidden" id="j-id"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Вихід</label><input required type="datetime-local" id="j-start" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Повернення</label><input type="datetime-local" id="j-end" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeModal('modal-journal-edit')" class="px-4 py-2 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Зберегти</button></div></form></div></div>
+
+    <div id="modal-rotation" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30 shrink-0"><h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center space-x-2"><i data-lucide="refresh-cw" class="w-5 h-5"></i><span>Планова ротація / Заявка</span></h3><button type="button" onclick="closeModal('modal-rotation')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 overflow-y-auto custom-scrollbar space-y-4 flex-1"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Назва (або старший) *</label><input required type="text" id="rot-name" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Напр: Заміна на СП-1"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Плановий час *</label><input required type="datetime-local" id="rot-time" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div></div><div class="border-t dark:border-gray-700 pt-4 mt-4"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2 block">Особовий склад (Пошук)</label><div class="flex gap-2 mb-2"><select id="rot-dir" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-bold text-sm w-32 shrink-0"><option value="in">ЗАХОДИТЬ</option><option value="out">ВИХОДИТЬ</option></select><div class="relative flex-1"><input type="text" id="rot-search" oninput="handleRotSearch()" placeholder="Пошук бійця..." class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"/><i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4"></i></div></div><ul id="rot-search-results" class="bg-gray-50 dark:bg-gray-800 rounded-lg border dark:border-gray-700 divide-y dark:divide-gray-700 mb-4 max-h-32 overflow-y-auto custom-scrollbar empty:hidden"></ul><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2 block">Учасники заявки</label><ul id="rot-members-list" class="space-y-2"></ul></div></div><div class="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-end shrink-0 space-x-2"><button type="button" onclick="closeModal('modal-rotation')" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium">Скасувати</button><button type="button" onclick="saveRotation()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium shadow-sm flex items-center"><i data-lucide="check" class="w-4 h-4 mr-2"></i>Зберегти</button></div></div></div>
+
+    <!-- МОДАЛКА: НАЛАШТУВАННЯ БЕКАПІВ -->
+    <div id="modal-backup-settings" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30"><h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center"><i data-lucide="clock" class="w-5 h-5 mr-2"></i>Графік бекапів</h3><button onclick="closeModal('modal-backup-settings')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-4"><div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-lg text-xs border border-blue-100 dark:border-blue-800/50">Додайте час (ГГ:ХХ), коли програма має нагадати про необхідність створення резервної копії.</div><div class="flex gap-2"><input type="time" id="new-backup-time" class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/><button onclick="addBackupTime()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center font-bold"><i data-lucide="plus" class="w-4 h-4 mr-1"></i>Додати</button></div><div class="mt-4"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2 block">Встановлені нагадування:</label><ul id="backup-times-list" class="space-y-2"></ul></div></div><div class="px-6 py-4 border-t dark:border-gray-700 flex justify-end bg-gray-50 dark:bg-gray-800/80"><button onclick="closeModal('modal-backup-settings')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium">Закрити</button></div></div></div>
+
+    <!-- МОДАЛЬНЕ ВІКНО CHANGELOG -->
+    <div id="modal-changelog" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border dark:border-gray-700">
+            <div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30">
+                <h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center space-x-2">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-emerald-500"></i>
+                    <span>📋 Історія оновлень (ТАКТ-ОБЛІК)</span>
+                    <span class="text-xs bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.0.0</span>
+                </h3>
+                <button onclick="closeModal('modal-changelog')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="changelogModalList" class="p-6 overflow-y-auto max-h-[70vh] space-y-4 custom-scrollbar"></div>
+            <div class="px-6 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-between items-center text-xs text-gray-500">
+                <span>📄 Автономна офлайн-система</span>
+                <button onclick="closeModal('modal-changelog')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors cursor-pointer">
+                    Зрозуміло
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ─── ПЕРЕВІРКА ОФЛАЙНУ ПЕРЕД ЗАПУСКОМ ─────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof tailwind === 'undefined' || typeof lucide === 'undefined') {
+            document.getElementById('offline-setup-warning').style.display = 'block';
+            document.getElementById('app-wrapper').style.display = 'none';
+            document.body.className = '';
+            document.body.style.backgroundColor = '#e5e7eb';
+            return; 
+        }
+        
+        runMigrations();
+        rebuildPersonnelMap();
+        initSelects();
+        applyTheme();
+        applySidebarState();
+        buildPosCache();
+        
+        if (typeof sortRotations === 'function') sortRotations();
+        
+        updateRotationsBadge(); // БЕЗ ЗАТРИМКИ!
+        
+        renderTab(activeTab);
+        
+        checkBackupReminders();
+        setInterval(checkBackupReminders, 60000);
+    });
+
+    // ─── УТИЛІТИ ──────────────────────────────────────────────────────────────
+    const el  = id => document.getElementById(id);
+    const val = id => el(id).value;
+
+    function openModal(id)  { el(id).style.display = 'flex'; }
+    function closeModal(id) { el(id).style.display = 'none'; }
+
+    // ─── КОНСТАНТИ ────────────────────────────────────────────────────────────
+    const RANKS = ['Солдат','Ст. солдат','Мл. сержант','Сержант','Ст. сержант','Мл. лейтенант','Лейтенант','Ст. лейтенант','Капітан','Майор'];
+    const STATUSES = {
+        '200':      { label: '200 (Загиблий)',     color: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',                  icon: 'crosshair' },
+        'mia':      { label: 'Зниклий',            color: 'bg-gray-200 text-gray-800 border-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500',                icon: 'alert-triangle' },
+        '300':      { label: '300 (Поранений)',    color: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800', icon: 'heart-pulse' },
+        'sick':     { label: 'Хворий/травма',      color: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800', icon: 'activity' },
+        'detached': { label: 'Відрив',             color: 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800', icon: 'plane-takeoff' },
+        'ok':       { label: 'В строю',            color: 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',     icon: 'shield' }
+    };
+    const STATUS_KEYS    = ['200', 'mia', '300', 'sick', 'detached', 'ok'];
+    const POSITION_TYPES = [{id:'combat',label:'Бойова'},{id:'non_combat',label:'Не бойова'}];
+    const COMBAT_TYPES   = new Set(['combat']);
+    const ICONS          = ['crosshair','target','plane','flame','shield','radio','tent','plus-square','map-pin'];
+    const ICON_MAP       = {combat:'crosshair',non_combat:'tent'};
+    const TASKS          = ['піхота','бойовий медик','БПЛА','МБ','вогнева підтримка','облаштування','бронегрупа','резерв','медевак',"зв'язок",'провідник','рекон','ППО','Логістика','ІСВ','Штурмовик','*'];
+
+    // ─── СТАН ─────────────────────────────────────────────────────────────────
+    let personnel    = JSON.parse(localStorage.getItem('tactical_personnel'))       || [];
+    let positions    = JSON.parse(localStorage.getItem('tactical_positions'))       || [
+        { id:'pos_ppd',  name:'ППД',              type:'non_combat',     rop:'Тилові',   icon:'tent',         equipment:[] },
+        { id:'pos_hosp', name:'Госпіталь / Евакуація',   type:'non_combat', rop:'Медицина', icon:'plus-square', equipment:[] }
+    ];
+    let logs             = JSON.parse(localStorage.getItem('tactical_logs'))             || [];
+    let journal          = JSON.parse(localStorage.getItem('tactical_journal'))         || [];
+    let plannedRotations = JSON.parse(localStorage.getItem('tactical_rotations')) || [];
+    let groupOrder       = JSON.parse(localStorage.getItem('tactical_groups_order'))    || [];
+    let collapsedGroups  = JSON.parse(localStorage.getItem('tactical_collapsed_groups'))    || {};
+    let collapsedPositions = JSON.parse(localStorage.getItem('tactical_collapsed_positions')) || {};
+
+    let backupSchedule   = JSON.parse(localStorage.getItem('tactical_backup_schedule')) || ['10:00', '17:30', '20:00'];
+    let lastBackupTime   = parseInt(localStorage.getItem('tactical_last_backup_time'))  || 0;
+
+    let isDarkMode         = localStorage.getItem('tactical_dark_mode')         === 'true';
+    let isSidebarCollapsed = localStorage.getItem('tactical_sidebar_collapsed') === 'true';
+    
+    let isSortingLocked    = localStorage.getItem('tactical_sorting_locked') !== 'false';
+
+    let activeTab           = 'dashboard';
+    let currentPage         = 1;
+    let itemsPerPage        = 50;
+    let currentMoveSoldierId = null;
+    let selectedMoveStatus   = '';
+    let tempEquipment        = [];
+    let searchTimeout;
+    let journalSearchTimeout;
+    let targetAddToPosId     = null;
+    let currentPosIcon       = 'crosshair';
+
+    // Змінні для Ctrl+Z
+    let undoStack = [];
+    let isUndoing = false;
+
+    function updateUndoButton() {
+        const btn = el('floating-undo-btn');
+        if (btn) {
+            if (undoStack.length > 0) { btn.classList.remove('hidden'); btn.classList.add('flex'); }
+            else { btn.classList.add('hidden'); btn.classList.remove('flex'); }
+        }
+    }
+
+    function getActiveRotationMap() {
+        const activeMap = new Map();
+        if (plannedRotations) {
+            plannedRotations.forEach(rot => {
+                rot.members.forEach(m => {
+                    if (!isMemberDone(m)) activeMap.set(m.soldierId, m.dir);
+                });
+            });
+        }
+        return activeMap;
+    }
+
+    // ─── КЕШ ПОЗИЦІЙ (ПРОДУКТИВНІСТЬ) ─────────────────────────────────────────
+    let posCache  = null;
+    let posMap    = {};
+    let groupedPosCache = {}; // ОПТИМІЗАЦІЯ: Кешуємо групи
+    let _posDirty = true;
+
+    let personnelMap = new Map();
+
+    function rebuildPersonnelMap() {
+        personnelMap.clear();
+        personnel.forEach(p => personnelMap.set(p.id, p));
+    }
+    function getPersonById(id) { return personnelMap.get(id); }
+
+    function buildPosCache() {
+        if (!_posDirty) return;
+        posMap = {};
+        groupedPosCache = {};
+
+        // 1. Будуємо мапу ID->Назва і групуємо локації
+        positions.forEach(pos => {
+            posMap[pos.id] = pos.name;
+            const g = pos.rop?.trim() || 'Основні / Без групи';
+            (groupedPosCache[g] = groupedPosCache[g] || []).push(pos);
+        });
+
+        // 2. Оновлюємо список груп (groupOrder), щоб там були всі існуючі групи
+        Object.keys(groupedPosCache).forEach(g => { 
+            if (!groupOrder.includes(g)) groupOrder.push(g); 
+        });
+        
+        // 3. Чистимо groupOrder від порожніх (видалених) груп
+        groupOrder = groupOrder.filter(g => groupedPosCache[g]);
+
+        // 4. Створюємо плаский кеш для швидкого доступу
+        posCache = [];
+        groupOrder.forEach(gName => { posCache.push(...groupedPosCache[gName]); });
+        
+        _posDirty = false;
+    }
+
+    function getOrderedPositions() { buildPosCache(); return posCache; }
+    function getPosName(id)        { buildPosCache(); return posMap[id] || 'Невідомо'; }
+
+    // ─── КЕШОВАНІ ФОРМАТЕРИ ДАТ ───────────────────────────────────────────────
+    const _dtFmt = new Intl.DateTimeFormat('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const _dFmt  = new Intl.DateTimeFormat('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    function fmtDT(iso) {
+        if (!iso) return '—';
+        const parts = _dtFmt.formatToParts(new Date(iso));
+        const p = {};
+        parts.forEach(x => { p[x.type] = x.value; });
+        return `${p.day}.${p.month} ${p.hour}:${p.minute}`;
+    }
+    function fmtDate(iso) {
+        if (!iso) return '—';
+        return _dFmt.format(new Date(iso));
+    }
+
+    function toLocalISO(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
+
+    const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    function esc(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, m => ESC_MAP[m]);
+    }
+    
+    function jsEsc(str) { return JSON.stringify(str).replace(/"/g, '&quot;'); }
+
+    // ─── ІКОНКИ ───────────────────────────────────────────────────────────────
+    function scheduleIcons() {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    // ─── CHIP FILTERS & CHANGELOG MODAL ──────────────────────────────────────
+    let currentQuickStatus = 'all';
+
+    function setQuickStatusFilter(statusKey) {
+        currentQuickStatus = statusKey;
+        const filterStatusSelect = el('filter-status');
+        const filterPosSelect = el('filter-pos');
+        
+        if (statusKey === 'combat') {
+            if (filterStatusSelect) filterStatusSelect.value = 'all';
+            if (filterPosSelect) filterPosSelect.value = 'combat_only';
+        } else {
+            if (filterStatusSelect) filterStatusSelect.value = statusKey;
+            if (filterPosSelect && filterPosSelect.value === 'combat_only') filterPosSelect.value = 'all';
+        }
+        
+        updateChipActiveState();
+        resetPageAndRender();
+    }
+
+    function updateChipActiveState() {
+        document.querySelectorAll('.chip-btn').forEach(btn => {
+            const st = btn.getAttribute('data-status');
+            if (st === currentQuickStatus) {
+                btn.className = 'chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-emerald-600 text-white border-emerald-500 shadow-xs cursor-pointer';
+            } else {
+                btn.className = 'chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-emerald-500/20 cursor-pointer';
+            }
+        });
+    }
+
+    function updateChipCounts() {
+        const total = personnel.length;
+        const okCount = personnel.filter(p => p.status === 'ok').length;
+        const c300Count = personnel.filter(p => p.status === '300').length;
+        const sickCount = personnel.filter(p => p.status === 'sick').length;
+        const detachedCount = personnel.filter(p => p.status === 'detached').length;
+        
+        const combatPosIds = new Set(positions.filter(p => p.type === 'combat').map(p => p.id));
+        const combatCount = personnel.filter(p => combatPosIds.has(p.positionId)).length;
+        
+        if (el('chip-count-all')) el('chip-count-all').innerText = `(${total})`;
+        if (el('chip-count-ok')) el('chip-count-ok').innerText = `(${okCount})`;
+        if (el('chip-count-combat')) el('chip-count-combat').innerText = `(${combatCount})`;
+        if (el('chip-count-300')) el('chip-count-300').innerText = `(${c300Count})`;
+        if (el('chip-count-sick')) el('chip-count-sick').innerText = `(${sickCount})`;
+        if (el('chip-count-detached')) el('chip-count-detached').innerText = `(${detachedCount})`;
+    }
+
+    // ─── AUTONOMOUS CHANGELOG DATA (v1.0.0) ────────────────────────────────────
+    const APP_CHANGELOG = [
+        {
+            version: "1.0.0",
+            date: "02.08.2026",
+            isCurrent: true,
+            sections: [
+                {
+                    title: "🎨 Тактичний редизайн (Tactical Pro UI)",
+                    items: [
+                        "<b>Оновлено колірну палітру</b>: впроваджено єдиний Tactical Emerald стиль з гармонійними акцентами.",
+                        "<b>Quick Filter Chips (Кнопки-фільтри в 1 клік)</b>: додано швидкі фільтри статусів (🛡️ В строю, ⚔️ На бойових, 🏥 300, 🤒 Хворі, ✈️ Відрив) над таблицею особового складу.",
+                        "<b>Активний індикатор меню</b>: бічна панель отримала ефекти підсвічування вкладок та кнопку перегляду версії."
+                    ]
+                },
+                {
+                    title: "📋 Автономне версіонування",
+                    items: [
+                        "<b>Compact History Object</b>: додано модальне вікно оновлень з підтримкою 100% офлайн режиму."
+                    ]
+                }
+            ]
+        }
+    ];
+
+    function renderChangelogModal() {
+        const container = el('changelogModalList');
+        if (!container) return;
+        let html = '';
+        APP_CHANGELOG.forEach(item => {
+            const borderClass = item.isCurrent ? 'border-l-4 border-emerald-500' : 'border-l-4 border-gray-500 opacity-80';
+            const currentBadge = item.isCurrent 
+                ? `<span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700">Поточна</span>` 
+                : '';
+            html += `
+            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 ${borderClass} border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm">
+                <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2">
+                    <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                        <span>🚀 Версія ${item.version}</span>
+                        ${currentBadge}
+                    </h4>
+                    <span class="text-xs font-mono text-gray-400">${item.date}</span>
+                </div>
+                <div class="space-y-3">
+            `;
+            item.sections.forEach(sec => {
+                html += `
+                    <div class="space-y-1">
+                        <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">${sec.title}</div>
+                        <ul class="space-y-1 text-xs text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
+                            ${sec.items.map(it => `<li>${it}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function openChangelogModal() {
+        renderChangelogModal();
+        openModal('modal-changelog');
+    }
+
+    // ─── INIT ТА СЛУХАЧІ КЛАВІШ ───────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape')
+            document.querySelectorAll('.modal-overlay:not([style*="display: none"])').forEach(m => closeModal(m.id));
+            
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; 
+            e.preventDefault();
+            handleUndo();
+        }
+    });
+
+    // ─── ТЕМИ / SIDEBAR ───────────────────────────────────────────────────────
+    function toggleDarkMode()    { isDarkMode = !isDarkMode; localStorage.setItem('tactical_dark_mode', isDarkMode); applyTheme(); }
+    function applyTheme()        { document.documentElement.classList.toggle('dark', isDarkMode); }
+    function toggleSidebar()     { isSidebarCollapsed = !isSidebarCollapsed; localStorage.setItem('tactical_sidebar_collapsed', isSidebarCollapsed); applySidebarState(); }
+    function applySidebarState() { el('sidebar').classList.toggle('sidebar-collapsed', isSidebarCollapsed); }
+
+    function toggleSortingLock() {
+        isSortingLocked = !isSortingLocked;
+        localStorage.setItem('tactical_sorting_locked', isSortingLocked);
+        renderPositions();
+    }
+
+    // ─── ЗБЕРЕЖЕННЯ ───────────────────────────────────────────────────────────
+    function saveLocalUI() {
+        localStorage.setItem('tactical_collapsed_groups',    JSON.stringify(collapsedGroups));
+        localStorage.setItem('tactical_collapsed_positions', JSON.stringify(collapsedPositions));
+    }
+
+    function saveStateSilent() {
+        if (typeof sortRotations === 'function') sortRotations();
+
+        if (!isUndoing) {
+            undoStack.push({
+                personnel: localStorage.getItem('tactical_personnel') || '[]',
+                positions: localStorage.getItem('tactical_positions') || '[]',
+                logs: localStorage.getItem('tactical_logs') || '[]',
+                journal: localStorage.getItem('tactical_journal') || '[]',
+                groupOrder: localStorage.getItem('tactical_groups_order') || '[]',
+                rotations: localStorage.getItem('tactical_rotations') || '[]'
+            });
+            if (undoStack.length > 20) undoStack.shift();
+        }
+
+        localStorage.setItem('tactical_personnel',    JSON.stringify(personnel));
+        localStorage.setItem('tactical_positions',    JSON.stringify(positions));
+        localStorage.setItem('tactical_logs',         JSON.stringify(logs));
+        localStorage.setItem('tactical_journal',      JSON.stringify(journal));
+        localStorage.setItem('tactical_groups_order', JSON.stringify(groupOrder));
+        localStorage.setItem('tactical_rotations',    JSON.stringify(plannedRotations)); 
+        
+        updateUndoButton();
+        if (typeof updateRotationsBadge === 'function') updateRotationsBadge();
+    }
+
+    function saveState(tabsToRender = [activeTab]) {
+        saveStateSilent();
+        tabsToRender.forEach(tab => renderTab(tab));
+    }
+
+    function handleUndo() {
+        if (undoStack.length === 0) return showToast('Немає дій для скасування');
+        
+        isUndoing = true;
+        const snap = undoStack.pop();
+        
+        personnel        = JSON.parse(snap.personnel);
+        positions        = JSON.parse(snap.positions);
+        logs             = JSON.parse(snap.logs);
+        journal          = JSON.parse(snap.journal);
+        groupOrder       = JSON.parse(snap.groupOrder);
+        plannedRotations = JSON.parse(snap.rotations);
+
+        _posDirty = true;
+        rebuildPersonnelMap();
+        saveStateSilent();
+        
+        renderTab(activeTab);
+        if (activeTab === 'dashboard') renderRotationsWidget();
+        
+        isUndoing = false;
+        updateUndoButton();
+        showToast('↩️ Дію скасовано (Ctrl+Z)');
+    }
+
+    // ─── ЛОГИ / ТОСТ ──────────────────────────────────────────────────────────
+    function addLog(msg, name) {
+        logs.unshift({ id: Date.now().toString(), timestamp: new Date().toISOString(), message: msg, callsign: name });
+        if (logs.length > 500) logs.length = 500;
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+        el('toast-msg').innerText = msg;
+        el('toast').classList.remove('hidden');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el('toast').classList.add('hidden'), 3000);
+    }
+
+    // ─── WEB CRYPTO API (НАТИВНЕ ШИФРУВАННЯ БЕЗ ІНТЕРНЕТУ) ────────────────────
+    async function deriveKey(password, salt) {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+            "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+        );
+        return crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+            keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+        );
+    }
+
+    async function encryptData(plainText, password) {
+        const enc = new TextEncoder();
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const key = await deriveKey(password, salt);
+        const encrypted = await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv }, key, enc.encode(plainText)
+        );
+        const combined = new Uint8Array(salt.byteLength + iv.byteLength + encrypted.byteLength);
+        combined.set(salt, 0);
+        combined.set(iv, salt.byteLength);
+        combined.set(new Uint8Array(encrypted), salt.byteLength + iv.byteLength);
+        
+        let binary = '';
+        for (let i = 0; i < combined.byteLength; i++) {
+            binary += String.fromCharCode(combined[i]);
+        }
+        return btoa(binary);
+    }
+
+    async function decryptData(base64Data, password) {
+        const raw = atob(base64Data);
+        const combined = new Uint8Array(new ArrayBuffer(raw.length));
+        for (let i = 0; i < raw.length; i++) combined[i] = raw.charCodeAt(i);
+        
+        const salt = combined.slice(0, 16);
+        const iv = combined.slice(16, 28);
+        const encrypted = combined.slice(28);
+        
+        const key = await deriveKey(password, salt);
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv }, key, encrypted
+        );
+        const dec = new TextDecoder();
+        return dec.decode(decrypted);
+    }
+
+    // ─── ЕКСПОРТ / ІМПОРТ З ШИФРУВАННЯМ ───────────────────────────────────────
+    function openExportModal() {
+        el('export-pwd').value = '';
+        openModal('modal-export-password');
+    }
+
+    async function executeEncryptedExport(e) {
+        e.preventDefault();
+        const pwd = val('export-pwd');
+        if (!pwd) return showToast('Введіть пароль!');
+        
+        showToast('Шифрування даних...');
+        closeModal('modal-export-password');
+
+        try {
+            const dataObj = { personnel, positions, logs, journal, groupOrder, plannedRotations };
+            const jsonStr = JSON.stringify(dataObj);
+            
+            const encryptedBase64 = await encryptData(jsonStr, pwd);
+            const finalFileContent = `TACT_ENC_V1:${encryptedBase64}`;
+            
+            // Отримуємо локальний час пристрою, а не UTC (по Гринвічу)
+            const d = new Date();
+            const pad = n => n.toString().padStart(2, '0');
+            const nowStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([finalFileContent], { type: 'text/plain' }));
+            a.download = `takt_backup_${nowStr}.enc`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+            
+            lastBackupTime = Date.now();
+            localStorage.setItem('tactical_last_backup_time', lastBackupTime.toString());
+            checkBackupReminders(); 
+            
+            showToast('Зашифрована копія збережена!');
+        } catch (err) {
+            console.error("Деталі помилки шифрування:", err);
+            if (!window.isSecureContext) {
+                showToast('Помилка: Браузер вимагає HTTPS або локальний файл (file://)');
+            } else {
+                showToast('Помилка шифрування! Перевірте консоль (F12).');
+            }
+        }
+    }
+
+    let pendingImportFile = null;
+
+    function handleFileSelect(e) {
+        const f = e.target.files[0]; 
+        if (!f) return;
+        pendingImportFile = f;
+        
+        if (f.name.endsWith('.enc')) {
+            el('import-pwd').value = '';
+            openModal('modal-import-password');
+        } else if (f.name.endsWith('.json')) {
+            processUnencryptedImport(f);
+        } else {
+            showToast('Невідомий формат файлу');
+        }
+        e.target.value = '';
+    }
+
+    function closeImportPasswordModal() {
+        pendingImportFile = null;
+        closeModal('modal-import-password');
+    }
+
+    async function executeEncryptedImport(e) {
+        e.preventDefault();
+        const pwd = val('import-pwd');
+        if (!pwd || !pendingImportFile) return;
+
+        showToast('Розшифровка...');
+        closeModal('modal-import-password');
+
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            try {
+                const content = ev.target.result;
+                if (!content.startsWith('TACT_ENC_V1:')) {
+                    throw new Error('Невірний формат зашифрованого файлу');
+                }
+                const b64 = content.split('TACT_ENC_V1:')[1];
+                const decJsonStr = await decryptData(b64, pwd);
+                loadDataFromJsonString(decJsonStr);
+            } catch (err) {
+                console.error(err);
+                showToast('Помилка! Невірний пароль або пошкоджений файл.');
+            }
+        };
+        reader.readAsText(pendingImportFile);
+        pendingImportFile = null;
+    }
+
+    function processUnencryptedImport(file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                loadDataFromJsonString(ev.target.result);
+            } catch (err) {
+                showToast('Помилка: невірний файл JSON');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function loadDataFromJsonString(jsonStr) {
+        const d = JSON.parse(jsonStr);
+        if (!d.personnel) throw new Error('Bad data structure');
+        personnel          = d.personnel;
+        positions          = d.positions          || [];
+        logs               = d.logs               || [];
+        journal            = d.journal            || [];
+        plannedRotations   = d.plannedRotations   || [];
+        groupOrder         = d.groupOrder         || [];
+        
+        _posDirty = true;
+        runMigrations();
+        rebuildPersonnelMap();
+        saveState();
+        showToast('Дані успішно відновлено!');
+    }
+
+    // ─── ОЧИЩЕННЯ БАЗИ ДАНИХ (БЕЗПЕКА) ────────────────────────────────────────
+    function wipeAllDataPrompt() {
+        askConfirm('УВАГА! Ви збираєтесь ПОВНІСТЮ ВИДАЛИТИ всі дані з цього пристрою. Ви точно зробили та зберегли бекап?', () => {
+            if (confirm('Остаточне попередження! Знищити всі бойові дані в цьому браузері? Дію неможливо скасувати.')) {
+                wipeAllData();
+            }
+        });
+    }
+
+    function wipeAllData() {
+        const keys = [
+            'tactical_personnel', 'tactical_positions', 'tactical_logs',
+            'tactical_journal', 'tactical_groups_order',
+            'tactical_collapsed_groups', 'tactical_collapsed_positions',
+            'tactical_last_backup_time', 'tactical_rotations', 'tactical_sorting_locked'
+        ];
+        keys.forEach(k => localStorage.removeItem(k));
+
+        personnel = [];
+        positions = [
+            { id:'pos_ppd',  name:'ППД',              type:'non_combat',     rop:'Тилові',   icon:'tent',         equipment:[] },
+            { id:'pos_hosp', name:'Госпіталь / Евакуація',   type:'non_combat', rop:'Медицина', icon:'plus-square', equipment:[] }
+        ];
+        logs = []; journal = []; groupOrder = []; collapsedGroups = {}; collapsedPositions = {}; plannedRotations = [];
+        isSortingLocked = true;
+
+        _posDirty = true;
+        rebuildPersonnelMap();
+        switchTab('dashboard');
+        
+        lastBackupTime = 0;
+        checkBackupReminders();
+        
+        showToast('БАЗУ ДАНИХ ПОВНІСТЮ ЗНИЩЕНО!');
+    }
+
+    // ─── СИСТЕМА НАГАДУВАНЬ ПРО БЕКАП ─────────────────────────────────────────
+    function openBackupSettingsModal() {
+        renderBackupTimesList();
+        el('new-backup-time').value = '';
+        openModal('modal-backup-settings');
+    }
+
+    function renderBackupTimesList() {
+        const list = el('backup-times-list');
+        if (!backupSchedule || backupSchedule.length === 0) {
+            list.innerHTML = '<li class="text-sm text-gray-500 text-center py-2">Нагадувань немає</li>';
+            return;
+        }
+        
+        backupSchedule.sort((a, b) => a.localeCompare(b));
+        
+        list.innerHTML = backupSchedule.map((time, idx) => `
+            <li class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg border border-gray-200 dark:border-gray-600">
+                <span class="font-bold text-gray-800 dark:text-gray-200 text-lg ml-2"><i data-lucide="clock" class="w-4 h-4 inline mr-1 text-emerald-500"></i>${time}</span>
+                <button onclick="removeBackupTime(${idx})" class="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </li>
+        `).join('');
+        scheduleIcons();
+    }
+
+    function addBackupTime() {
+        const timeVal = val('new-backup-time');
+        if (!timeVal) return showToast('Виберіть час!');
+        if (backupSchedule.includes(timeVal)) return showToast('Такий час вже є!');
+        
+        backupSchedule.push(timeVal);
+        localStorage.setItem('tactical_backup_schedule', JSON.stringify(backupSchedule));
+        renderBackupTimesList();
+        checkBackupReminders();
+        el('new-backup-time').value = '';
+    }
+
+    function removeBackupTime(idx) {
+        backupSchedule.splice(idx, 1);
+        localStorage.setItem('tactical_backup_schedule', JSON.stringify(backupSchedule));
+        renderBackupTimesList();
+        checkBackupReminders();
+    }
+
+    function checkBackupReminders() {
+        const banner = el('backup-reminder-banner');
+        if (!backupSchedule || backupSchedule.length === 0) {
+            banner.classList.add('hidden');
+            banner.classList.remove('flex');
+            return;
+        }
+
+        const now = new Date();
+        const lastBackupDate = new Date(lastBackupTime);
+        let shouldRemind = false;
+
+        for (let timeStr of backupSchedule) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const scheduledTimeToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+            
+            if (now >= scheduledTimeToday && lastBackupDate < scheduledTimeToday) {
+                shouldRemind = true;
+                break;
+            }
+        }
+
+        if (shouldRemind) {
+            banner.classList.remove('hidden');
+            banner.classList.add('flex');
+        } else {
+            banner.classList.add('hidden');
+            banner.classList.remove('flex');
+        }
+    }
+
+    function applyStyles(ws, opts = {}) {
+        if (!ws['!ref']) return ws;
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        const colWidths = [];
+
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+                const cell = ws[cellRef];
+                if (!cell) continue;
+
+                if (!cell.s) cell.s = {};
+                if (!cell.s.font) cell.s.font = { name: "Times New Roman", sz: 12 };
+
+                // Заголовки (перший рядок + додаткові)
+                if (R === 0 || (opts.extraHeaderRows && opts.extraHeaderRows.includes(R))) {
+                    cell.s.font.bold = true;
+                    cell.s.alignment = { horizontal: "center", vertical: "center" };
+                } else {
+                    // Кастомні налаштування для даних
+                    if (opts.boldCols && opts.boldCols.includes(C)) cell.s.font.bold = true;
+                    if (opts.centerCols && opts.centerCols.includes(C)) cell.s.alignment = { ...(cell.s.alignment || {}), horizontal: "center" };
+                    if (opts.commanderCells && opts.commanderCells.includes(cellRef)) cell.s.font.bold = true;
+                }
+
+                // Розрахунок оптимальної ширини колонки
+                const valStr = cell.v != null ? cell.v.toString() : '';
+                let len = valStr.length;
+                if (R === 0 || (opts.extraHeaderRows && opts.extraHeaderRows.includes(R))) len += 4; else len += 2;
+                if ((opts.boldCols && opts.boldCols.includes(C)) || (opts.commanderCells && opts.commanderCells.includes(cellRef))) len += 1;
+
+                colWidths[C] = Math.max(colWidths[C] || 10, Math.min(len, 60)); // мін 10, макс 60 символів
+            }
+        }
+        
+        ws['!cols'] = colWidths.map(w => ({ wch: w }));
+        return ws;
+    }
+
+    // ─── EXCEL EXPORTS ────────────────────────────────────────────────────────
+    function exportDetailedReport() {
+        if (typeof XLSX === 'undefined') return showToast('Бібліотека Excel недоступна');
+        
+        const activePos = getOrderedPositions().filter(p => p.type === 'combat');
+        const uC = {}, tC = {};
+
+        let currentRowPers = 1; // 1, бо 0 це рядок заголовків
+        const commanderCells = [];
+
+        const dataPers = activePos.flatMap(pos => {
+            return personnel
+                .filter(p => p.positionId === pos.id && (p.status === 'ok' || p.status === '300'))
+                .sort((a, b) => {
+                    if (pos.commanderId === a.id) return -1;
+                    if (pos.commanderId === b.id) return  1;
+                    return (a.fullName || '').localeCompare(b.fullName || '');
+                })
+                .map(s => {
+                    if (pos.commanderId === s.id) {
+                        commanderCells.push(`E${currentRowPers + 1}`); // E - це колонка "Позивний"
+                    }
+                    currentRowPers++;
+
+                    const dSince = s.deploymentStartTime ? fmtDate(s.deploymentStartTime) : '—';
+                    const unit   = s.unit || 'Без підрозділу';
+                    const task   = s.currentTask || 'піхота';
+                    uC[unit] = (uC[unit] || 0) + 1;
+                    tC[task]  = (tC[task]  || 0) + 1;
+                    return {
+                        "Звання":        s.rank || '',
+                        "ПІБ":           s.fullName || '',
+                        "РОП/Група":     pos.rop?.trim() || 'Без групи',
+                        "Позиція":       pos.name,
+                        "Позивний":      s.callsign || '',
+                        "Підрозділ":     s.unit || '',
+                        "Завдання":      s.status === '300' ? task + ' (300)' : task,
+                        "На позиції з":  dSince
+                    };
+                });
+        });
+
+        const dataApp2 = activePos.map(pos => ({
+            "РОП/Група":    pos.rop?.trim() || 'Без групи',
+            "Позиція":      pos.name,
+            "К-ть О/С":     personnel.filter(p => p.positionId === pos.id && (p.status === 'ok' || p.status === '300')).length,
+            "ОВТ та Майно": (pos.equipment || []).map(e => `${e.name} (${e.quantity})`).join(', ')
+        }));
+
+        const summaryData = [];
+        summaryData.push(["ПО ПІДРОЗДІЛАХ", "К-ть"]);
+        Object.keys(uC).sort().forEach(u => summaryData.push([u, uC[u]]));
+        summaryData.push(["", ""]);
+        summaryData.push(["ПО ЗАВДАННЯХ", "К-ть"]);
+        const taskHeaderRowIndex = summaryData.length - 1;
+        Object.keys(tC).sort().forEach(t => summaryData.push([t, tC[t]]));
+
+        const wb = XLSX.utils.book_new();
+        
+        const wsPers = XLSX.utils.json_to_sheet(dataPers);
+        applyStyles(wsPers, { commanderCells });
+        XLSX.utils.book_append_sheet(wb, wsPers, "Особовий склад");
+        
+        const wsApp2 = XLSX.utils.json_to_sheet(dataApp2);
+        applyStyles(wsApp2, { boldCols: [2], centerCols: [2] }); // Індекс 2 - це "К-ть О/С"
+        XLSX.utils.book_append_sheet(wb, wsApp2, "Додаток 2");
+        
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+        applyStyles(wsSummary, { boldCols: [1], extraHeaderRows: [taskHeaderRowIndex] }); // Індекс 1 - це "К-ть"
+        XLSX.utils.book_append_sheet(wb, wsSummary, "Зведення");
+
+        // --- ДОДАЄМО ЛОГ 100 ---
+        const dataLogs = logs.slice(0, 100).map(l => {
+            let msg = l.message
+                .replace('⚠️ БЕЗ ЗАЯВКИ: ', '[Позапланово] ')
+                .replace('🗑️ ВИДАЛЕНО ЗАЯВКУ: ', '[Скасовано] ')
+                .replace('✅ ЗАВЕРШЕНО ЗАЯВКУ: ', '[Завершено] ');
+            return {
+                "Дата та Час": fmtDT(l.timestamp),
+                "Боєць / Позивний": l.callsign || 'Система',
+                "Опис події": msg
+            };
+        });
+        const wsLogs = XLSX.utils.json_to_sheet(dataLogs.length ? dataLogs : [{"Інфо": "Немає подій"}]);
+        applyStyles(wsLogs, { boldCols: [0, 1] }); // Робимо Час і Позивний жирними
+        XLSX.utils.book_append_sheet(wb, wsLogs, "Лог подій");
+
+        XLSX.writeFile(wb, `Звіт_${new Date().toLocaleDateString('uk-UA')}.xlsx`);
+        showToast('Експортовано');
+    }
+
+    function exportJournalExcel() {
+        if (typeof XLSX === 'undefined') return showToast('Бібліотека Excel недоступна');
+        if (journal.length === 0) return showToast('Журнал порожній');
+
+        const active = [], history = [];
+        const now = Date.now();
+
+        journal.forEach(r => {
+            const s  = getPersonById(r.soldierId) || {};
+            const sN = s.fullName ? `${s.fullName}${s.callsign ? ` ("${s.callsign}")` : ''}` : s.callsign || 'Видалений';
+            const ia = !r.endTime;
+            const displayStartTime = r.startTime; 
+            const ms = (ia ? now : new Date(r.endTime)) - new Date(displayStartTime);
+            const ds = Math.floor(ms / 86400000);
+            const hs = Math.floor((ms % 86400000) / 3600000);
+            const row = {
+                "Боєць / Позивний": sN,
+                "Підрозділ":        s.unit || '',
+                "Поточна позиція":  r.positionName || getPosName(r.positionId),
+                "Захід (Час)":      fmtDT(displayStartTime),
+                "Повернення":       ia ? 'НА ПОЗИЦІЇ' : fmtDT(r.endTime),
+                "Тривалість":       `${ds > 0 ? ds + 'д ' : ''}${hs}г`
+            };
+            ia ? active.push(row) : history.push(row);
+        });
+
+        const wb = XLSX.utils.book_new();
+        
+        const wsActive = XLSX.utils.json_to_sheet(active.length ? active : [{ "Інфо": "Немає активних" }]);
+        applyStyles(wsActive);
+        XLSX.utils.book_append_sheet(wb, wsActive, "Зараз на позиціях");
+        
+        const wsHistory = XLSX.utils.json_to_sheet(history.length ? history : [{ "Інфо": "Немає історії" }]);
+        applyStyles(wsHistory);
+        XLSX.utils.book_append_sheet(wb, wsHistory, "Історія (Вийшли)");
+        
+        XLSX.writeFile(wb, `Журнал_${new Date().toLocaleDateString('uk-UA')}.xlsx`);
+        showToast('Журнал експортовано');
+    }
+
+    // ─── TABS ─────────────────────────────────────────────────────────────────
+    function switchTab(t) {
+        activeTab = t;
+        ['dashboard','personnel','positions','journal','rotations'].forEach(id => {
+            const elTab = el('tab-'+id);
+            if (elTab) elTab.classList.add('hidden');
+            const btn = el('nav-'+id);
+            if (btn) {
+                btn.classList.remove('bg-emerald-600','text-white');
+                btn.classList.add('hover:bg-slate-800','hover:text-white','text-slate-300');
+            }
+        });
+        const activeEl = el('tab-'+t);
+        if (activeEl) activeEl.classList.remove('hidden');
+        const activeBtn = el('nav-'+t);
+        if (activeBtn) {
+            activeBtn.classList.add('bg-emerald-600','text-white');
+            activeBtn.classList.remove('hover:bg-slate-800','text-slate-300');
+        }
+        renderTab(t);
+    }
+
+    function renderTab(t) {
+        if      (t === 'dashboard')  renderDashboard();
+        else if (t === 'personnel')  { fillDynamicLists(); renderPersonnel(); }
+        else if (t === 'positions')  { fillDynamicLists(); renderPositions(); }
+        else if (t === 'journal')    renderJournal();
+        else if (t === 'rotations')  { fillDynamicLists(); renderRotations(); }
+    }
+
+    // ─── DASHBOARD (ОПТИМІЗОВАНО) ─────────────────────────────────────────────
+    function renderDashboard() {
+        let cr = 0, wia = 0, kia = 0, inField = 0;
+        const pc = {}, bu = {}, bt = {};
+        TASKS.forEach(t => { bt[t] = 0; });
+        const activePosIds = new Set(positions.filter(p => p.type === 'combat').map(p => p.id));
+        
+        for (const p of personnel) {
+            if (p.status === 'ok')  { 
+                cr++; 
+                pc[p.positionId] = (pc[p.positionId] || 0) + 1; 
+                if (activePosIds.has(p.positionId)) {
+                    inField++;
+                    const u = p.unit || 'Без підрозділу';
+                    const t = p.currentTask || 'піхота';
+                    bu[u] = (bu[u] || 0) + 1;
+                    if (bt.hasOwnProperty(t)) bt[t]++;
+                }
+            }
+            else if (p.status === '300') wia++;
+            else if (p.status === '200') kia++;
+        }
+        
+        el('stat-total').innerText  = personnel.length;
+        el('stat-combat').innerText = cr;
+        el('stat-field').innerText  = inField;
+        el('stat-wia').innerText    = wia;
+        el('stat-kia').innerText    = kia;
+
+        el('stat-positions-table').innerHTML = getOrderedPositions().filter(p => p.type === 'combat').map(pos =>
+            `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="px-6 py-2 text-sm font-medium">${esc(pos.name)}</td>
+                <td class="px-6 py-2 text-sm text-gray-500">Бойова</td>
+                <td class="px-6 py-2 text-sm text-right font-bold">${pc[pos.id] || 0} чол.</td>
+            </tr>`
+        ).join('');
+
+        el('log-list').innerHTML = logs.length === 0
+            ? '<li class="p-4 text-gray-500 text-center text-sm">Подій немає</li>'
+            : logs.slice(0, 100).map(l => {
+                const isWarn = l.message.includes('⚠️ БЕЗ ЗАЯВКИ: ');
+                const isCheat = l.message.includes('🗑️ ВИДАЛЕНО ЗАЯВКУ: ') || l.message.includes('✅ ЗАВЕРШЕНО ЗАЯВКУ: ');
+                
+                let rowClass = 'hover:bg-gray-50 dark:hover:bg-gray-700/50';
+                let textClass = '';
+                let badgeHtml = '';
+
+                if (isWarn) {
+                    rowClass = 'bg-red-50 dark:bg-red-900/10 border-l-2 border-red-500 hover:bg-red-100 dark:hover:bg-red-900/20';
+                    textClass = 'text-red-700 dark:text-red-400';
+                    badgeHtml = '<span class="ml-2 text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm">Без заявки</span>';
+                } else if (isCheat) {
+                    rowClass = 'bg-yellow-50 dark:bg-yellow-900/10 border-l-2 border-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-900/20';
+                    textClass = 'text-yellow-700 dark:text-yellow-400';
+                    const isDel = l.message.includes('🗑️');
+                    badgeHtml = `<span class="ml-2 text-[9px] ${isDel ? 'bg-orange-500' : 'bg-green-600'} text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shadow-sm">${isDel ? 'Скасовано' : 'Завершено'}</span>`;
+                }
+
+                const msg = l.message.replace('⚠️ БЕЗ ЗАЯВКИ: ', '').replace('🗑️ ВИДАЛЕНО ЗАЯВКУ: ', '').replace('✅ ЗАВЕРШЕНО ЗАЯВКУ: ', '');
+                
+                return `<li class="px-4 py-2 flex justify-between items-start transition-colors ${rowClass}">
+                    <div><span class="font-bold text-sm ${textClass}">${esc(l.callsign)}</span>${badgeHtml}<p class="text-xs text-gray-500 mt-0.5">${esc(msg)}</p></div>
+                    <span class="text-[10px] text-gray-400 ml-2 shrink-0">${fmtDT(l.timestamp)}</span>
+                </li>`;
+              }).join('');
+
+        const tot = Object.values(bu).reduce((a, b) => a + b, 0);
+        el('stat-units-table').innerHTML = tot === 0
+            ? '<tr><td colspan="2" class="px-6 py-4 text-center text-gray-500">Порожньо</td></tr>'
+            : Object.keys(bu).sort().map(u =>
+                `<tr><td class="px-6 py-2 text-sm font-bold">${esc(u)}</td><td class="px-6 py-2 text-sm text-right text-indigo-600 font-bold">${bu[u]}</td></tr>`
+              ).join('')
+              + `<tr class="bg-indigo-50 dark:bg-indigo-900/30 border-t"><td class="px-6 py-2 font-black uppercase">Разом</td><td class="px-6 py-2 text-right font-black">${tot}</td></tr>`;
+
+        const tt = TASKS.reduce((s, t) => s + bt[t], 0);
+        el('stat-tasks-table').innerHTML =
+            TASKS.map(t =>
+                `<tr class="${bt[t] > 0 ? '' : 'opacity-50'}"><td class="px-6 py-1.5 text-sm capitalize">${esc(t)}</td><td class="px-6 py-1.5 text-sm text-right font-bold">${bt[t]}</td></tr>`
+            ).join('')
+            + `<tr class="bg-blue-50 dark:bg-blue-900/30 border-t sticky bottom-0"><td class="px-6 py-2 font-black uppercase">РАЗОМ:</td><td class="px-6 py-2 text-right font-black">${tt}</td></tr>`;
+
+        // ОПТИМІЗАЦІЯ: Прибрали подвійний виклик scheduleIcons()
+        renderRotationsWidget();
+    }
+
+    // ─── PERSONNEL ────────────────────────────────────────────────────────────
+    function handleSearch()       { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { currentPage = 1; renderPersonnel(); }, 300); }
+    function resetPageAndRender() { currentPage = 1; renderPersonnel(); }
+    function changePerPage()      { itemsPerPage = val('per-page') === 'all' ? 999999 : parseInt(val('per-page')); currentPage = 1; renderPersonnel(); }
+    function prevPage()           { if (currentPage > 1) { currentPage--; renderPersonnel(); } }
+
+    function nextPage() {
+        const q    = val('search-input').toLowerCase();
+        const filt = personnel.filter(p =>
+            (p.fullName  || '').toLowerCase().includes(q) ||
+            (p.callsign  || '').toLowerCase().includes(q)
+        );
+        const maxPage = Math.ceil(filt.length / itemsPerPage) || 1;
+        if (currentPage < maxPage) { currentPage++; renderPersonnel(); }
+    }
+
+    function renderPersonnel() {
+        updateNotesBadge(); 
+        updateChipCounts();
+        updateChipActiveState();
+
+        const q  = val('search-input').toLowerCase();
+        const fU = val('filter-unit'), fP = val('filter-pos'), fS = val('filter-status');
+
+        let filt = personnel.filter(p => {
+            const matchesQuery = (p.fullName || '').toLowerCase().includes(q) || (p.callsign || '').toLowerCase().includes(q);
+            const matchesUnit = (fU === 'all' || p.unit === fU);
+            const matchesStatus = (fS === 'all' || p.status === fS);
+            
+            let matchesPos = true;
+            if (fP === 'combat_only') {
+                const combatPosIds = new Set(positions.filter(pos => pos.type === 'combat').map(pos => pos.id));
+                matchesPos = combatPosIds.has(p.positionId);
+            } else {
+                matchesPos = (fP === 'all' || p.positionId === fP);
+            }
+            
+            return matchesQuery && matchesUnit && matchesPos && matchesStatus;
+        });
+
+        filt.sort((a, b) => {
+            if (a.status === 'ok' && b.status !== 'ok') return -1;
+            if (a.status !== 'ok' && b.status === 'ok') return  1;
+            return (a.fullName || '').localeCompare(b.fullName || '');
+        });
+
+        const tp    = Math.ceil(filt.length / itemsPerPage) || 1;
+        if (currentPage > tp) currentPage = tp;
+        const start = (currentPage - 1) * itemsPerPage;
+        const items = filt.slice(start, start + itemsPerPage);
+
+        el('page-info').innerText = filt.length > 0
+            ? `${start + 1}-${Math.min(start + itemsPerPage, filt.length)} з ${filt.length}` : '0 з 0';
+
+        if (items.length === 0) {
+            el('personnel-tbody').innerHTML = '<tr><td colspan="5" class="px-6 py-10 text-center text-gray-500">Не знайдено.</td></tr>';
+            return;
+        }
+        
+        const activeRotMap = getActiveRotationMap();
+
+        el('personnel-tbody').innerHTML = items.map(s => {
+            const st = STATUSES[s.status];
+            const rotDir = activeRotMap.get(s.id);
+            const inRot = rotDir ? `<span class="inline-flex relative h-2.5 w-2.5 ml-2 shrink-0" title="В ротації"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${rotDir==='in'?'bg-orange-400':'bg-indigo-400'} opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 ${rotDir==='in'?'bg-orange-500':'bg-indigo-500'}"></span></span>` : '';
+            
+            const noteIcon = s.note ? `<button type="button" onclick="event.stopPropagation(); viewNote('${s.id}')" class="ml-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 shrink-0 bg-blue-50 dark:bg-blue-900/30 p-1 rounded-full border border-blue-200 dark:border-blue-800 transition-colors" title="Переглянути примітку"><i data-lucide="info" class="w-3.5 h-3.5"></i></button>` : '';
+
+            return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="px-6 py-3 whitespace-nowrap">
+                    <div class="font-bold text-sm flex items-center">${esc(s.fullName) || 'Не вказано'} ${inRot} ${noteIcon}</div>
+                    <div class="text-xs text-gray-500">${esc(s.rank)}${s.callsign ? ` • <span class="text-indigo-500 font-bold">"${esc(s.callsign)}"</span>` : ''}</div>
+                </td>
+                <td class="px-6 py-3 text-sm">${esc(s.unit) || '—'}</td>
+                <td class="px-6 py-3 text-sm"><div class="flex items-center"><i data-lucide="map-pin" class="w-3.5 h-3.5 mr-1 text-gray-400"></i>${esc(getPosName(s.positionId))}</div></td>
+                <td class="px-6 py-3"><span class="px-2 py-1 text-[10px] font-bold rounded border ${st.color}">${st.label}</span></td>
+                <td class="px-6 py-3 text-right">
+                    <button onclick="openMoveModal('${s.id}')"    class="p-1.5 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 rounded mr-1"><i data-lucide="arrow-right-left" class="w-4 h-4"></i></button>
+                    <button onclick="openSoldierModal('${s.id}')" class="p-1.5 text-blue-600 bg-blue-50 dark:bg-blue-900/30 rounded"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                </td>
+            </tr>`;
+        }).join('');
+        scheduleIcons();
+    }
+
+    // ─── POSITIONS (ОПТИМІЗОВАНО) ─────────────────────────────────────────────
+    function togglePos(id)  { collapsedPositions[id] = !collapsedPositions[id]; saveLocalUI(); renderPositions(); }
+    function toggleGroup(g) { collapsedGroups[g]     = !collapsedGroups[g];     saveLocalUI(); renderPositions(); }
+
+    function toggleAllInGroup(g) {
+        buildPosCache();
+        const gp = groupedPosCache[g] || [];
+        const shouldCollapse = gp.some(p => !collapsedPositions[p.id]);
+        gp.forEach(p => collapsedPositions[p.id] = shouldCollapse);
+        saveLocalUI(); 
+        renderPositions();
+    }
+
+    function toggleCommander(pId, sId) {
+        const p = positions.find(x => x.id === pId);
+        if (p) { p.commanderId = (p.commanderId === sId) ? null : sId; saveState(['positions']); }
+    }
+
+    function moveGroupOrder(g, dir) {
+        if (isSortingLocked) return;
+        const i = groupOrder.indexOf(g); if (i === -1) return;
+        if (dir === -1 && i > 0)                        [groupOrder[i], groupOrder[i-1]] = [groupOrder[i-1], groupOrder[i]];
+        else if (dir === 1 && i < groupOrder.length - 1) [groupOrder[i], groupOrder[i+1]] = [groupOrder[i+1], groupOrder[i]];
+        _posDirty = true; // ОПТИМІЗАЦІЯ: Кеш груп зламався, треба оновити
+        saveState(['positions']);
+    }
+
+    function movePositionOrder(pId, dir) {
+        if (isSortingLocked) return;
+        const i = positions.findIndex(p => p.id === pId); if (i === -1) return;
+        const p  = positions[i];
+        const gp = positions.filter(x => (x.rop?.trim() || 'Основні / Без групи') === (p.rop?.trim() || 'Основні / Без групи'));
+        const gi = gp.findIndex(x => x.id === pId);
+        if (dir === -1 && gi > 0) {
+            const ti = positions.findIndex(x => x.id === gp[gi-1].id);
+            [positions[i], positions[ti]] = [positions[ti], positions[i]];
+        } else if (dir === 1 && gi < gp.length - 1) {
+            const ti = positions.findIndex(x => x.id === gp[gi+1].id);
+            [positions[i], positions[ti]] = [positions[ti], positions[i]];
+        }
+        _posDirty = true; saveState(['positions']);
+    }
+
+    function viewEquipment(pId) {
+        const p = positions.find(x => x.id === pId); if (!p) return;
+        el('eq-view-title').innerHTML = `<i data-lucide="package" class="w-5 h-5 mr-2"></i> ОВТ: ${esc(p.name)}`;
+        el('eq-view-list').innerHTML  = (!p.equipment || p.equipment.length === 0)
+            ? '<p class="text-gray-500 py-4 text-center">ОВТ відсутнє.</p>'
+            : p.equipment.map(e =>
+                `<li class="flex justify-between py-2 border-b dark:border-gray-700"><span>${esc(e.name)}</span><b class="text-blue-600 bg-blue-50 px-2 rounded">${esc(e.quantity)}</b></li>`
+              ).join('');
+        openModal('modal-equipment-view'); scheduleIcons();
+    }
+
+    function buildPosSoldierRowHtml(s, pos, isCom, activeRotMap) {
+        let tB = '';
+        if (s.deploymentStartTime && isCom) {
+            const d = Math.floor((Date.now() - new Date(s.deploymentStartTime)) / 86400000);
+            if (d > 0) {
+                let col = 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/40 dark:text-green-400 dark:border-green-800';
+                if (d > 30) col = 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-400 dark:border-red-800 font-black animate-pulse';
+                else if (d > 20) col = 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/40 dark:text-orange-400 dark:border-orange-800';
+                else if (d > 10) col = 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-400 dark:border-yellow-800';
+                
+                tB = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border flex items-center shadow-sm ${col}" title="Днів в полях: ${d}"><i data-lucide="clock" class="w-2.5 h-2.5 mr-0.5"></i>${d}д</span>`;
+            }
+        }
+        const cH = s.callsign ? `<span class="font-black text-indigo-600 dark:text-indigo-400">"${esc(s.callsign)}"</span>` : '';
+        const tH = (s.currentTask && s.currentTask !== 'піхота') ? `<span class="uppercase font-bold text-blue-700 bg-blue-100 px-1 rounded">${esc(s.currentTask)}</span>` : '';
+        const rotDir = activeRotMap.get(s.id);
+        const inRot = rotDir ? `<span class="inline-flex relative h-2 w-2 ml-1 mt-0.5 shrink-0" title="В ротації"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${rotDir==='in'?'bg-orange-400':'bg-indigo-400'} opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 ${rotDir==='in'?'bg-orange-500':'bg-indigo-500'}"></span></span>` : '';
+        const noteIcon = s.note ? `<button type="button" onclick="event.stopPropagation(); viewNote('${s.id}')" class="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 shrink-0 bg-blue-50 dark:bg-blue-900/30 p-0.5 rounded-full transition-colors" title="Переглянути примітку"><i data-lucide="info" class="w-3 h-3"></i></button>` : '';
+        
+        return `<li class="flex justify-between items-start py-1.5 px-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg border border-transparent leading-tight gap-1">
+            <div class="flex items-start flex-1 min-w-0 pr-1">
+                <button onclick="toggleCommander('${pos.id}','${s.id}')" class="p-1 shrink-0 mt-0.5"><i data-lucide="star" class="w-3.5 h-3.5 ${pos.commanderId === s.id ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300 dark:text-gray-600 hover:text-yellow-400'}"></i></button>
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-[13px] ${pos.commanderId === s.id ? 'text-yellow-700 dark:text-yellow-400' : ''} truncate flex items-center gap-1">${esc(s.fullName) || 'Невідомо'} ${inRot} ${noteIcon}</p>
+                    <div class="flex items-center gap-1.5 text-[10px] mt-0.5">${cH}${tH}<span class="text-gray-500 truncate">${esc(s.unit) || '—'}</span></div>
+                </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0 mt-1">${tB}${s.status !== 'ok' ? `<span class="text-[9px] font-bold px-1 rounded bg-red-100 text-red-800 shrink-0">${esc(s.status)}</span>` : ''}<button onclick="openMoveModal('${s.id}')" class="text-gray-400 hover:text-indigo-500 bg-gray-100 dark:bg-gray-700 p-1 rounded shrink-0"><i data-lucide="arrow-right-left" class="w-3 h-3"></i></button></div>
+        </li>`;
+    }
+
+    function renderPositions() {
+        const lockBtn = el('btn-lock-sort');
+        if (lockBtn) {
+            lockBtn.innerHTML = isSortingLocked 
+                ? '<i data-lucide="lock" class="w-4 h-4 mr-2"></i><span>Закріплено</span>' 
+                : '<i data-lucide="unlock" class="w-4 h-4 mr-2"></i><span>Ред. порядок</span>';
+            lockBtn.className = isSortingLocked 
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-lg flex items-center text-sm transition-colors flex-1 sm:flex-none justify-center'
+                : 'bg-orange-100 text-orange-700 border border-orange-300 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400 px-3 py-2 rounded-lg flex items-center text-sm font-bold transition-colors flex-1 sm:flex-none justify-center';
+        }
+
+        // ОПТИМІЗАЦІЯ: Використовуємо готовий кеш замість перебудови
+        buildPosCache();
+        const groups = groupedPosCache;
+        const sbp = {};
+        
+        personnel.forEach(p => { (sbp[p.positionId] = sbp[p.positionId] || []).push(p); });
+
+        const activePosIds = new Set(positions.filter(p => p.type === 'combat').map(p => p.id));
+        const inFieldCount = personnel.filter(p => p.status === 'ok' && activePosIds.has(p.positionId)).length;
+        if (el('pos-combat-count-badge')) el('pos-combat-count-badge').innerText = inFieldCount;
+
+        const activeRotMap = getActiveRotationMap();
+
+        const gl = groupOrder.length;
+        el('positions-container').innerHTML = groupOrder.map((gName, gi) => {
+            const groupPositions = groups[gName] || [];
+            const gCount  = groupPositions.reduce((s, p) => s + (sbp[p.id] || []).length, 0);
+            const isC     = collapsedGroups[gName];
+
+            const activeGroupPosCount = groupPositions.filter(p => (sbp[p.id] || []).length > 0).length;
+
+            const posCards = groupPositions.map((pos, pi) => {
+                const sol   = (sbp[pos.id] || []).slice().sort((a, b) => {
+                    if (pos.commanderId === a.id) return -1;
+                    if (pos.commanderId === b.id) return  1;
+                    return 0;
+                });
+                const isCom = COMBAT_TYPES.has(pos.type);
+                const hC    = isCom ? 'bg-red-50/50 dark:bg-red-900/20 border-red-100' : 'bg-gray-50 dark:bg-gray-800 border-gray-200';
+
+                let sh = '';
+                if (!collapsedPositions[pos.id]) {
+                    if (sol.length === 0) {
+                        sh = '<div class="p-4 text-center text-xs text-gray-400">Порожня</div>';
+                    } else {
+                        const lis = sol.map(s => buildPosSoldierRowHtml(s, pos, isCom, activeRotMap)).join('');
+                        sh = `<div class="p-2 overflow-y-auto max-h-64 custom-scrollbar"><ul class="space-y-0.5">${lis}</ul></div>`;
+                    }
+                }
+
+                const eqBtn = (pos.equipment || []).length > 0
+                    ? `<button onclick="viewEquipment('${pos.id}')" class="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 flex items-center"><i data-lucide="package" class="w-3 h-3 mr-1 text-blue-500"></i>${pos.equipment.length}</button>` : '';
+
+                return `<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border dark:border-gray-700 flex flex-col relative">
+                    <div class="px-3 py-2 border-b dark:border-gray-700 flex flex-col gap-2 ${hC}">
+                        <div class="flex justify-between">
+                            <div class="flex gap-2"><i data-lucide="${pos.icon || 'crosshair'}" class="w-4 h-4 ${isCom ? 'text-red-500' : 'text-gray-500'} mt-0.5"></i><h3 class="font-bold text-sm leading-tight">${esc(pos.name)}</h3></div>
+                            <div class="flex">
+                                ${!isSortingLocked ? `
+                                <button onclick="movePositionOrder('${pos.id}',-1)" class="${pi === 0 ? 'hidden' : ''} p-1"><i data-lucide="arrow-up" class="w-3 h-3 text-gray-400 hover:text-gray-800 dark:hover:text-white"></i></button>
+                                <button onclick="movePositionOrder('${pos.id}',1)"  class="${pi === groupPositions.length-1 ? 'hidden' : ''} p-1"><i data-lucide="arrow-down" class="w-3 h-3 text-gray-400 hover:text-gray-800 dark:hover:text-white"></i></button>
+                                ` : ''}
+                                <button onclick="togglePos('${pos.id}')" class="p-1 ml-1"><i data-lucide="${collapsedPositions[pos.id] ? 'chevron-down' : 'chevron-up'}" class="w-4 h-4 text-gray-400"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between bg-white/60 dark:bg-gray-800/60 p-1.5 rounded">
+                            <div class="flex gap-2">${eqBtn}<span class="bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] font-bold border dark:border-gray-600 flex items-center"><i data-lucide="users" class="w-3 h-3 mr-1 text-gray-500"></i>${sol.length}</span></div>
+                            <div class="flex gap-1">
+                                <button onclick="openAddToPosModal('${pos.id}')"  class="text-gray-500 bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded border dark:border-gray-600 hover:bg-gray-100 hover:text-indigo-500 transition-colors"><i data-lucide="user-plus" class="w-3 h-3"></i></button>
+                                <button onclick="openPositionModal('${pos.id}')"  class="text-gray-500 bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded border dark:border-gray-600 hover:bg-gray-100 transition-colors"><i data-lucide="settings" class="w-3 h-3"></i></button>
+                            </div>
+                        </div>
+                    </div>${sh}
+                </div>`;
+            }).join('');
+
+            return `<div class="bg-white/50 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100 dark:border-gray-700 mb-6 shadow-sm">
+                <div class="flex justify-between mb-4">
+                    <div class="flex items-center">
+                        <h3 class="text-lg font-bold flex items-center cursor-pointer hover:text-indigo-500" onclick="toggleGroup(${jsEsc(gName)})">
+                            <i data-lucide="${isC ? 'folder-closed' : 'folder-open'}" class="w-6 h-6 mr-2 text-indigo-500"></i>
+                            ${esc(gName)} <span class="ml-3 text-[11px] bg-gray-200 dark:bg-gray-700 px-2 rounded-full">${activeGroupPosCount} поз.</span><span class="ml-2 text-[11px] text-indigo-700 bg-indigo-100 px-2 rounded-full">${gCount} чол.</span>
+                        </h3>
+                        <button onclick="openGroupModal(${jsEsc(gName)})" class="ml-3 text-gray-400 hover:text-blue-500 p-1 rounded border dark:border-gray-700 bg-white dark:bg-gray-800" title="Налаштування групи"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="toggleAllInGroup(${jsEsc(gName)})" class="ml-2 text-gray-400 hover:text-indigo-500 p-1 rounded border dark:border-gray-700 bg-white dark:bg-gray-800" title="Згорнути/Розгорнути всі позиції"><i data-lucide="chevrons-up-down" class="w-4 h-4"></i></button>
+                    </div>
+                    <div>
+                        ${!isSortingLocked ? `
+                        <button onclick="moveGroupOrder(${jsEsc(gName)},-1)" class="${gi === 0 ? 'hidden' : ''} p-1"><i data-lucide="arrow-up" class="w-4 h-4 text-gray-400 hover:text-gray-800 dark:hover:text-white"></i></button>
+                        <button onclick="moveGroupOrder(${jsEsc(gName)},1)"  class="${gi === gl - 1 ? 'hidden' : ''} p-1"><i data-lucide="arrow-down" class="w-4 h-4 text-gray-400 hover:text-gray-800 dark:hover:text-white"></i></button>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 ${isC ? 'hidden' : ''}">${posCards}</div>
+            </div>`;
+        }).join('');
+
+        scheduleIcons();
+    }
+
+    // ─── JOURNAL TRACKING ─────────────────────────────────────────────────────
+    function handleJournalTracking(sId, fId, tId) {
+        if (fId === tId) return;
+        const s  = getPersonById(sId);
+        const tP = positions.find(p => p.id === tId);
+
+        const isC  = tP && tP.type === 'combat';
+        const now  = new Date().toISOString();
+
+        const aj   = journal.find(j => j.soldierId === sId && !j.endTime);
+
+        if (isC) {
+            if (aj) {
+                aj.positionId = tId;
+                aj.positionName = tP.name;
+            } else {
+                journal.unshift({ id: 'jrn_' + Date.now(), soldierId: sId, positionId: tId, positionName: tP.name, startTime: now, endTime: null });
+                if (s) s.deploymentStartTime = now;
+            }
+        } else {
+            if (aj) {
+                aj.endTime = now;
+                if (s) s.deploymentStartTime = null;
+            }
+        }
+
+        if (journal.length > 2000) journal.length = 2000;
+    }
+
+    function renderJournal() {
+        const q = val('journal-search').toLowerCase();
+        const f = val('journal-filter');
+
+        const filt = journal.filter(r => {
+            const ia = !r.endTime;
+            if (f === 'active'  && !ia) return false;
+            if (f === 'history' &&  ia) return false;
+            if (!q) return true;
+            const s = getPersonById(r.soldierId) || {};
+            return (s.fullName || '').toLowerCase().includes(q) || (s.callsign || '').toLowerCase().includes(q);
+        });
+
+        filt.sort((a, b) => {
+            const timeA = new Date(a.endTime || a.startTime).getTime();
+            const timeB = new Date(b.endTime || b.startTime).getTime();
+            return timeB - timeA;
+        });
+
+        if (filt.length === 0) {
+            el('journal-tbody').innerHTML = '<tr><td colspan="5" class="px-6 py-6 text-center text-gray-500">Немає записів</td></tr>';
+            return;
+        }
+
+        const now = Date.now();
+        el('journal-tbody').innerHTML = filt.map(r => {
+            const s  = getPersonById(r.soldierId) || {};
+            const sN = s.fullName
+                ? `${esc(s.fullName)}${s.callsign ? ` (${esc(s.callsign)})` : ''}`
+                : esc(s.callsign) || 'Видалений';
+            const ia  = !r.endTime;
+            
+            const displayStartTime = r.startTime;
+            const ms  = (ia ? now : new Date(r.endTime)) - new Date(displayStartTime);
+            const ds  = Math.floor(ms / 86400000);
+            const hs  = Math.floor((ms % 86400000) / 3600000);
+            const durStr = `${ds > 0 ? ds + 'д ' : ''}${hs}г`;
+            const dur = ia
+                ? `<span class="text-green-600 font-bold flex gap-1 justify-end"><i data-lucide="activity" class="w-3 h-3"></i> ${durStr}</span>`
+                : `<span class="text-gray-500">${durStr}</span>`;
+            return `<tr class="${ia ? 'bg-green-50/20' : ''} hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="px-6 py-3"><div class="text-sm font-bold">${sN}</div><div class="text-xs text-gray-500">${esc(s.unit) || '—'}</div></td>
+                <td class="px-6 py-3 text-sm flex gap-1 items-center"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-gray-400"></i>${esc(r.positionName || getPosName(r.positionId))}</td>
+                <td class="px-6 py-3 text-sm">${fmtDT(displayStartTime)}</td>
+                <td class="px-6 py-3 text-sm">${ia ? '<span class="text-green-600 text-[10px] font-bold bg-green-100 px-2 rounded">НА ПОЗИЦІЇ</span>' : fmtDT(r.endTime)}</td>
+                <td class="px-6 py-3 text-right"><div class="flex justify-end gap-3 items-center">${dur}<button onclick="openJournalModal('${r.id}')" class="p-1 bg-gray-100 dark:bg-gray-700 rounded"><i data-lucide="edit-3" class="w-3 h-3 text-gray-500"></i></button><button onclick="deleteJournalEntry('${r.id}')" class="p-1 bg-red-50 dark:bg-red-900/30 rounded"><i data-lucide="trash-2" class="w-3 h-3 text-red-500"></i></button></div></td>
+            </tr>`;
+        }).join('');
+        scheduleIcons();
+    }
+
+    function deleteJournalEntry(id) {
+        askConfirm('Видалити цей запис з журналу?', () => {
+            const r = journal.find(j => j.id === id);
+            if (r && !r.endTime) {
+                const s = getPersonById(r.soldierId);
+                if (s) s.deploymentStartTime = null;
+            }
+            journal = journal.filter(j => j.id !== id);
+            saveStateSilent();
+            renderJournal();
+            showToast('Запис видалено');
+        });
+    }
+
+    function clearJournal() {
+        askConfirm('Очистити журнал (крім активних)?', () => {
+            journal = journal.filter(j => !j.endTime);
+            saveState(['journal']);
+            showToast('Очищено');
+        });
+    }
+
+    function handleJournalSearch() {
+        clearTimeout(journalSearchTimeout);
+        journalSearchTimeout = setTimeout(() => { renderJournal(); }, 300);
+    }
+
+    // ─── CONFIRM DIALOG ───────────────────────────────────────────────────────
+    let confCb = null;
+    function askConfirm(m, cb) { el('confirm-msg').innerText = m; confCb = cb; openModal('modal-confirm'); }
+    el('confirm-btn').addEventListener('click', () => { if (confCb) confCb(); closeModal('modal-confirm'); });
+
+    // ─── SELECTS INIT ─────────────────────────────────────────────────────────
+    function initSelects() {
+        const fill = (id, arr) => { const x = el(id); if (x) x.innerHTML = arr.map(a => `<option value="${a}">${a}</option>`).join(''); };
+        fill('s-rank', RANKS);
+        fill('m-task', TASKS);
+        const pt = el('p-type');
+        if (pt) pt.innerHTML = POSITION_TYPES.map(p => `<option value="${p.id}">${p.label}</option>`).join('');
+        const bs = el('bulk-status-select');
+        if (bs) bs.innerHTML = STATUS_KEYS.map(k => `<option value="${k}">${STATUSES[k].label}</option>`).join('');
+    }
+
+    function fillDynamicLists() {
+        const posOpts  = positions.map(p => `<option value="${esc(p.name)}">`).join('');
+        const ropOpts  = [...new Set(positions.map(p => p.rop).filter(Boolean))].map(r => `<option value="${esc(r)}">`).join('');
+        const units    = [...new Set(personnel.map(p => p.unit).filter(Boolean))];
+        const unitOpts = units.map(u => `<option value="${esc(u)}">`).join('');
+
+        const pl = el('pos-datalist');  if (pl) pl.innerHTML = posOpts;
+        const rl = el('rop-datalist');  if (rl) rl.innerHTML = ropOpts;
+        const ul = el('unit-datalist'); if (ul) ul.innerHTML = unitOpts;
+
+        const restoreSelect = (id, html) => {
+            const x = el(id); if (!x) return;
+            const cv = x.value;
+            x.innerHTML = html;
+            if ([...x.options].some(o => o.value === cv)) x.value = cv;
+        };
+        restoreSelect('filter-unit',   `<option value="all">Всі підрозділи</option>${units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('')}`);
+        restoreSelect('filter-pos',    `<option value="all">Всі локації</option>${positions.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}`);
+        restoreSelect('filter-status', `<option value="all">Всі статуси</option>${STATUS_KEYS.map(k => `<option value="${k}">${STATUSES[k].label}</option>`).join('')}`);
+
+        const sS = el('s-status');
+        if (sS) sS.innerHTML = STATUS_KEYS.map(k => `<option value="${k}">${STATUSES[k].label}</option>`).join('');
+    }
+
+    // ─── SOLDIER MODAL ────────────────────────────────────────────────────────
+    function openSoldierModal(id = null) {
+        el('modal-soldier').querySelector('form').reset();
+        el('s-id').value = id || '';
+        if (id) {
+            const s = getPersonById(id);
+            el('soldier-modal-title').innerText = 'Редагувати';
+            el('s-fullname').value = s.fullName || '';
+            el('s-callsign').value = s.callsign || '';
+            el('s-rank').value     = s.rank;
+            el('s-unit').value     = s.unit || '';
+            el('s-init-block').style.display  = 'none';
+            el('s-delete-btn').style.display  = 'flex';
+        } else {
+            el('soldier-modal-title').innerText = 'Додати бійця';
+            el('s-rank').value = 'Солдат';
+            el('s-pos-input').value = positions.length ? positions[0].name : '';
+            if (el('s-status')) el('s-status').value = 'ok';
+            el('s-init-block').style.display = 'grid';
+            el('s-delete-btn').style.display = 'none';
+        }
+        openModal('modal-soldier');
+    }
+
+    function saveSoldier(e) {
+        e.preventDefault();
+        const id = val('s-id');
+        const d  = { 
+            fullName: val('s-fullname').trim(), 
+            callsign: val('s-callsign').trim(), 
+            rank: val('s-rank'), 
+            unit: val('s-unit').trim()
+        };
+        if (id) {
+            const i = personnel.findIndex(p => p.id === id);
+            personnel[i] = { ...personnel[i], ...d };
+            personnelMap.set(id, personnel[i]);
+            addLog('Оновлено бійця', d.fullName);
+        } else {
+            d.id = 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            d.status = val('s-status');
+            d.currentTask = 'піхота';
+            const p = positions.find(x => x.name === val('s-pos-input'));
+            if (!p) return showToast('Помилка: позицію не знайдено!');
+            d.positionId = p.id;
+            personnel.push(d);
+            personnelMap.set(d.id, d);
+            addLog('Додано', d.fullName);
+            handleJournalTracking(d.id, null, p.id);
+        }
+        saveState();
+        closeModal('modal-soldier');
+        showToast('Збережено');
+    }
+
+    function deleteSoldier() {
+        askConfirm('Видалити бійця?', () => {
+            const id = val('s-id'), s = getPersonById(id);
+            personnel = personnel.filter(p => p.id !== id);
+            personnelMap.delete(id);
+            journal.filter(j => j.soldierId === id && !j.endTime).forEach(j => { j.endTime = new Date().toISOString(); });
+            addLog('Видалено', s.fullName || s.callsign);
+            saveState();
+            closeModal('modal-soldier');
+            showToast('Видалено');
+        });
+    }
+
+    // ─── MOVE MODAL ТА ПРИМІТКИ ───────────────────────────────────────────────
+    function setMoveStatus(k) {
+        selectedMoveStatus = k;
+        document.querySelectorAll('.status-btn').forEach(b => {
+            const bk = b.dataset.status;
+            b.className = bk === k
+                ? `status-btn p-2 text-sm rounded-lg border flex items-center space-x-2 transition-all ${STATUSES[bk].color} ring-2 ring-offset-1 dark:ring-offset-gray-800`
+                : 'status-btn p-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 flex items-center space-x-2 transition-all bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50';
+        });
+    }
+
+    function setMoveToPPD() {
+        const ppd = positions.find(p => p.type === 'non_combat') || positions[0];
+        if (ppd) { el('m-pos-input').value = ppd.name; }
+    }
+
+    function openMoveModal(id) {
+        currentMoveSoldierId = id;
+        const s = getPersonById(id);
+        el('move-modal-title').innerText = `Рух: ${s.fullName || s.callsign}`;
+        el('m-pos-input').value = '';
+        el('m-current-pos-label').innerText = getPosName(s.positionId);
+        
+        // Завантажуємо існуючу примітку, якщо є
+        el('m-notes').value  = s.note ? s.note.text : '';
+        
+        el('m-task').value   = s.currentTask || 'піхота';
+        el('move-status-grid').innerHTML = STATUS_KEYS.map(k =>
+            `<button type="button" data-status="${k}" onclick="setMoveStatus('${k}')" class="status-btn p-2 text-sm rounded-lg border flex items-center space-x-2"><i data-lucide="${STATUSES[k].icon}" class="w-4 h-4"></i><span class="truncate">${STATUSES[k].label}</span></button>`
+        ).join('');
+        scheduleIcons();
+        setMoveStatus(s.status);
+        openModal('modal-move');
+    }
+
+    function saveMove(e) {
+        e.preventDefault();
+        const s  = getPersonById(currentMoveSoldierId);
+        const no = val('m-notes').trim(), ta = val('m-task'), pi = val('m-pos-input').trim();
+        let npId = s.positionId, npN = getPosName(s.positionId);
+        if (pi !== '') {
+            const np = positions.find(p => p.name === pi);
+            if (!np) return showToast('Неіснуюча локація!');
+            npId = np.id; npN = np.name;
+        }
+
+        const hasRotation = getActiveRotationMap().has(s.id);
+        const oldType = positions.find(p => p.id === s.positionId)?.type;
+        const newType = positions.find(p => p.id === npId)?.type;
+        const isDeploymentShift = oldType !== newType;
+        const isPosChanged = s.positionId !== npId;
+
+        const executeMove = () => {
+            const l = [];
+            if (s.status     !== selectedMoveStatus) l.push(`Статус:[${STATUSES[selectedMoveStatus].label}]`);
+            if (isPosChanged)                        l.push(`[${getPosName(s.positionId)}] ➔ [${npN}]`);
+            if (s.currentTask !== ta)                l.push(`Завд:[${ta}]`);
+            
+            // Логіка оновлення примітки
+            if (no !== '') {
+                if (!s.note || s.note.text !== no) {
+                    s.note = { text: no, timestamp: new Date().toISOString() };
+                }
+                l.push(`Прим:${no}`);
+            } else if (s.note) {
+                delete s.note; // Якщо користувач стер текст — видаляємо примітку
+                l.push(`Прим:видалено`);
+            }
+            
+            if (l.length > 0) {
+                handleJournalTracking(s.id, s.positionId, npId);
+                s.status = selectedMoveStatus; 
+                s.positionId = npId; 
+                s.currentTask = ta;
+                
+                const logPrefix = (!hasRotation && isDeploymentShift && isPosChanged) ? '⚠️ БЕЗ ЗАЯВКИ: ' : '';
+                addLog(logPrefix + l.join('|'), s.fullName || s.callsign);
+                saveState();
+            }
+            closeModal('modal-move');
+            showToast(l.length > 0 ? 'Збережено' : 'Без змін');
+        };
+
+        if (isPosChanged && !hasRotation && isDeploymentShift) {
+            askConfirm(`🛑 УВАГА: ПОЗАПЛАНОВЕ ПЕРЕМІЩЕННЯ!\n\nПо в/с ${s.fullName || s.callsign} відсутня активна заявка на ротацію.\n\nВи впевнені, що хочете перевести його на позицію "${npN}"?`, executeMove);
+            return;
+        }
+
+        executeMove();
+    }
+
+    // Відображення вікна примітки
+    function viewNote(sId) {
+        const s = getPersonById(sId);
+        if (!s || !s.note) return;
+        el('note-view-title').innerHTML = `<i data-lucide="info" class="w-5 h-5 mr-2"></i>Примітка: ${esc(s.callsign || s.fullName)}`;
+        el('note-view-text').innerText = s.note.text;
+        el('note-view-date-text').innerText = `Додано/Змінено: ${fmtDT(s.note.timestamp)}`;
+        el('note-delete-btn').onclick = () => deleteNote(sId);
+        openModal('modal-note-view');
+        if (typeof scheduleIcons === 'function') scheduleIcons();
+    }
+
+    // Швидке видалення примітки
+    function deleteNote(sId) {
+        const s = getPersonById(sId);
+        if (s) {
+            delete s.note;
+            saveStateSilent();
+            renderTab(activeTab); // Перемальовуємо поточну вкладку, щоб оновити іконки
+            closeModal('modal-note-view');
+            addLog(`Примітку видалено`, s.fullName || s.callsign);
+            showToast('Примітку видалено');
+        }
+    }
+
+    function updateNotesBadge() {
+        const count = personnel.filter(p => p.note && p.note.text).length;
+        const badge = el('all-notes-badge');
+        if (badge) {
+            badge.innerText = count;
+            if (count > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        }
+        const modalBadge = el('all-notes-modal-badge');
+        if (modalBadge) modalBadge.innerText = count;
+    }
+
+    function openAllNotesModal() {
+        renderAllNotesList();
+        openModal('modal-all-notes');
+    }
+
+    function renderAllNotesList() {
+        updateNotesBadge();
+        const list = el('all-notes-list');
+        const soldiersWithNotes = personnel.filter(p => p.note && p.note.text).sort((a,b) => new Date(b.note.timestamp) - new Date(a.note.timestamp));
+        
+        if (soldiersWithNotes.length === 0) {
+            list.innerHTML = '<li class="p-8 text-center text-gray-500 font-medium">Активних приміток немає</li>';
+            return;
+        }
+
+        list.innerHTML = soldiersWithNotes.map(s => {
+            const pName = getPosName(s.positionId);
+            return `<li class="p-4 hover:bg-white dark:hover:bg-gray-800 transition-colors">
+                <div class="flex justify-between items-start gap-4">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
+                            <span class="font-bold text-sm text-gray-900 dark:text-gray-100">${esc(s.fullName || 'Невідомо')}</span>
+                            ${s.callsign ? `<span class="text-indigo-600 dark:text-indigo-400 font-bold text-sm">"${esc(s.callsign)}"</span>` : ''}
+                            <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded whitespace-nowrap"><i data-lucide="map-pin" class="w-3 h-3 inline pb-0.5"></i> ${esc(pName)}</span>
+                        </div>
+                        <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-800/50 inline-block w-full">${esc(s.note.text)}</p>
+                        <div class="text-[10px] text-gray-500 mt-2 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Додано: ${fmtDT(s.note.timestamp)}</div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2 shrink-0 border-l dark:border-gray-700 pl-4 ml-2">
+                        <button onclick="openMoveModal('${s.id}'); closeModal('modal-all-notes')" class="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 rounded-lg transition-colors border border-transparent dark:border-indigo-800/50" title="Перемістити / Редагувати"><i data-lucide="arrow-right-left" class="w-4 h-4"></i></button>
+                        <button onclick="deleteNoteFromList('${s.id}')" class="p-2 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 rounded-lg transition-colors border border-transparent dark:border-red-800/50" title="Видалити примітку"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            </li>`;
+        }).join('');
+        scheduleIcons();
+    }
+
+    function deleteNoteFromList(sId) {
+        const s = getPersonById(sId);
+        if (s && s.note) {
+            delete s.note;
+            saveStateSilent();
+            renderAllNotesList();
+            renderTab(activeTab);
+            addLog('Примітку видалено', s.fullName || s.callsign);
+            showToast('Примітку видалено');
+        }
+    }
+
+    function submitBulkStatus() {
+        const t = val('bulk-names').trim(), st = val('bulk-status-select');
+        if (!t) return;
+        const ns = t.split('\n').map(n => n.trim()).filter(Boolean);
+        let up = 0;
+        const nf = [];
+        const nameMap = new Map(personnel.map(p => [(p.fullName || '').toLowerCase(), p]));
+        ns.forEach(n => {
+            const s = nameMap.get(n.toLowerCase());
+            if (s) { if (s.status !== st) { addLog(`Мас.статус ➔ ${STATUSES[st].label}`, s.fullName); s.status = st; up++; } }
+            else nf.push(n);
+        });
+        saveState();
+        closeModal('modal-bulk-status');
+        if (nf.length > 0) askConfirm(`Оновлено: ${up}.\nНе знайдено (${nf.length}):\n${nf.slice(0, 5).join('\n')}`, null);
+        else showToast(`Оновлено ${up}`);
+        el('bulk-names').value = '';
+    }
+
+    function submitBulkUnit() {
+        const t = val('bulk-unit-names').trim(), u = val('bulk-unit-input').trim();
+        if (!t || !u) return showToast('Заповніть підрозділ та список ПІБ!');
+        
+        const ns = t.split('\n').map(n => n.trim()).filter(Boolean);
+        let up = 0, added = 0;
+        const now = Date.now();
+        const defaultPos = positions.find(p => p.type === 'non_combat')?.id || (positions[0]?.id || 'pos_ppd');
+        
+        const nameMap = new Map();
+        personnel.forEach(p => {
+            if (p.fullName) nameMap.set(p.fullName.toLowerCase(), p);
+        });
+
+        ns.forEach((n, i) => {
+            const s = nameMap.get(n.toLowerCase());
+            if (s) {
+                if (s.unit !== u) {
+                    addLog(`Мас.підрозділ ➔ ${u}`, s.fullName);
+                    s.unit = u;
+                    up++;
+                }
+            } else {
+                const newId = `s_${now}_bulk_${i}`;
+                const nd = {
+                    id: newId,
+                    fullName: n, callsign: '', rank: 'Солдат', unit: u,
+                    status: 'ok', positionId: defaultPos,
+                    currentTask: 'піхота', deploymentStartTime: null
+                };
+                personnel.push(nd);
+                personnelMap.set(nd.id, nd);
+                handleJournalTracking(nd.id, null, defaultPos);
+                addLog(`Швидко додано (${u})`, n);
+                added++;
+            }
+        });
+        
+        saveState();
+        closeModal('modal-bulk-unit');
+        el('bulk-unit-names').value = '';
+        el('bulk-unit-input').value = '';
+        showToast(`Оновлено: ${up}, Додано: ${added}`);
+    }
+
+    // ─── POSITION MODAL ───────────────────────────────────────────────────────
+    function openPositionModal(id = null) {
+        el('modal-position').querySelector('form').reset();
+        el('p-id').value = id || '';
+        if (id) {
+            const p = positions.find(x => x.id === id);
+            el('pos-modal-title').innerText = 'Редагувати';
+            el('p-name').value = p.name;
+            el('p-rop').value  = p.rop || '';
+            el('p-type').value = p.type;
+            currentPosIcon  = p.icon || 'crosshair';
+            tempEquipment   = JSON.parse(JSON.stringify(p.equipment || []));
+            el('p-delete-btn').style.display = 'flex';
+        } else {
+            el('pos-modal-title').innerText = 'Нова';
+            el('p-type').value = 'combat';
+            currentPosIcon  = 'crosshair';
+            tempEquipment   = [];
+            el('p-delete-btn').style.display = 'none';
+        }
+        renderIconGrid();
+        renderEquipmentList();
+        openModal('modal-position');
+    }
+
+    function renderIconGrid() {
+        el('p-icon-grid').innerHTML = ICONS.map(i => {
+            const a = currentPosIcon === i
+                ? 'bg-indigo-100 border-indigo-400 text-indigo-700'
+                : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100';
+            return `<button type="button" onclick="currentPosIcon='${i}'; renderIconGrid()" class="p-2 flex justify-center rounded-lg border ${a}"><i data-lucide="${i}" class="w-4 h-4"></i></button>`;
+        }).join('');
+        scheduleIcons();
+    }
+
+    function autoSelectIcon() { const t = val('p-type'); if (ICON_MAP[t]) { currentPosIcon = ICON_MAP[t]; renderIconGrid(); } }
+
+    function renderEquipmentList() {
+        const l = el('p-equipment-list');
+        if (tempEquipment.length === 0) {
+            l.innerHTML = '<div class="text-center py-4 text-xs text-gray-500">Порожньо</div>';
+        } else {
+            l.innerHTML = tempEquipment.map((eq, i) =>
+                `<div class="flex gap-2 items-center bg-gray-50 dark:bg-gray-800 p-2 rounded border dark:border-gray-700 mb-2">
+                    <input type="text" value="${esc(eq.name)}"     onchange="tempEquipment[${i}].name=this.value"     class="flex-1 p-1 border dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded text-sm">
+                    <input type="text" value="${esc(eq.quantity)}" onchange="tempEquipment[${i}].quantity=this.value" class="w-16 p-1 border dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded text-sm text-center">
+                    <button type="button" onclick="tempEquipment.splice(${i},1); renderEquipmentList();" class="p-1 text-red-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>`
+            ).join('');
+        }
+        scheduleIcons();
+    }
+
+    function addEquipmentRow() { tempEquipment.push({ id: Date.now(), name: '', quantity: '' }); renderEquipmentList(); }
+
+    function savePosition(e) {
+        e.preventDefault();
+        const id = val('p-id');
+        const d  = { name: val('p-name').trim(), rop: val('p-rop').trim(), type: val('p-type'), icon: currentPosIcon, equipment: tempEquipment };
+        if (!d.name) return showToast('Введіть назву позиції!');
+        if (id) {
+            const i = positions.findIndex(p => p.id === id);
+            positions[i] = { ...positions[i], ...d };
+            addLog('Оновлено позицію', d.name);
+        } else {
+            d.id = 'p_' + Date.now();
+            positions.push(d);
+            addLog('Створено', d.name);
+        }
+        _posDirty = true;
+        saveState(['positions']);
+        closeModal('modal-position');
+        showToast('Збережено');
+    }
+
+    function delPos() {
+        const id = val('p-id');
+        if (personnel.some(p => p.positionId === id)) return showToast('Помилка: На позиції є люди!');
+        askConfirm('Видалити позицію?', () => {
+            positions = positions.filter(p => p.id !== id);
+            _posDirty = true;
+            saveState(['positions']);
+            closeModal('modal-position');
+            showToast('Видалено');
+        });
+    }
+
+    // ─── ADD TO POS MODAL ─────────────────────────────────────────────────────
+    function openAddToPosModal(id) {
+        targetAddToPosId = id;
+        const p = positions.find(x => x.id === id);
+        el('add-to-pos-title').innerText = `Додати на: ${p.name}`;
+        el('add-to-pos-search').value = '';
+        handleAddToPosSearch();
+        openModal('modal-add-to-pos');
+    }
+
+    function handleAddToPosSearch() {
+        const q = val('add-to-pos-search').toLowerCase();
+        const r = el('add-to-pos-results');
+        let f = personnel.filter(p => p.positionId !== targetAddToPosId);
+        if (q) {
+            f = f.filter(p =>
+                (p.fullName  || '').toLowerCase().includes(q) ||
+                (p.callsign  || '').toLowerCase().includes(q)
+            );
+        } else {
+            f.sort((a, b) => {
+                if (a.status === 'ok' && b.status !== 'ok') return -1;
+                if (a.status !== 'ok' && b.status === 'ok') return  1;
+                return (a.fullName || '').localeCompare(b.fullName || '');
+            });
+        }
+        const pg = f.slice(0, 40);
+        if (pg.length === 0) {
+            r.innerHTML = '<li class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">Не знайдено</li>';
+            return;
+        }
+        const activeRotMap = getActiveRotationMap();
+        const to = TASKS.map(t => `<option value="${t}">${t}</option>`).join('');
+        r.innerHTML = pg.map(s => {
+            const ct = s.currentTask || 'піхота';
+            const toSel = to.replace(`value="${ct}"`, `value="${ct}" selected`);
+            const rotDir = activeRotMap.get(s.id);
+            const inRot = rotDir ? `<span class="inline-flex relative h-2 w-2 ml-2 shrink-0" title="В ротації"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${rotDir==='in'?'bg-orange-400':'bg-indigo-400'} opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 ${rotDir==='in'?'bg-orange-500':'bg-indigo-500'}"></span></span>` : '';
+            return `<li class="flex justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b dark:border-gray-700 gap-2">
+                <div class="truncate">
+                    <p class="font-bold text-sm truncate dark:text-gray-200 flex items-center">${esc(s.fullName || 'Невідомо')}${s.callsign ? ` <span class="text-indigo-500 dark:text-indigo-400 font-bold ml-1">"${esc(s.callsign)}"</span>` : ''} ${inRot}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${esc(s.unit) || '—'} | <span class="text-indigo-500 dark:text-indigo-400">${esc(getPosName(s.positionId))}</span></p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="qt-${s.id}" class="p-1 border dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded text-xs w-20">${toSel}</select>
+                    <button onclick="confirmAddToPos('${s.id}')" class="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded text-xs font-bold">Додати</button>
+                </div>
+            </li>`;
+        }).join('');
+    }
+
+    function confirmAddToPos(sId) {
+        const s = getPersonById(sId);
+        const p = positions.find(x => x.id === targetAddToPosId);
+        const t = val(`qt-${sId}`);
+        if (!s || !p) return;
+
+        const hasRotation = getActiveRotationMap().has(s.id);
+        const oldType = positions.find(pos => pos.id === s.positionId)?.type;
+        const newType = p.type;
+        const isDeploymentShift = oldType !== newType;
+
+        const executeAdd = () => {
+            const oid = s.positionId;
+            s.positionId  = p.id;
+            s.currentTask = t;
+            handleJournalTracking(s.id, oid, p.id);
+            
+            const logPrefix = (!hasRotation && isDeploymentShift) ? '⚠️ БЕЗ ЗАЯВКИ: ' : 'Швидко: ';
+            addLog(`${logPrefix}[${getPosName(oid)}] ➔ [${p.name}]`, s.fullName);
+            
+            saveState(['positions']);
+            showToast('Додано!');
+            handleAddToPosSearch();
+        };
+
+        if (!hasRotation && isDeploymentShift) {
+            askConfirm(`🛑 УВАГА: ПОЗАПЛАНОВЕ ПЕРЕМІЩЕННЯ!\n\nПо в/с ${s.fullName || s.callsign} відсутня активна заявка.\n\nВи впевнені, що хочете перевести його на "${p.name}"?`, executeAdd);
+            return;
+        }
+
+        executeAdd();
+    }
+
+    // ─── GROUP MODAL ──────────────────────────────────────────────────────────
+    function openGroupModal(g) {
+        el('g-old-name').value = g;
+        el('g-new-name').value = g === 'Основні / Без групи' ? '' : g;
+        openModal('modal-group-edit');
+    }
+
+    function saveGroupEdit(e) {
+        e.preventDefault();
+        const o = val('g-old-name'), n = val('g-new-name').trim() || 'Основні / Без групи';
+        if (n !== o) {
+            positions.forEach(p => {
+                if ((p.rop?.trim() || 'Основні / Без групи') === o)
+                    p.rop = n === 'Основні / Без групи' ? '' : n;
+            });
+            const i = groupOrder.indexOf(o);
+            if (i !== -1) groupOrder[i] = n;
+            if (collapsedGroups[o] !== undefined) { collapsedGroups[n] = collapsedGroups[o]; delete collapsedGroups[o]; }
+            _posDirty = true;
+            saveState(['positions']);
+            showToast('Оновлено');
+        }
+        closeModal('modal-group-edit');
+    }
+
+    function deleteGroupPrompt() {
+        const g  = val('g-old-name');
+        buildPosCache();
+        const gp = groupedPosCache[g] || [];
+        if (personnel.some(p => gp.some(x => x.id === p.positionId))) return showToast('Є люди в цій групі!');
+        askConfirm(`Видалити групу і ${gp.length} поз.?`, () => {
+            const ids = new Set(gp.map(p => p.id));
+            positions  = positions.filter(p => !ids.has(p.id));
+            groupOrder = groupOrder.filter(x => x !== g);
+            delete collapsedGroups[g];
+            _posDirty = true;
+            saveState(['positions']);
+            closeModal('modal-group-edit');
+            showToast('Видалено!');
+        });
+    }
+
+    // ─── JOURNAL MODAL ────────────────────────────────────────────────────────
+    function openJournalModal(id) {
+        const r = journal.find(j => j.id === id); if (!r) return;
+        el('j-id').value    = r.id;
+        const displayStartTime = r.startTime;
+        el('j-start').value = toLocalISO(displayStartTime);
+        el('j-end').value   = toLocalISO(r.endTime);
+        openModal('modal-journal-edit');
+    }
+
+    function saveJournalEdit(e) {
+        e.preventDefault();
+        const r  = journal.find(j => j.id === val('j-id'));
+        const sv = val('j-start'), ev = val('j-end');
+        if (sv) r.startTime = new Date(sv).toISOString();
+        r.endTime = ev ? new Date(ev).toISOString() : null;
+        const s  = getPersonById(r.soldierId);
+        const aj = journal.find(j => j.soldierId === s?.id && !j.endTime);
+        if (s && aj && aj.id === r.id) s.deploymentStartTime = r.startTime;
+        saveState(['journal','positions']);
+        closeModal('modal-journal-edit');
+        showToast('Час оновлено!');
+    }
+
+    // ─── IMPORT ───────────────────────────────────────────────────────────────
+    function submitImport() {
+        const t = val('import-text').trim(); if (!t) return;
+        let a = 0;
+        const now = Date.now();
+        t.split('\n').forEach((l, i) => {
+            const sep = l.includes('\t') ? '\t' : l.includes(';') ? ';' : ',';
+            const c   = l.split(sep).map(x => x.replace(/"/g, '').trim());
+            if (c.length >= 1 && c[0]) {
+                const fullName = c[0];
+                const unit     = c[1] || '';
+                const rankRaw  = c[2] || 'Солдат';
+                const callsign = c[3] || '';
+                
+                const r  = RANKS.find(x => x.toLowerCase() === rankRaw.toLowerCase()) || rankRaw;
+                const ei = personnel.findIndex(p => (p.fullName || '').toLowerCase() === fullName.toLowerCase());
+                if (ei !== -1) {
+                    personnel[ei].rank = r;
+                    personnel[ei].unit = unit;
+                    if (callsign) personnel[ei].callsign = callsign;
+                    personnelMap.set(personnel[ei].id, personnel[ei]);
+                } else {
+                    const nd = {
+                        id: `s_${now}_${i}`,
+                        fullName: fullName, callsign: callsign, rank: r, unit: unit,
+                        status: 'ok', positionId: positions[0]?.id || 'pos_ppd',
+                        currentTask: 'піхота', deploymentStartTime: null
+                    };
+                    personnel.push(nd);
+                    personnelMap.set(nd.id, nd);
+                    a++;
+                }
+            }
+        });
+        addLog(`Імпорт Excel: +${a}`, 'Система');
+        saveState();
+        closeModal('modal-import');
+        el('import-text').value = '';
+        showToast(`Додано нових: ${a}`);
+    }
+
+    // ─── МІГРАЦІЇ ТА АВТОВІДНОВЛЕННЯ ──────────────────────────────────────────
+    function runMigrations() {
+        let changed = false;
+        
+        personnel.forEach(p => {
+            if (!p.currentTask) { p.currentTask = 'піхота'; changed = true; }
+            
+            if (p.status === 'rest') { p.status = 'ok'; changed = true; }
+            if (p.status === '500')  { p.status = 'mia'; changed = true; }
+            
+            if (p.deploymentStartTime === undefined) {
+                const pos = positions.find(x => x.id === p.positionId);
+                if (pos && pos.type === 'combat') {
+                    const activeJ = journal.find(j => j.soldierId === p.id && !j.endTime);
+                    p.deploymentStartTime = activeJ ? activeJ.startTime : new Date().toISOString();
+                } else {
+                    p.deploymentStartTime = null;
+                }
+                changed = true;
+            }
+        });
+        
+        positions.forEach(p => {
+            if (p.type === 'base' || p.type === 'hospital') {
+                p.type = 'non_combat';
+                changed = true;
+            } else if (p.type !== 'combat' && p.type !== 'non_combat') {
+                p.type = 'combat';
+                changed = true;
+            }
+        });
+
+        journal.forEach(j => {
+            if (!j.positionName) {
+                const pos = positions.find(x => x.id === j.positionId);
+                if (pos) { j.positionName = pos.name; changed = true; }
+            }
+            if (!j.endTime) {
+                const s = getPersonById(j.soldierId);
+                if (s && s.deploymentStartTime && new Date(s.deploymentStartTime) < new Date(j.startTime)) {
+                    j.startTime = s.deploymentStartTime;
+                    changed = true;
+                }
+            }
+        });
+
+        if (changed) saveStateSilent();
+    }
+    // ─── ROTATIONS (ПЛАНОВІ ЗАМІНИ) ───────────────────────────────────────────
+    let tempRotMembers = [];
+    let editingRotationIdx = null;
+
+    function sortRotations() {
+        if (!plannedRotations || plannedRotations.length === 0) return;
+        plannedRotations.sort((a, b) => {
+            let aDone = a.members.length > 0;
+            a.members.forEach(m => { if (!isMemberDone(m)) aDone = false; });
+            let bDone = b.members.length > 0;
+            b.members.forEach(m => { if (!isMemberDone(m)) bDone = false; });
+
+            if (aDone && !bDone) return 1;
+            if (!aDone && bDone) return -1;
+            if (aDone && bDone) return new Date(b.plannedTime) - new Date(a.plannedTime);
+            return new Date(a.plannedTime) - new Date(b.plannedTime);
+        });
+    }
+
+    function updateRotationsBadge() {
+        let lateCount = 0;
+        const now = new Date();
+        plannedRotations.forEach(rot => {
+            const isLate = new Date(rot.plannedTime) < now;
+            if (isLate) {
+                let allDone = true;
+                rot.members.forEach(m => { if (!isMemberDone(m)) allDone = false; });
+                if (!allDone) lateCount++;
+            }
+        });
+        const badge = el('rotations-badge');
+        if (badge) {
+            if (lateCount > 0) {
+                badge.innerText = lateCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    }
+
+    function isMemberDone(member) {
+        const s = getPersonById(member.soldierId);
+        if (!s) return true;
+        const pos = positions.find(p => p.id === s.positionId);
+        const isAtCombat = pos && pos.type === 'combat';
+        
+        if (member.dir === 'in') return isAtCombat;
+        if (member.dir === 'out') return !isAtCombat;
+        return false;
+    }
+
+    function renderRotations() {
+        const c = el('rotations-container');
+        if (!c) return;
+
+        let lateCount = 0;
+        const now = new Date();
+
+        if (plannedRotations.length === 0) {
+            c.innerHTML = '<div class="col-span-full py-10 text-center text-gray-500">Немає запланованих ротацій</div>';
+            el('rotations-badge').classList.add('hidden');
+            return;
+        }
+
+        c.innerHTML = plannedRotations.map((rot, rIdx) => {
+            const isLate = new Date(rot.plannedTime) < now;
+            let allDone = true;
+
+            const membersHtml = rot.members.map(m => {
+                const s = getPersonById(m.soldierId) || { fullName: 'Видалено', callsign: '', positionId: null };
+                const done = isMemberDone(m);
+                if (!done) allDone = false;
+                
+                const fullNameStr = s.fullName || 'Невідомо';
+                const lastName = fullNameStr.trim().split(/\s+/)[0]; 
+                
+                const icon = m.dir === 'in' 
+                    ? `<i data-lucide="arrow-right-circle" class="w-4 h-4 text-orange-500"></i>` 
+                    : `<i data-lucide="arrow-left-circle" class="w-4 h-4 text-blue-500"></i>`;
+                
+                const statusColor = done 
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 border-green-200' 
+                    : (isLate ? 'bg-red-100 dark:bg-red-900/30 text-red-700 border-red-200 animate-pulse' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 border-gray-200');
+                
+                const statusIcon = done ? '<i data-lucide="check" class="w-3 h-3"></i>' : (isLate ? '<i data-lucide="alert-circle" class="w-3 h-3"></i>' : '<i data-lucide="clock" class="w-3 h-3"></i>');
+
+                const currPosName = s.positionId ? getPosName(s.positionId) : 'Невідомо';
+                const targetPosName = m.targetPosId ? getPosName(m.targetPosId) : null;
+                
+                let currPosColor = 'text-gray-700 dark:text-gray-300';
+                if (m.dir === 'in' && m.targetPosId) {
+                    currPosColor = (s.positionId === m.targetPosId) 
+                        ? 'text-emerald-600 dark:text-emerald-400' 
+                        : 'text-orange-600 dark:text-orange-400';
+                }
+                
+                let routeInfo = `Зараз: <b class="${currPosColor}">${esc(currPosName)}</b>`;
+                if (targetPosName && m.dir === 'in') {
+                    routeInfo += ` <span class="text-gray-400 mx-1">➔</span> План: <b class="text-indigo-600 dark:text-indigo-400">${esc(targetPosName)}</b>`;
+                }
+
+                return `<li class="py-1.5 border-b dark:border-gray-700/50 last:border-0">
+                    <div class="flex justify-between items-start gap-2 w-full">
+                        <div class="flex items-start gap-1.5 min-w-0 flex-1">
+                            <div class="mt-0.5 shrink-0">${icon}</div>
+                            <div class="min-w-0 flex-1">
+                                <div class="font-bold text-[13px] text-gray-800 dark:text-gray-200 leading-none truncate" title="${esc(fullNameStr)}">
+                                    ${esc(lastName)}${s.callsign ? ` <span class="text-indigo-500 ml-1">"${esc(s.callsign)}"</span>` : ''}
+                                </div>
+                                <div class="text-[10px] text-gray-500 mt-1 truncate leading-none">
+                                    ${routeInfo}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-1.5 py-0.5 rounded border text-[9px] font-bold flex items-center gap-1 shrink-0 ${statusColor} self-center">
+                            ${statusIcon} 
+                            <span class="hidden sm:inline">${done ? 'ВИКОНАНО' : (m.dir === 'in' ? 'ЩЕ НА ППД' : 'ЩЕ НА ПОЗИЦІЇ')}</span>
+                            <span class="sm:hidden">${done ? 'ОК' : 'ЧЕКАЄ'}</span>
+                        </div>
+                    </div>
+                </li>`;
+            }).join('');
+
+            if (isLate && !allDone) lateCount++;
+
+            const headerColor = allDone ? 'bg-green-50 dark:bg-green-900/20' : (isLate ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-800/80');
+            const borderColor = allDone ? 'border-green-200' : (isLate ? 'border-red-300' : 'border-gray-200 dark:border-gray-700');
+
+            return `<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${borderColor} overflow-hidden flex flex-col relative">
+                <div class="px-4 py-3 border-b ${borderColor} ${headerColor} flex justify-between items-start">
+                    <div>
+                        <h3 class="font-bold text-sm leading-tight">${esc(rot.name)}</h3>
+                        <p class="text-[11px] text-gray-500 flex items-center mt-1"><i data-lucide="clock" class="w-3 h-3 mr-1"></i>План: ${fmtDT(rot.plannedTime)}</p>
+                    </div>
+                    <div class="flex gap-1 z-10">
+                        <button onclick="openRotationModal(${rIdx})" class="text-gray-400 hover:text-blue-500 bg-white dark:bg-gray-800 p-1 rounded"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="deleteRotation(${rIdx})" class="text-gray-400 hover:text-red-500 bg-white dark:bg-gray-800 p-1 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+                <div class="p-3">
+                    <ul class="space-y-1">${membersHtml}</ul>
+                </div>
+                ${allDone ? `<div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"><button onclick="completeRotation(${rIdx})" class="w-full bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-emerald-50 dark:text-emerald-400 px-4 py-2 rounded-lg font-bold shadow-sm transition-colors text-sm border border-slate-500 dark:border-slate-600">Всі на місцях. Завершити!</button></div>` : ''}
+            </div>`;
+        }).join('');
+
+        updateRotationsBadge();
+        scheduleIcons();
+    }
+
+    function renderRotationsWidget() {
+        const w = el('dashboard-rotations-widget');
+        const l = el('widget-rotations-list');
+        if (!w || !l) return;
+
+        if (plannedRotations.length === 0) {
+            w.classList.add('hidden');
+            return;
+        }
+
+        w.classList.remove('hidden');
+        const now = new Date();
+        
+        const activeRots = plannedRotations.slice(0, 3);
+
+        l.innerHTML = activeRots.map(rot => {
+            const isLate = new Date(rot.plannedTime) < now;
+            let allDone = true;
+            rot.members.forEach(m => { if(!isMemberDone(m)) allDone = false; });
+
+            const border = allDone ? 'border-green-300' : (isLate ? 'border-red-400' : 'border-indigo-200');
+            const bg = allDone ? 'bg-green-50 dark:bg-green-900/10' : (isLate ? 'bg-red-50 dark:bg-red-900/10' : 'bg-indigo-50 dark:bg-indigo-900/10');
+            const icon = allDone ? '<i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>' : (isLate ? '<i data-lucide="alert-triangle" class="w-4 h-4 text-red-600"></i>' : '<i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>');
+
+            return `<div class="p-3 rounded-lg border ${border} ${bg} flex justify-between items-center cursor-pointer hover:shadow-md transition-shadow" onclick="switchTab('rotations')">
+                <div>
+                    <p class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate max-w-[150px]">${esc(rot.name)}</p>
+                    <p class="text-[10px] text-gray-500">${fmtDT(rot.plannedTime)} • ${rot.members.length} чол.</p>
+                </div>
+                ${icon}
+            </div>`;
+        }).join('');
+        scheduleIcons();
+    }
+
+    function openRotationModal(idx = null) {
+        fillDynamicLists();
+        editingRotationIdx = idx;
+        
+        if (idx !== null) {
+            const rot = plannedRotations[idx];
+            el('rot-name').value = rot.name;
+            el('rot-time').value = toLocalISO(rot.plannedTime);
+            tempRotMembers = JSON.parse(JSON.stringify(rot.members)); 
+        } else {
+            el('rot-name').value = '';
+            const d = new Date();
+            d.setHours(d.getHours() + 2);
+            el('rot-time').value = toLocalISO(d.toISOString());
+            tempRotMembers = [];
+        }
+        
+        el('rot-search').value = '';
+        el('rot-search-results').innerHTML = '';
+        renderTempRotMembers();
+        openModal('modal-rotation');
+    }
+
+    function handleRotSearch() {
+        const q = val('rot-search').toLowerCase();
+        const r = el('rot-search-results');
+        if (q.length < 2) { r.innerHTML = ''; return; }
+
+        const f = personnel.filter(p => 
+            (p.fullName || '').toLowerCase().includes(q) || 
+            (p.callsign || '').toLowerCase().includes(q)
+        ).slice(0, 5);
+
+        if (f.length === 0) { r.innerHTML = '<li class="p-2 text-xs text-gray-500">Не знайдено</li>'; return; }
+
+        r.innerHTML = f.map(s => `
+            <li class="flex justify-between items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" onclick="addMemberToRot('${s.id}')">
+                <div class="truncate"><span class="font-bold text-sm">${esc(s.fullName || 'Невідомо')}</span>${s.callsign ? ` <span class="text-indigo-500 font-bold text-sm ml-1">"${esc(s.callsign)}"</span>` : ''} <span class="text-xs text-gray-500 ml-1 truncate">(${esc(getPosName(s.positionId))})</span></div>
+                <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-500 shrink-0"></i>
+            </li>
+        `).join('');
+        scheduleIcons();
+    }
+
+    function addMemberToRot(sId) {
+        if (tempRotMembers.some(m => m.soldierId === sId)) return showToast('Вже у списку!');
+        const dir = val('rot-dir');
+        tempRotMembers.push({ soldierId: sId, dir: dir, targetPosId: '' });
+        el('rot-search').value = '';
+        el('rot-search-results').innerHTML = '';
+        renderTempRotMembers();
+    }
+
+    function removeMemberFromRot(idx) {
+        tempRotMembers.splice(idx, 1);
+        renderTempRotMembers();
+    }
+
+    function updateTempRotPosByName(idx, posName) {
+        const p = positions.find(x => x.name === posName);
+        tempRotMembers[idx].targetPosId = p ? p.id : '';
+        renderTempRotMembers(); 
+    }
+
+    function renderTempRotMembers() {
+        const list = el('rot-members-list');
+        if (tempRotMembers.length === 0) {
+            list.innerHTML = '<li class="text-xs text-gray-500 text-center py-2">Додайте бійців через пошук вище</li>';
+            return;
+        }
+
+        list.innerHTML = tempRotMembers.map((m, i) => {
+            const s = getPersonById(m.soldierId);
+            const dirHtml = m.dir === 'in' 
+                ? '<span class="bg-orange-100 text-orange-800 text-[10px] px-2 py-0.5 rounded font-bold shrink-0">ЗАХОДИТЬ ➔</span>' 
+                : '<span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold shrink-0">⬅ ВИХОДИТЬ</span>';
+            
+            const currPosName = m.targetPosId ? getPosName(m.targetPosId) : '';
+            const searchInput = `<input type="text" list="pos-datalist" placeholder="Пошук позиції..." value="${esc(currPosName)}" onchange="updateTempRotPosByName(${i}, this.value)" class="text-[11px] p-1.5 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 w-[140px] outline-none focus:ring-1 focus:ring-indigo-500">`;
+
+            return `<li class="flex justify-between items-center bg-white dark:bg-gray-700 p-2 rounded border dark:border-gray-600 gap-2">
+                <div class="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+                    ${dirHtml}
+                    <span class="font-bold text-sm truncate">${esc(s.fullName || 'Невідомо')}${s.callsign ? ` <span class="text-indigo-500 font-bold ml-1">"${esc(s.callsign)}"</span>` : ''}</span>
+                    ${m.dir === 'in' ? searchInput : ''}
+                </div>
+                <button onclick="removeMemberFromRot(${i})" class="text-red-500 hover:text-red-700 p-1 shrink-0 bg-red-50 dark:bg-red-900/30 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </li>`;
+        }).join('');
+        scheduleIcons();
+    }
+
+    function saveRotation() {
+        const n = val('rot-name').trim();
+        const t = val('rot-time');
+        
+        if (!n) return showToast('Введіть назву ротації!');
+        if (!t) return showToast('Оберіть плановий час!');
+        if (tempRotMembers.length === 0) return showToast('Додайте хоча б одного бійця!');
+
+        if (editingRotationIdx !== null) {
+            plannedRotations[editingRotationIdx].name = n;
+            plannedRotations[editingRotationIdx].plannedTime = new Date(t).toISOString();
+            plannedRotations[editingRotationIdx].members = [...tempRotMembers];
+            addLog(`📝 Оновлено заявку: ${n}`, 'Система');
+        } else {
+            plannedRotations.push({
+                id: 'rot_' + Date.now(),
+                name: n,
+                plannedTime: new Date(t).toISOString(),
+                createdAt: new Date().toISOString(),
+                members: [...tempRotMembers]
+            });
+            addLog(`📝 Створено заявку: ${n}`, 'Система');
+        }
+
+        saveStateSilent();
+        closeModal('modal-rotation');
+        renderRotations();
+        renderRotationsWidget();
+        showToast(editingRotationIdx !== null ? 'Ротацію оновлено!' : 'Ротацію заплановано!');
+    }
+
+    function deleteRotation(idx) {
+        askConfirm('Видалити цю ротацію з плану?', () => {
+            const rotName = plannedRotations[idx].name;
+            addLog(`🗑️ ВИДАЛЕНО ЗАЯВКУ: ${rotName}`, 'Система');
+            plannedRotations.splice(idx, 1);
+            saveStateSilent();
+            renderRotations();
+            renderRotationsWidget();
+            showToast('Видалено');
+        });
+    }
+
+    function completeRotation(idx) {
+        askConfirm('Всі на місцях. Завершити ротацію?', () => {
+            const rotName = plannedRotations[idx].name;
+            addLog(`✅ ЗАВЕРШЕНО ЗАЯВКУ: ${rotName}`, 'Система');
+            plannedRotations.splice(idx, 1);
+            saveStateSilent();
+            renderRotations();
+            renderRotationsWidget();
+            showToast('Завершено');
+        });
+    }
+
+    </script>
+    </div> <!-- Закриття app-wrapper -->
+</body>
+</html>

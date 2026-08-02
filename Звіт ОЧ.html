@@ -2954,8 +2954,112 @@ ${customTasksHtml}
             initPreviewTheme();
         }
 
-        // МОДАЛЬНЕ ВІКНО CHANGELOG
+        // МОДАЛЬНЕ ВІКНО CHANGELOG (COMPACT AUTONOMOUS CHANGELOG DATA)
+        const APP_CHANGELOG = [
+            {
+                version: "1.1.0",
+                date: "02.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🎨 Загальний редизайн інтерфейсу (Tactical Premium UI)",
+                        items: [
+                            "<b>OLED Deep Palette</b>: впроваджено глибоку темну палітру фону (<code>#070a12</code>) та контрастних карток (<code>#0f172a</code>).",
+                            "<b>Glassmorphism Header & Sticky Nav</b>: додано ефект розмиття фону (<code>backdrop-filter: blur(12px)</code>) для шапки та стрічки якірного меню із неоновим свіченням активних вкладок.",
+                            "<b>Modern Dynamic Buttons</b>: інтегровано об'ємні градієнтні кнопки із мікро-анімацією підняття та активного кліку."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.0.2",
+                date: "02.08.2026",
+                sections: [
+                    {
+                        title: "🎨 Покращення UI та зручності (UX)",
+                        items: [
+                            "<b>Тактичний нічний режим A4 макета</b>: додано кнопку-перемикач (<code>🌙 Нічний / 📄 Паперовий</code>) у заголовок макета A4 зі збереженням у <code>localStorage</code>."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.0.1",
+                date: "02.08.2026",
+                sections: [
+                    {
+                        title: "🎨 Покращення UI та верстки",
+                        items: [
+                            "<b>Редизайн розділу 3.1.2 «Завдання БпАК»</b>: розділено розвідувальні та ударні місії, додано підписані поля вильотів/часу та таблицю результативності."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.0.0",
+                date: "02.08.2026",
+                sections: [
+                    {
+                        title: "🎨 Покращення UI та верстки",
+                        items: [
+                            "<b>Редизайн розділу 5.3 «Бойовий потенціал»</b>: впроваджено тактичну картку-матрицю з кольоровими іконками, підсумок боєготових на ППД та текстові примітки."
+                        ]
+                    },
+                    {
+                        title: "📋 Система версіонування",
+                        items: [
+                            "Інтегровано загальний проєктний <code>CHANGELOG.md</code> та додано кнопковий бейдж версії у шапку."
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        function renderChangelogModal() {
+            const container = document.getElementById('changelogModalList');
+            if (!container) return;
+
+            let html = '';
+            APP_CHANGELOG.forEach(item => {
+                const borderStyle = item.isCurrent ? 'border-left: 4px solid var(--accent);' : 'border-left: 4px solid var(--border); opacity: 0.85;';
+                const currentBadge = item.isCurrent 
+                    ? `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #10b981;">Поточна</span>` 
+                    : '';
+
+                html += `
+                <div style="background: rgba(255, 255, 255, 0.02); ${borderStyle} border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                        <h4 style="font-weight: 800; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>🚀 Версія ${item.version}</span>
+                            ${currentBadge}
+                        </h4>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">${item.date}</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                `;
+
+                item.sections.forEach(sec => {
+                    html += `
+                        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                            <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">${sec.title}</div>
+                            <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                                ${sec.items.map(it => `<li>${it}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
         function openChangelogModal() {
+            renderChangelogModal();
             document.getElementById('changelogModal').classList.remove('hidden');
         }
         function closeChangelogModal() {
@@ -2985,78 +3089,8 @@ ${customTasksHtml}
                 </h3>
                 <button type="button" onclick="closeChangelogModal()" class="btn-icon" style="width:28px; height:28px; font-size:1rem;">×</button>
             </div>
-            <div class="modal-body">
-                <!-- Версія 1.1.0 -->
-                <div style="background: rgba(255, 255, 255, 0.02); border-left: 4px solid var(--accent); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                        <h4 style="font-weight: 800; font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
-                            <span>🚀 Версія 1.1.0</span>
-                            <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #10b981;">Поточна</span>
-                        </h4>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">02.08.2026</span>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Загальний редизайн інтерфейсу (Tactical Premium UI)</div>
-                        <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                            <li><b>OLED Deep Palette</b>: впроваджено глибоку темну палітру фону (<code>#070a12</code>) та контрастних карток (<code>#0f172a</code>).</li>
-                            <li><b>Glassmorphism Header & Sticky Nav</b>: додано ефект розмиття фону (<code>backdrop-filter: blur(12px)</code>) для шапки та стрічки якірного меню із неоновим свіченням активних вкладок.</li>
-                            <li><b>Modern Dynamic Buttons</b>: інтегровано об'ємні градієнтні кнопки із мікро-анімацією підняття та активного кліку.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Версія 1.0.2 -->
-                <div style="background: rgba(255, 255, 255, 0.01); border-left: 4px solid var(--border); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; opacity: 0.85;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                        <h4 style="font-weight: 800; font-size: 0.95rem; color: #fff;">Версія 1.0.2</h4>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">02.08.2026</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Покращення UI та зручності (UX)</div>
-                        <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem;">
-                            <li><b>Тактичний нічний режим A4 макета</b>: додано кнопку-перемикач (<code>🌙 Нічний / 📄 Паперовий</code>) із збереженням у <code>localStorage</code>.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Версія 1.0.1 -->
-                <div style="background: rgba(255, 255, 255, 0.01); border-left: 4px solid var(--border); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; opacity: 0.85;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                        <h4 style="font-weight: 800; font-size: 0.95rem; color: #fff;">Версія 1.0.1</h4>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">02.08.2026</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Покращення UI та верстки</div>
-                        <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem;">
-                            <li><b>Редизайн розділу 3.1.2 «Завдання БпАК»</b>: розділено розвідувальні та ударні місії, додано підписані поля вильотів/часу та таблицю результативності.</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Версія 1.0.0 -->
-                <div style="background: rgba(255, 255, 255, 0.01); border-left: 4px solid var(--border); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; opacity: 0.85;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                        <h4 style="font-weight: 800; font-size: 0.95rem; color: #fff;">Версія 1.0.0</h4>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">02.08.2026</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Покращення UI та верстки</div>
-                        <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                            <li><b>Редизайн розділу 5.3 «Бойовий потенціал»</b>:
-                                <br>• Впроваджено стилізовану тактичну картку-матрицю з кольоровими іконками (🛡️ <i>Боєготові на ППД</i>, 🔄 <i>На адаптації</i>, ⚠️ <i>Без БЗВП</i>).
-                                <br>• <b>Підсумок боєготових</b>: додано підсумковий рядок «Всього» (розраховується тільки для колонки «Боєготові на ППД»).
-                                <br>• Оновлено текстове поле приміток до потенціалу.
-                            </li>
-                        </ul>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                        <div style="font-size: 0.75rem; font-weight: 800; color: #a855f7; text-transform: uppercase;">📋 Система версіонування</div>
-                        <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem;">
-                            <li>Інтегровано загальний проєктний <code>CHANGELOG.md</code> та додано кнопковий бейдж версії <code>v1.0.0</code> у шапку.</li>
-                        </ul>
-                    </div>
-                </div>
+            <div id="changelogModalList" class="modal-body">
+                <!-- Динамічний рендеринг з масиву APP_CHANGELOG -->
             </div>
             <div class="modal-footer">
                 <span>📄 Детальніше дивіться у файлі CHANGELOG.md</span>
