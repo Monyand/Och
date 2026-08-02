@@ -84,7 +84,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>📋 v1.2.2</span>
+                    <span>📋 v1.3.0</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -888,7 +888,7 @@
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.2.1</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.3.0</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -918,9 +918,22 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.3.0",
+                date: "03.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🛡️ Безпека та криптографія",
+                        color: "indigo",
+                        items: [
+                            "<b>Зашифрований Експорт/Імпорт налаштувань (<code>.enc</code>)</b>: додано функції збереження конфігурації у зашифрований файл <code>Settings_Dodatok6_YYYY-MM-DD.enc</code> з парольним захистом AES-256 (Web Crypto API)."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.2.2",
                 date: "02.08.2026",
-                isCurrent: true,
                 sections: [
                     {
                         title: "⚙️ Логіка обробки даних",
