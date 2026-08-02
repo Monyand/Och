@@ -81,8 +81,11 @@
         <div class="bg-slate-800 dark:bg-gray-950 p-4 text-white flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <h1 class="text-xl font-bold">Автоматизатор Додатку 6</h1>
-                <span class="text-sm bg-slate-700 dark:bg-gray-800 px-3 py-1 rounded-full hidden sm:inline-block">Версія
-                    14 (редагування записів) </span>
+                <button onclick="openChangelogModal()"
+                    class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+                    title="Натисніть, щоб переглянути історію оновлень">
+                    <span>📋 v1.2.0</span>
+                </button>
             </div>
             <div class="flex items-center gap-2">
                 <!-- Кнопка Налаштувань -->
@@ -597,36 +600,36 @@
             </div>
 
             <!-- Вкладки налаштувань -->
-            <div class="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/80 px-6 shrink-0 overflow-x-auto gap-2">
+            <div class="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/80 px-4 md:px-6 shrink-0 overflow-x-auto gap-1.5 md:gap-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <button id="set-tab-btn-kw" onclick="switchSettingsTab('kw')"
-                    class="px-4 py-3 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2">
+                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
                     🏷️ <span>Категорії (170/30к)</span>
                 </button>
                 <button id="set-tab-btn-whitelist" onclick="switchSettingsTab('whitelist')"
-                    class="px-4 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2">
+                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
                     🎯 <span>Еталонні позиції</span> <span id="badge-count-whitelist" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
                 </button>
                 <button id="set-tab-btn-replacements" onclick="switchSettingsTab('replacements')"
-                    class="px-4 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2">
+                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
                     🔄 <span>Автозаміна</span> <span id="badge-count-replacements" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
                 </button>
                 <button id="set-tab-btn-rop" onclick="switchSettingsTab('rop')"
-                    class="px-4 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2">
+                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
                     🌳 <span>Ієрархія РОПів</span> <span id="badge-count-rop" class="bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
                 </button>
                 <button id="set-tab-btn-units" onclick="switchSettingsTab('units')"
-                    class="px-4 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2">
+                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
                     📂 <span>Обов'язкові файли</span> <span id="badge-count-units" class="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
                 </button>
             </div>
 
             <!-- Вміст вкладок -->
-            <div class="px-6 py-5 overflow-y-auto grow">
+            <div class="px-4 md:px-6 py-4 overflow-y-auto grow">
 
                 <!-- Вкладка 1: Розподіл по списках (Категорії) -->
-                <div id="set-tab-content-kw" class="space-y-5">
-                    <div class="bg-blue-50/50 dark:bg-blue-950/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/40">
-                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-base mb-1 flex items-center gap-2">
+                <div id="set-tab-content-kw" class="space-y-4">
+                    <div class="bg-blue-50/50 dark:bg-blue-950/20 p-3.5 rounded-xl border border-blue-100 dark:border-blue-900/40">
+                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base mb-1 flex items-center gap-2">
                             <span>1. Розподіл по списках (170 тис. / 100 тис. / 30 тис.)</span>
                         </h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -634,33 +637,33 @@
                         </p>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div class="space-y-3">
+                        <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                             <label class="block text-sm font-semibold text-purple-700 dark:text-purple-400 mb-1 flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
                                 Ключові слова для РОП (170 тис. грн) <span class="text-gray-400 font-normal text-xs">(через кому)</span>
                             </label>
                             <input type="text" id="kw-btgr"
-                                class="w-full px-3.5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white text-sm"
+                                class="w-full px-3.5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white text-sm"
                                 placeholder="бтгр, роп, воп, пв, сп">
                         </div>
 
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                             <label class="block text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                                 Ключові слова для Заб. БД (30 тис. грн) <span class="text-gray-400 font-normal text-xs">(через кому)</span>
                             </label>
                             <input type="text" id="kw-zab"
-                                class="w-full px-3.5 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white text-sm"
+                                class="w-full px-3.5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white text-sm"
                                 placeholder="заб, забезпечення, заб. бд">
                         </div>
                     </div>
                 </div>
 
                 <!-- Вкладка 2: Перевірка позицій (Еталони) -->
-                <div id="set-tab-content-whitelist" class="hidden space-y-4">
-                    <div class="bg-pink-50/50 dark:bg-pink-950/20 p-4 rounded-xl border border-pink-100 dark:border-pink-900/40">
-                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-base mb-1 flex items-center gap-2">
+                <div id="set-tab-content-whitelist" class="hidden space-y-3">
+                    <div class="bg-pink-50/50 dark:bg-pink-950/20 p-3.5 rounded-xl border border-pink-100 dark:border-pink-900/40">
+                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base mb-1 flex items-center gap-2">
                             <span>2. Перевірка правильності позицій (Рожевий звіт)</span>
                         </h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -669,16 +672,16 @@
                     </div>
 
                     <div class="relative">
-                        <textarea id="kw-valid-tasks" rows="12" oninput="updateSettingsBadges()"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white text-sm leading-relaxed font-mono"
+                        <textarea id="kw-valid-tasks" rows="7" oninput="updateSettingsBadges()"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white text-sm leading-relaxed font-mono max-h-60 md:max-h-72"
                             placeholder='ПВ "ПОМІДОР" (РОП)&#10;ВОП "ОГІРОК"&#10;штаб бтгр&#10;пвх'></textarea>
                     </div>
                 </div>
 
                 <!-- Вкладка 3: Автозаміна -->
-                <div id="set-tab-content-replacements" class="hidden space-y-4">
-                    <div class="bg-indigo-50/50 dark:bg-indigo-950/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
-                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-base mb-1 flex items-center gap-2">
+                <div id="set-tab-content-replacements" class="hidden space-y-3">
+                    <div class="bg-indigo-50/50 dark:bg-indigo-950/20 p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
+                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base mb-1 flex items-center gap-2">
                             <span>3. Правила автозаміни (Крок 5: Виправлення опечаток)</span>
                         </h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -687,18 +690,18 @@
                     </div>
 
                     <div class="relative">
-                        <textarea id="kw-replace-rules" rows="12" oninput="updateSettingsBadges()"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm font-mono leading-relaxed"
+                        <textarea id="kw-replace-rules" rows="7" oninput="updateSettingsBadges()"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm font-mono leading-relaxed max-h-60 md:max-h-72"
                             placeholder="помідор = ПВ &quot;ПОМІДОР&quot; (РОП)&#10;сп помідор = ПВ &quot;ПОМІДОР&quot; (РОП)&#10;огірок = ВОП &quot;ОГІРОК&quot;"></textarea>
                     </div>
                 </div>
 
                 <!-- Вкладка 4: Ієрархія РОПів та ВОПів -->
-                <div id="set-tab-content-rop" class="hidden space-y-4">
-                    <div class="border border-gray-200 dark:border-gray-700/80 rounded-xl p-4 bg-gray-50/50 dark:bg-gray-800/40 shadow-sm">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+                <div id="set-tab-content-rop" class="hidden space-y-3">
+                    <div class="border border-gray-200 dark:border-gray-700/80 rounded-xl p-3.5 bg-gray-50/50 dark:bg-gray-800/40 shadow-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700 pb-3 mb-3">
                             <div>
-                                <h4 class="font-bold text-gray-800 dark:text-gray-200 text-base flex items-center gap-2">
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base flex items-center gap-2">
                                     <span>4. Ієрархія РОПів та ВОПів (Для Додатку 2)</span>
                                 </h4>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -720,7 +723,7 @@
                         </div>
 
                         <!-- Візуальний конструктор -->
-                        <div id="rop-visual-view" class="space-y-4">
+                        <div id="rop-visual-view" class="space-y-3">
                             <div class="flex flex-wrap items-center justify-between bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 gap-2">
                                 <span class="text-xs font-medium text-gray-600 dark:text-gray-300" id="rop-stats-badge">
                                     📊 Завантаження ієрархії...
@@ -748,7 +751,7 @@
                             </div>
 
                             <!-- Контейнер карток РОПів -->
-                            <div id="rop-cards-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                            <div id="rop-cards-container" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                                 <!-- Картки генеруються функцією renderVisualRopHierarchy() -->
                             </div>
                         </div>
@@ -764,17 +767,17 @@
                                     class="bg-gray-100 dark:bg-gray-600 px-1 py-0.5 rounded text-blue-600 dark:text-blue-300 font-mono">- БП "Левіс"</code>
                                 — підпорядкований БП попереднього ВОПа.
                             </p>
-                            <textarea id="kw-rop-hierarchy" rows="10" oninput="syncRopFromText(); updateSettingsBadges();"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm font-mono leading-relaxed"
+                            <textarea id="kw-rop-hierarchy" rows="7" oninput="syncRopFromText(); updateSettingsBadges();"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm font-mono leading-relaxed max-h-60 md:max-h-72"
                                 placeholder='[РОП 1]&#10;КСП "Альфа"&#10;БП "Бета"&#10;ВОП "Омега"&#10;- КСП "Орлан"&#10;- БП "Сокіл"&#10;- БП "Яструб"&#10;&#10;[РОП 2]&#10;КСП "Вектор"&#10;ВОП "Дельта"&#10;- БП "Олімп"'></textarea>
                         </div>
                     </div>
                 </div>
 
                 <!-- Вкладка 5: Обов'язкові підрозділи (Очікувані файли) -->
-                <div id="set-tab-content-units" class="hidden space-y-4">
-                    <div class="bg-amber-50/50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/40">
-                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-base mb-1 flex items-center gap-2">
+                <div id="set-tab-content-units" class="hidden space-y-3">
+                    <div class="bg-amber-50/50 dark:bg-amber-950/20 p-3.5 rounded-xl border border-amber-100 dark:border-amber-900/40">
+                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base mb-1 flex items-center gap-2">
                             <span>5. Список обов'язкових підрозділів / файлів</span>
                         </h4>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -783,8 +786,8 @@
                     </div>
 
                     <div class="relative">
-                        <textarea id="kw-required-units" rows="12" oninput="updateSettingsBadges()"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white text-sm leading-relaxed font-mono"
+                        <textarea id="kw-required-units" rows="7" oninput="updateSettingsBadges()"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white text-sm leading-relaxed font-mono max-h-60 md:max-h-72"
                             placeholder="1 мр&#10;2 мр&#10;3 мр&#10;1 мінбат&#10;2 мінбат&#10;рбр&#10;зрбатр&#10;взвод зв'язку&#10;управління"></textarea>
                     </div>
                 </div>
@@ -814,7 +817,93 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНЕ ВІКНО ІСТОРІЇ ОНОВЛЕНЬ (CHANGELOG) -->
+    <div id="changelogModal"
+        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm transition-opacity p-2 md:p-4">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl mx-auto overflow-hidden transform transition-all flex flex-col max-h-[85vh]">
+            
+            <div
+                class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 shrink-0">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
+                    <span>Історія оновлень (Changelog)</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.2.0</span>
+                </h3>
+                <button onclick="closeChangelogModal()"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 text-sm text-gray-700 dark:text-gray-300">
+                
+                <!-- Версія 1.2.0 -->
+                <div class="border-l-4 border-blue-500 pl-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                            <span>Версія 1.2.0</span>
+                            <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Поточна</span>
+                        </h4>
+                        <span class="text-xs text-gray-400">02.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-xs md:text-sm list-disc list-inside text-gray-600 dark:text-gray-300">
+                        <li><b>Контроль обов'язкових звітів (`checkMissingFiles`)</b>: автоматична перевірка наявності звітів від усіх підрозділів з відображенням бейджів ⚠️.</li>
+                        <li><b>Налаштування «Обов'язкові файли»</b>: нова вкладка для редагування списку очікуваних підрозділів.</li>
+                        <li><b>Оптимізований UI налаштувань</b>: адаптивна висота текстових полів та прихований скролбар вкладок.</li>
+                        <li><b>Впроваджено візуальну версію та CHANGELOG.md</b>.</li>
+                    </ul>
+                </div>
+
+                <!-- Версія 1.1.0 -->
+                <div class="border-l-4 border-gray-300 dark:border-gray-700 pl-4 space-y-2 opacity-80">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white">Версія 1.1.0</h4>
+                        <span class="text-xs text-gray-400">28.07.2026</span>
+                    </div>
+                    <ul class="space-y-1 text-xs list-disc list-inside text-gray-600 dark:text-gray-400">
+                        <li>Візуальний конструктор ієрархії РОПів та ВОПів.</li>
+                        <li>Модуль перевірки Чорного списку бійців (СЗЧ).</li>
+                        <li>Імпорт посад та звань з еталонних файлів Word.</li>
+                    </ul>
+                </div>
+
+                <!-- Версія 1.0.0 -->
+                <div class="border-l-4 border-gray-300 dark:border-gray-700 pl-4 space-y-2 opacity-70">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white">Версія 1.0.0</h4>
+                        <span class="text-xs text-gray-400">15.07.2026</span>
+                    </div>
+                    <ul class="space-y-1 text-xs list-disc list-inside text-gray-600 dark:text-gray-400">
+                        <li>Базове сортування по 3 списках виплат (170 тис / 100 тис / 30 тис).</li>
+                        <li>Перевірка дублікатів та опечаток у ПІБ.</li>
+                        <li>Експорт звітів у формати Excel (`.xlsx`).</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center text-xs text-gray-400">
+                <span>📄 Деталі дивіться у файлі CHANGELOG.md</span>
+                <button onclick="closeChangelogModal()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-1.5 rounded-lg shadow-sm transition-colors">
+                    Зрозуміло
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <script>
+        function openChangelogModal() {
+            document.getElementById('changelogModal').classList.remove('hidden');
+        }
+        function closeChangelogModal() {
+            document.getElementById('changelogModal').classList.add('hidden');
+        }
         // Ініціалізація та керування темною темою
         function updateThemeIcon() {
             const isDark = document.documentElement.classList.contains('dark');
@@ -974,10 +1063,10 @@
                 const content = document.getElementById(`set-tab-content-${t}`);
                 if (!btn || !content) return;
                 if (t === tab) {
-                    btn.className = "px-4 py-3 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2";
+                    btn.className = "px-2.5 md:px-3.5 py-2.5 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5";
                     content.classList.remove('hidden');
                 } else {
-                    btn.className = "px-4 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2";
+                    btn.className = "px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5";
                     content.classList.add('hidden');
                 }
             });
