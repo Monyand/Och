@@ -9,6 +9,17 @@
     <script>
         tailwind.config = {
             darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0b0b0b',
+                        darkcard: '#121212',
+                        darkpanel: '#0f0f0f',
+                        darkinput: '#1a1a1a',
+                        darkborder: '#222222'
+                    }
+                }
+            }
         }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
@@ -18,13 +29,44 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
 
+        /* OLED Black темна тема (як у Звіті ПБД) */
+        html.dark body {
+            background-color: #0b0b0b !important;
+            color: #e0e0e0;
+        }
+        html.dark .bg-gray-900 {
+            background-color: #0b0b0b !important;
+        }
+        html.dark .bg-gray-800 {
+            background-color: #121212 !important;
+        }
+        html.dark .bg-gray-950 {
+            background-color: #0f0f0f !important;
+        }
+        html.dark .bg-gray-700 {
+            background-color: #1a1a1a !important;
+        }
+        html.dark .border-gray-700, html.dark .border-gray-600 {
+            border-color: #222222 !important;
+        }
+        html.dark .border-gray-800 {
+            border-color: #1c1c1c !important;
+        }
+        html.dark input[type="text"], 
+        html.dark textarea, 
+        html.dark select {
+            background-color: #1a1a1a !important;
+            border-color: #333333 !important;
+            color: #ffffff !important;
+        }
+
         #drop-zone.dragover {
             background-color: #eff6ff;
             border-color: #3b82f6;
         }
 
         .dark #drop-zone.dragover {
-            background-color: #1e3a8a;
+            background-color: #1a233a;
             border-color: #60a5fa;
         }
     </style>
@@ -112,6 +154,9 @@
                     class="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-2 max-h-60 overflow-y-auto">
                 </ul>
             </div>
+
+            <!-- Блок попередження про відсутні файли підрозділів -->
+            <div id="missingFilesAlert" class="mb-6 hidden"></div>
 
             <!-- Панель інструментів (Кнопки) -->
             <div
@@ -569,6 +614,10 @@
                     class="px-4 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2">
                     🌳 <span>Ієрархія РОПів</span> <span id="badge-count-rop" class="bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
                 </button>
+                <button id="set-tab-btn-units" onclick="switchSettingsTab('units')"
+                    class="px-4 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-2">
+                    📂 <span>Обов'язкові файли</span> <span id="badge-count-units" class="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+                </button>
             </div>
 
             <!-- Вміст вкладок -->
@@ -722,6 +771,24 @@
                     </div>
                 </div>
 
+                <!-- Вкладка 5: Обов'язкові підрозділи (Очікувані файли) -->
+                <div id="set-tab-content-units" class="hidden space-y-4">
+                    <div class="bg-amber-50/50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/40">
+                        <h4 class="font-bold text-gray-800 dark:text-gray-200 text-base mb-1 flex items-center gap-2">
+                            <span>5. Список обов'язкових підрозділів / файлів</span>
+                        </h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Впишіть назви підрозділів або їхніх файлів (<b>кожну з нового рядка</b>). Програма автоматично перевірятиме завантажені документи та підсвічуватиме, якого саме підрозділу немає в завантажених.
+                        </p>
+                    </div>
+
+                    <div class="relative">
+                        <textarea id="kw-required-units" rows="12" oninput="updateSettingsBadges()"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white text-sm leading-relaxed font-mono"
+                            placeholder="1 мр&#10;2 мр&#10;3 мр&#10;1 мінбат&#10;2 мінбат&#10;рбр&#10;зрбатр&#10;взвод зв'язку&#10;управління"></textarea>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Футер модального вікна -->
@@ -751,8 +818,10 @@
         // Ініціалізація та керування темною темою
         function updateThemeIcon() {
             const isDark = document.documentElement.classList.contains('dark');
-            document.getElementById('theme-icon-dark').classList.toggle('hidden', !isDark);
-            document.getElementById('theme-icon-light').classList.toggle('hidden', isDark);
+            const darkIcon = document.getElementById('theme-icon-dark');
+            const lightIcon = document.getElementById('theme-icon-light');
+            if (darkIcon) darkIcon.classList.toggle('hidden', !isDark);
+            if (lightIcon) lightIcon.classList.toggle('hidden', isDark);
         }
 
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -760,7 +829,11 @@
         } else {
             document.documentElement.classList.remove('dark');
         }
-        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateThemeIcon);
+        } else {
+            updateThemeIcon();
+        }
 
         function toggleDarkMode() {
             if (document.documentElement.classList.contains('dark')) {
@@ -895,7 +968,7 @@
         }
 
         function switchSettingsTab(tab) {
-            const tabs = ['kw', 'whitelist', 'replacements', 'rop'];
+            const tabs = ['kw', 'whitelist', 'replacements', 'rop', 'units'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`set-tab-btn-${t}`);
                 const content = document.getElementById(`set-tab-content-${t}`);
@@ -923,6 +996,14 @@
 
             const ropBadge = document.getElementById('badge-count-rop');
             if (ropBadge) ropBadge.innerText = currentRopData ? currentRopData.length : 0;
+
+            const reqInput = document.getElementById('kw-required-units');
+            if (reqInput) {
+                const reqVal = reqInput.value;
+                const reqCount = reqVal.split('\n').filter(s => s.trim().length > 0).length;
+                const reqBadge = document.getElementById('badge-count-units');
+                if (reqBadge) reqBadge.innerText = reqCount;
+            }
         }
 
         function openSettings() {
@@ -931,6 +1012,7 @@
             document.getElementById('kw-zab').value = localStorage.getItem('keywords_zab') !== null ? localStorage.getItem('keywords_zab') : "заб, забезпечення, заб. бд";
             document.getElementById('kw-valid-tasks').value = localStorage.getItem('valid_tasks') !== null ? localStorage.getItem('valid_tasks') : 'ПВ "ПОМІДОР" (РОП)\nВОП "ОГІРОК"\nштаб бтгр';
             document.getElementById('kw-replace-rules').value = localStorage.getItem('replace_rules') !== null ? localStorage.getItem('replace_rules') : 'помідор = ПВ "ПОМІДОР" (РОП)\nсп помідор = ПВ "ПОМІДОР" (РОП)\nогірок = ВОП "ОГІРОК"';
+            document.getElementById('kw-required-units').value = localStorage.getItem('required_units') !== null ? localStorage.getItem('required_units') : "1 мр\n2 мр\n3 мр\n1 мінбат\n2 мінбат\nрбр\nзрбатр\nвзвод зв'язку\nуправління";
 
             const rawHierarchy = localStorage.getItem('rop_hierarchy') !== null ? localStorage.getItem('rop_hierarchy') : '[РОП 1]\nКСП "Альфа"\nБП "Бета"\nВОП "Омега"\n- КСП "Орлан"\n- БП "Сокіл"\n- БП "Яструб"\n\n[РОП 2]\nКСП "Вектор"\nВОП "Дельта"\n- БП "Олімп"';
             document.getElementById('kw-rop-hierarchy').value = rawHierarchy;
@@ -958,11 +1040,95 @@
             localStorage.setItem('valid_tasks', document.getElementById('kw-valid-tasks').value);
             localStorage.setItem('replace_rules', document.getElementById('kw-replace-rules').value);
             localStorage.setItem('rop_hierarchy', document.getElementById('kw-rop-hierarchy').value);
+            localStorage.setItem('required_units', document.getElementById('kw-required-units').value);
             closeSettings();
 
             if (btgrData.length > 0 || broData.length > 0 || zabData.length > 0) {
                 reassignCategories();
                 checkInvalidTasks();
+            }
+            checkMissingFiles();
+        }
+
+        function checkMissingFiles() {
+            const rawExpected = localStorage.getItem('required_units') !== null 
+                ? localStorage.getItem('required_units') 
+                : "1 мр\n2 мр\n3 мр\n1 мінбат\n2 мінбат\nрбр\nзрбатр\nвзвод зв'язку\nуправління";
+
+            const expectedUnits = rawExpected.split('\n')
+                .map(u => u.trim())
+                .filter(u => u.length > 0);
+
+            const alertContainer = document.getElementById('missingFilesAlert');
+            if (!alertContainer) return;
+
+            if (expectedUnits.length === 0) {
+                alertContainer.classList.add('hidden');
+                return;
+            }
+
+            const uploadedFileNames = [...new Set([...btgrData, ...broData, ...zabData].map(p => p.fileName.toLowerCase()))];
+            
+            if (uploadedFileNames.length === 0) {
+                alertContainer.classList.add('hidden');
+                return;
+            }
+
+            const missingUnits = [];
+            const presentUnits = [];
+
+            expectedUnits.forEach(unit => {
+                const normUnit = unit.toLowerCase().replace(/\s+/g, '');
+                const found = uploadedFileNames.some(fn => {
+                    const normFn = fn.replace(/\s+/g, '');
+                    return normFn.includes(normUnit);
+                });
+                if (found) {
+                    presentUnits.push(unit);
+                } else {
+                    missingUnits.push(unit);
+                }
+            });
+
+            alertContainer.classList.remove('hidden');
+
+            if (missingUnits.length === 0) {
+                alertContainer.className = "mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-xl shadow-sm";
+                alertContainer.innerHTML = `
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🟢</span>
+                            <div>
+                                <h4 class="font-bold text-sm">Усі обов'язкові підрозділи подали звіти!</h4>
+                                <p class="text-xs text-emerald-600 dark:text-emerald-400">Завантажено ${presentUnits.length} з ${expectedUnits.length} підрозділів зі списку налаштувань.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                alertContainer.className = "mb-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 rounded-xl shadow-sm";
+                
+                const missingBadgesHtml = missingUnits.map(u => 
+                    `<span class="inline-flex items-center bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-200 dark:border-red-800 shadow-xs mt-1 mr-1">⚠️ ${u}</span>`
+                ).join('');
+
+                alertContainer.innerHTML = `
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🚨</span>
+                                <div>
+                                    <h4 class="font-bold text-sm text-red-700 dark:text-red-400">Увага! Відсутні звіти підрозділів (${missingUnits.length} з ${expectedUnits.length})</h4>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">Подано ${presentUnits.length} з ${expectedUnits.length} підрозділів зі списку очікуваних.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-1">
+                            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1">Не завантажено файли для:</span>
+                            <div class="flex flex-wrap items-center">${missingBadgesHtml}</div>
+                        </div>
+                    </div>
+                `;
             }
         }
 
@@ -2170,6 +2336,7 @@
             checkInvalidTasks();
             if (currentBlacklistRecords.length > 0) checkBlacklist();
             if (currentMasterRecords.length > 0) checkMissing();
+            checkMissingFiles();
             renderTables();
             filterTables();
         }
@@ -2204,6 +2371,7 @@
             checkInvalidTasks();
             if (currentBlacklistRecords.length > 0) checkBlacklist();
             if (currentMasterRecords.length > 0) checkMissing();
+            checkMissingFiles();
             renderTables();
             filterTables();
         }
