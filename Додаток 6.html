@@ -84,7 +84,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>📋 v1.3.0</span>
+                    <span>📋 v1.3.1</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -446,6 +446,10 @@
                         class="px-4 md:px-6 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-sm uppercase tracking-wider whitespace-nowrap transition-colors">
                         Заб. БД (30) - <span id="countZab">0</span> чол.
                     </button>
+                    <button id="tab-utoch" onclick="switchTab('utoch')"
+                        class="px-4 md:px-6 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-1.5">
+                        📝 <span>Уточнення</span> - <span id="countUtoch">0</span>
+                    </button>
                 </div>
 
                 <!-- Таблиці -->
@@ -564,6 +568,124 @@
                         <tbody id="zab-body"
                             class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-750"></tbody>
                     </table>
+                </div>
+
+                <!-- Вкладка 4: Уточнення (Коригувальний звіт) -->
+                <div id="table-utoch-container" class="hidden flex-col gap-6 mb-4">
+                    <!-- Форма додавання запису уточнення -->
+                    <div class="bg-gray-50 dark:bg-gray-800/80 p-4 md:p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center flex-wrap gap-2">
+                            <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                📝 <span>Генератор Уточнень до Додатку 6</span>
+                            </h3>
+                            <div class="flex gap-2">
+                                <button onclick="copyUtochToClipboard()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg shadow-sm transition-colors flex items-center gap-1 cursor-pointer">
+                                    📋 Скопіювати для Word
+                                </button>
+                                <button onclick="downloadUtochExcel()" class="text-xs bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded-lg shadow-sm transition-colors flex items-center gap-1 cursor-pointer">
+                                    💾 Завантажити Excel (.xlsx)
+                                </button>
+                                <button onclick="clearUtochList()" class="text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 hover:bg-red-200 font-bold py-1.5 px-3 rounded-lg transition-colors cursor-pointer">
+                                    🗑️ Очистити
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Тип уточнення</label>
+                                <select id="utoch-input-type" onchange="toggleUtochTaskField()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="correct">🟢 Уточнено! (Додати / Оновлення днів)</option>
+                                    <option value="error">🔴 Уточнено! Помилково поданий у вказані дні</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">ПІБ військовослужбовця</label>
+                                <input type="text" id="utoch-input-name" list="utoch-soldier-datalist" oninput="autoFillUtochSoldier(this.value)" placeholder="Почніть вводити ПІБ..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                <datalist id="utoch-soldier-datalist"></datalist>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Звання</label>
+                                <input type="text" id="utoch-input-rank" placeholder="напр: старший сержант" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </div>
+
+                            <div class="lg:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Займана посада</label>
+                                <input type="text" id="utoch-input-position" placeholder="напр: інструктор групи інструкторів" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </div>
+
+                            <div id="utoch-task-box">
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Завдання (РОП / Локація)</label>
+                                <input type="text" id="utoch-input-task" list="utoch-tasks-datalist" placeholder="напр: БРО НОВОСЕЛІВКА" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                <datalist id="utoch-tasks-datalist"></datalist>
+                            </div>
+
+                            <div class="lg:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase mb-1">Період / Дні</label>
+                                <input type="text" id="utoch-input-period" placeholder="напр: 01.07.2026 - 29.07.2026" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </div>
+
+                            <div class="flex items-end gap-2">
+                                <button type="button" id="utoch-submit-btn" onclick="addUtochRecord()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow transition-colors text-xs flex items-center justify-center gap-1 cursor-pointer">
+                                    <span>➕ Додати до списку уточнень</span>
+                                </button>
+                                <button type="button" id="utoch-cancel-btn" onclick="cancelUtochEdit()" class="hidden py-2 px-4 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg shadow transition-colors text-xs flex items-center justify-center gap-1 cursor-pointer" title="Скасувати редагування">
+                                    <span>Скасувати</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Таблиця 1: Уточнено! -->
+                    <div class="space-y-2">
+                        <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase flex items-center gap-2">
+                            <span>Уточнено!</span>
+                            <span id="utoch-correct-badge" class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 text-xs px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+                        </h4>
+                        <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
+                            <table id="utoch-correct-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                                <thead class="bg-gray-50 dark:bg-gray-700/80">
+                                    <tr>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Звання</th>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">ПІБ</th>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Посада</th>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Завдання</th>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Період</th>
+                                        <th class="px-4 py-2.5 text-center text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Дія</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="utoch-correct-tbody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tr><td colspan="6" class="px-4 py-6 text-center text-xs text-gray-400">Записів немає. Додайте бійця за допомогою форми вище.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Таблиця 2: Уточнено! Помилково поданий у вказані дні та періоди -->
+                    <div class="space-y-2">
+                        <h4 class="text-sm font-bold text-red-700 dark:text-red-400 uppercase flex items-center gap-2">
+                            <span>Уточнено! Помилково поданий у вказані дні та періоди</span>
+                            <span id="utoch-error-badge" class="bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-300 text-xs px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+                        </h4>
+                        <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
+                            <table id="utoch-error-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                                <thead class="bg-gray-50 dark:bg-gray-700/80">
+                                    <tr>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Звання</th>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">ПІБ</th>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Посада</th>
+                                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Період</th>
+                                        <th class="px-4 py-2.5 text-center text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Дія</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="utoch-error-tbody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tr><td colspan="5" class="px-4 py-6 text-center text-xs text-gray-400">Записів немає. Додайте бійця за допомогою форми вище.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -888,7 +1010,7 @@
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.3.0</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.3.1</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -918,9 +1040,25 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
-                version: "1.3.0",
+                version: "1.3.1",
                 date: "03.08.2026",
                 isCurrent: true,
+                sections: [
+                    {
+                        title: "📝 Модуль Уточнень",
+                        color: "purple",
+                        items: [
+                            "<b>Режим редагування</b>: додано кнопку редагування створеного запису, яка повертає його до форми без втрати даних.",
+                            "<b>Форматування для Word</b>: текст у згенерованій таблиці вирівняно зліва по центру, а період перенесено на 2 рядки.",
+                            "<b>Очищення форми</b>: кнопка «Очистити» тепер також скидає незбережені поля вводу."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.3.0",
+                date: "03.08.2026",
+                isCurrent: false,
                 sections: [
                     {
                         title: "🛡️ Безпека та криптографія",
@@ -1142,7 +1280,7 @@
         function getValidTasks() {
             const defaultValid = 'ПВ "ПОМІДОР" (РОП)\nВОП "ОГІРОК"\nштаб бтгр';
             let raw = localStorage.getItem('valid_tasks') !== null ? localStorage.getItem('valid_tasks') : defaultValid;
-            return raw.split('\n').map(s => s.trim().toLowerCase()).filter(s => s);
+            return raw.split('\n').map(s => s.trim()).filter(s => s);
         }
 
         function getReplaceRules() {
@@ -3229,7 +3367,7 @@
                 // 3. Невідома позиція (відсебенька)
                 if (validList.length > 0) {
                     let lowerTask = p.task.toLowerCase();
-                    let isValid = validList.some(v => lowerTask.includes(v));
+                    let isValid = validList.some(v => lowerTask.includes(v.toLowerCase()));
                     if (!isValid) invalidTasksList.push(p);
                 }
             });
@@ -4176,6 +4314,327 @@
             checkInvalidTasks();
             renderTables();
             filterTables();
+        }
+
+        // ─── ЛОГІКА МОДУЛЯ УТОЧНЕНЬ ДОДОТКУ 6 ──────────────────────────────────────
+        let utochData = [];
+
+        function switchTab(type) {
+            ['btgr', 'bro', 'zab', 'utoch'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const container = document.getElementById(`table-${t}-container`);
+                if (!btn || !container) return;
+
+                if (t === type) {
+                    btn.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+                    btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                    container.classList.remove('hidden');
+                    if (t === 'utoch') {
+                        container.classList.add('flex');
+                        updateUtochSoldierDatalist();
+                        updateUtochTasksDatalist();
+                        renderUtochTables();
+                    }
+                } else {
+                    btn.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+                    btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                    container.classList.add('hidden');
+                    if (t === 'utoch') container.classList.remove('flex');
+                }
+            });
+        }
+
+        function toggleUtochTaskField() {
+            const type = document.getElementById('utoch-input-type').value;
+            const taskBox = document.getElementById('utoch-task-box');
+            if (type === 'error') {
+                taskBox.style.display = 'none';
+            } else {
+                taskBox.style.display = 'block';
+            }
+        }
+
+        function updateUtochSoldierDatalist() {
+            const dl = document.getElementById('utoch-soldier-datalist');
+            if (!dl) return;
+            dl.innerHTML = '';
+
+            const allSoldiers = [...btgrData, ...broData, ...zabData];
+            const uniqueNames = new Map();
+            allSoldiers.forEach(s => {
+                if (s.name && s.name !== "[ВІДСУТНІЙ В/С]" && !uniqueNames.has(s.name)) {
+                    uniqueNames.set(s.name, s);
+                }
+            });
+
+            uniqueNames.forEach((s, name) => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.label = `${s.rank} | ${s.pos}`;
+                dl.appendChild(opt);
+            });
+        }
+
+        function updateUtochTasksDatalist() {
+            const dl = document.getElementById('utoch-tasks-datalist');
+            if (!dl) return;
+            dl.innerHTML = '';
+            const validTasks = getValidTasks();
+            validTasks.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                dl.appendChild(opt);
+            });
+        }
+
+        function autoFillUtochSoldier(nameValue) {
+            if (!nameValue) return;
+            const valClean = nameValue.trim().toLowerCase();
+            const allSoldiers = [...btgrData, ...broData, ...zabData];
+            const match = allSoldiers.find(s => s.name.trim().toLowerCase() === valClean);
+
+            if (match) {
+                if (match.rank) document.getElementById('utoch-input-rank').value = match.rank;
+                if (match.pos) document.getElementById('utoch-input-position').value = match.pos;
+                if (match.task && match.task !== "[НЕ ВКАЗАНО]") document.getElementById('utoch-input-task').value = match.task;
+            }
+        }
+
+        let editingUtochId = null;
+
+        function clearUtochForm() {
+            document.getElementById('utoch-input-name').value = '';
+            document.getElementById('utoch-input-rank').value = '';
+            document.getElementById('utoch-input-position').value = '';
+            document.getElementById('utoch-input-task').value = '';
+            document.getElementById('utoch-input-period').value = '';
+        }
+
+        function cancelUtochEdit() {
+            editingUtochId = null;
+            clearUtochForm();
+            const btn = document.getElementById('utoch-submit-btn');
+            if (btn) {
+                btn.innerHTML = `<span>➕ Додати до списку уточнень</span>`;
+                btn.classList.replace('bg-green-600', 'bg-blue-600');
+                btn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+            }
+            const cancelBtn = document.getElementById('utoch-cancel-btn');
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+        }
+
+        function addUtochRecord() {
+            const type = document.getElementById('utoch-input-type').value;
+            const rank = document.getElementById('utoch-input-rank').value.trim();
+            const name = document.getElementById('utoch-input-name').value.trim();
+            const position = document.getElementById('utoch-input-position').value.trim();
+            const task = document.getElementById('utoch-input-task').value.trim();
+            const period = document.getElementById('utoch-input-period').value.trim();
+
+            if (!name) return alert('Введіть ПІБ військовослужбовця!');
+            if (!period) return alert('Вкажіть період або дні!');
+
+            if (editingUtochId) {
+                const index = utochData.findIndex(r => r.id === editingUtochId);
+                if (index !== -1) {
+                    utochData[index] = {
+                        ...utochData[index],
+                        type,
+                        rank: rank || '—',
+                        name,
+                        position: position || '—',
+                        task: type === 'correct' ? (task || '—') : '',
+                        period
+                    };
+                }
+                cancelUtochEdit();
+            } else {
+                utochData.push({
+                    id: 'utoch_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    type: type, // 'correct' or 'error'
+                    rank: rank || '—',
+                    name: name,
+                    position: position || '—',
+                    task: type === 'correct' ? (task || '—') : '',
+                    period: period
+                });
+                clearUtochForm();
+            }
+            renderUtochTables();
+        }
+
+        function editUtochRecord(id) {
+            const record = utochData.find(r => r.id === id);
+            if (!record) return;
+
+            editingUtochId = id;
+
+            document.getElementById('utoch-input-type').value = record.type;
+            toggleUtochTaskField();
+
+            document.getElementById('utoch-input-name').value = record.name;
+            document.getElementById('utoch-input-rank').value = record.rank;
+            document.getElementById('utoch-input-position').value = record.position;
+            if (record.type === 'correct') {
+                document.getElementById('utoch-input-task').value = record.task;
+            }
+            document.getElementById('utoch-input-period').value = record.period;
+
+            const btn = document.getElementById('utoch-submit-btn');
+            if (btn) {
+                btn.innerHTML = `<span>💾 Зберегти зміни</span>`;
+                btn.classList.replace('bg-blue-600', 'bg-green-600');
+                btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+            }
+            const cancelBtn = document.getElementById('utoch-cancel-btn');
+            if (cancelBtn) cancelBtn.classList.remove('hidden');
+            
+            document.getElementById('table-utoch-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteUtochRecord(id) {
+            utochData = utochData.filter(r => r.id !== id);
+            renderUtochTables();
+        }
+
+        function clearUtochList() {
+            if (confirm('Ви впевнені, що хочете очистити весь список уточнень?')) {
+                utochData = [];
+                cancelUtochEdit(); // clears form and resets buttons
+                renderUtochTables();
+            }
+        }
+
+        function renderUtochTables() {
+            const correctRecords = utochData.filter(r => r.type === 'correct');
+            const errorRecords = utochData.filter(r => r.type === 'error');
+
+            document.getElementById('countUtoch').innerText = utochData.length;
+            document.getElementById('utoch-correct-badge').innerText = correctRecords.length;
+            document.getElementById('utoch-error-badge').innerText = errorRecords.length;
+
+            // Рендер Таблиці 1: Уточнено!
+            const correctTbody = document.getElementById('utoch-correct-tbody');
+            if (correctRecords.length === 0) {
+                correctTbody.innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-xs text-gray-400">Записів немає. Додайте бійця за допомогою форми вище.</td></tr>`;
+            } else {
+                correctTbody.innerHTML = correctRecords.map(r => `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <td class="px-4 py-2.5 text-xs text-gray-700 dark:text-gray-300 font-medium">${r.rank}</td>
+                        <td class="px-4 py-2.5 text-xs font-bold text-gray-900 dark:text-white">${r.name}</td>
+                        <td class="px-4 py-2.5 text-xs text-gray-600 dark:text-gray-300">${r.position}</td>
+                        <td class="px-4 py-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">${r.task}</td>
+                        <td class="px-4 py-2.5 text-xs text-gray-700 dark:text-gray-300 font-mono">${r.period}</td>
+                        <td class="px-4 py-2.5 text-center flex justify-center gap-1">
+                            <button onclick="editUtochRecord('${r.id}')" class="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-200 px-2 py-1 rounded transition-colors font-bold" title="Редагувати">✏️</button>
+                            <button onclick="deleteUtochRecord('${r.id}')" class="text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 hover:bg-red-200 px-2 py-1 rounded transition-colors font-bold" title="Видалити">✕</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // Рендер Таблиці 2: Уточнено! Помилково поданий...
+            const errorTbody = document.getElementById('utoch-error-tbody');
+            if (errorRecords.length === 0) {
+                errorTbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-xs text-gray-400">Записів немає. Додайте бійця за допомогою форми вище.</td></tr>`;
+            } else {
+                errorTbody.innerHTML = errorRecords.map(r => `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <td class="px-4 py-2.5 text-xs text-gray-700 dark:text-gray-300 font-medium">${r.rank}</td>
+                        <td class="px-4 py-2.5 text-xs font-bold text-gray-900 dark:text-white">${r.name}</td>
+                        <td class="px-4 py-2.5 text-xs text-gray-600 dark:text-gray-300">${r.position}</td>
+                        <td class="px-4 py-2.5 text-xs text-red-700 dark:text-red-400 font-mono">${r.period}</td>
+                        <td class="px-4 py-2.5 text-center flex justify-center gap-1">
+                            <button onclick="editUtochRecord('${r.id}')" class="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-200 px-2 py-1 rounded transition-colors font-bold" title="Редагувати">✏️</button>
+                            <button onclick="deleteUtochRecord('${r.id}')" class="text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 hover:bg-red-200 px-2 py-1 rounded transition-colors font-bold" title="Видалити">✕</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function downloadUtochExcel() {
+            if (utochData.length === 0) return alert('Список уточнень порожній!');
+
+            const wb = XLSX.utils.book_new();
+
+            const correctRecords = utochData.filter(r => r.type === 'correct');
+            const errorRecords = utochData.filter(r => r.type === 'error');
+
+            if (correctRecords.length > 0) {
+                const wsData1 = [["Уточнено!"], ["Звання", "ПІБ", "Посада", "Завдання (РОП)", "Період / Дні"]];
+                correctRecords.forEach(r => wsData1.push([r.rank, r.name, r.position, r.task, r.period]));
+                const ws1 = XLSX.utils.aoa_to_sheet(wsData1);
+                ws1['!cols'] = [{ wch: 18 }, { wch: 32 }, { wch: 45 }, { wch: 25 }, { wch: 25 }];
+                styleExcelSheet(ws1);
+                XLSX.utils.book_append_sheet(wb, ws1, "Уточнено (Додані)");
+            }
+
+            if (errorRecords.length > 0) {
+                const wsData2 = [["Уточнено! Помилково поданий у вказані дні та періоди"], ["Звання", "ПІБ", "Посада", "Період / Дні"]];
+                errorRecords.forEach(r => wsData2.push([r.rank, r.name, r.position, r.period]));
+                const ws2 = XLSX.utils.aoa_to_sheet(wsData2);
+                ws2['!cols'] = [{ wch: 18 }, { wch: 32 }, { wch: 45 }, { wch: 25 }];
+                styleExcelSheet(ws2);
+                XLSX.utils.book_append_sheet(wb, ws2, "Помилково подані");
+            }
+
+            const today = new Date();
+            const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+            XLSX.writeFile(wb, `Utochnenya_Dodatok6_${dateStr}.xlsx`);
+        }
+
+        function copyUtochToClipboard() {
+            if (utochData.length === 0) return alert('Список уточнень порожній!');
+
+            const correctRecords = utochData.filter(r => r.type === 'correct');
+            const errorRecords = utochData.filter(r => r.type === 'error');
+
+            let html = `<div style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000;">`;
+
+            if (correctRecords.length > 0) {
+                html += `<p style="font-weight: bold; margin-top: 0; margin-bottom: 0;">Уточнено!</p>`;
+                html += `<table border="1" style="border-collapse: collapse; width: 100%; border: 1px solid #000; text-align: left; font-size: 12pt; color: #000; margin-bottom: 12pt;">
+                    <tbody>`;
+                correctRecords.forEach(r => {
+                    let formattedPeriod = r.period.replace(/\s*-\s*/, ' -<br/>');
+                    html += `<tr>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle;">${r.rank}</td>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle;">${r.name}</td>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle;">${r.position}</td>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle;">${r.task}</td>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle; white-space: nowrap;">${formattedPeriod}</td>
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+            }
+
+            if (errorRecords.length > 0) {
+                html += `<p style="font-weight: bold; margin-top: 0; margin-bottom: 0;">Уточнено! Помилково поданий у вказані дні та періоди</p>`;
+                html += `<table border="1" style="border-collapse: collapse; width: 100%; border: 1px solid #000; text-align: left; font-size: 12pt; color: #000; margin-bottom: 12pt;">
+                    <tbody>`;
+                errorRecords.forEach(r => {
+                    let formattedPeriod = r.period.replace(/\s*-\s*/, ' -<br/>');
+                    html += `<tr>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle;">${r.rank}</td>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle;">${r.name}</td>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle;">${r.position}</td>
+                        <td style="padding: 2px 4px; border: 1px solid #000; vertical-align: middle; white-space: nowrap;">${formattedPeriod}</td>
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+            }
+
+            html += `</div>`;
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const item = new ClipboardItem({ 'text/html': blob });
+            navigator.clipboard.write([item]).then(() => {
+                alert('📋 Таблиці уточнень успішно скопійовано! Вставте (Ctrl+V) прямо у Word.');
+            }).catch(err => {
+                console.error(err);
+                alert('Не вдалося скопіювати автоматично. Спробуйте зберегти через Excel!');
+            });
         }
     </script>
     <!-- МОДАЛЬНЕ ВІКНО РЕДАГУВАННЯ ЗАПИСУ -->
