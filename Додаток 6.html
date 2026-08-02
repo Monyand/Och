@@ -842,45 +842,86 @@
             <div class="p-6 overflow-y-auto space-y-6 text-sm text-gray-700 dark:text-gray-300">
                 
                 <!-- Версія 1.2.0 -->
-                <div class="border-l-4 border-blue-500 pl-4 space-y-2">
-                    <div class="flex items-center justify-between">
+                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border-l-4 border-blue-500 border border-gray-200 dark:border-gray-700 space-y-4 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2.5">
                         <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>Версія 1.2.0</span>
-                            <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded">Поточна</span>
+                            <span>🚀 Версія 1.2.0</span>
+                            <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-700">Поточна</span>
                         </h4>
-                        <span class="text-xs text-gray-400">02.08.2026</span>
+                        <span class="text-xs font-mono text-gray-400">02.08.2026</span>
                     </div>
-                    <ul class="space-y-1.5 text-xs md:text-sm list-disc list-inside text-gray-600 dark:text-gray-300">
-                        <li><b>Контроль обов'язкових звітів (`checkMissingFiles`)</b>: автоматична перевірка наявності звітів від усіх підрозділів з відображенням бейджів ⚠️.</li>
-                        <li><b>Налаштування «Обов'язкові файли»</b>: нова вкладка для редагування списку очікуваних підрозділів.</li>
-                        <li><b>Оптимізований UI налаштувань</b>: адаптивна висота текстових полів та прихований скролбар вкладок.</li>
-                        <li><b>Впроваджено візуальну версію та CHANGELOG.md</b>.</li>
-                    </ul>
+
+                    <!-- Розділ: Новий функціонал -->
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                            <span>✨ Новий функціонал</span>
+                        </div>
+                        <ul class="space-y-2 text-xs md:text-sm pl-2">
+                            <li class="space-y-1">
+                                <div><b>Модуль контролю обов'язкових звітів (<code>checkMissingFiles</code>)</b>:</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 pl-3 border-l-2 border-blue-200 dark:border-blue-900/50 space-y-1">
+                                    <div>• Автоматичний аналіз завантажених документів на наявність усіх очікуваних звітів підрозділів.</div>
+                                    <div>• Динамічний блок сповіщень <b><code>missingFilesAlert</code></b>:</div>
+                                    <div class="pl-2 space-y-0.5">
+                                        <div>🟢 <span class="text-emerald-700 dark:text-emerald-400 font-medium">Зелений стан</span> — всі підрозділи подали звіти.</div>
+                                        <div>🚨 <span class="text-amber-700 dark:text-amber-400 font-medium">Янтарно-червоний стан</span> — підсвічує відсутні звіти з бейджами ⚠️.</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="space-y-1">
+                                <div><b>Налаштування «Обов'язкові файли»</b>:</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 pl-3 border-l-2 border-blue-200 dark:border-blue-900/50">
+                                    Нова 5-та вкладка у налаштуваннях (<code>kw-required-units</code>) для редагування списку очікуваних підрозділів зі збереженням у <code>localStorage</code> (<code>required_units</code>).
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Розділ: Покращення верстки та UI -->
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                            <span>🎨 Покращення верстки та UI</span>
+                        </div>
+                        <ul class="space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
+                            <li><b>Оптимізація модального вікна налаштувань</b>: початкову висоту полів зменшено з <code>rows="12"</code> до <code>rows="7"</code> із внутрішнім скролом (<code>max-h-60</code>). Усунуто вертикальний скрол всього вікна.</li>
+                            <li><b>Приховування скролбару вкладок</b>: додано класи <code>[scrollbar-width:none]</code> для панелі вкладок, зменшено відступи для компактності.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Розділ: Система версіонування -->
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wide">
+                            <span>📋 Система версіонування</span>
+                        </div>
+                        <ul class="space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
+                            <li>Впроваджено файл <code>CHANGELOG.md</code> та додано цей інтерактивний віджет версій у шапку програми.</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Версія 1.1.0 -->
-                <div class="border-l-4 border-gray-300 dark:border-gray-700 pl-4 space-y-2 opacity-80">
-                    <div class="flex items-center justify-between">
+                <div class="bg-gray-50/50 dark:bg-gray-900/30 rounded-xl p-4 border-l-4 border-gray-400 dark:border-gray-600 border border-gray-200 dark:border-gray-700/60 space-y-2 opacity-85">
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/60 pb-2">
                         <h4 class="font-bold text-base text-gray-900 dark:text-white">Версія 1.1.0</h4>
-                        <span class="text-xs text-gray-400">28.07.2026</span>
+                        <span class="text-xs font-mono text-gray-400">28.07.2026</span>
                     </div>
-                    <ul class="space-y-1 text-xs list-disc list-inside text-gray-600 dark:text-gray-400">
-                        <li>Візуальний конструктор ієрархії РОПів та ВОПів.</li>
-                        <li>Модуль перевірки Чорного списку бійців (СЗЧ).</li>
-                        <li>Імпорт посад та звань з еталонних файлів Word.</li>
+                    <ul class="space-y-1 text-xs text-gray-600 dark:text-gray-300 list-disc list-inside">
+                        <li><b>Візуальний конструктор ієрархії РОПів та ВОПів</b> для зручного налаштування структури Додатку 2.</li>
+                        <li><b>Модуль перевірки Чорного списку бійців (СЗЧ)</b> з автоматичним попередженням про порушників.</li>
+                        <li><b>Імпорт посад та звань</b> із додаткових файлів Word.</li>
                     </ul>
                 </div>
 
                 <!-- Версія 1.0.0 -->
-                <div class="border-l-4 border-gray-300 dark:border-gray-700 pl-4 space-y-2 opacity-70">
-                    <div class="flex items-center justify-between">
+                <div class="bg-gray-50/30 dark:bg-gray-900/20 rounded-xl p-4 border-l-4 border-gray-300 dark:border-gray-700 border border-gray-200 dark:border-gray-700/40 space-y-2 opacity-70">
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/40 pb-2">
                         <h4 class="font-bold text-base text-gray-900 dark:text-white">Версія 1.0.0</h4>
-                        <span class="text-xs text-gray-400">15.07.2026</span>
+                        <span class="text-xs font-mono text-gray-400">15.07.2026</span>
                     </div>
-                    <ul class="space-y-1 text-xs list-disc list-inside text-gray-600 dark:text-gray-400">
-                        <li>Базове сортування по 3 списках виплат (170 тис / 100 тис / 30 тис).</li>
-                        <li>Перевірка дублікатів та опечаток у ПІБ.</li>
-                        <li>Експорт звітів у формати Excel (`.xlsx`).</li>
+                    <ul class="space-y-1 text-xs text-gray-600 dark:text-gray-400 list-disc list-inside">
+                        <li><b>Базове сортування бійців</b> по 3 списках виплат (170 тис. грн / 100 тис. грн / 30 тис. грн).</li>
+                        <li><b>Автоматична перевірка дублікатів</b> та пошук описок у ПІБ.</li>
+                        <li><b>Експорт готових зведених звітів</b> у формати Excel (<code>.xlsx</code>) із форматуванням.</li>
                     </ul>
                 </div>
 
@@ -904,6 +945,25 @@
         function closeChangelogModal() {
             document.getElementById('changelogModal').classList.add('hidden');
         }
+
+        // Закриття модальних вікон за допомогою клавіші Escape (Esc) та кліку на фон (Backdrop)
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                closeSettings();
+                closeChangelogModal();
+                closeEditModal();
+            }
+        });
+
+        window.addEventListener('click', function (e) {
+            const settingsModal = document.getElementById('settingsModal');
+            const changelogModal = document.getElementById('changelogModal');
+            const editRecordModal = document.getElementById('editRecordModal');
+
+            if (e.target === settingsModal) closeSettings();
+            if (e.target === changelogModal) closeChangelogModal();
+            if (e.target === editRecordModal) closeEditModal();
+        });
         // Ініціалізація та керування темною темою
         function updateThemeIcon() {
             const isDark = document.documentElement.classList.contains('dark');
