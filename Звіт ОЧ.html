@@ -11,16 +11,17 @@
 
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --panel-bg: #151f32;
+            --bg-color: #070a12;
+            --panel-bg: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --border: #243249;
-            --input-bg: #0b0f19;
-            --section-header-bg: #1e2d42;
+            --border: #1e293b;
+            --border-hover: #334155;
+            --input-bg: #090d16;
+            --section-header-bg: #1e293b;
             --section-header-text: #f8fafc;
-            --gray-light: #1e2d4a;
-            --preview-bg: #090d16;
+            --gray-light: #162032;
+            --preview-bg: #060911;
             --preview-box-bg: #ffffff;
             /* Page stays white/classic for accurate paper rendering */
             --preview-text: #000000;
@@ -29,10 +30,10 @@
             --success: #10b981;
             --danger: #f87171;
             --warning: #fbbf24;
-            --radius: 0.5rem;
+            --radius: 0.625rem;
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -52,14 +53,15 @@
         }
 
         .header {
-            background-color: var(--panel-bg);
+            background-color: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
             padding: 0.75rem 2rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 50;
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-md);
         }
 
         .header h1 {
@@ -119,12 +121,13 @@
         .anchor-nav {
             position: sticky;
             top: 0;
-            background-color: var(--panel-bg);
+            background-color: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
             z-index: 40;
-            padding: 0.5rem 1rem;
+            padding: 0.55rem 1rem;
             border-bottom: 1px solid var(--border);
             display: flex;
-            gap: 0.4rem;
+            gap: 0.5rem;
             flex-wrap: wrap;
             overflow-x: auto;
         }
@@ -135,21 +138,27 @@
 
         .anchor-link {
             font-size: 0.75rem;
-            font-weight: bold;
+            font-weight: 600;
             color: var(--text-muted);
             text-decoration: none;
-            padding: 0.3rem 0.6rem;
-            background: var(--input-bg);
-            border: 1px solid var(--border);
+            padding: 0.35rem 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 9999px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
-        .anchor-link:hover,
-        .anchor-link.active {
+        .anchor-link:hover {
             color: var(--text-main);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .anchor-link.active {
+            color: #ffffff;
             background: var(--accent);
             border-color: var(--accent);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
         }
 
         /* FORM PANEL */
@@ -230,6 +239,26 @@
             transition: background-color 0.3s;
             font-size: 14pt;
             line-height: 1.45;
+        }
+
+        /* DARK / DIMMED A4 PREVIEW MODE */
+        .preview-box.preview-dark {
+            background-color: #141c2e !important;
+            color: #cbd5e1 !important;
+            border-color: var(--border) !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+        }
+        .preview-box.preview-dark th,
+        .preview-box.preview-dark td {
+            border-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+        .preview-box.preview-dark th {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .preview-box.preview-dark b,
+        .preview-box.preview-dark strong {
+            color: #f8fafc !important;
         }
 
         .preview-box p {
@@ -722,15 +751,15 @@
         /* BUTTONS STYLING */
         .btn {
             padding: 0.55rem 1.2rem;
-            border: none;
-            border-radius: 0.375rem;
+            border: 1px solid transparent;
+            border-radius: 0.5rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.4rem;
-            font-size: 0.85rem;
+            font-size: 0.825rem;
             transition: all 0.2s ease;
             box-shadow: var(--shadow-sm);
         }
@@ -741,37 +770,38 @@
         }
 
         .btn:active {
-            transform: translateY(0);
+            transform: translateY(0) scale(0.98);
         }
 
         .btn-primary {
-            background-color: var(--accent);
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
         }
 
         .btn-primary:hover {
-            background-color: var(--accent-hover);
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
         }
 
         .btn-success {
-            background-color: var(--success);
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
             color: white;
         }
 
         .btn-success:hover {
-            filter: brightness(1.05);
+            background: linear-gradient(135deg, #34d399 0%, #059669 100%);
         }
 
         .btn-danger-outline {
-            background-color: transparent;
-            border: 1px solid var(--danger);
-            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
             box-shadow: none;
         }
 
         .btn-danger-outline:hover {
-            background-color: var(--danger);
+            background: #ef4444;
             color: white;
+            border-color: #ef4444;
         }
 
         .btn-outline {
@@ -1184,6 +1214,105 @@
             font-size: 0.75rem;
             color: var(--text-muted);
         }
+
+        /* 3.1.2 UAV SECTION REDESIGN */
+        .uav-rec-card {
+            background-color: #111827;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .uav-rec-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .uav-rec-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+        .uav-field-box {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .uav-field-box label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .uav-input {
+            width: 100% !important;
+            text-align: center !important;
+            font-weight: 700 !important;
+            font-size: 0.9rem !important;
+            background: #0b0f19 !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 0.375rem !important;
+            padding: 0.4rem !important;
+            color: #fff !important;
+            transition: all 0.2s;
+        }
+        .uav-input:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) !important;
+        }
+
+        .uav-strike-card {
+            background-color: #111827;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .uav-strike-header {
+            display: grid;
+            grid-template-columns: 1.4fr repeat(3, 1fr);
+            background-color: #1e293b;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+        .uav-col-type { text-align: left; padding-left: 0.25rem; }
+        .uav-col-all { color: #94a3b8; }
+        .uav-col-ok { color: #34d399; }
+        .uav-col-fail { color: #f87171; }
+
+        .uav-strike-row {
+            display: grid;
+            grid-template-columns: 1.4fr repeat(3, 1fr);
+            padding: 0.5rem 0.8rem;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 0.6rem;
+            transition: background-color 0.15s;
+        }
+        .uav-strike-row:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        .uav-type-badge {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            background: #1e293b;
+            padding: 0.35rem 0.6rem;
+            border-radius: 0.375rem;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 
@@ -1202,7 +1331,7 @@
             </svg>
             <span>Доповідь ОЧ 2 МБ 125 ОВМБр</span>
             <button type="button" onclick="openChangelogModal()" class="btn-version" title="Натисніть для перегляду історії оновлень">
-                📋 v1.0.0
+                📋 v1.1.0
             </button>
         </h1>
         <div class="header-actions">
@@ -1341,57 +1470,78 @@
 
                         <!-- 3.2 БпАК -->
                         <div class="task-block">
-                            <label class="text-accent">3.1.2. Завдання БпАК</label>
-                            <div class="grid-2">
-                                <div class="input-group-row"><label>Розвідувальні місії</label>
-                                    <div class="flex-row"><input type="number" min="0" class="num-input v-uav"
-                                            data-type="rec" id="uavRecF" placeholder="Вил" value="0"><input
-                                            type="number" min="0" class="num-input" id="uavRecH" placeholder="Год"
-                                            value="0"><input type="number" min="0" class="num-input" id="uavRecM"
-                                            placeholder="Хв" value="0"></div>
+                            <label class="text-accent" style="font-weight: 800; font-size: 0.95rem;">3.1.2. Завдання БпАК</label>
+                            
+                            <!-- 1. Розвідувальні місії -->
+                            <div class="uav-rec-card">
+                                <div class="uav-rec-title">
+                                    <span>🛰️ Розвідувальні місії</span>
                                 </div>
-                                <div class="input-group-row"><label>FPV-Камікадзе</label>
-                                    <div class="flex-row"><input type="number" min="0" class="num-input v-uav"
-                                            data-type="strike" id="uavFpvT" placeholder="Всі" value="0"><input
-                                            type="number" min="0" class="num-input text-accent" id="uavFpvO"
-                                            placeholder="Усп" value="0"><input type="number" min="0" class="num-input"
-                                            id="uavFpvFail" placeholder="Не усп" value="0"></div>
-                                </div>
-                                <div class="input-group-row"><label>Скид з важкого бомбера</label>
-                                    <div class="flex-row"><input type="number" min="0" class="num-input v-uav"
-                                            data-type="strike" id="uavHeavyDropT" placeholder="Всі" value="0"><input
-                                            type="number" min="0" class="num-input text-accent" id="uavHeavyDropO"
-                                            placeholder="Усп" value="0"><input type="number" min="0" class="num-input"
-                                            id="uavHeavyDropFail" placeholder="Не усп" value="0"></div>
-                                </div>
-                                <div class="input-group-row"><label>Скид з БпЛА</label>
-                                    <div class="flex-row"><input type="number" min="0" class="num-input v-uav"
-                                            data-type="strike" id="uavDropT" placeholder="Всі" value="0"><input
-                                            type="number" min="0" class="num-input text-accent" id="uavDropO"
-                                            placeholder="Усп" value="0"><input type="number" min="0" class="num-input"
-                                            id="uavDropFail" placeholder="Не усп" value="0"></div>
-                                </div>
-                                <div class="input-group-row"><label>Мінування</label>
-                                    <div class="flex-row"><input type="number" min="0" class="num-input v-uav"
-                                            data-type="strike" id="uavMineT" placeholder="Всі" value="0"><input
-                                            type="number" min="0" class="num-input text-accent" id="uavMineO"
-                                            placeholder="Усп" value="0"><input type="number" min="0" class="num-input"
-                                            id="uavMineFail" placeholder="Не усп" value="0"></div>
-                                </div>
-                                <div class="input-group-row"><label>Доставка</label>
-                                    <div class="flex-row"><input type="number" min="0" class="num-input v-uav"
-                                            data-type="strike" id="uavDelT" placeholder="Всі" value="0"><input
-                                            type="number" min="0" class="num-input text-success" id="uavDelO"
-                                            placeholder="Усп" value="0"><input type="number" min="0" class="num-input"
-                                            id="uavDelFail" placeholder="Не усп" value="0"></div>
+                                <div class="uav-rec-grid">
+                                    <div class="uav-field-box">
+                                        <label>✈️ Вильоти</label>
+                                        <input type="number" min="0" class="uav-input v-uav" data-type="rec" id="uavRecF" placeholder="0" value="0" oninput="triggerPreview()">
+                                    </div>
+                                    <div class="uav-field-box">
+                                        <label>⏱️ Години</label>
+                                        <input type="number" min="0" class="uav-input" id="uavRecH" placeholder="0" value="0" oninput="triggerPreview()">
+                                    </div>
+                                    <div class="uav-field-box">
+                                        <label>⌛ Хвилини</label>
+                                        <input type="number" min="0" class="uav-input" id="uavRecM" placeholder="0" value="0" oninput="triggerPreview()">
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex-col mt-2">
-                                <textarea id="uavDone" placeholder="Виконано / Виконується: кожен пункт з нового рядка"
-                                    rows="3"></textarea>
-                                <textarea id="uavPlan" placeholder="Заплановано: кожен пункт з нового рядка"
-                                    rows="3"></textarea>
-                                <textarea id="uavInfo" placeholder="Інформаційно:" rows="1"></textarea>
+
+                            <!-- 2. Ударні та спеціальні місії -->
+                            <div class="uav-strike-card">
+                                <div class="uav-strike-header">
+                                    <div class="uav-col-type">🎯 Ударні / Спец. місії</div>
+                                    <div class="uav-col-all">📊 Всього вильотів</div>
+                                    <div class="uav-col-ok">🎯 Успішно</div>
+                                    <div class="uav-col-fail">❌ Не успішно</div>
+                                </div>
+
+                                <div class="uav-strike-row">
+                                    <div class="uav-type-badge" title="FPV-Камікадзе">FPV-Камікадзе</div>
+                                    <div><input type="number" min="0" class="uav-input v-uav" data-type="strike" id="uavFpvT" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-success" id="uavFpvO" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-danger" id="uavFpvFail" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                </div>
+
+                                <div class="uav-strike-row">
+                                    <div class="uav-type-badge" title="Скид з важкого бомбера">Скид з важкого бомбера</div>
+                                    <div><input type="number" min="0" class="uav-input v-uav" data-type="strike" id="uavHeavyDropT" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-success" id="uavHeavyDropO" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-danger" id="uavHeavyDropFail" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                </div>
+
+                                <div class="uav-strike-row">
+                                    <div class="uav-type-badge" title="Скид з БпЛА">Скид з БпЛА</div>
+                                    <div><input type="number" min="0" class="uav-input v-uav" data-type="strike" id="uavDropT" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-success" id="uavDropO" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-danger" id="uavDropFail" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                </div>
+
+                                <div class="uav-strike-row">
+                                    <div class="uav-type-badge" title="Мінування">Мінування</div>
+                                    <div><input type="number" min="0" class="uav-input v-uav" data-type="strike" id="uavMineT" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-success" id="uavMineO" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-danger" id="uavMineFail" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                </div>
+
+                                <div class="uav-strike-row">
+                                    <div class="uav-type-badge" title="Доставка майна">Доставка майна</div>
+                                    <div><input type="number" min="0" class="uav-input v-uav" data-type="strike" id="uavDelT" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-success" id="uavDelO" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                    <div><input type="number" min="0" class="uav-input text-danger" id="uavDelFail" placeholder="0" value="0" oninput="triggerPreview()"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex-col mt-2" style="gap: 0.5rem;">
+                                <textarea id="uavDone" placeholder="Виконано / Виконується: кожен пункт з нового рядка" rows="3" oninput="triggerPreview()"></textarea>
+                                <textarea id="uavPlan" placeholder="Заплановано: кожен пункт з нового рядка" rows="3" oninput="triggerPreview()"></textarea>
+                                <textarea id="uavInfo" placeholder="Інформаційно до БпАК..." rows="1" oninput="triggerPreview()"></textarea>
                             </div>
                         </div>
 
@@ -1722,6 +1872,10 @@
                     </svg>
                     Попередній перегляд (A4 макет)
                 </h3>
+                <button type="button" onclick="togglePreviewTheme()" class="btn-version" style="font-size: 0.75rem; padding: 0.25rem 0.65rem; display: flex; align-items: center; gap: 0.35rem;" title="Перемкнути нічний/паперовий режим макета A4">
+                    <span id="previewThemeIcon">🌙</span>
+                    <span id="previewThemeText">Нічний режим</span>
+                </button>
             </div>
             <div id="reportPreview" class="preview-box"></div>
         </div>
@@ -2772,8 +2926,33 @@ ${customTasksHtml}
             // Активувати якірну шпигунську стрічку навігації
             spyAnchors();
 
+            initPreviewTheme();
             triggerPreview();
         });
+
+        // HIGHT/PAPER MODE TOGGLE FOR A4 PREVIEW
+        function initPreviewTheme() {
+            const mode = localStorage.getItem('previewTheme') || 'dark';
+            const box = document.getElementById('reportPreview');
+            const icon = document.getElementById('previewThemeIcon');
+            const text = document.getElementById('previewThemeText');
+            if (mode === 'dark') {
+                if (box) box.classList.add('preview-dark');
+                if (icon) icon.innerText = '📄';
+                if (text) text.innerText = 'Паперовий режим';
+            } else {
+                if (box) box.classList.remove('preview-dark');
+                if (icon) icon.innerText = '🌙';
+                if (text) text.innerText = 'Нічний режим';
+            }
+        }
+
+        function togglePreviewTheme() {
+            const box = document.getElementById('reportPreview');
+            const isDark = box ? box.classList.contains('preview-dark') : false;
+            localStorage.setItem('previewTheme', isDark ? 'paper' : 'dark');
+            initPreviewTheme();
+        }
 
         // МОДАЛЬНЕ ВІКНО CHANGELOG
         function openChangelogModal() {
@@ -2802,34 +2981,79 @@ ${customTasksHtml}
             <div class="modal-header">
                 <h3 style="font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
                     <span>📋 Історія оновлень (Звіт ОЧ)</span>
-                    <span class="btn-version">v1.0.0</span>
+                    <span class="btn-version">v1.1.0</span>
                 </h3>
                 <button type="button" onclick="closeChangelogModal()" class="btn-icon" style="width:28px; height:28px; font-size:1rem;">×</button>
             </div>
             <div class="modal-body">
-                <!-- Версія 1.0.0 -->
+                <!-- Версія 1.1.0 -->
                 <div style="background: rgba(255, 255, 255, 0.02); border-left: 4px solid var(--accent); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
                         <h4 style="font-weight: 800; font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
-                            <span>🚀 Версія 1.0.0</span>
+                            <span>🚀 Версія 1.1.0</span>
                             <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #10b981;">Поточна</span>
                         </h4>
                         <span style="font-size: 0.75rem; color: var(--text-muted);">02.08.2026</span>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Покращення UI та верстки</div>
+                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Загальний редизайн інтерфейсу (Tactical Premium UI)</div>
                         <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                            <li><b>Редизайн розділу 5.3 «Бойовий потенціал»</b>: впроваджено стилізовану тактичну картку-матрицю з кольоровими іконками (🛡️ <i>Боєготові на ППД</i>, 🔄 <i>На адаптації</i>, ⚠️ <i>Без БЗВП</i>).</li>
-                            <li><b>Автоматичний підсумок</b>: додано підсумковий рядок «Всього» для боєготових на ППД.</li>
-                            <li><b>Оновлено поле приміток</b>.</li>
+                            <li><b>OLED Deep Palette</b>: впроваджено глибоку темну палітру фону (<code>#070a12</code>) та контрастних карток (<code>#0f172a</code>).</li>
+                            <li><b>Glassmorphism Header & Sticky Nav</b>: додано ефект розмиття фону (<code>backdrop-filter: blur(12px)</code>) для шапки та стрічки якірного меню із неоновим свіченням активних вкладок.</li>
+                            <li><b>Modern Dynamic Buttons</b>: інтегровано об'ємні градієнтні кнопки із мікро-анімацією підняття та активного кліку.</li>
                         </ul>
                     </div>
+                </div>
 
+                <!-- Версія 1.0.2 -->
+                <div style="background: rgba(255, 255, 255, 0.01); border-left: 4px solid var(--border); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; opacity: 0.85;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                        <h4 style="font-weight: 800; font-size: 0.95rem; color: #fff;">Версія 1.0.2</h4>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">02.08.2026</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Покращення UI та зручності (UX)</div>
+                        <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem;">
+                            <li><b>Тактичний нічний режим A4 макета</b>: додано кнопку-перемикач (<code>🌙 Нічний / 📄 Паперовий</code>) із збереженням у <code>localStorage</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Версія 1.0.1 -->
+                <div style="background: rgba(255, 255, 255, 0.01); border-left: 4px solid var(--border); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; opacity: 0.85;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                        <h4 style="font-weight: 800; font-size: 0.95rem; color: #fff;">Версія 1.0.1</h4>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">02.08.2026</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Покращення UI та верстки</div>
+                        <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem;">
+                            <li><b>Редизайн розділу 3.1.2 «Завдання БпАК»</b>: розділено розвідувальні та ударні місії, додано підписані поля вильотів/часу та таблицю результативності.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Версія 1.0.0 -->
+                <div style="background: rgba(255, 255, 255, 0.01); border-left: 4px solid var(--border); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; opacity: 0.85;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                        <h4 style="font-weight: 800; font-size: 0.95rem; color: #fff;">Версія 1.0.0</h4>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">02.08.2026</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                        <div style="font-size: 0.75rem; font-weight: 800; color: #60a5fa; text-transform: uppercase;">🎨 Покращення UI та верстки</div>
+                        <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                            <li><b>Редизайн розділу 5.3 «Бойовий потенціал»</b>:
+                                <br>• Впроваджено стилізовану тактичну картку-матрицю з кольоровими іконками (🛡️ <i>Боєготові на ППД</i>, 🔄 <i>На адаптації</i>, ⚠️ <i>Без БЗВП</i>).
+                                <br>• <b>Підсумок боєготових</b>: додано підсумковий рядок «Всього» (розраховується тільки для колонки «Боєготові на ППД»).
+                                <br>• Оновлено текстове поле приміток до потенціалу.
+                            </li>
+                        </ul>
+                    </div>
                     <div style="display: flex; flex-direction: column; gap: 0.35rem;">
                         <div style="font-size: 0.75rem; font-weight: 800; color: #a855f7; text-transform: uppercase;">📋 Система версіонування</div>
                         <ul style="font-size: 0.8rem; color: var(--text-main); padding-left: 1.25rem;">
-                            <li>Інтегровано загальний проєктний <code>CHANGELOG.md</code> та додано кнопковий бейдж версії.</li>
+                            <li>Інтегровано загальний проєктний <code>CHANGELOG.md</code> та додано кнопковий бейдж версії <code>v1.0.0</code> у шапку.</li>
                         </ul>
                     </div>
                 </div>
