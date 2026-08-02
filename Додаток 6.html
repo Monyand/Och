@@ -84,7 +84,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>📋 v1.2.0</span>
+                    <span>📋 v1.2.1</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -828,7 +828,7 @@
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.2.0</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.2.1</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -841,12 +841,32 @@
 
             <div class="p-6 overflow-y-auto space-y-6 text-sm text-gray-700 dark:text-gray-300">
                 
-                <!-- Версія 1.2.0 -->
-                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border-l-4 border-blue-500 border border-gray-200 dark:border-gray-700 space-y-4 shadow-sm">
+                <!-- Версія 1.2.1 -->
+                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border-l-4 border-blue-500 border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm">
                     <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2.5">
                         <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>🚀 Версія 1.2.0</span>
+                            <span>🚀 Версія 1.2.1</span>
                             <span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-700">Поточна</span>
+                        </h4>
+                        <span class="text-xs font-mono text-gray-400">02.08.2026</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+                            <span>🎨 Покращення UI та зручності (UX)</span>
+                        </div>
+                        <ul class="space-y-1.5 text-xs md:text-sm text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
+                            <li><b>Швидке закриття модальних вікон</b>: додано обробник клавіші <code>Escape</code> (Esc) для вікон Налаштувань, Changelog та Редагування.</li>
+                            <li><b>Закриття кліком по фону (Backdrop)</b>: клік по затемненій області навколо будь-якого модального вікна закриває його.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Версія 1.2.0 -->
+                <div class="bg-gray-50/50 dark:bg-gray-900/30 rounded-xl p-4 border-l-4 border-gray-400 dark:border-gray-600 border border-gray-200 dark:border-gray-700/60 space-y-4 opacity-90">
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2.5">
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                            <span>Версія 1.2.0</span>
                         </h4>
                         <span class="text-xs font-mono text-gray-400">02.08.2026</span>
                     </div>
