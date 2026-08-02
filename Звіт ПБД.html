@@ -494,11 +494,15 @@
 <body>
 
     <div class="top-bar">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <button class="btn-settings"
-                style="padding: 5px 10px; font-size: 20px; border: none; outline: none; border-radius: 4px;"
+        <div class="header-title">
+            <button class="btn-toggle-sidebar" id="toggle-sidebar-btn"
                 onclick="toggleSidebar()" title="Сховати/Показати меню">☰</button>
-            <h1>Генератор звіту для ПБД</h1>
+            <h1 style="display: flex; align-items: center; gap: 10px;">
+                <span>Генератор звіту для ПБД</span>
+                <button type="button" onclick="openChangelogModal()" style="font-size: 11px; background: #059669; color: #fff; border: none; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Натисніть для перегляду історії оновлень">
+                    📋 v1.0.0
+                </button>
+            </h1>
         </div>
         <button class="btn-settings" onclick="toggleSettings()">⚙️ Налаштування та Файли</button>
     </div>
@@ -2500,7 +2504,103 @@
                 }
             }
         }
+        // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
+        const APP_CHANGELOG = [
+            {
+                version: "1.0.0",
+                date: "03.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🛡️ Безпека та криптографія",
+                        items: [
+                            "<b>Зашифрований Експорт/Імпорт налаштувань (<code>.enc</code>)</b>: інтегровано збереження та відновлення словників позицій, зброї ОВгП та назви підрозділу у файл <code>Settings_ZvitPBD_YYYY-MM-DD.enc</code> з паролем (AES-256)."
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        function renderChangelogModal() {
+            const container = document.getElementById('changelogModalList');
+            if (!container) return;
+            let html = '';
+            APP_CHANGELOG.forEach(item => {
+                const borderClass = item.isCurrent ? 'border-left: 4px solid #10b981;' : 'border-left: 4px solid #6b7280; opacity: 0.8;';
+                const currentBadge = item.isCurrent 
+                    ? `<span style="background: #064e3b; color: #a7f3d0; font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; border: 1px solid #047857;">Поточна</span>` 
+                    : '';
+                html += `
+                <div style="background: #262626; border-radius: 8px; padding: 12px; ${borderClass} border: 1px solid #333; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 6px; margin-bottom: 8px;">
+                        <h4 style="margin: 0; font-size: 14px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 8px;">
+                            <span>🚀 Версія ${item.version}</span>
+                            ${currentBadge}
+                        </h4>
+                        <span style="font-size: 11px; color: #aaa; font-family: monospace;">${item.date}</span>
+                    </div>
+                    <div>
+                `;
+                item.sections.forEach(sec => {
+                    html += `
+                        <div style="margin-bottom: 6px;">
+                            <div style="font-size: 11px; font-weight: bold; color: #34d399; text-transform: uppercase; margin-bottom: 4px;">${sec.title}</div>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #ccc;">
+                                ${sec.items.map(it => `<li style="margin-bottom: 2px;">${it}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function openChangelogModal() {
+            renderChangelogModal();
+            document.getElementById('modal-changelog').style.display = 'flex';
+        }
+
+        function closeChangelogModal() {
+            document.getElementById('modal-changelog').style.display = 'none';
+        }
+
+        // Закриття модальних вікон за допомогою клавіші Escape (Esc) та кліку на фон (Backdrop)
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                closeChangelogModal();
+                closeSettingsExportModal();
+                closeSettingsImportModal();
+            }
+        });
+
+        window.addEventListener('click', function (e) {
+            ['modal-changelog', 'modal-settings-export-pwd', 'modal-settings-import-pwd'].forEach(id => {
+                const modal = document.getElementById(id);
+                if (modal && e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
     </script>
+
+    <!-- МОДАЛЬНЕ ВІКНО CHANGELOG ЗВІТУ ПБД -->
+    <div id="modal-changelog" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 550px; overflow: hidden; padding: 20px; color: #fff; max-height: 80vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0; font-size: 18px; color: #34d399; display: flex; align-items: center; gap: 8px;">
+                    📋 <span>Історія оновлень (Звіт ПБД)</span>
+                    <span style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.0.0</span>
+                </h3>
+                <button onclick="closeChangelogModal()" style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">✕</button>
+            </div>
+            <div id="changelogModalList" style="overflow-y: auto; flex: 1; padding-right: 5px;"></div>
+            <div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #888;">
+                <span>📄 Офлайн-система Звіт ПБД</span>
+                <button onclick="closeChangelogModal()" style="padding: 6px 14px; background: #059669; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Зрозуміло</button>
+            </div>
+        </div>
+    </div>
 
     <!-- МОДАЛКА: Експорт налаштувань Звіт ПБД -->
     <div id="modal-settings-export-pwd" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
