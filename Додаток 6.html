@@ -5,12 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Додаток 6</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
                     colors: {
                         darkbg: '#0b0b0b',
                         darkcard: '#121212',
@@ -72,10 +79,10 @@
     </style>
 </head>
 
-<body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-4 md:p-8 transition-colors duration-200">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-2 md:p-4 transition-colors duration-200">
 
     <div
-        class="max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-colors duration-200">
+        class="max-w-[1600px] w-full mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-colors duration-200">
 
         <!-- Шапка з кнопками -->
         <div class="bg-slate-800 dark:bg-gray-950 p-4 text-white flex justify-between items-center">
@@ -84,7 +91,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>📋 v1.3.1</span>
+                    <span>📋 v1.4.0</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -121,24 +128,35 @@
         </div>
 
         <div class="p-6">
-            <!-- Зона завантаження файлів -->
-            <div class="mb-6">
-                <div id="drop-zone"
-                    class="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center cursor-pointer transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    onclick="document.getElementById('fileInput').click()">
-                    <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                        </path>
-                    </svg>
-                    <p class="text-lg font-medium text-gray-700 dark:text-gray-300">Натисніть тут або перетягніть файли
-                        ПІДРОЗДІЛІВ (.docx, .dotx)</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Крок 1: Завантажте сюди всі файли ЩБД, які
-                        вам надіслали</p>
-                    <input type="file" id="fileInput" multiple
-                        accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.wordprocessingml.template"
-                        class="hidden" onchange="handleFilesSelect(event)">
+            <!-- Зона завантаження файлів (2-колонковий макет на великих екранах) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                <div class="lg:col-span-7">
+                    <div id="drop-zone"
+                        class="w-full h-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center cursor-pointer transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col items-center justify-center min-h-[150px]"
+                        onclick="document.getElementById('fileInput').click()">
+                        <svg class="mx-auto h-10 w-10 text-gray-400 dark:text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-base font-medium text-gray-700 dark:text-gray-300">Натисніть тут або перетягніть файли ПІДРОЗДІЛІВ (.docx, .dotx)</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Крок 1: Завантажте сюди всі файли ЩБД, які вам надіслали</p>
+                        <input type="file" id="fileInput" multiple accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.wordprocessingml.template" class="hidden" onchange="handleFilesSelect(event)">
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5">
+                    <div class="h-full bg-gray-50/70 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700/70 rounded-xl p-4 flex flex-col justify-between min-h-[150px]">
+                        <div>
+                            <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                                <span>📁 Опрацьовані файли</span>
+                                <span class="bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 text-xs px-2 py-0.5 rounded-full font-mono font-bold"><span id="docsCountDisplay">0</span> шт.</span>
+                            </h3>
+                            <div id="missingFilesAlert" class="mb-3 hidden"></div>
+                            <div id="processedFilesList" class="hidden">
+                                <ul id="fileNames" class="text-xs text-gray-600 dark:text-gray-400 space-y-1 max-h-48 overflow-y-auto pr-1">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -147,90 +165,52 @@
                 Обробка документів... Будь ласка, зачекайте.
             </div>
 
-            <!-- Список оброблених файлів -->
-            <div id="processedFilesList" class="mb-6 hidden">
-                <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2 uppercase">Опрацьовані файли
-                    підрозділів <span
-                        class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded ml-2">(Всього:
-                        <span id="docsCountDisplay">0</span> шт.)</span></h3>
-                <ul id="fileNames"
-                    class="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-2 max-h-60 overflow-y-auto">
-                </ul>
-            </div>
-
-            <!-- Блок попередження про відсутні файли підрозділів -->
-            <div id="missingFilesAlert" class="mb-6 hidden"></div>
-
-            <!-- Панель інструментів (Кнопки) -->
-            <div
-                class="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/70 shadow-sm mb-8">
-                <div class="flex flex-wrap items-center gap-3">
+            <!-- Панель інструментів (Кнопки кроків) -->
+            <div class="p-2.5 bg-gray-50/80 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700/70 shadow-sm mb-8">
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Крок 2 -->
                     <button onclick="document.getElementById('masterFileInput').click()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 focus:outline-none flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        Крок 2: Звірка з БЧС (Загублені та описки ПІБ)
+                        class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs">
+                        <svg class="w-4 h-4 mr-2 text-blue-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <span>Крок 2: Звірка з БЧС (Загублені та описки ПІБ)</span>
                     </button>
-                    <input type="file" id="masterFileInput" multiple
-                        accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        class="hidden" onchange="handleMasterFilesSelect(event)">
+                    <input type="file" id="masterFileInput" multiple accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="handleMasterFilesSelect(event)">
 
+                    <!-- Крок 3 -->
                     <button onclick="document.getElementById('blacklistFileInput').click()"
-                        class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 focus:outline-none flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                            </path>
-                        </svg>
-                        Крок 3: Чорний список (СЗЧ)
+                        class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-orange-500 dark:hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs">
+                        <svg class="w-4 h-4 mr-2 text-orange-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <span>Крок 3: Чорний список (СЗЧ)</span>
                     </button>
-                    <input type="file" id="blacklistFileInput" multiple
-                        accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        class="hidden" onchange="handleBlacklistFilesSelect(event)">
+                    <input type="file" id="blacklistFileInput" multiple accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="handleBlacklistFilesSelect(event)">
 
+                    <!-- Крок 4 -->
                     <button onclick="document.getElementById('importPosFileInput').click()"
-                        class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 focus:outline-none flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                        </svg>
-                        Крок 4: Імпорт посад і звань
+                        class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-teal-500 dark:hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs">
+                        <svg class="w-4 h-4 mr-2 text-teal-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <span>Крок 4: Імпорт посад і звань</span>
                     </button>
-                    <input type="file" id="importPosFileInput" multiple
-                        accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        class="hidden" onchange="handleImportPosFilesSelect(event)">
+                    <input type="file" id="importPosFileInput" multiple accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="handleImportPosFilesSelect(event)">
 
+                    <!-- Крок 5 -->
                     <button onclick="standardizeTasks()"
-                        class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 focus:outline-none flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                            </path>
-                        </svg>
-                        Крок 5: Стандартизувати позиції
+                        class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-pink-500 dark:hover:border-pink-500 hover:text-pink-600 dark:hover:text-pink-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs">
+                        <svg class="w-4 h-4 mr-2 text-pink-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span>Крок 5: Стандартизувати позиції</span>
                     </button>
 
-                    <!-- Зведена Матриця -->
+                    <!-- Крок 6 -->
                     <button onclick="downloadPivotReport()"
-                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-150 focus:outline-none flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                            </path>
-                        </svg>
-                        Крок 6: Зведена матриця (Excel)
+                        class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-purple-500 dark:hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs">
+                        <svg class="w-4 h-4 mr-2 text-purple-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span>Крок 6: Зведена матриця (Excel)</span>
                     </button>
 
+                    <!-- Очистити -->
                     <button onclick="clearData()"
-                        class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-lg shadow transition duration-150 focus:outline-none flex items-center justify-center ml-auto">
-                        <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                            </path>
-                        </svg>
-                        Очистити
+                        class="flex items-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-750 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold py-2 px-3.5 rounded-lg border border-gray-200 dark:border-gray-600/60 shadow-sm transition-all focus:outline-none text-xs ml-auto">
+                        <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <span>Очистити</span>
                     </button>
                 </div>
             </div>
@@ -238,218 +218,135 @@
             <!-- Результати -->
             <div id="resultsArea" class="hidden">
 
-                <!-- Сповіщення про РОЗБІЖНОСТІ З БЧС (Крок 7) -->
-                <div id="bchsDiscrepanciesAlert"
-                    class="hidden mb-4 p-4 bg-cyan-50 dark:bg-cyan-900/20 border-l-4 border-cyan-500 text-cyan-900 dark:text-cyan-200 rounded-lg shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 mr-2 text-cyan-600 dark:text-cyan-400" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <h3 class="font-bold text-lg">Описки та розбіжності в написанні ПІБ: <span
-                                    id="bchsDiscrepanciesCount">0</span> збігів</h3>
+                <!-- СТРІЧКА СТАТУСІВ ТА ПОПЕРЕДЖЕНЬ (STATUS RIBBON BAR) -->
+                <div id="statusRibbonBar" class="mb-6 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700/70 shadow-sm flex flex-wrap items-center gap-2.5">
+                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mr-1 flex items-center gap-1.5">
+                        <span>📊 Статус даних:</span>
+                    </span>
+
+                    <!-- Чип: Дублювання -->
+                    <div id="duplicatesAlert" class="hidden items-center gap-2 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-700/60 text-xs font-semibold">
+                        <span>⚠️ Дублювання/опечатки: <b id="dupCount" class="font-bold">0</b></span>
+                        <div class="flex items-center gap-1.5 ml-1 border-l border-red-300 dark:border-red-700/60 pl-2">
+                            <button onclick="downloadDuplicatesReport()" title="Завантажити Excel-звіт" class="hover:opacity-75 transition-opacity cursor-pointer">📊</button>
+                            <button onclick="toggleAlertDetails('duplicatesAlert', 'dupDetailsList')" class="hover:underline text-[11px] bg-red-200 dark:bg-red-800/80 px-2 py-0.5 rounded cursor-pointer">Деталі</button>
                         </div>
-                        <div class="flex items-center gap-3 mt-2 sm:mt-0">
-                            <button onclick="downloadBchsDiscrepanciesReport()"
-                                class="text-xs bg-cyan-200 hover:bg-cyan-300 dark:bg-cyan-700 dark:hover:bg-cyan-600 dark:text-cyan-100 text-cyan-900 px-3 py-1.5 rounded shadow-sm focus:outline-none transition-colors font-semibold flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    </div>
+
+                    <!-- Чип: Невідомі позиції -->
+                    <div id="invalidTasksAlert" class="hidden items-center gap-2 bg-pink-100 dark:bg-pink-900/40 text-pink-800 dark:text-pink-200 px-3 py-1.5 rounded-lg border border-pink-200 dark:border-pink-700/60 text-xs font-semibold">
+                        <span>❓ Невідомі позиції: <b id="invalidCount" class="font-bold">0</b></span>
+                        <div class="flex items-center gap-1.5 ml-1 border-l border-pink-300 dark:border-pink-700/60 pl-2">
+                            <button onclick="downloadInvalidReport()" title="Завантажити Excel-звіт" class="hover:opacity-75 transition-opacity cursor-pointer">📊</button>
+                            <button onclick="toggleAlertDetails('invalidTasksAlert', 'invalidDetailsList')" class="hover:underline text-[11px] bg-pink-200 dark:bg-pink-800/80 px-2 py-0.5 rounded cursor-pointer">Деталі</button>
+                        </div>
+                    </div>
+
+                    <!-- Чип: Неповні дані -->
+                    <div id="emptyFieldsAlert" class="hidden items-center gap-2 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 px-3 py-1.5 rounded-lg border border-yellow-200 dark:border-yellow-700/60 text-xs font-semibold">
+                        <span>⚠️ Неповні дані: <b id="emptyCount" class="font-bold">0</b></span>
+                        <div class="flex items-center gap-1.5 ml-1 border-l border-yellow-300 dark:border-yellow-700/60 pl-2">
+                            <button onclick="downloadEmptyReport()" title="Завантажити Excel-звіт" class="hover:opacity-75 transition-opacity cursor-pointer">📊</button>
+                            <button onclick="toggleAlertDetails('emptyFieldsAlert', 'emptyDetailsList')" class="hover:underline text-[11px] bg-yellow-200 dark:bg-yellow-800/80 px-2 py-0.5 rounded cursor-pointer">Деталі</button>
+                        </div>
+                    </div>
+
+                    <!-- Чип: Чорний список (СЗЧ) -->
+                    <div id="blacklistAlert" class="hidden items-center gap-2 bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200 px-3 py-1.5 rounded-lg border border-orange-200 dark:border-orange-700/60 text-xs font-semibold">
+                        <span>☠️ Чорний список (СЗЧ): <b id="blacklistCount" class="font-bold">0</b></span>
+                        <div class="flex items-center gap-1.5 ml-1 border-l border-orange-300 dark:border-orange-700/60 pl-2">
+                            <button onclick="downloadBlacklistReport()" title="Завантажити Excel-звіт" class="hover:opacity-75 transition-opacity cursor-pointer">📊</button>
+                            <button onclick="toggleAlertDetails('blacklistAlert', 'blacklistDetailsList')" class="hover:underline text-[11px] bg-orange-200 dark:bg-orange-800/80 px-2 py-0.5 rounded cursor-pointer">Деталі</button>
+                        </div>
+                    </div>
+
+                    <!-- Чип: Загублені бійці -->
+                    <div id="missingAlert" class="hidden items-center gap-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-700/60 text-xs font-semibold">
+                        <span>🔍 Загублені бійці: <b id="missingCount" class="font-bold">0</b></span>
+                        <div class="flex items-center gap-1.5 ml-1 border-l border-indigo-300 dark:border-indigo-700/60 pl-2">
+                            <button onclick="downloadMissingReport()" title="Завантажити Excel-звіт" class="hover:opacity-75 transition-opacity cursor-pointer">📊</button>
+                            <button onclick="toggleAlertDetails('missingAlert', 'missingDetailsList')" class="hover:underline text-[11px] bg-indigo-200 dark:bg-indigo-800/80 px-2 py-0.5 rounded cursor-pointer">Деталі</button>
+                        </div>
+                    </div>
+
+                    <!-- Чип: Описки в ПІБ (БЧС) -->
+                    <div id="bchsDiscrepanciesAlert" class="hidden items-center gap-2 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-200 px-3 py-1.5 rounded-lg border border-cyan-200 dark:border-cyan-700/60 text-xs font-semibold">
+                        <span>📝 Описки ПІБ (БЧС): <b id="bchsDiscrepanciesCount" class="font-bold">0</b></span>
+                        <div class="flex items-center gap-1.5 ml-1 border-l border-cyan-300 dark:border-cyan-700/60 pl-2">
+                            <button onclick="downloadBchsDiscrepanciesReport()" title="Завантажити Excel-звіт" class="hover:opacity-75 transition-opacity cursor-pointer">📊</button>
+                            <button onclick="toggleAlertDetails('bchsDiscrepanciesAlert', 'bchsDiscrepanciesDetailsList')" class="hover:underline text-[11px] bg-cyan-200 dark:bg-cyan-800/80 px-2 py-0.5 rounded cursor-pointer">Деталі</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ПОНОШИРИННА ПАНЕЛЬ ДЕТАЛЕЙ (SMART DRAWER 100% WIDTH) -->
+                <div id="alertDrawerPanel" class="hidden mb-6 p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl w-full transition-all">
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700 mb-4">
+                        <h3 id="alertDrawerTitle" class="font-bold text-base text-gray-900 dark:text-gray-100 flex items-center gap-2"></h3>
+                        <button onclick="closeAlertDrawer()" title="Закрити панель деталей" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div id="alertDrawerContent">
+                        <ul id="bchsDiscrepanciesDetailsList" class="hidden space-y-3 text-xs"></ul>
+                        <ul id="blacklistDetailsList" class="hidden space-y-3 text-xs"></ul>
+                        <ul id="missingDetailsList" class="hidden space-y-3 text-xs"></ul>
+                        <ul id="emptyDetailsList" class="hidden space-y-2 text-xs list-disc pl-5"></ul>
+                        <ul id="invalidDetailsList" class="hidden space-y-2 text-xs list-disc pl-5"></ul>
+                        <ul id="dupDetailsList" class="hidden space-y-4 text-xs"></ul>
+                    </div>
+                </div>
+
+                <!-- Вкладки та Швидкий пошук у єдиному рядку -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 dark:border-gray-700 mb-4 gap-4 pb-2 md:pb-0">
+                    <div class="flex overflow-x-auto gap-2">
+                        <button id="tab-btgr" onclick="switchTab('btgr')"
+                            class="px-4 py-2.5 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-bold focus:outline-none text-xs uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-2">
+                            <span>РОП (170)</span>
+                            <span class="bg-blue-500/20 text-blue-600 dark:text-blue-300 font-mono font-bold text-xs px-2.5 py-0.5 rounded-full border border-blue-500/30">
+                                <span id="countBtgr">0</span> чол.
+                            </span>
+                        </button>
+                        <button id="tab-bro" onclick="switchTab('bro')"
+                            class="px-4 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-bold focus:outline-none text-xs uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-2">
+                            <span>БРО (100)</span>
+                            <span class="bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 font-mono font-bold text-xs px-2.5 py-0.5 rounded-full border border-indigo-500/30">
+                                <span id="countBro">0</span> чол.
+                            </span>
+                        </button>
+                        <button id="tab-zab" onclick="switchTab('zab')"
+                            class="px-4 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-bold focus:outline-none text-xs uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-2">
+                            <span>Заб. БД (30)</span>
+                            <span class="bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-mono font-bold text-xs px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                                <span id="countZab">0</span> чол.
+                            </span>
+                        </button>
+                        <button id="tab-utoch" onclick="switchTab('utoch')"
+                            class="px-4 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-bold focus:outline-none text-xs uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-2">
+                            <span>📝 Уточнення</span>
+                            <span class="bg-pink-500/20 text-pink-600 dark:text-pink-300 font-mono font-bold text-xs px-2.5 py-0.5 rounded-full border border-pink-500/30">
+                                <span id="countUtoch">0</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-2 md:mb-0 w-full md:w-auto">
+                        <div class="relative w-full md:w-64">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
-                                Завантажити Excel-звіт
-                            </button>
-                            <button onclick="toggleBchsDiscrepanciesDetails()"
-                                class="text-sm font-semibold underline hover:text-cyan-900 dark:hover:text-cyan-100 focus:outline-none">
-                                Показати деталі
-                            </button>
+                            </div>
+                            <input type="text" id="searchInput" onkeyup="filterTables()"
+                                placeholder="Пошук за ПІБ, посадою..."
+                                class="w-full pl-9 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors shadow-sm">
                         </div>
+                        <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-3 rounded-lg text-xs shadow-sm transition-colors flex items-center gap-1.5 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span class="hidden sm:inline">Додати запис</span>
+                        </button>
                     </div>
-                    <ul id="bchsDiscrepanciesDetailsList" class="mt-4 text-sm hidden space-y-3"></ul>
-                </div>
-
-                <!-- Сповіщення про ЧОРНИЙ СПИСОК -->
-                <div id="blacklistAlert"
-                    class="hidden mb-4 p-4 bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 text-orange-900 dark:text-orange-200 rounded-lg shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 mr-2 text-orange-600 dark:text-orange-500" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <h3 class="font-bold text-lg">Увага! В звітах знайдено осіб з Чорного списку: <span
-                                    id="blacklistCount">0</span> збігів</h3>
-                        </div>
-                        <div class="flex items-center gap-3 mt-2 sm:mt-0">
-                            <button onclick="downloadBlacklistReport()"
-                                class="text-xs bg-orange-200 hover:bg-orange-300 dark:bg-orange-700 dark:hover:bg-orange-600 dark:text-orange-100 text-orange-900 px-3 py-1.5 rounded shadow-sm focus:outline-none transition-colors font-semibold flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                Завантажити звіт
-                            </button>
-                            <button onclick="toggleBlacklistDetails()"
-                                class="text-sm font-semibold underline hover:text-orange-900 dark:hover:text-orange-100 focus:outline-none">Показати
-                                деталі</button>
-                        </div>
-                    </div>
-                    <ul id="blacklistDetailsList" class="mt-4 text-sm hidden space-y-4"></ul>
-                </div>
-
-                <!-- Сповіщення про ЗАГУБЛЕНИХ (Еталонна звірка) -->
-                <div id="missingAlert"
-                    class="hidden mb-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500 text-indigo-800 dark:text-indigo-200 rounded-lg shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 mr-2 text-indigo-600 dark:text-indigo-400" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                                </path>
-                            </svg>
-                            <h3 class="font-bold text-lg">Увага! Загублені бійці (є в еталоні, немає у звітах): <span
-                                    id="missingCount">0</span></h3>
-                        </div>
-                        <div class="flex items-center gap-3 mt-2 sm:mt-0">
-                            <button onclick="downloadMissingReport()"
-                                class="text-xs bg-indigo-200 hover:bg-indigo-300 dark:bg-indigo-700 dark:hover:bg-indigo-600 dark:text-indigo-100 text-indigo-900 px-3 py-1.5 rounded shadow-sm focus:outline-none transition-colors font-semibold flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                Завантажити звіт
-                            </button>
-                            <button onclick="toggleMissingDetails()"
-                                class="text-sm font-semibold underline hover:text-indigo-900 dark:hover:text-indigo-100 focus:outline-none">Показати
-                                деталі</button>
-                        </div>
-                    </div>
-                    <ul id="missingDetailsList" class="mt-4 text-sm hidden space-y-4"></ul>
-                </div>
-
-                <!-- Сповіщення про пусті клітинки -->
-                <div id="emptyFieldsAlert"
-                    class="hidden mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 rounded-lg shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 mr-2 text-yellow-600 dark:text-yellow-500" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <h3 class="font-bold text-lg">Увага! Виявлено неповні дані: <span id="emptyCount">0</span>
-                            </h3>
-                        </div>
-                        <div class="flex items-center gap-3 mt-2 sm:mt-0">
-                            <button onclick="downloadEmptyReport()"
-                                class="text-xs bg-yellow-200 hover:bg-yellow-300 dark:bg-yellow-700 dark:hover:bg-yellow-600 dark:text-yellow-100 text-yellow-900 px-3 py-1.5 rounded shadow-sm focus:outline-none transition-colors font-semibold flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                Завантажити звіт
-                            </button>
-                            <button onclick="toggleEmptyDetails()"
-                                class="text-sm font-semibold underline hover:text-yellow-900 dark:hover:text-yellow-100 focus:outline-none">Показати
-                                деталі</button>
-                        </div>
-                    </div>
-                    <ul id="emptyDetailsList" class="mt-4 text-sm hidden space-y-2 list-disc pl-8"></ul>
-                </div>
-
-                <!-- Сповіщення про ЛІВІ (недозволені) позиції -->
-                <div id="invalidTasksAlert"
-                    class="hidden mb-4 p-4 bg-pink-50 dark:bg-pink-900/20 border-l-4 border-pink-500 text-pink-800 dark:text-pink-200 rounded-lg shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 mr-2 text-pink-600 dark:text-pink-500" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <h3 class="font-bold text-lg">Увага! Невідомі позиції (помилки/відсебеньки): <span
-                                    id="invalidCount">0</span></h3>
-                        </div>
-                        <div class="flex items-center gap-3 mt-2 sm:mt-0">
-                            <button onclick="downloadInvalidReport()"
-                                class="text-xs bg-pink-200 hover:bg-pink-300 dark:bg-pink-800 dark:hover:bg-pink-700 dark:text-pink-100 text-pink-900 px-3 py-1.5 rounded shadow-sm focus:outline-none transition-colors font-semibold flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                Завантажити звіт
-                            </button>
-                            <button onclick="toggleInvalidDetails()"
-                                class="text-sm font-semibold underline hover:text-pink-900 dark:hover:text-pink-100 focus:outline-none">Показати
-                                деталі</button>
-                        </div>
-                    </div>
-                    <ul id="invalidDetailsList" class="mt-4 text-sm hidden space-y-2 list-disc pl-8"></ul>
-                </div>
-
-                <!-- Сповіщення про дублікати -->
-                <div id="duplicatesAlert"
-                    class="hidden mb-4 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-300 rounded-lg shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <h3 class="font-bold text-lg">Увага! Знайдено дублювання/опечатки: <span
-                                    id="dupCount">0</span></h3>
-                        </div>
-                        <div class="flex items-center gap-3 mt-2 sm:mt-0">
-                            <button onclick="downloadDuplicatesReport()"
-                                class="text-xs bg-red-200 hover:bg-red-300 dark:bg-red-800 dark:hover:bg-red-700 dark:text-red-100 text-red-900 px-3 py-1.5 rounded shadow-sm focus:outline-none transition-colors font-semibold flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                Завантажити звіт
-                            </button>
-                            <button onclick="toggleDupDetails()"
-                                class="text-sm font-semibold underline hover:text-red-900 dark:hover:text-red-100 focus:outline-none">Показати
-                                деталі</button>
-                        </div>
-                    </div>
-                    <ul id="dupDetailsList" class="mt-4 text-sm hidden space-y-3 max-h-96 overflow-y-auto pr-2"></ul>
-                </div>
-
-                <!-- Рядок пошуку -->
-                <div class="mb-4 relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                    <input type="text" id="searchInput" onkeyup="filterTables()"
-                        placeholder="Швидкий пошук за ПІБ, посадою або званням..."
-                        class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors shadow-sm">
-                </div>
-
-                <!-- 3 Вкладки -->
-                <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4 overflow-x-auto">
-                    <button id="tab-btgr" onclick="switchTab('btgr')"
-                        class="px-4 md:px-6 py-3 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold focus:outline-none text-sm uppercase tracking-wider whitespace-nowrap transition-colors">
-                        РОП (170) - <span id="countBtgr">0</span> чол.
-                    </button>
-                    <button id="tab-bro" onclick="switchTab('bro')"
-                        class="px-4 md:px-6 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-sm uppercase tracking-wider whitespace-nowrap transition-colors">
-                        БРО (100) - <span id="countBro">0</span> чол.
-                    </button>
-                    <button id="tab-zab" onclick="switchTab('zab')"
-                        class="px-4 md:px-6 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-sm uppercase tracking-wider whitespace-nowrap transition-colors">
-                        Заб. БД (30) - <span id="countZab">0</span> чол.
-                    </button>
-                    <button id="tab-utoch" onclick="switchTab('utoch')"
-                        class="px-4 md:px-6 py-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-sm uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-1.5">
-                        📝 <span>Уточнення</span> - <span id="countUtoch">0</span>
-                    </button>
                 </div>
 
                 <!-- Таблиці -->
@@ -462,7 +359,7 @@
                         </button>
                     </div>
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                        <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10 shadow-sm backdrop-blur-md">
                             <tr>
                                 <th
                                     class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
@@ -501,7 +398,7 @@
                         </button>
                     </div>
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                        <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10 shadow-sm backdrop-blur-md">
                             <tr>
                                 <th
                                     class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
@@ -540,7 +437,7 @@
                         </button>
                     </div>
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                        <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10 shadow-sm backdrop-blur-md">
                             <tr>
                                 <th
                                     class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
@@ -693,13 +590,13 @@
 
     <!-- МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ -->
     <div id="settingsModal"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm transition-opacity p-2 md:p-4">
+        class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-md transition-opacity">
         <div
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-5xl mx-auto overflow-hidden transform transition-all flex flex-col max-h-[92vh]">
+            class="bg-gray-50 dark:bg-gray-900 w-full h-full overflow-hidden transform transition-all flex flex-col shadow-2xl">
             
             <!-- Шапка модального вікна -->
             <div
-                class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 shrink-0">
+                class="px-6 py-4 md:px-8 md:py-5 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-800/80 shrink-0">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -721,36 +618,40 @@
                 </button>
             </div>
 
-            <!-- Вкладки налаштувань -->
-            <div class="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/80 px-4 md:px-6 shrink-0 overflow-x-auto gap-1.5 md:gap-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                <button id="set-tab-btn-kw" onclick="switchSettingsTab('kw')"
-                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
-                    🏷️ <span>Категорії (170/30к)</span>
-                </button>
-                <button id="set-tab-btn-whitelist" onclick="switchSettingsTab('whitelist')"
-                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
-                    🎯 <span>Еталонні позиції</span> <span id="badge-count-whitelist" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
-                </button>
-                <button id="set-tab-btn-replacements" onclick="switchSettingsTab('replacements')"
-                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
-                    🔄 <span>Автозаміна</span> <span id="badge-count-replacements" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
-                </button>
-                <button id="set-tab-btn-rop" onclick="switchSettingsTab('rop')"
-                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
-                    🌳 <span>Ієрархія РОПів</span> <span id="badge-count-rop" class="bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
-                </button>
-                <button id="set-tab-btn-units" onclick="switchSettingsTab('units')"
-                    class="px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
-                    📂 <span>Обов'язкові файли</span> <span id="badge-count-units" class="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
-                </button>
-            </div>
+            <!-- Тіло налаштувань (Sidebar + Контент) -->
+            <div class="flex flex-col md:flex-row flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900/50">
+                
+                <!-- Sidebar (Меню зліва) -->
+                <div class="flex md:flex-col border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900 w-full md:w-64 lg:w-72 shrink-0 overflow-x-auto md:overflow-y-auto p-2 md:p-4 gap-1.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    <button id="set-tab-btn-kw" onclick="switchSettingsTab('kw')"
+                        class="px-3 md:px-4 py-2.5 rounded-lg bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800 focus:outline-none text-sm whitespace-nowrap transition-all flex items-center justify-start gap-2.5 w-full text-left font-medium">
+                        <span class="text-lg">🏷️</span> <span>Категорії</span>
+                    </button>
+                    <button id="set-tab-btn-whitelist" onclick="switchSettingsTab('whitelist')"
+                        class="px-3 md:px-4 py-2.5 rounded-lg bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800 focus:outline-none text-sm whitespace-nowrap transition-all flex items-center justify-start gap-2.5 w-full text-left font-medium">
+                        <span class="text-lg">🎯</span> <span class="flex-1">Еталонні позиції</span> <span id="badge-count-whitelist" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+                    </button>
+                    <button id="set-tab-btn-replacements" onclick="switchSettingsTab('replacements')"
+                        class="px-3 md:px-4 py-2.5 rounded-lg bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800 focus:outline-none text-sm whitespace-nowrap transition-all flex items-center justify-start gap-2.5 w-full text-left font-medium">
+                        <span class="text-lg">🔄</span> <span class="flex-1">Автозаміна</span> <span id="badge-count-replacements" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+                    </button>
+                    <button id="set-tab-btn-rop" onclick="switchSettingsTab('rop')"
+                        class="px-3 md:px-4 py-2.5 rounded-lg bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800 focus:outline-none text-sm whitespace-nowrap transition-all flex items-center justify-start gap-2.5 w-full text-left font-medium">
+                        <span class="text-lg">🌳</span> <span class="flex-1">Ієрархія РОПів</span> <span id="badge-count-rop" class="bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+                    </button>
+                    <button id="set-tab-btn-units" onclick="switchSettingsTab('units')"
+                        class="px-3 md:px-4 py-2.5 rounded-lg bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800 focus:outline-none text-sm whitespace-nowrap transition-all flex items-center justify-start gap-2.5 w-full text-left font-medium">
+                        <span class="text-lg">📂</span> <span class="flex-1">Обов'язкові файли</span> <span id="badge-count-units" class="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+                    </button>
+                </div>
 
-            <!-- Вміст вкладок -->
-            <div class="px-4 md:px-6 py-4 overflow-y-auto grow">
+                <!-- Вміст вкладок -->
+                <div class="flex-1 overflow-y-auto">
+                    <div class="max-w-7xl mx-auto w-full px-4 md:px-12 py-6 md:py-10">
 
-                <!-- Вкладка 1: Розподіл по списках (Категорії) -->
-                <div id="set-tab-content-kw" class="space-y-4">
-                    <div class="bg-blue-50/50 dark:bg-blue-950/20 p-3.5 rounded-xl border border-blue-100 dark:border-blue-900/40">
+                    <!-- Вкладка 1: Розподіл по списках (Категорії) -->
+                    <div id="set-tab-content-kw" class="space-y-6">
+                        <div class="bg-blue-50/50 dark:bg-blue-900/20 p-5 rounded-2xl border border-blue-100 dark:border-blue-800/40">
                         <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base mb-1 flex items-center gap-2">
                             <span>1. Розподіл по списках (170 тис. / 100 тис. / 30 тис.)</span>
                         </h4>
@@ -794,8 +695,8 @@
                     </div>
 
                     <div class="relative">
-                        <textarea id="kw-valid-tasks" rows="7" oninput="updateSettingsBadges()"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white text-sm leading-relaxed font-mono max-h-60 md:max-h-72"
+                        <textarea id="kw-valid-tasks" rows="15" oninput="updateSettingsBadges()"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700/50 dark:text-white text-sm leading-relaxed font-mono min-h-[400px] xl:min-h-[600px] h-full resize-y"
                             placeholder='ПВ "ПОМІДОР" (РОП)&#10;ВОП "ОГІРОК"&#10;штаб бтгр&#10;пвх'></textarea>
                     </div>
                 </div>
@@ -812,8 +713,8 @@
                     </div>
 
                     <div class="relative">
-                        <textarea id="kw-replace-rules" rows="7" oninput="updateSettingsBadges()"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm font-mono leading-relaxed max-h-60 md:max-h-72"
+                        <textarea id="kw-replace-rules" rows="15" oninput="updateSettingsBadges()"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700/50 dark:text-white text-sm font-mono leading-relaxed min-h-[400px] xl:min-h-[600px] h-full resize-y"
                             placeholder="помідор = ПВ &quot;ПОМІДОР&quot; (РОП)&#10;сп помідор = ПВ &quot;ПОМІДОР&quot; (РОП)&#10;огірок = ВОП &quot;ОГІРОК&quot;"></textarea>
                     </div>
                 </div>
@@ -873,7 +774,7 @@
                             </div>
 
                             <!-- Контейнер карток РОПів -->
-                            <div id="rop-cards-container" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                            <div id="rop-cards-container" class="space-y-3 min-h-[400px]">
                                 <!-- Картки генеруються функцією renderVisualRopHierarchy() -->
                             </div>
                         </div>
@@ -889,8 +790,8 @@
                                     class="bg-gray-100 dark:bg-gray-600 px-1 py-0.5 rounded text-blue-600 dark:text-blue-300 font-mono">- БП "Левіс"</code>
                                 — підпорядкований БП попереднього ВОПа.
                             </p>
-                            <textarea id="kw-rop-hierarchy" rows="7" oninput="syncRopFromText(); updateSettingsBadges();"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm font-mono leading-relaxed max-h-60 md:max-h-72"
+                            <textarea id="kw-rop-hierarchy" rows="15" oninput="syncRopFromText(); updateSettingsBadges();"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white text-sm font-mono leading-relaxed min-h-[400px] xl:min-h-[600px] h-full resize-y"
                                 placeholder='[РОП 1]&#10;КСП "Альфа"&#10;БП "Бета"&#10;ВОП "Омега"&#10;- КСП "Орлан"&#10;- БП "Сокіл"&#10;- БП "Яструб"&#10;&#10;[РОП 2]&#10;КСП "Вектор"&#10;ВОП "Дельта"&#10;- БП "Олімп"'></textarea>
                         </div>
                     </div>
@@ -908,17 +809,18 @@
                     </div>
 
                     <div class="relative">
-                        <textarea id="kw-required-units" rows="7" oninput="updateSettingsBadges()"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white text-sm leading-relaxed font-mono max-h-60 md:max-h-72"
+                        <textarea id="kw-required-units" rows="15" oninput="updateSettingsBadges()"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700/50 dark:text-white text-sm leading-relaxed font-mono min-h-[400px] xl:min-h-[600px] h-full resize-y"
                             placeholder="1 мр&#10;2 мр&#10;3 мр&#10;1 мінбат&#10;2 мінбат&#10;рбр&#10;зрбатр&#10;взвод зв'язку&#10;управління"></textarea>
                     </div>
                 </div>
-
+                </div>
+                </div> <!-- End max-w-7xl -->
             </div>
 
             <!-- Футер модального вікна -->
             <div
-                class="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0">
+                class="px-6 py-4 md:px-8 md:py-5 bg-white dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center shrink-0">
                 <div class="flex gap-2 items-center flex-wrap">
                     <button type="button" onclick="openSettingsExportModal()" class="bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 font-bold py-1.5 px-3 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer" title="Заберегти зашифрований файл налаштувань з паролем">
                         🔒 Експорт .enc
@@ -1010,7 +912,7 @@
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.3.1</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.4.0</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1040,9 +942,26 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.4.0",
+                date: "04.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🎨 Масштабний UX/UI Редизайн та Нові Функції",
+                        color: "blue",
+                        items: [
+                            "<b>Глобальний редизайн</b>: Оновлено вигляд кнопок кроків на сучасні ghost-кнопки, таблиці тепер мають закріплені шапки для зручної навігації, а бейджі завдань стали мінімалістичними.",
+                            "<b>Центр налаштувань</b>: Вікно налаштувань перетворено на повноцінну повноекранну сторінку з боковим меню (Sidebar) і великими полями вводу.",
+                            "<b>Ручне додавання бійців</b>: Додано нову кнопку біля пошуку для ручного внесення військовослужбовців з автоматичним сортуванням у правильну таблицю.",
+                            "<b>Інтелектуальний пошук звітів</b>: Повністю переписано логіку перевірки відсутніх звітів. Тепер використовуються розумні межі слів, що усуває помилкові спрацьовування (напр., «МБ» не плутається з «2МБ»), і коректно читаються злиті назви («ПБД5МР»)."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.3.1",
                 date: "03.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "✨ Новий функціонал: Модуль «Уточнення»",
@@ -1393,10 +1312,10 @@
                 const content = document.getElementById(`set-tab-content-${t}`);
                 if (!btn || !content) return;
                 if (t === tab) {
-                    btn.className = "px-2.5 md:px-3.5 py-2.5 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5";
+                    btn.className = "px-3 md:px-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 shadow-sm text-blue-600 dark:text-blue-400 font-bold focus:outline-none text-sm whitespace-nowrap transition-all flex items-center justify-start gap-2.5 w-full text-left border border-gray-200 dark:border-gray-700/60";
                     content.classList.remove('hidden');
                 } else {
-                    btn.className = "px-2.5 md:px-3.5 py-2.5 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none text-xs md:text-sm whitespace-nowrap transition-colors flex items-center gap-1.5";
+                    btn.className = "px-3 md:px-4 py-2.5 rounded-lg bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800 focus:outline-none text-sm whitespace-nowrap transition-all flex items-center justify-start gap-2.5 w-full text-left font-medium border border-transparent";
                     content.classList.add('hidden');
                 }
             });
@@ -1497,11 +1416,27 @@
             const presentUnits = [];
 
             expectedUnits.forEach(unit => {
-                const normUnit = unit.toLowerCase().replace(/\s+/g, '');
+                // 1. Нормалізуємо очікувану назву (розділяємо букви і цифри, щоб "1мб" і "1 мб" були однаковими)
+                let str = unit.toLowerCase();
+                str = str.replace(/([0-9])([a-zа-яієїґ])/g, '$1 $2').replace(/([a-zа-яієїґ])([0-9])/g, '$1 $2');
+                
+                // 2. Розбиваємо на слова/числа
+                const chunks = str.match(/[a-zа-яієїґ0-9']+/g);
+                if (!chunks) return;
+
+                // 3. Будуємо регулярний вираз. Дозволяємо будь-які не-буквено-цифрові символи між частинами (напр., "_" або пробіл)
+                const innerPattern = chunks.join('[^a-zа-яієїґ0-9\']*');
+                
+                // 4. Обертаємо в межі слова, щоб "МБ" не знаходилось всередині "2МБ" або "ВРБ"
+                const regex = new RegExp(`(^|[^a-zа-яієїґ0-9'])${innerPattern}([^a-zа-яієїґ0-9']|$)`, 'i');
+                
                 const found = uploadedFileNames.some(fn => {
-                    const normFn = fn.replace(/\s+/g, '');
-                    return normFn.includes(normUnit);
+                    // Видаляємо типовий префікс "пбд", щоб файли типу "ПБД5МР" (без роздільника) 
+                    // не ламали межу слова для "5мр"
+                    const cleanFn = fn.replace(/пбд/gi, ' ');
+                    return regex.test(cleanFn);
                 });
+                
                 if (found) {
                     presentUnits.push(unit);
                 } else {
@@ -1512,20 +1447,18 @@
             alertContainer.classList.remove('hidden');
 
             if (missingUnits.length === 0) {
-                alertContainer.className = "mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-xl shadow-sm";
+                alertContainer.className = "mb-3 p-2.5 px-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 rounded-lg shadow-sm text-xs";
                 alertContainer.innerHTML = `
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <div class="flex items-center gap-2">
-                            <span class="text-xl">🟢</span>
-                            <div>
-                                <h4 class="font-bold text-sm">Усі обов'язкові підрозділи подали звіти!</h4>
-                                <p class="text-xs text-emerald-600 dark:text-emerald-400">Завантажено ${presentUnits.length} з ${expectedUnits.length} підрозділів зі списку налаштувань.</p>
-                            </div>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="font-bold text-xs">Усі обов'язкові підрозділи подали звіти!</span>
+                            <span class="text-[11px] text-emerald-600 dark:text-emerald-400">(${presentUnits.length} з ${expectedUnits.length} підрозділів зі списку налаштувань)</span>
                         </div>
                     </div>
                 `;
             } else {
-                alertContainer.className = "mb-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 rounded-xl shadow-sm";
+                alertContainer.className = "mb-3 p-2.5 px-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 rounded-lg shadow-sm text-xs";
                 
                 const missingBadgesHtml = missingUnits.map(u => 
                     `<span class="inline-flex items-center bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300 text-xs px-2.5 py-1 rounded-lg font-bold border border-red-200 dark:border-red-800 shadow-xs mt-1 mr-1">⚠️ ${u}</span>`
@@ -3143,10 +3076,46 @@
             }
         }
 
-        function toggleBchsDiscrepanciesDetails() {
-            const list = document.getElementById('bchsDiscrepanciesDetailsList');
-            if (list) list.classList.toggle('hidden');
+        function toggleAlertDetails(alertId, listId) {
+            const drawer = document.getElementById('alertDrawerPanel');
+            const targetList = document.getElementById(listId);
+            if (!drawer || !targetList) return;
+
+            const allLists = ['bchsDiscrepanciesDetailsList', 'blacklistDetailsList', 'missingDetailsList', 'emptyDetailsList', 'invalidDetailsList', 'dupDetailsList'];
+            
+            const isSameListOpen = !drawer.classList.contains('hidden') && !targetList.classList.contains('hidden');
+
+            // Hide all lists inside drawer
+            allLists.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+
+            if (isSameListOpen) {
+                drawer.classList.add('hidden');
+            } else {
+                targetList.classList.remove('hidden');
+                drawer.classList.remove('hidden');
+
+                // Title update
+                const titleEl = document.getElementById('alertDrawerTitle');
+                if (alertId === 'duplicatesAlert') titleEl.innerHTML = '🔴 Детальний список дублювань та опечаток';
+                else if (alertId === 'invalidTasksAlert') titleEl.innerHTML = '❓ Детальний список невідомих позицій';
+                else if (alertId === 'emptyFieldsAlert') titleEl.innerHTML = '⚠️ Детальний список неповних даних';
+                else if (alertId === 'blacklistAlert') titleEl.innerHTML = '☠️ Детальний список осіб з Чорного списку (СЗЧ)';
+                else if (alertId === 'missingAlert') titleEl.innerHTML = '🔍 Детальний список загублених бійців';
+                else if (alertId === 'bchsDiscrepanciesAlert') titleEl.innerHTML = '📝 Детальний список описок ПІБ (БЧС)';
+                
+                drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
+
+        function closeAlertDrawer() {
+            const drawer = document.getElementById('alertDrawerPanel');
+            if (drawer) drawer.classList.add('hidden');
+        }
+
+        function toggleBchsDiscrepanciesDetails() { toggleAlertDetails('bchsDiscrepanciesAlert', 'bchsDiscrepanciesDetailsList'); }
 
         function downloadBchsDiscrepanciesReport() {
             if (typeof XLSX === 'undefined') {
@@ -3327,6 +3296,7 @@
             if (invalidTasksList.length > 0) {
                 document.getElementById('invalidCount').innerText = invalidTasksList.length;
                 alertBox.classList.remove('hidden');
+                alertBox.classList.add('flex');
 
                 invalidTasksList.forEach(p => {
                     let li = document.createElement('li');
@@ -3341,6 +3311,7 @@
                 });
             } else {
                 alertBox.classList.add('hidden');
+                alertBox.classList.remove('flex');
             }
         }
 
@@ -3375,7 +3346,7 @@
             renderInvalidTasksAlert();
         }
 
-        function toggleInvalidDetails() { document.getElementById('invalidDetailsList').classList.toggle('hidden'); }
+        function toggleInvalidDetails() { toggleAlertDetails('invalidTasksAlert', 'invalidDetailsList'); }
         function downloadInvalidReport() {
             const wsData = [["№ п/п", "Звання", "ПІБ", "Помилкова позиція (відсебенька)", "Джерело (Файл)"]];
             invalidTasksList.forEach((p, i) => wsData.push([i + 1, p.rank, p.name, p.task, p.fileName]));
@@ -3503,6 +3474,7 @@
                 let totalMatches = blacklistedResults.reduce((sum, item) => sum + item.matches.length, 0);
                 document.getElementById('blacklistCount').innerText = totalMatches;
                 alertBox.classList.remove('hidden');
+                alertBox.classList.add('flex');
 
                 blacklistedResults.forEach(item => {
                     let b = item.blacklistPerson;
@@ -3566,10 +3538,11 @@
                 });
             } else {
                 alertBox.classList.add('hidden');
+                alertBox.classList.remove('flex');
             }
         }
 
-        function toggleBlacklistDetails() { document.getElementById('blacklistDetailsList').classList.toggle('hidden'); }
+        function toggleBlacklistDetails() { toggleAlertDetails('blacklistAlert', 'blacklistDetailsList'); }
 
         function downloadBlacklistReport() {
             const wsData = [["№ п/п", "ПІБ з Чорного списку", "Файл Чорного списку", "Тип збігу", "Звання (Звіт)", "ПІБ (Звіт)", "Займана посада", "Завдання які виконувались", "Джерело (Файл)"]];
@@ -3731,6 +3704,7 @@
             if (missingPersonnelData.length > 0) {
                 document.getElementById('missingCount').innerText = missingPersonnelData.length;
                 alertBox.classList.remove('hidden');
+                alertBox.classList.add('flex');
 
                 missingPersonnelData.forEach(p => {
                     let m = p.masterPerson;
@@ -3786,10 +3760,11 @@
                 });
             } else {
                 alertBox.classList.add('hidden');
+                alertBox.classList.remove('flex');
             }
         }
 
-        function toggleMissingDetails() { document.getElementById('missingDetailsList').classList.toggle('hidden'); }
+        function toggleMissingDetails() { toggleAlertDetails('missingAlert', 'missingDetailsList'); }
 
         function downloadMissingReport() {
             const wsData = [["№ п/п", "Звання", "ПІБ", "Займана посада", "Завдання які виконувались", "Джерельний файл", "Знайдено у контрольних/Чорному файлах"]];
@@ -3821,6 +3796,7 @@
             if (emptyFieldsWarnings.length > 0) {
                 document.getElementById('emptyCount').innerText = emptyFieldsWarnings.length;
                 alertBox.classList.remove('hidden');
+                alertBox.classList.add('flex');
                 emptyFieldsWarnings.forEach(warning => {
                     let li = document.createElement('li');
                     li.innerHTML = `<span class="font-semibold dark:text-gray-200">${warning.name}</span> <span class="text-gray-600 dark:text-gray-400">(файл: <i class="dark:text-gray-300">${warning.fileName}</i>)</span> — відсутня інформація: <b class="text-red-600 dark:text-red-400">${warning.missingFields.join(', ')}</b>`;
@@ -3828,10 +3804,11 @@
                 });
             } else {
                 alertBox.classList.add('hidden');
+                alertBox.classList.remove('flex');
             }
         }
 
-        function toggleEmptyDetails() { document.getElementById('emptyDetailsList').classList.toggle('hidden'); }
+        function toggleEmptyDetails() { toggleAlertDetails('emptyFieldsAlert', 'emptyDetailsList'); }
 
         function downloadEmptyReport() {
             const wsData = [["ПІБ", "Відсутня інформація", "Джерело (Файл)"]];
@@ -3890,6 +3867,7 @@
             if (dupes.length > 0) {
                 document.getElementById('dupCount').innerText = dupes.length;
                 alertBox.classList.remove('hidden');
+                alertBox.classList.add('flex');
 
                 dupes.forEach(group => {
                     group.forEach(p => duplicateNames.add(p.normName));
@@ -3955,6 +3933,7 @@
                 });
             } else {
                 alertBox.classList.add('hidden');
+                alertBox.classList.remove('flex');
             }
         }
 
@@ -4011,14 +3990,14 @@
             renderTables();
         }
 
-        function toggleDupDetails() { document.getElementById('dupDetailsList').classList.toggle('hidden'); }
+        function toggleDupDetails() { toggleAlertDetails('duplicatesAlert', 'dupDetailsList'); }
 
         function generateTableRowHtml(p, index, isDup) {
             let isBlacklisted = blacklistedIds.has(p.id);
 
             let rowBg = 'bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700';
             let warnIcon = '';
-            let nameColor = 'text-gray-900 dark:text-gray-100';
+            let nameColor = 'text-gray-900 dark:text-gray-100 font-semibold';
 
             if (p.name === "[ВІДСУТНІЙ В/С]") {
                 rowBg = 'bg-pink-50 hover:bg-pink-100 dark:bg-pink-900/30 dark:hover:bg-pink-900/50';
@@ -4031,31 +4010,33 @@
             } else if (isDup) {
                 rowBg = 'bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50';
                 warnIcon = '<span title="Увага: Можливий дублікат або опечатка!" class="ml-1 inline-flex items-center justify-center w-4 h-4 text-[10px] bg-red-500 text-white rounded-full cursor-help">!</span>';
-                nameColor = 'text-red-700 dark:text-red-400 font-medium';
+                nameColor = 'text-red-700 dark:text-red-400 font-semibold';
             }
 
             let rankClass = !p.rank ? 'bg-yellow-200 dark:bg-yellow-900/60' : '';
             let posClass = !p.pos ? 'bg-yellow-200 dark:bg-yellow-900/60' : '';
             let taskClass = !p.task ? 'bg-yellow-200 dark:bg-yellow-900/60' : '';
 
-            let colorTextTask = p.type === 'btgr' ? 'text-purple-600 dark:text-purple-400' :
-                p.type === 'bro' ? 'text-indigo-600 dark:text-indigo-400' :
-                    'text-emerald-600 dark:text-emerald-400';
+            let colorTextTask = p.type === 'btgr' ? 'text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wide' :
+                p.type === 'bro' ? 'text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wide' :
+                    'text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wide';
 
             return `
                 <tr class="divide-y divide-gray-200 dark:divide-gray-700 transition-colors ${rowBg}">
-                    <td class="px-4 py-2 whitespace-nowrap text-gray-500 dark:text-gray-400">${index + 1}</td>
-                    <td class="px-4 py-2 whitespace-nowrap dark:text-gray-300 ${rankClass}">${p.rank}</td>
-                    <td class="px-4 py-2 ${nameColor}">${p.name} ${warnIcon}</td>
-                    <td class="px-4 py-2 text-gray-500 dark:text-gray-400 text-xs ${posClass}">${p.pos}</td>
-                    <td class="px-4 py-2 font-semibold ${colorTextTask} ${taskClass}">${p.task}</td>
-                    <td class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500" title="${p.fileName}">${p.fileName.length > 15 ? p.fileName.substring(0, 15) + '...' : p.fileName}</td>
-                    <td class="px-4 py-2 text-center whitespace-nowrap">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="openEditModal('${p.id}')" title="Редагувати рядок" class="text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus:outline-none">
+                    <td class="px-4 py-2.5 whitespace-nowrap text-gray-400 dark:text-gray-500 text-xs text-center font-mono">${index + 1}</td>
+                    <td class="px-4 py-2.5 whitespace-nowrap text-xs text-gray-700 dark:text-gray-200 font-medium ${rankClass}">${p.rank}</td>
+                    <td class="px-4 py-2.5 text-sm ${nameColor}">${p.name} ${warnIcon}</td>
+                    <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300 text-xs max-w-xs leading-relaxed ${posClass}">${p.pos}</td>
+                    <td class="px-4 py-2.5 font-semibold text-xs whitespace-nowrap ${taskClass}">
+                        <span class="${colorTextTask}">${p.task}</span>
+                    </td>
+                    <td class="px-4 py-2.5 text-xs text-gray-700 dark:text-gray-300 font-mono whitespace-nowrap" title="${p.fileName}">${p.fileName}</td>
+                    <td class="px-4 py-2.5 text-center whitespace-nowrap">
+                        <div class="flex justify-center gap-1.5">
+                            <button onclick="openEditModal('${p.id}')" title="Редагувати рядок" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus:outline-none">
                                 <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             </button>
-                            <button onclick="deleteRecord('${p.id}')" title="Видалити рядок" class="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors focus:outline-none">
+                            <button onclick="deleteRecord('${p.id}')" title="Видалити рядок" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors focus:outline-none">
                                 <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
@@ -4188,9 +4169,58 @@
             processedDocsCount = 0;
         }
 
+        function populateEditTasksDatalist() {
+            let dl = document.getElementById('edit-tasks-datalist');
+            if (!dl) {
+                dl = document.createElement('datalist');
+                dl.id = 'edit-tasks-datalist';
+                document.body.appendChild(dl);
+            }
+            dl.innerHTML = '';
+
+            let positionsSet = new Set();
+            const whitelistText = document.getElementById('kw-valid-tasks').value;
+            whitelistText.split('\n').forEach(line => {
+                let p = line.trim();
+                if (p) positionsSet.add(p);
+            });
+            const replaceRulesText = document.getElementById('kw-replace-rules').value;
+            replaceRulesText.split('\n').forEach(line => {
+                let parts = line.split('=');
+                if (parts.length >= 2) positionsSet.add(parts[1].trim());
+            });
+            [...btgrData, ...broData, ...zabData].forEach(r => {
+                if (r.task && r.task !== "[НЕ ВКАЗАНО]" && r.task.trim() !== '') {
+                    positionsSet.add(r.task.trim());
+                }
+            });
+            Array.from(positionsSet).sort().forEach(pos => {
+                let opt = document.createElement('option');
+                opt.value = pos;
+                dl.appendChild(opt);
+            });
+        }
+
+        function openAddModal() {
+            document.getElementById('edit-record-id').value = 'NEW';
+            document.getElementById('edit-record-rank').value = '';
+            document.getElementById('edit-record-name').value = '';
+            document.getElementById('edit-record-pos').value = '';
+            document.getElementById('edit-record-task').value = '';
+            
+            let titleEl = document.getElementById('modal-title');
+            if (titleEl) titleEl.innerText = "➕ Додати військовослужбовця";
+            
+            populateEditTasksDatalist();
+            document.getElementById('editRecordModal').classList.remove('hidden');
+        }
+
         function openEditModal(recordId) {
             let record = [...btgrData, ...broData, ...zabData].find(p => p.id === recordId);
             if (!record) return;
+
+            let titleEl = document.getElementById('modal-title');
+            if (titleEl) titleEl.innerText = "✏️ Редагування запису";
 
             document.getElementById('edit-record-id').value = record.id;
             document.getElementById('edit-record-rank').value = record.rank;
@@ -4269,6 +4299,29 @@
 
             if (name === '') {
                 name = "[ВІДСУТНІЙ В/С]";
+            }
+
+            if (id === "NEW") {
+                let newRecord = {
+                    id: 'manual_' + Date.now(),
+                    type: 'bro', 
+                    rank: rank || "—",
+                    name: name,
+                    normName: normalizeName(name),
+                    pos: pos || "—",
+                    task: task || "—",
+                    fileName: "Вручну додано",
+                    warnMissingTask: !task,
+                    warnInvalidTask: false,
+                    warnNoName: name === "[ВІДСУТНІЙ В/С]"
+                };
+                broData.push(newRecord);
+                updateTaskForRecord(newRecord);
+                updateCounts();
+                renderAllTables();
+                closeEditModal();
+                showCustomAlert("Військовослужбовця успішно додано!");
+                return;
             }
 
             let record = null;
@@ -4645,7 +4698,7 @@
             class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all flex flex-col">
             <div
                 class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 shrink-0">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                <h3 id="modal-title" class="text-lg font-bold text-gray-900 dark:text-white">
                     ✏️ Редагування запису
                 </h3>
                 <button onclick="closeEditModal()"
