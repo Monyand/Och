@@ -91,7 +91,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>📋 v1.6.1</span>
+                    <span>📋 v1.6.2</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -137,9 +137,9 @@
                         <svg class="mx-auto h-10 w-10 text-gray-400 dark:text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
-                        <p class="text-base font-medium text-gray-700 dark:text-gray-300">Натисніть тут або перетягніть файли ПІДРОЗДІЛІВ (.docx, .dotx)</p>
+                        <p class="text-base font-medium text-gray-700 dark:text-gray-300">Натисніть тут або перетягніть файли ПІДРОЗДІЛІВ (.docx, .dotx, .xlsx, .xls)</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Крок 1: Завантажте сюди всі файли ЩБД, які вам надіслали</p>
-                        <input type="file" id="fileInput" multiple accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.wordprocessingml.template" class="hidden" onchange="handleFilesSelect(event)">
+                        <input type="file" id="fileInput" multiple accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.wordprocessingml.template, .xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="hidden" onchange="handleFilesSelect(event)">
                     </div>
                 </div>
 
@@ -170,11 +170,11 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <!-- Крок 2 -->
                     <button onclick="document.getElementById('masterFileInput').click()"
-                        class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs">
+                        class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs" title="Дозволено Word (.docx) та Excel (.xlsx)">
                         <svg class="w-4 h-4 mr-2 text-blue-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         <span>Крок 2: Звірка з БЧС (Загублені та описки ПІБ)</span>
                     </button>
-                    <input type="file" id="masterFileInput" multiple accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="handleMasterFilesSelect(event)">
+                    <input type="file" id="masterFileInput" multiple accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, .xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="hidden" onchange="handleMasterFilesSelect(event)">
 
                     <!-- Крок 3 -->
                     <button onclick="document.getElementById('blacklistFileInput').click()"
@@ -1003,9 +1003,22 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.6.2",
+                date: "06.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "📊 Підтримка Excel для Кроків 1 та 2",
+                        items: [
+                            "<b>Обробка Excel файлів</b>: Додано можливість завантажувати файли у форматах <code>.xlsx</code> та <code>.xls</code> для основних списків (Крок 1) та звірки з БЧС (Крок 2). Програма тепер автоматично зчитує всі аркуші з Excel та конвертує їх для обробки."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.6.1",
                 date: "05.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🛠 Форматування підрозділів та Автозаміна",
@@ -3008,16 +3021,30 @@
                 await new Promise(resolve => setTimeout(resolve, 0));
 
                 const file = files[i];
-                if (!file.name.endsWith('.docx') && !file.name.endsWith('.dotx')) {
-                    alert(`Файл ${file.name} не є документом Word (.docx або .dotx). Пропускаємо.`);
+                const isWord = file.name.endsWith('.docx') || file.name.endsWith('.dotx');
+                const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+                if (!isWord && !isExcel) {
+                    alert(`Файл ${file.name} не є документом Word (.docx/.dotx) або Excel (.xlsx/.xls). Пропускаємо.`);
                     continue;
                 }
 
                 try {
+                    let htmlString = "";
                     const arrayBuffer = await readFileAsArrayBuffer(file);
-                    const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                    
+                    if (isWord) {
+                        const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                        htmlString = result.value;
+                    } else if (isExcel) {
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        workbook.SheetNames.forEach(sheetName => {
+                            const worksheet = workbook.Sheets[sheetName];
+                            htmlString += XLSX.utils.sheet_to_html(worksheet);
+                        });
+                    }
 
-                    const parsedRecords = parseDocumentRecords(result.value, file.name);
+                    const parsedRecords = parseDocumentRecords(htmlString, file.name);
 
                     let fileVopCount = 0; let fileBtgrCount = 0; let fileBroCount = 0; let fileZabCount = 0;
 
@@ -3127,12 +3154,27 @@
             for (let i = 0; i < event.target.files.length; i++) {
                 await new Promise(resolve => setTimeout(resolve, 0));
                 const file = event.target.files[i];
-                if (!file.name.endsWith('.docx') && !file.name.endsWith('.dotx')) continue;
+                const isWord = file.name.endsWith('.docx') || file.name.endsWith('.dotx');
+                const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+                
+                if (!isWord && !isExcel) continue;
 
                 try {
+                    let htmlString = "";
                     const arrayBuffer = await readFileAsArrayBuffer(file);
-                    const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-                    const masterRecords = parseDocumentRecords(result.value, file.name);
+                    
+                    if (isWord) {
+                        const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                        htmlString = result.value;
+                    } else if (isExcel) {
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        workbook.SheetNames.forEach(sheetName => {
+                            const worksheet = workbook.Sheets[sheetName];
+                            htmlString += XLSX.utils.sheet_to_html(worksheet);
+                        });
+                    }
+
+                    const masterRecords = parseDocumentRecords(htmlString, file.name);
 
                     if (masterRecords.length === 0) {
                         alert(`⚠️ У файлі "${file.name}" не знайдено записів. Перевірте формат таблиці (має бути ПІБ і звання).`);
