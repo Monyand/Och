@@ -91,7 +91,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>📋 v1.5.0</span>
+                    <span>📋 v1.6.0</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -204,6 +204,13 @@
                         class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-purple-500 dark:hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs">
                         <svg class="w-4 h-4 mr-2 text-purple-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         <span>Крок 6: Зведена матриця (Excel)</span>
+                    </button>
+
+                    <!-- Крок 7 -->
+                    <button onclick="downloadAllCategoriesExcel()"
+                        class="group flex items-center bg-transparent border border-gray-300 dark:border-gray-600 hover:border-emerald-500 dark:hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-gray-600 dark:text-gray-300 font-medium py-2 px-3.5 rounded-lg transition-colors focus:outline-none text-xs">
+                        <svg class="w-4 h-4 mr-2 text-emerald-500 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                        <span>Крок 7: Завантажити всі категорії (Excel)</span>
                     </button>
 
                     <!-- Очистити -->
@@ -360,10 +367,7 @@
                 <div id="table-vop-container" class="overflow-x-auto mb-4">
 <div class="flex justify-between items-center mb-2">
 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Список ВОП (270)</h2>
-<button onclick="downloadExcel(vopData, 'VOP_270k.xlsx', 'ВОП')"
-class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-1 px-4 rounded shadow-sm transition-colors">
-Завантажити Excel (.xlsx)
-</button>
+
 </div>
 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                         <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10 shadow-sm backdrop-blur-md">
@@ -399,10 +403,7 @@ class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-g
                 <div id="table-btgr-container" class="overflow-x-auto mb-4">
 <div class="flex justify-between items-center mb-2">
 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Список РОП (170)</h2>
-<button onclick="downloadExcel(btgrData, 'ROP_170k.xlsx', 'РОП')"
-class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-1 px-4 rounded shadow-sm transition-colors">
-Завантажити Excel (.xlsx)
-</button>
+
 </div>
 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                         <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10 shadow-sm backdrop-blur-md">
@@ -438,10 +439,7 @@ class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-g
                 <div id="table-bro-container" class="hidden overflow-x-auto mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Список БРО (100)</h2>
-                        <button onclick="downloadExcel(broData, 'BRO_100k.xlsx', 'БРО')"
-                            class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-1 px-4 rounded shadow focus:outline-none transition-colors">
-                            Завантажити Excel (.xlsx)
-                        </button>
+                        
                     </div>
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                         <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10 shadow-sm backdrop-blur-md">
@@ -477,10 +475,7 @@ class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-g
                 <div id="table-zab-container" class="hidden overflow-x-auto mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Список Заб. БД (30)</h2>
-                        <button onclick="downloadExcel(zabData, 'ZAB_30k.xlsx', 'Заб. БД')"
-                            class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white py-1 px-4 rounded shadow focus:outline-none transition-colors">
-                            Завантажити Excel (.xlsx)
-                        </button>
+                        
                     </div>
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                         <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10 shadow-sm backdrop-blur-md">
@@ -978,7 +973,7 @@ class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-g
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.5.0</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.6.0</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1008,9 +1003,24 @@ class="text-sm bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-g
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
-                version: "1.5.0",
+                version: "1.6.0",
                 date: "05.08.2026",
                 isCurrent: true,
+                sections: [
+                    {
+                        title: "📊 Нова система Excel експорту",
+                        items: [
+                            "<b>Експорт усіх категорій</b>: Додано кнопку «Крок 7» для вивантаження єдиного Excel-файлу.",
+                            "<b>Структура файлу</b>: В Excel-файлі створено нову сторінку «Усі категорії», де зібрано дані з усіх 4 списків (ВОП, РОП, БРО, Заб БД). Інші вкладки містять дані, розбиті окремо за цими категоріями.",
+                            "<b>Очищення інтерфейсу</b>: Видалено індивідуальні зелені кнопки «Завантажити Excel» з кожної таблиці (ВОП, РОП тощо), оскільки тепер все вивантажується централізовано через Крок 7."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.5.0",
+                date: "05.08.2026",
+                isCurrent: false,
                 sections: [
                     {
                         title: "🚀 Впровадження нової категорії ВОП (270)",
@@ -4286,6 +4296,45 @@ else                     if (isBtgr) type = 'btgr';
                     };
                 }
             }
+        }
+
+        function downloadAllCategoriesExcel() {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            const dateStr = `${dd}.${mm}.${yyyy}`;
+            const newFilename = `Всі_категорії_Позиції_${dateStr}.xlsx`;
+
+            const wb = XLSX.utils.book_new();
+            let hasData = false;
+
+            function addSheet(dataArray, sheetName) {
+                if (dataArray && dataArray.length > 0) {
+                    hasData = true;
+                    const wsData = [["№ п/п", "Звання", "ПІБ", "Займана посада", "Завдання які виконувались", "Джерело"]];
+                    dataArray.forEach((p, index) => wsData.push([index + 1, p.rank, p.name, p.pos, p.task, p.fileName]));
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+                    ws['!cols'] = [{ wch: EXCEL_CONFIG.columns.num }, { wch: EXCEL_CONFIG.columns.rank }, { wch: EXCEL_CONFIG.columns.name }, { wch: EXCEL_CONFIG.columns.pos }, { wch: EXCEL_CONFIG.columns.task }, { wch: EXCEL_CONFIG.columns.source }];
+                    styleExcelSheet(ws);
+                    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                }
+            }
+
+            const allData = [...vopData, ...btgrData, ...broData, ...zabData];
+            addSheet(allData, "Усі категорії");
+
+            addSheet(vopData, "ВОП (270)");
+            addSheet(btgrData, "РОП (170)");
+            addSheet(broData, "БРО (100)");
+            addSheet(zabData, "Заб. БД (30)");
+
+            if (!hasData) {
+                alert('Немає даних для вивантаження жодної з категорій!');
+                return;
+            }
+
+            XLSX.writeFile(wb, newFilename);
         }
 
         function downloadExcel(dataArray, filename, sheetName = "РОП-ВОП") {
