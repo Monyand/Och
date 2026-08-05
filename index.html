@@ -53,7 +53,21 @@
 
 <body class="text-gray-200 antialiased py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
 
-    <!-- Header -->
+    <!-- Login Screen -->
+    <div id="login-screen" class="w-full h-full flex flex-col items-center justify-center min-h-screen">
+        <div class="app-card rounded-xl p-8 max-w-sm w-full mx-4 text-center">
+            <h2 class="text-2xl font-bold text-white mb-6">Введіть пароль</h2>
+            <input type="password" id="password-input" class="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-4 py-2 text-white mb-4 focus:outline-none focus:border-blue-500 transition-colors" placeholder="Пароль..." onkeypress="if(event.key === 'Enter') checkPassword()">
+            <button onclick="checkPassword()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                Увійти
+            </button>
+            <p id="error-msg" class="text-red-500 text-sm mt-3 hidden">Невірний пароль!</p>
+        </div>
+    </div>
+
+    <!-- Main Content (Hidden by default) -->
+    <div id="main-content" class="w-full flex-col items-center w-full" style="display: none;">
+<!-- Header -->
     <div class="max-w-6xl w-full mb-12 text-center">
         <h1
             class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-4 tracking-tight">
@@ -263,6 +277,44 @@
         </a>
 
     </div>
+    </div>
+
+    <script>
+        // SHA-256 Hash for "admin"
+        const CORRECT_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; 
+
+        async function hashPassword(password) {
+            const msgUint8 = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkPassword() {
+            const pwd = document.getElementById("password-input").value;
+            const errorMsg = document.getElementById("error-msg");
+            
+            try {
+                const hash = await hashPassword(pwd);
+                if (hash === CORRECT_HASH) {
+                    document.getElementById("login-screen").style.display = "none";
+                    document.getElementById("main-content").style.display = "flex";
+                    errorMsg.classList.add("hidden");
+                    sessionStorage.setItem("isAuthenticated", "true");
+                } else {
+                    errorMsg.classList.remove("hidden");
+                }
+            } catch (e) {
+                console.error("Error hashing password", e);
+            }
+        }
+
+        // Check if already authenticated in this session
+        if (sessionStorage.getItem("isAuthenticated") === "true") {
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("main-content").style.display = "flex";
+        }
+    </script>
 
 </body>
 
