@@ -981,6 +981,8 @@
                 <div class="section-header" onclick="togglePanel('panel-3-2-3')">
                     <h2>3.2.3. Засобами ОВгП (Міномети, АГС, СПГ, ВКК)</h2>
                     <div class="header-controls">
+                        <span class="total-badge" style="background: #e91e63;">60мм: <span
+                                id="ammo-60mm">0</span></span>
                         <span class="total-badge" style="background: #ff5722;">81мм: <span
                                 id="ammo-81mm">0</span></span>
                         <span class="total-badge" style="background: #ff9800;">82мм: <span
@@ -2071,6 +2073,7 @@
         function generateReport3_2_1_and_3() {
             let ovgpHtml = '';
             let genHtml = '';
+            let ammo60mm = 0;
             let ammo81mm = 0;
             let ammo82mm = 0;
             let ammo120mm = 0;
@@ -2132,8 +2135,10 @@
 
                     const ammoNum = parseInt(used) || 0;
 
-                    // Count ammo for 81mm, 82mm and 120mm mortars
-                    if (caliber === '81мм') {
+                    // Count ammo for 60mm, 81mm, 82mm and 120mm mortars
+                    if (caliber === '60мм') {
+                        ammo60mm += ammoNum;
+                    } else if (caliber === '81мм') {
                         ammo81mm += ammoNum;
                     } else if (caliber === '82мм') {
                         ammo82mm += ammoNum;
@@ -2176,6 +2181,7 @@
             updateCount('report-4-gen');
 
             // Update ammo counters with zero-hiding
+            setBadgeValueAndVisibility('ammo-60mm', ammo60mm);
             setBadgeValueAndVisibility('ammo-81mm', ammo81mm);
             setBadgeValueAndVisibility('ammo-82mm', ammo82mm);
             setBadgeValueAndVisibility('ammo-120mm', ammo120mm);
