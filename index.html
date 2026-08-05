@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Головне меню</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        darkbg: '#0b0b0b',
+                        darkcard: '#121212',
+                        darkpanel: '#0f0f0f',
+                        darkinput: '#1a1a1a',
+                        darkborder: '#222222'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0b0b0b 0%, #151515 100%);
+            min-height: 100vh;
+        }
+        .app-card {
+            background-color: #121212;
+            border: 1px solid #222222;
+            transition: all 0.3s ease;
+        }
+        .app-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="text-gray-200 antialiased py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+
+    <!-- Header -->
+    <div class="max-w-6xl w-full mb-12 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-4 tracking-tight">
+            Єдиний Центр Управління
+        </h1>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+            Головне меню програмного комплексу для швидкого доступу до всіх інструментів, генераторів звітів та парсерів.
+        </p>
+    </div>
+
+    <!-- Grid Container -->
+    <div class="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Card 1 -->
+        <a href="Додаток 6.html" class="app-card rounded-xl p-6 flex flex-col group cursor-pointer relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">Додаток 6</h2>
+                <span class="bg-blue-500/10 text-blue-400 text-xs font-bold px-2.5 py-1 rounded-full">Основне</span>
+            </div>
+            <p class="text-sm text-gray-400 mb-6 flex-grow">
+                Потужний інструмент для автоматичного розподілу особового складу по позиціях (ВОП, РОП, БРО, ЗАБ) на основі файлів ЩБД та ПБД.
+            </p>
+            <div class="flex items-center text-sm font-semibold text-blue-400 mt-auto">
+                Відкрити додаток
+                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </a>
+
+        <!-- Card 2 -->
+        <a href="Звіт ОЧ.html" class="app-card rounded-xl p-6 flex flex-col group cursor-pointer relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">Звіт ОЧ</h2>
+                <span class="bg-purple-500/10 text-purple-400 text-xs font-bold px-2.5 py-1 rounded-full">Звіти</span>
+            </div>
+            <p class="text-sm text-gray-400 mb-6 flex-grow">
+                Генератор доповіді КСП (Tactical Premium Edition). Автоматизує процес зведення оперативних текстових звітів та донесень.
+            </p>
+            <div class="flex items-center text-sm font-semibold text-purple-400 mt-auto">
+                Відкрити додаток
+                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </a>
+
+        <!-- Card 3 -->
+        <a href="Звіт ПБД.html" class="app-card rounded-xl p-6 flex flex-col group cursor-pointer relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">Звіт ПБД</h2>
+                <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full">Аналітика</span>
+            </div>
+            <p class="text-sm text-gray-400 mb-6 flex-grow">
+                Аналіз результатів бойових дій (ПБД), підрахунок уражених цілей, використання БК та активності БпЛА/ОВгП.
+            </p>
+            <div class="flex items-center text-sm font-semibold text-emerald-400 mt-auto">
+                Відкрити додаток
+                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </a>
+
+        <!-- Card 4 -->
+        <a href="Втрати 3.0.html" class="app-card rounded-xl p-6 flex flex-col group cursor-pointer relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white group-hover:text-red-400 transition-colors">Втрати 3.0</h2>
+                <span class="bg-red-500/10 text-red-400 text-xs font-bold px-2.5 py-1 rounded-full">Медицина</span>
+            </div>
+            <p class="text-sm text-gray-400 mb-6 flex-grow">
+                MedTactical - Система Обліку. Професійний облік санітарних та безповоротних втрат, відстеження евакуації та статусу лікування.
+            </p>
+            <div class="flex items-center text-sm font-semibold text-red-400 mt-auto">
+                Відкрити додаток
+                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </a>
+
+        <!-- Card 5 -->
+        <a href="БЧС.html" class="app-card rounded-xl p-6 flex flex-col group cursor-pointer relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white group-hover:text-orange-400 transition-colors">БЧС Парсер</h2>
+                <span class="bg-orange-500/10 text-orange-400 text-xs font-bold px-2.5 py-1 rounded-full">Утиліта</span>
+            </div>
+            <p class="text-sm text-gray-400 mb-6 flex-grow">
+                Автоматизований парсер Бойового Чисельного Складу в формат DOCX. Швидка конвертація великих таблиць у структуровані документи.
+            </p>
+            <div class="flex items-center text-sm font-semibold text-orange-400 mt-auto">
+                Відкрити додаток
+                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </a>
+
+        <!-- Card 6 -->
+        <a href="Калькулятор БК.html" class="app-card rounded-xl p-6 flex flex-col group cursor-pointer relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white group-hover:text-yellow-400 transition-colors">Калькулятор БК</h2>
+                <span class="bg-yellow-500/10 text-yellow-400 text-xs font-bold px-2.5 py-1 rounded-full">Утиліта</span>
+            </div>
+            <p class="text-sm text-gray-400 mb-6 flex-grow">
+                Аналізатор та калькулятор витрати боєкомплекту. Дозволяє швидко звести кількість витрачених снарядів по всім видам озброєння.
+            </p>
+            <div class="flex items-center text-sm font-semibold text-yellow-400 mt-auto">
+                Відкрити додаток
+                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </a>
+        
+        <!-- Card 7 -->
+        <a href="Облік перевіряючих.html" class="app-card rounded-xl p-6 flex flex-col group cursor-pointer relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white group-hover:text-teal-400 transition-colors">Облік Перевіряючих</h2>
+                <span class="bg-teal-500/10 text-teal-400 text-xs font-bold px-2.5 py-1 rounded-full">Парсер</span>
+            </div>
+            <p class="text-sm text-gray-400 mb-6 flex-grow">
+                Парсер БЧС (БР та Об'єднані комірки). Спеціалізований інструмент для роботи зі специфічним форматуванням таблиць.
+            </p>
+            <div class="flex items-center text-sm font-semibold text-teal-400 mt-auto">
+                Відкрити додаток
+                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </a>
+
+        <!-- Card 8 -->
+        <a href="Ротації (дод6).html" class="app-card rounded-xl p-6 flex flex-col group cursor-pointer relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white group-hover:text-pink-400 transition-colors">Ротації</h2>
+                <span class="bg-pink-500/10 text-pink-400 text-xs font-bold px-2.5 py-1 rounded-full">Аналітика</span>
+            </div>
+            <p class="text-sm text-gray-400 mb-6 flex-grow">
+                Мульти-агрегатор періодів ротації. Збирає інформацію про час перебування бійців на позиціях та прогнозує необхідні заміни.
+            </p>
+            <div class="flex items-center text-sm font-semibold text-pink-400 mt-auto">
+                Відкрити додаток
+                <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+        </a>
+
+    </div>
+
+</body>
+</html>
