@@ -91,7 +91,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>📋 v1.6.0</span>
+                    <span>📋 v1.6.1</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -973,7 +973,7 @@
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.6.0</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.6.1</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1003,9 +1003,24 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
-                version: "1.6.0",
+                version: "1.6.1",
                 date: "05.08.2026",
                 isCurrent: true,
+                sections: [
+                    {
+                        title: "🛠 Форматування підрозділів та Автозаміна",
+                        items: [
+                            "<b>Смарт-пошук автозаміни</b>: Крок 5 (Стандартизація) тепер використовує розумні межі слів (наприклад, правило «бук» більше не буде випадково замінювати частину слова «бамбук»).",
+                            "<b>Автоматичний регістр</b>: Тепер усі «невідомі» підрозділи в зведеній матриці автоматично виводяться малими літерами (наприклад, 2рв, взвод зв'язку).",
+                            "<b>Винятки</b>: Налаштовано специфічне форматування для винятків: РБпАК, ІСВ, вПТРК, мінбатр, гв, кв."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.6.0",
+                date: "05.08.2026",
+                isCurrent: false,
                 sections: [
                     {
                         title: "📊 Нова система Excel експорту",
@@ -2330,8 +2345,15 @@
                 return;
             }
 
+            // Сортуємо правила за довжиною (щоб "бамбук" перевірявся раніше за "бук")
+            rules.sort((a, b) => b.trigger.length - a.trigger.length);
+
             let replacedCount = 0;
             let allData = [...vopData, ...btgrData, ...broData, ...zabData];
+
+            function escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
 
             allData.forEach(p => {
                 if (!p.task) return;
@@ -2339,7 +2361,13 @@
 
                 for (let r of rules) {
                     if (r.trigger === '') continue;
-                    if (lowerTask.includes(r.trigger)) {
+                    
+                    // Смарт-пошук: перевіряємо, щоб це було окреме слово (або мало роздільники типу '-', ' ', '/' тощо),
+                    // щоб "бук" не спрацьовувало всередині "бамбук"
+                    let triggerEscaped = escapeRegExp(r.trigger);
+                    let regex = new RegExp(`(^|[^а-яіїєґa-z0-9_])(${triggerEscaped})([^а-яіїєґa-z0-9_]|$)`, 'i');
+                    
+                    if (regex.test(lowerTask)) {
                         p.task = r.replaceWith;
                         replacedCount++;
                         break;
@@ -2382,17 +2410,20 @@
                 .replace(/\s+/g, ' ')
                 .trim();
 
-            let lower = name.toLowerCase();
-            if (lower.includes("ісв") || lower.includes("исв") || lower.includes("icv") || lower.includes("isv") || lower.includes("icb")) {
-                return "ІСВ";
+            name = name.toLowerCase();
+
+            if (name.includes("ісв") || name.includes("исв") || name.includes("icv") || name.includes("isv") || name.includes("icb")) {
+                return "ісв";
             }
 
-            name = name.replace(/(\d+)\s*мр/gi, '$1мр');
-        name = name.replace(/вптрк/gi, 'вПТРК');
-        name = name.replace(/гв/gi, 'гв');
-        name = name.replace(/кв/gi, 'кв');
-        name = name.replace(/(^|\s)мб(\s|$)/gi, '$1мінбатр$2');
-        if (name.trim().toLowerCase() === 'мб') name = 'мінбатр';
+            name = name.replace(/рбпак/g, 'РБпАК');
+            name = name.replace(/рбак/g, 'РБпАК');
+            name = name.replace(/(\d+)\s*мр/g, '$1мр');
+            name = name.replace(/вптрк/g, 'вПТРК');
+            name = name.replace(/гв/g, 'гв');
+            name = name.replace(/кв/g, 'кв');
+            name = name.replace(/(^|\s)мб(\s|$)/g, '$1мінбатр$2');
+            if (name.trim() === 'мб') name = 'мінбатр';
 
             return name || String(fileName);
         }
