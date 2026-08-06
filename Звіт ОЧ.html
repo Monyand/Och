@@ -693,9 +693,11 @@
         }
 
         .sub-positions-container {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 0.5rem;
+            width: 100%;
+            margin-top: 0.5rem;
         }
 
         .sub-position-item {
@@ -1331,7 +1333,7 @@
             </svg>
             <span>Доповідь ОЧ 2 МБ 125 ОВМБр</span>
             <button type="button" onclick="openChangelogModal()" class="btn-version" title="Натисніть для перегляду історії оновлень">
-                📋 v1.1.0
+                🚀 v1.1.1
             </button>
         </h1>
         <div class="header-actions">
@@ -2957,9 +2959,22 @@ ${customTasksHtml}
         // МОДАЛЬНЕ ВІКНО CHANGELOG (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.1.1",
+                date: "06.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🎨 Оптимізація інтерфейсу",
+                        items: [
+                            "<b>Компактний вигляд категорій</b>: Розділ 4.1 'Розподіл особового складу' переведено на сіткову структуру (Grid). Тепер підкатегорії вишиковуються колонками і не займають багато вертикального місця на екрані."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.1.0",
                 date: "02.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🎨 Загальний редизайн інтерфейсу (Tactical Premium UI)",
@@ -3085,7 +3100,7 @@ ${customTasksHtml}
             <div class="modal-header">
                 <h3 style="font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
                     <span>📋 Історія оновлень (Звіт ОЧ)</span>
-                    <span class="btn-version">v1.1.0</span>
+                    <span class="btn-version">v1.1.1</span>
                 </h3>
                 <button type="button" onclick="closeChangelogModal()" class="btn-icon" style="width:28px; height:28px; font-size:1rem;">×</button>
             </div>
