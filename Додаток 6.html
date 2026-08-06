@@ -91,7 +91,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>📋 v1.6.2</span>
+                    <span>🚀 v1.7.0</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -161,8 +161,14 @@
             </div>
 
             <div id="loadingStatus"
-                class="hidden mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg animate-pulse border border-blue-200 dark:border-blue-800">
-                Обробка документів... Будь ласка, зачекайте.
+                class="hidden mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800 transition-all">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="loadingStatusText" class="font-medium animate-pulse">Обробка документів... Будь ласка, зачекайте.</span>
+                    <span id="loadingStatusCount" class="text-sm font-bold"></span>
+                </div>
+                <div class="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5">
+                    <div id="loadingStatusBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
             </div>
 
             <!-- Панель інструментів (Кнопки кроків) -->
@@ -973,7 +979,7 @@
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <span class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.6.1</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.7.0</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1003,9 +1009,37 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
-                version: "1.6.2",
+                version: "1.7.0",
                 date: "06.08.2026",
                 isCurrent: true,
+                sections: [
+                    {
+                        title: "⚡ Оптимізація продуктивності",
+                        items: [
+                            "<b>Паралельна обробка</b>: Завантаження та обробка великої кількості файлів тепер виконується паралельно (через <code>Promise.all</code>), що значно прискорює Крок 1 та Крок 2.",
+                            "<b>Кешування пошуку</b>: Додано мемоїзацію для алгоритму Левенштейна (пошук описок), що зменшує навантаження на процесор під час звірки списків."
+                        ]
+                    },
+                    {
+                        title: "🎨 Покращення UI/UX",
+                        items: [
+                            "<b>Тоасти замість Alert</b>: Усі спливаючі вікна (успіх, помилки) тепер виводяться у вигляді красивих анімованих Toast-повідомлень у правому верхньому куті, не блокуючи роботу браузера.",
+                            "<b>Прогрес-бар</b>: Додано плавну панель прогресу (Progress bar) та лічильник оброблених файлів під час завантаження."
+                        ]
+                    },
+                    {
+                        title: "🧹 Рефакторинг та виправлення",
+                        items: [
+                            "<b>Виправлено ручне додавання</b>: Вирішено помилку, через яку ручне додавання запису ('Додати запис') не працювало.",
+                            "<b>Уніфікація коду</b>: Оптимізовано функції парсингу документів (Word/Excel) та рендерингу таблиць, що зробило код легшим та надійнішим."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.6.2",
+                date: "06.08.2026",
+                isCurrent: false,
                 sections: [
                     {
                         title: "📊 Підтримка Excel для Кроків 1 та 2",
@@ -2993,7 +3027,11 @@
             return dist <= maxErrors;
         }
 
+        const _levCache = new Map();
         function levenshteinDistance(a, b) {
+            const key = a < b ? a + '|' + b : b + '|' + a;
+            if (_levCache.has(key)) return _levCache.get(key);
+
             if (a.length === 0) return b.length;
             if (b.length === 0) return a.length;
             let matrix = [];
@@ -3008,42 +3046,57 @@
                     }
                 }
             }
-            return matrix[b.length][a.length];
+            const dist = matrix[b.length][a.length];
+            _levCache.set(key, dist);
+            return dist;
+        }
+
+        async function extractHtmlFromDocument(file) {
+            const isWord = file.name.endsWith('.docx') || file.name.endsWith('.dotx');
+            const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+            if (!isWord && !isExcel) {
+                throw new Error(`FORMAT_ERROR`);
+            }
+
+            const arrayBuffer = await readFileAsArrayBuffer(file);
+            let htmlString = "";
+
+            if (isWord) {
+                const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                htmlString = result.value;
+            } else if (isExcel) {
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                workbook.SheetNames.forEach(sheetName => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    htmlString += XLSX.utils.sheet_to_html(worksheet);
+                });
+            }
+            return htmlString;
         }
 
         async function processFiles(files) {
-            document.getElementById('loadingStatus').classList.remove('hidden');
+            const loadingStatus = document.getElementById('loadingStatus');
+            const loadingStatusBar = document.getElementById('loadingStatusBar');
+            const loadingStatusCount = document.getElementById('loadingStatusCount');
             const fileNamesList = document.getElementById('fileNames');
+            
+            loadingStatus.classList.remove('hidden');
             document.getElementById('processedFilesList').classList.remove('hidden');
 
-            for (let i = 0; i < files.length; i++) {
-                // Даємо можливість браузеру оновити UI (уникаємо зависання)
-                await new Promise(resolve => setTimeout(resolve, 0));
+            let processedCount = 0;
+            const totalFiles = files.length;
+            
+            const updateProgress = () => {
+                processedCount++;
+                const percent = Math.round((processedCount / totalFiles) * 100);
+                if (loadingStatusCount) loadingStatusCount.innerText = `${processedCount} / ${totalFiles}`;
+                if (loadingStatusBar) loadingStatusBar.style.width = `${percent}%`;
+            };
 
-                const file = files[i];
-                const isWord = file.name.endsWith('.docx') || file.name.endsWith('.dotx');
-                const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
-
-                if (!isWord && !isExcel) {
-                    alert(`Файл ${file.name} не є документом Word (.docx/.dotx) або Excel (.xlsx/.xls). Пропускаємо.`);
-                    continue;
-                }
-
+            const promises = Array.from(files).map(async (file) => {
                 try {
-                    let htmlString = "";
-                    const arrayBuffer = await readFileAsArrayBuffer(file);
-                    
-                    if (isWord) {
-                        const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-                        htmlString = result.value;
-                    } else if (isExcel) {
-                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                        workbook.SheetNames.forEach(sheetName => {
-                            const worksheet = workbook.Sheets[sheetName];
-                            htmlString += XLSX.utils.sheet_to_html(worksheet);
-                        });
-                    }
-
+                    const htmlString = await extractHtmlFromDocument(file);
                     const parsedRecords = parseDocumentRecords(htmlString, file.name);
 
                     let fileVopCount = 0; let fileBtgrCount = 0; let fileBroCount = 0; let fileZabCount = 0;
@@ -3069,7 +3122,6 @@
                     deleteBtn.className = "text-red-500 hover:text-red-750 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded transition-colors focus:outline-none ml-2";
                     deleteBtn.title = "Видалити цей файл та його дані";
                     deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
-
                     deleteBtn.addEventListener('click', () => removeProcessedFile(file.name, li));
 
                     li.appendChild(infoDiv);
@@ -3077,24 +3129,32 @@
                     fileNamesList.appendChild(li);
                 } catch (error) {
                     console.error("Помилка читання файлу:", error);
-                    const li = document.createElement('li');
-                    li.className = "flex items-center justify-between bg-red-50 dark:bg-red-900/20 p-2 rounded-lg border border-red-200 dark:border-red-800 mb-1 text-sm text-red-700 dark:text-red-400";
-                    li.innerHTML = `<span>❌ ${file.name} (Помилка читання)</span>`;
+                    if (error.message === 'FORMAT_ERROR') {
+                        showToast(`Файл ${file.name} пропущено: невірний формат`, "warning");
+                    } else {
+                        showToast(`Помилка читання файлу ${file.name}`, "error");
+                        const li = document.createElement('li');
+                        li.className = "flex items-center justify-between bg-red-50 dark:bg-red-900/20 p-2 rounded-lg border border-red-200 dark:border-red-800 mb-1 text-sm text-red-700 dark:text-red-400";
+                        li.innerHTML = `<span>❌ ${file.name} (Помилка читання)</span>`;
 
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = "text-red-500 hover:text-red-750 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded transition-colors focus:outline-none ml-2";
-                    deleteBtn.title = "Видалити цей рядок";
-                    deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = "text-red-500 hover:text-red-750 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded transition-colors focus:outline-none ml-2";
+                        deleteBtn.title = "Видалити цей рядок";
+                        deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+                        deleteBtn.addEventListener('click', () => li.remove());
 
-                    deleteBtn.addEventListener('click', () => li.remove());
-
-                    li.appendChild(deleteBtn);
-                    fileNamesList.appendChild(li);
+                        li.appendChild(deleteBtn);
+                        fileNamesList.appendChild(li);
+                    }
+                } finally {
+                    updateProgress();
                 }
-            }
+            });
+
+            await Promise.all(promises);
 
             document.getElementById('docsCountDisplay').innerText = processedDocsCount;
-            document.getElementById('loadingStatus').classList.add('hidden');
+            loadingStatus.classList.add('hidden');
             document.getElementById('resultsArea').classList.remove('hidden');
 
             checkDuplicates();
@@ -3146,38 +3206,31 @@
         // --- КРОК 2: ЗАГУБЛЕНІ (ЕТАЛОН) ---
         async function handleMasterFilesSelect(event) {
             if (event.target.files.length === 0) return;
-            document.getElementById('loadingStatus').classList.remove('hidden');
+            const loadingStatus = document.getElementById('loadingStatus');
+            const loadingStatusBar = document.getElementById('loadingStatusBar');
+            const loadingStatusCount = document.getElementById('loadingStatusCount');
+            
+            loadingStatus.classList.remove('hidden');
             document.getElementById('resultsArea').classList.remove('hidden');
 
             let totalFound = 0;
+            let processedCount = 0;
+            const totalFiles = event.target.files.length;
+            
+            const updateProgress = () => {
+                processedCount++;
+                const percent = Math.round((processedCount / totalFiles) * 100);
+                if (loadingStatusCount) loadingStatusCount.innerText = `${processedCount} / ${totalFiles}`;
+                if (loadingStatusBar) loadingStatusBar.style.width = `${percent}%`;
+            };
 
-            for (let i = 0; i < event.target.files.length; i++) {
-                await new Promise(resolve => setTimeout(resolve, 0));
-                const file = event.target.files[i];
-                const isWord = file.name.endsWith('.docx') || file.name.endsWith('.dotx');
-                const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
-                
-                if (!isWord && !isExcel) continue;
-
+            const promises = Array.from(event.target.files).map(async (file) => {
                 try {
-                    let htmlString = "";
-                    const arrayBuffer = await readFileAsArrayBuffer(file);
-                    
-                    if (isWord) {
-                        const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-                        htmlString = result.value;
-                    } else if (isExcel) {
-                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                        workbook.SheetNames.forEach(sheetName => {
-                            const worksheet = workbook.Sheets[sheetName];
-                            htmlString += XLSX.utils.sheet_to_html(worksheet);
-                        });
-                    }
-
+                    const htmlString = await extractHtmlFromDocument(file);
                     const masterRecords = parseDocumentRecords(htmlString, file.name);
 
                     if (masterRecords.length === 0) {
-                        alert(`⚠️ У файлі "${file.name}" не знайдено записів. Перевірте формат таблиці (має бути ПІБ і звання).`);
+                        showToast(`У файлі "${file.name}" не знайдено записів. Перевірте формат таблиці (має бути ПІБ і звання).`, "warning");
                     } else {
                         totalFound += masterRecords.length;
                     }
@@ -3185,16 +3238,24 @@
                     currentMasterRecords = [...currentMasterRecords, ...masterRecords];
                 } catch (error) {
                     console.error("Помилка читання еталонного файлу:", error);
-                    alert("Помилка при читанні еталонного файлу " + file.name);
+                    if (error.message === 'FORMAT_ERROR') {
+                        // ignore silently or warning
+                    } else {
+                        showToast("Помилка при читанні еталонного файлу " + file.name, "error");
+                    }
+                } finally {
+                    updateProgress();
                 }
-            }
+            });
+
+            await Promise.all(promises);
 
             if (totalFound > 0) {
-                alert(`✅ Еталон завантажено! Знайдено ${totalFound} записів.`);
+                showToast(`Еталон завантажено! Знайдено ${totalFound} записів.`, "success");
             }
 
             checkMissing();
-            document.getElementById('loadingStatus').classList.add('hidden');
+            loadingStatus.classList.add('hidden');
         }
 
         function checkMissing() {
@@ -4292,46 +4353,27 @@ else                     if (isBtgr) type = 'btgr';
             `;
         }
 
+        function renderTable(data, bodyId) {
+            const body = document.getElementById(bodyId);
+            if (!body) return;
+            let html = '';
+            data.forEach((p, index) => {
+                let isDup = duplicateNames.has(p.normName);
+                html += generateTableRowHtml(p, index, isDup);
+            });
+            body.innerHTML = html;
+        }
+
         function renderTables() {
             if(document.getElementById('countVop')) document.getElementById('countVop').innerText = vopData.length;
-            document.getElementById('countBtgr').innerText = btgrData.length;
-            document.getElementById('countBro').innerText = broData.length;
-            document.getElementById('countZab').innerText = zabData.length;
+            if(document.getElementById('countBtgr')) document.getElementById('countBtgr').innerText = btgrData.length;
+            if(document.getElementById('countBro')) document.getElementById('countBro').innerText = broData.length;
+            if(document.getElementById('countZab')) document.getElementById('countZab').innerText = zabData.length;
 
-            const btgrBody = document.getElementById('btgr-body');
-            
-            const vopBody = document.getElementById('vop-body');
-            let vopHtml = '';
-            
-            vopData.forEach((p, index) => {
-                let isDup = duplicateNames.has(p.normName);
-                vopHtml += generateTableRowHtml(p, index, isDup);
-            });
-            if (vopBody) vopBody.innerHTML = vopHtml;
-
-            let btgrHtml = '';
-            
-            btgrData.forEach((p, index) => {
-                let isDup = duplicateNames.has(p.normName);
-                btgrHtml += generateTableRowHtml(p, index, isDup);
-            });
-            btgrBody.innerHTML = btgrHtml;
-
-            const broBody = document.getElementById('bro-body');
-            let broHtml = '';
-            broData.forEach((p, index) => {
-                let isDup = duplicateNames.has(p.normName);
-                broHtml += generateTableRowHtml(p, index, isDup);
-            });
-            broBody.innerHTML = broHtml;
-
-            const zabBody = document.getElementById('zab-body');
-            let zabHtml = '';
-            zabData.forEach((p, index) => {
-                let isDup = duplicateNames.has(p.normName);
-                zabHtml += generateTableRowHtml(p, index, isDup);
-            });
-            zabBody.innerHTML = zabHtml;
+            renderTable(vopData, 'vop-body');
+            renderTable(btgrData, 'btgr-body');
+            renderTable(broData, 'bro-body');
+            renderTable(zabData, 'zab-body');
 
             // Зберігаємо поточний стан пошукового фільтра після перемалювання
             filterTables();
@@ -4611,12 +4653,28 @@ else                     if (isBtgr) type = 'btgr';
                     warnInvalidTask: false,
                     warnNoName: name === "[ВІДСУТНІЙ В/С]"
                 };
-                broData.push(newRecord);
-                updateTaskForRecord(newRecord);
-                updateCounts();
-                renderAllTables();
+                const kw = getKeywords();
+                const taskLower = task.toLowerCase();
+                let newType = 'bro';
+                if (kw.vop.some(k => taskLower.includes(k))) newType = 'vop';
+                else if (kw.btgr.some(k => taskLower.includes(k))) newType = 'btgr';
+                else if (kw.bro.some(k => taskLower.includes(k))) newType = 'bro';
+                else if (kw.zab.some(k => taskLower.includes(k))) newType = 'zab';
+
+                newRecord.type = newType;
+                if (newType === 'vop') vopData.push(newRecord);
+                else if (newType === 'btgr') btgrData.push(newRecord);
+                else if (newType === 'zab') zabData.push(newRecord);
+                else broData.push(newRecord);
                 closeEditModal();
-                showCustomAlert("Військовослужбовця успішно додано!");
+                checkDuplicates();
+                checkBlacklist();
+                checkMissing();
+                recalculateEmptyFields();
+                checkInvalidTasks();
+                renderTables();
+                filterTables();
+                showToast("Військовослужбовця успішно додано!", "success");
                 return;
             }
 
@@ -5051,6 +5109,58 @@ else                     if (isBtgr) type = 'btgr';
             </div>
         </div>
     </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            
+            let bgClass = "bg-blue-600";
+            let icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            
+            if (type === 'success') {
+                bgClass = "bg-emerald-600";
+                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+            } else if (type === 'warning') {
+                bgClass = "bg-amber-500";
+                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+            } else if (type === 'error') {
+                bgClass = "bg-red-600";
+                icon = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            }
+
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transform transition-all duration-300 -translate-y-10 opacity-0 pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `
+                <div class="shrink-0">${icon}</div>
+                <div>${message}</div>
+                <button class="ml-2 shrink-0 opacity-70 hover:opacity-100 focus:outline-none" onclick="this.parentElement.remove()">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.remove('-translate-y-10', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-10');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        
+        window.originalAlert = window.alert;
+        window.alert = function(msg) {
+            if (msg.includes("Помилка") || msg.includes("Невідомо")) showToast(msg, 'error');
+            else if (msg.includes("⚠️")) showToast(msg.replace("⚠️", "").trim(), 'warning');
+            else if (msg.includes("✅")) showToast(msg.replace("✅", "").trim(), 'success');
+            else showToast(msg, 'info');
+        };
+    </script>
 </body>
 
 </html>
