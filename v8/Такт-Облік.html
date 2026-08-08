@@ -149,6 +149,12 @@
             </div>
         </div>
 
+        <div id="target-mode-banner" class="hidden fixed top-0 left-0 right-0 bg-indigo-600 text-white p-3 text-center shadow-lg z-[200] flex justify-center items-center gap-4 animate-fade-in">
+            <i data-lucide="crosshair" class="w-5 h-5 animate-pulse"></i>
+            <span class="font-bold text-sm tracking-wide" id="target-mode-text">Виберіть позицію для переміщення...</span>
+            <button onclick="cancelTargetMode()" class="bg-indigo-800 hover:bg-indigo-900 px-3 py-1 rounded text-xs transition-colors shadow font-bold border border-indigo-500">Скасувати (Esc)</button>
+        </div>
+
         <div id="sidebar" class="w-full md:w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 flex flex-col shadow-xl z-10 shrink-0 h-auto md:h-full">
             <div class="p-4 flex items-center justify-between bg-slate-950/50 min-h-[72px]">
                 <div class="flex items-center space-x-3 overflow-hidden">
@@ -209,7 +215,7 @@
             </div>
 
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 w-full">
-                <div class="max-w-[1600px] mx-auto w-full">
+                <div class="w-full">
 
                     <!-- TAB: DASHBOARD -->
                     <div id="tab-dashboard" class="space-y-6 block">
@@ -438,7 +444,7 @@
     <div id="modal-changelog" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border dark:border-gray-700">
             <div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-olive-50 dark:bg-olive-900/30">
-                <h3 class="font-bold text-lg text-olive-900 dark:text-olive-300 flex items-center space-x-2">
+                <h3 class="font-bold text-lg text-olive-900 dark:text-olive-400 flex items-center space-x-2">
                     <i data-lucide="shield-check" class="w-5 h-5 text-olive-500"></i>
                     <span>📋 Історія оновлень (ТАКТ-ОБЛІК)</span>
                     <span class="text-xs bg-olive-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.1.0</span>
@@ -698,9 +704,29 @@
     // ─── AUTONOMOUS CHANGELOG DATA (v1.0.0) ────────────────────────────────────
     const APP_CHANGELOG = [
         {
-            version: "1.1.0",
+            version: "1.2.0",
             date: "08.08.2026",
             isCurrent: true,
+            sections: [
+                {
+                    title: "🎯 Нові функції",
+                    items: [
+                        "Режим 'Вибір цілі': швидке переміщення бійців через клік на позицію без необхідності утримувати Drag-and-Drop.",
+                        "Опція переміщення додана в нове Контекстне меню (правий клік по бійцю)."
+                    ]
+                },
+                {
+                    title: "🔧 Оптимізація та виправлення",
+                    items: [
+                        "Виправлено помилку логування: тепер переміщення бійців мишкою та в режимі цілі коректно відображаються у Лозі 100 на головному дашборді."
+                    ]
+                }
+            ]
+        },
+        {
+            version: "1.1.0",
+            date: "08.08.2026",
+            isCurrent: false,
             sections: [
                 {
                     title: "🚀 Нові можливості",
@@ -768,10 +794,10 @@
             `;
             item.sections.forEach(sec => {
                 html += `
-                    <div class="space-y-1">
-                        <div class="text-xs font-bold text-olive-600 dark:text-olive-400 uppercase tracking-wide">${sec.title}</div>
-                        <ul class="space-y-1 text-xs text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
-                            ${sec.items.map(it => `<li>${it}</li>`).join('')}
+                    <div class="space-y-2">
+                        <div class="text-sm font-bold text-olive-600 dark:text-olive-400 uppercase tracking-wide">${sec.title}</div>
+                        <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-200 pl-5 list-disc marker:text-gray-400">
+                            ${sec.items.map(it => `<li class="pl-1 leading-relaxed">${it}</li>`).join('')}
                         </ul>
                     </div>
                 `;
@@ -1730,7 +1756,7 @@
                     ? 'bg-gradient-to-r from-red-50 to-transparent dark:from-red-950/40 dark:to-transparent border-b border-red-100 dark:border-red-900/30' 
                     : 'bg-gradient-to-r from-gray-50 to-transparent dark:from-gray-800/40 dark:to-transparent border-b border-gray-200 dark:border-white/5';
 
-                return `<div ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${pos.id}')" class="rounded-xl border flex flex-col relative tactical-card group transition-colors ${cardClasses}">
+                return `<div ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${pos.id}')" onclick="if(window.isMovingSoldierId) handleTargetModeDrop('${pos.id}')" class="rounded-xl border flex flex-col relative tactical-card group transition-colors ${cardClasses}">
                     ${rotBadge}
                     <div class="px-3 py-2 flex flex-col gap-2 ${headerClasses}">
                         <div class="flex justify-between">
@@ -1774,7 +1800,7 @@
                         ` : ''}
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 ${isC ? 'hidden' : ''}">${posCards}</div>
+                <div class="grid gap-4 ${isC ? 'hidden' : ''}" style="grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));">${posCards}</div>
             </div>`;
         }).join('');
 
@@ -2937,6 +2963,11 @@
         
         el('soldier-context-menu').classList.add('hidden');
         
+        if (action === 'move') {
+            startTargetMode(s);
+            return;
+        }
+        
         if (action === 'commander') {
             const pos = positions.find(p => p.id === s.positionId);
             if (pos) { pos.commanderId = s.id; saveState(); showToast('Призначено старшим'); }
@@ -2964,8 +2995,47 @@
         if(!s) return;
         el('soldier-context-menu').classList.add('hidden');
         s.currentTask = task;
-        saveState(); showToast('Завдання оновлено');
+        saveState();
+        renderUI();
     }
+
+    // --- TARGET MODE ---
+    window.isMovingSoldierId = null;
+
+    function startTargetMode(soldier) {
+        window.isMovingSoldierId = soldier.id;
+        document.body.classList.add('target-mode-active');
+        el('target-mode-banner').classList.remove('hidden');
+        el('target-mode-text').innerText = `Клікніть на позицію, щоб перемістити туди: ${soldier.fullName || 'Бійця'}`;
+    }
+
+    function cancelTargetMode() {
+        window.isMovingSoldierId = null;
+        document.body.classList.remove('target-mode-active');
+        el('target-mode-banner').classList.add('hidden');
+    }
+
+    function handleTargetModeDrop(posId) {
+        if (!window.isMovingSoldierId) return;
+        const s = personnel.find(x => x.id === window.isMovingSoldierId);
+        if (s && s.positionId !== posId) {
+            const oldPosId = s.positionId;
+            handleJournalTracking(s.id, oldPosId, posId);
+            s.positionId = posId;
+            s.inRotation = false;
+            addLog(`[${getPosName(oldPosId)}] ➔ [${getPosName(posId)}]`, s.fullName || s.callsign);
+            saveState();
+            showToast(`${s.fullName || 'Бійця'} переміщено!`, 'success');
+        }
+        cancelTargetMode();
+        renderUI();
+    }
+    
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && window.isMovingSoldierId) cancelTargetMode();
+    });
+
+
 
     // --- DRAG AND DROP LOGIC ---
     let draggedSoldierId = null;
@@ -3078,6 +3148,7 @@
             }
 
             handleJournalTracking(s.id, oldPosId, targetPosId);
+            addLog(`[${getPosName(oldPosId)}] ➔ [${getPosName(targetPosId)}]`, s.fullName || s.callsign);
             saveState(); // includes re-render
             showToast('Переміщено!');
         }
@@ -3095,6 +3166,7 @@
     
     <!-- CONTEXT MENU HTML -->
     <div id="soldier-context-menu" class="hidden absolute z-[100] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border dark:border-gray-700 w-48 py-1 text-sm flex flex-col">
+        <button onclick="cmAction('move')" class="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"><i data-lucide="crosshair" class="w-4 h-4 mr-2 text-indigo-500"></i> Перемістити</button>
         <button onclick="cmAction('commander')" class="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"><i data-lucide="star" class="w-4 h-4 mr-2 text-yellow-500"></i> Старший</button>
         <button onclick="cmAction('ppd')" class="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"><i data-lucide="home" class="w-4 h-4 mr-2 text-green-500"></i> На ППД</button>
         <button onclick="cmAction('edit')" class="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"><i data-lucide="edit" class="w-4 h-4 mr-2 text-blue-500"></i> Редагувати</button>

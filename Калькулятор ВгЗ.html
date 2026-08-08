@@ -1,652 +1,635 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор ВгЗ</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>Журнал ВгЗ</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: tailwind.colors.stone,
+                        slate: tailwind.colors.stone,
+                        olive: {
+                            400: '#84965c',
+                            500: '#5c693a',
+                            600: '#4b5320',
+                            700: '#3a4219',
+                            800: '#2c3311',
+                            900: '#1d2309',
+                        },
+                        coyote: {
+                            400: '#c5a365',
+                            500: '#a6824a',
+                            600: '#8c6833',
+                        }
+                    }
+                }
+            }
+        };
+    </script>
     <style>
-        :root {
-            --bg-color: #0b0b0b;
-            --panel-bg: #121212;
-            --text-main: #e0e0e0;
-            --accent: #4caf50;
-            --accent-hover: #45a049;
-            --border: #222;
-            --danger: #f44336;
-            --warning: #ff9800;
-            --info: #2196f3;
-            --purple: #9c27b0;
-            --nav-width: 220px;
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #6b7280; }
+        
+        .modal-overlay { display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            padding-top: 60px;
-            padding-left: calc(var(--nav-width) + 40px);
-            transition: padding-left 0.3s ease;
+        
+        /* Hide number input spinners */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
         }
-
-
-
-        h1,
-        h2,
-        h3 {
-            color: #fff;
-            margin-top: 0;
+        input[type="number"] { 
+            -moz-appearance: textfield; 
+            appearance: textfield;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .top-bar {
+        
+        #toast-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #0f0f0f;
-            padding: 10px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .top-bar h1 {
-            margin: 0;
-            font-size: 20px;
-            color: var(--accent);
-        }
-
-        .btn-settings {
-            background: transparent;
-            border: 1px solid #444;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-settings:hover {
-            background: #222;
-        }
-
-        /* Бічна навігація */
-
-
-
-
-
-
-
-
-        .nav-short {
-            font-weight: bold;
-            color: #aaa;
-            font-size: 0.9em;
-            margin-right: 5px;
-        }
-
-
-
-
-
-
-
-
-
-        .nav-count {
-            background: #2a2a2a;
-            color: #fff;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
-            min-width: 20px;
-            text-align: center;
-        }
-
-        .nav-count.non-zero {
-            background: var(--accent);
-        }
-
-        .nav-count.hidden {
-            display: none;
-        }
-
-        .settings-panel {
-            display: none;
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .settings-panel.active {
-            display: block;
-        }
-
-        .panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 30px;
-            transition: 0.3s;
-            scroll-margin-top: 80px;
-        }
-
-        .file-inputs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .file-group {
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 5px;
-        }
-
-        label {
-            font-weight: bold;
-            font-size: 0.85em;
-            color: #aaa;
-        }
-
-        input[type="file"],
-        input[type="text"],
-        input[type="number"],
-        select,
-        textarea {
-            background-color: #1a1a1a;
-            color: #fff;
-            border: 1px solid #333;
-            padding: 8px 10px;
-            border-radius: 4px;
-            font-family: inherit;
-            font-size: 14px;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            border-color: var(--accent);
-            outline: none;
-        }
-
-        textarea {
-            resize: vertical;
-        }
-
-        button {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-
-        .btn-action {
-            background-color: #2196f3;
-        }
-
-        .btn-action:hover {
-            background-color: #1e88e5;
-        }
-
-        .report-section {
-            margin-top: 10px;
-            display: none;
-        }
-
-        .constructor-item {
-            background-color: #181818;
-            border-left: 4px solid var(--info);
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            position: relative;
-        }
-
-        .constructor-item.warning {
-            border-left-color: var(--warning);
-        }
-
-        .constructor-item.success {
-            border-left-color: var(--accent);
-        }
-
-        .constructor-item.danger {
-            border-left-color: var(--danger);
-            background-color: #2a1111;
-        }
-
-        .constructor-item.uav-item {
-            border-left-color: var(--purple);
-            background-color: #2a1e2e;
-        }
-
-        .constructor-item.manual-card {
-            border-left-style: dashed;
-            border-left-color: #888;
-            background-color: #151515;
-        }
-
-        .constructor-item.has-enemy-cas {
-            background-color: #3b1c1c !important;
-            border-left-color: var(--danger) !important;
-            box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
-        }
-
-        .constructor-controls {
-            display: flex;
             gap: 10px;
-            margin-top: 10px;
-            align-items: center;
-            flex-wrap: wrap;
         }
-
-        .constructor-controls label {
-            margin-right: -5px;
-            font-size: 0.85em;
-        }
-
-        .input-wrap {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .cat-badge {
-            background-color: #333;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            margin-left: 10px;
-            color: #ccc;
-        }
-
-        .uav-warning {
-            color: #ff8a80;
-            font-size: 0.85em;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        .final-record {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 10px;
-            background: #181818;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #2f2f2f;
-        }
-
-        .record-text {
-            flex-grow: 1;
-            background: transparent;
-            color: #fff;
-            border: 1px dashed #444;
-            padding: 8px;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 15px;
-            border-radius: 4px;
-            line-height: 1.4;
-            min-height: 40px;
-            white-space: pre-wrap;
-        }
-
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-danger:hover {
-            background-color: #d32f2f;
-        }
-
-        .loss-cb-group {
-            display: flex;
-            gap: 15px;
-            background: #0f0f0f;
-            padding: 8px 12px;
-            border-radius: 4px;
-            border: 1px solid #333;
-        }
-
-        .loss-cb-group label {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            color: #ddd;
-        }
-
-        .loss-details-row {
-            display: none;
-            gap: 10px;
-            margin-top: 5px;
-            padding-left: 10px;
-            border-left: 2px solid #555;
-        }
-
-        .loss-details-row.active {
-            display: flex;
-            align-items: center;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding: 15px 20px;
-            cursor: pointer;
-            user-select: none;
-            border-radius: 8px 8px 0 0;
-            background-color: #161616;
-        }
-
-        .section-header:hover {
-            background-color: #1c1c1c;
-        }
-
-        .section-header h2 {
-            margin: 0;
-            pointer-events: none;
-            font-size: 1.1em;
-            color: var(--accent);
-        }
-
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .toggle-icon {
-            font-size: 18px;
-            color: #aaa;
-            transition: transform 0.3s;
-            pointer-events: none;
-        }
-
-        .panel-body {
-            padding: 20px;
-            display: block;
-        }
-
-        .panel.collapsed .panel-body {
-            display: none;
-        }
-
-        .panel.collapsed .toggle-icon {
-            transform: rotate(-90deg);
-        }
-
-        .panel.collapsed .section-header {
+        .toast {
+            background-color: #1f2937;
+            color: #f9fafb;
+            padding: 12px 20px;
             border-radius: 8px;
-            border-bottom: none;
-        }
-
-        .list-header-wrap {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #4b5320;
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-top: 20px;
-            margin-bottom: 15px;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .toast.toast-error { border-left-color: #ef4444; }
+        .toast.toast-warning { border-left-color: #f59e0b; }
+        .toast.toast-success { border-left-color: #10b981; }
+        
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(-10px); }
         }
 
-        .list-header-wrap h3 {
-            margin: 0;
+        /* Custom Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #f59e0b; /* yellow-500 */
         }
-
-        .total-badge {
-            background: #222;
-            color: #fff;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: bold;
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #f59e0b; /* yellow-500 */
         }
-
-        body {
-            padding-left: 20px;
+        .toggle-checkbox {
+            right: 0;
+            z-index: 1;
+            border-color: #4b5563; /* gray-600 */
+            transition: all 0.3s;
+        }
+        .toggle-label {
+            width: 2.5rem;
+            height: 1.25rem;
+            background-color: #4b5563; /* gray-600 */
+            border-radius: 9999px;
+            transition: all 0.3s;
         }
     </style>
 </head>
 
-<body>
-    <div class="top-bar">
-        <h1>🎯 Калькулятор ВгЗ <span style="font-size: 14px; font-weight: normal; background-color: #ffaa00; color: #000; padding: 2px 8px; border-radius: 4px; margin-left: 10px; vertical-align: middle;">Тестова бета-версія в розробці</span></h1>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+    <div id="toast-container"></div>
+
+    <!-- Header -->
+    <div class="w-full max-w-[1400px] flex justify-between items-center bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md mb-6">
+        <h1 class="text-xl font-bold text-olive-400 flex items-center gap-2">
+            <i data-lucide="crosshair" class="w-6 h-6"></i>
+            Калькулятор ВгЗ
+            <span class="text-xs bg-coyote-500 text-black px-2 py-0.5 rounded-full font-bold ml-2">PRO</span>
+            <button onclick="openChangelogModal()" class="text-[10px] text-olive-400 font-bold border border-olive-500/40 bg-olive-500/15 hover:bg-olive-500/30 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-1 ml-2" title="Історія оновлень">
+                <span>🎯 v1.1.0</span>
+            </button>
+        </h1>
+        <button onclick="clearAllData(this)" class="text-xs text-gray-500 hover:text-red-400 transition-colors underline w-24 text-right">Очистити все</button>
     </div>
 
-    <div class="container" style="margin-top: 20px;">
-        <div class="panel" id="panel-fire-calculator">
-            <div class="section-header">
-                <h2>Калькулятор ВгЗ (АГС, СПГ, МК-19, Міномети)</h2>
+    <!-- Main Grid -->
+    <div class="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Positions Database -->
+        <div class="lg:col-span-3 bg-gray-800 rounded-xl border border-gray-700 shadow-md flex flex-col h-fit">
+            <div class="bg-gray-800/80 border-b border-gray-700 p-4 flex items-center gap-2">
+                <i data-lucide="database" class="w-5 h-5 text-coyote-500"></i>
+                <h2 class="text-base font-bold text-white">База позицій</h2>
             </div>
-            <div class="panel-body">
-                <p style="color:#aaa; font-size:14px; margin-top:0;">Ви можете завантажити файл
-                    "fire-missions-report.xlsx" сюди для швидкого підрахунку, або додати рядки вручну.</p>
+            
+            <div class="p-4 space-y-4">
+                <form id="form-add-pos" class="flex gap-2" onsubmit="addPosition(event)">
+                    <input type="text" id="input-new-pos" placeholder="Напр: АЛЬФА (120ММ)" required class="flex-1 bg-gray-900 text-white border border-gray-600 rounded p-2 text-sm focus:border-coyote-500 focus:ring-1 focus:ring-coyote-500 outline-none transition-colors">
+                    <button type="submit" class="bg-coyote-600 hover:bg-coyote-700 text-white p-2 rounded transition-colors" title="Додати">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </form>
 
-                <div style="display:flex; gap:10px; margin-bottom: 15px; flex-wrap: wrap;">
-                    <input type="file" id="file-vgz-standalone" accept=".xlsx, .xls" style="display:none;"
-                        onchange="handleVgzFileUpload(event)">
-                    <button class="btn-action" onclick="document.getElementById('file-vgz-standalone').click()">📂
-                        Завантажити Excel (тільки для ВгЗ)</button>
+                <div id="positions-list" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto custom-scrollbar">
+                    <!-- Позиції будуть тут -->
                 </div>
-
-                <div id="vgz-manual-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">
-                    <!-- Ручні рядки -->
-                </div>
-
-                <button class="btn-small" style="margin-bottom: 15px;" onclick="addManualVgzRow()">+ Додати позицію
-                    вручну</button>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h3 style="margin: 0; color: var(--accent); font-size: 1.05em;">📊 Результат ВгЗ:</h3>
-                    <button class="btn-small btn-action" onclick="copyVgzResult(this)">📋 Копіювати результат</button>
-                </div>
-                <textarea id="vgz-result-textarea" rows="8"
-                    style="width: 100%; box-sizing: border-box; background: #101010; color: #fff; border: 1px dashed #444; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 4px; resize: vertical;"
-                    placeholder="Тут з'явиться підсумок по ВгЗ..."></textarea>
             </div>
         </div>
 
-        <script>
-            function getCol(row, possibleNames) {
-                for (let key in row) {
-                    let cleanKey = key.replace(/^\uFEFF/, '').trim().toLowerCase();
-                    if (possibleNames.includes(cleanKey)) {
-                        let val = row[key];
-                        return val !== undefined && val !== null ? val.toString().trim() : '';
-                    }
-                }
-                return '';
-            }
-
-            function parseExcelFile(file) {
-                return new Promise((resolve, reject) => {
-                    if (!file) resolve([]);
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const data = new Uint8Array(e.target.result);
-                            const workbook = XLSX.read(data, { type: 'array' });
-                            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
-                            resolve(json);
-                        } catch (err) { reject(err); }
-                    };
-                    reader.onerror = (err) => reject(err);
-                    reader.readAsArrayBuffer(file);
-                });
-            }
-
-            let fireMissionsData = [];
-
-            async function handleVgzFileUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                try {
-                    // Використовуємо існуючу функцію parseExcelFile (визначену вище)
-                    const data = await parseExcelFile(file);
-                    calculateFireMissions(data);
-                    event.target.value = ''; // Скинути інпут
-                } catch (err) {
-                    alert('Помилка при зчитуванні Excel файлу');
-                    console.error(err);
-                }
-            }
-            function addManualVgzRow(pos = '', wp = '', vgz = 1, ammo = 0) {
-                const container = document.getElementById('vgz-manual-list');
-                const row = document.createElement('div');
-                row.style = 'display:flex; gap:10px; align-items:center; background:#181818; padding:8px; border:1px solid #333; border-radius:4px; margin-bottom: 5px; flex-wrap: wrap;';
-                row.innerHTML = `
-                <input type="text" class="vgz-pos" placeholder="Позиція (напр. КАВУН)" value="${pos}" style="flex:1; min-width: 120px; padding:6px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;" oninput="generateVgzText()">
-                <input type="text" class="vgz-wp" placeholder="Зброя (напр. 82мм, АГС, СПГ)" value="${wp}" style="flex:1; min-width: 120px; padding:6px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;" oninput="generateVgzText()">
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <span style="color:#aaa; font-size:12px;">ВгЗ:</span>
-                    <input type="number" min="0" class="vgz-count" value="${vgz}" style="width:60px; padding:6px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;" oninput="generateVgzText()">
+        <!-- Middle Column: VgZ Missions -->
+        <div class="lg:col-span-5 bg-gray-800 rounded-xl border border-gray-700 shadow-md h-fit overflow-hidden">
+                <div class="bg-gray-800/80 border-b border-gray-700 p-4 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="target" class="w-5 h-5 text-olive-500"></i>
+                        <h2 class="text-base font-bold text-white">Вогневі завдання</h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="clearMissions(this)" class="text-xs text-red-400 hover:text-red-300 transition-colors underline mr-2 w-24 text-right">
+                            Очистити ВгЗ
+                        </button>
+                        <button onclick="addMission()" class="bg-olive-600 hover:bg-olive-700 text-white font-bold py-1.5 px-3 rounded shadow-sm transition-colors flex items-center gap-2 text-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i> ВгЗ
+                        </button>
+                    </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <span style="color:#aaa; font-size:12px;">Пострілів:</span>
-                    <input type="number" min="0" class="vgz-ammo" value="${ammo}" style="width:70px; padding:6px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;" oninput="generateVgzText()">
+                
+                <div class="p-4 bg-gray-900/30">
+                    <div id="missions-list" class="space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar pr-2">
+                        <!-- ВгЗ будуть тут -->
+                    </div>
+                    
+                    <div id="empty-state" class="text-center py-8 text-gray-500 hidden">
+                        <i data-lucide="clipboard-list" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                        <p class="text-sm">Журнал порожній. Додайте ВгЗ.</p>
+                    </div>
                 </div>
-                <button type="button" class="btn-icon" style="color:var(--danger); padding:0 8px;" onclick="this.parentElement.remove(); generateVgzText();">✖</button>
-            `;
-                container.appendChild(row);
-                generateVgzText();
+            </div>
+
+        <!-- Right Column: Result Panel -->
+        <div class="lg:col-span-4 bg-[#1a1c14] rounded-xl border-2 border-olive-700 shadow-lg overflow-hidden relative h-fit">
+            <div class="absolute inset-0 bg-olive-900/10 pointer-events-none"></div>
+            <div class="relative bg-olive-900/50 border-b border-olive-800 p-4 flex justify-between items-center">
+                <h3 class="text-olive-400 font-bold flex items-center gap-2 text-base">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i> ФІНАЛЬНИЙ ЗВІТ
+                </h3>
+                <button onclick="copyResult(this)" class="bg-olive-600 hover:bg-olive-500 text-white py-1.5 px-4 rounded shadow-sm transition-colors flex items-center gap-2 text-sm font-bold border border-olive-500">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Скопіювати
+                </button>
+            </div>
+            <div class="relative p-4">
+                <textarea id="result-textarea" rows="15" readonly class="w-full bg-black/40 text-coyote-300 border border-dashed border-olive-700/50 rounded-lg p-4 font-mono text-base font-bold tracking-wide focus:outline-none focus:border-olive-500 custom-scrollbar resize-y shadow-inner leading-relaxed" placeholder="Додайте позиції та ВгЗ, щоб згенерувати звіт..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="modal-changelog" class="modal-overlay fixed inset-0 z-[100] bg-black/60">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col modal-content border dark:border-gray-700">
+            <div class="p-6 flex justify-between items-center border-b border-gray-100 dark:border-gray-700/80 bg-gray-50/50 dark:bg-gray-900/20 rounded-t-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-olive-100 dark:bg-olive-900/30 flex items-center justify-center text-olive-600 dark:text-olive-400">
+                        <i data-lucide="file-clock" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-gray-900 dark:text-white">Історія оновлень</h2>
+                        <p class="text-xs text-gray-500 font-bold">Останні зміни та нові функції Калькулятора ВгЗ</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-changelog')" class="text-gray-400 hover:text-gray-600 dark:hover:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-gray-800 space-y-6" id="changelogModalList">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const APP_CHANGELOG = [
+            {
+                version: "1.1.0",
+                date: "08.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🎨 Оптимізація інтерфейсу",
+                        items: [
+                            "Новий Layout: Дизайн переведено на зручну 3-х колонкову сітку (Позиції, Завдання, Звіт).",
+                            "Покращення UX: Видалено демо-підказки та тестові дані. Прибрано дефолтні стрілочки для вводу чисел у полях БК.",
+                            "Безпечне Очищення: Системні вікна confirm() замінено на стильні вбудовані кнопки з двоетапним підтвердженням."
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function renderChangelogModal() {
+            const container = document.getElementById('changelogModalList');
+            if (!container) return;
+            let html = '';
+            APP_CHANGELOG.forEach(item => {
+                const borderClass = item.isCurrent ? 'border-l-4 border-olive-500' : 'border-l-4 border-gray-500 opacity-80';
+                const currentBadge = item.isCurrent 
+                    ? `<span class="bg-olive-100 text-olive-800 dark:bg-olive-900/80 dark:text-olive-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-olive-300 dark:border-olive-700">АКТУАЛЬНО</span>` 
+                    : '';
+                html += `
+                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 ${borderClass} border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2">
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                            <span>🚀 Версія ${item.version}</span>
+                            ${currentBadge}
+                        </h4>
+                        <span class="text-xs text-gray-500 font-mono font-bold">${item.date}</span>
+                    </div>
+                    <div class="space-y-4 pt-1">
+                        ${item.sections.map(sec => `
+                            <div>
+                                <h5 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">${sec.title}</h5>
+                                <ul class="space-y-1.5">
+                                    ${sec.items.map(bullet => `
+                                        <li class="flex items-start text-xs text-gray-600 dark:text-gray-400 leading-relaxed gap-2">
+                                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-olive-500 shrink-0 mt-0.5"></i>
+                                            <span>${bullet}</span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function openChangelogModal() {
+            renderChangelogModal();
+            openModal('modal-changelog');
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeModal('modal-changelog');
+            }
+        });
+
+        // App state Lucide
+        lucide.createIcons();
+
+        // State
+        let positions;
+        let missions;
+
+        if (localStorage.getItem('tactical_vgz_positions') === null) {
+            positions = [];
+            localStorage.setItem('tactical_vgz_positions', JSON.stringify(positions));
+        } else {
+            positions = JSON.parse(localStorage.getItem('tactical_vgz_positions')) || [];
+        }
+
+        if (localStorage.getItem('tactical_vgz_missions') === null) {
+            missions = [];
+            localStorage.setItem('tactical_vgz_missions', JSON.stringify(missions));
+        } else {
+            missions = JSON.parse(localStorage.getItem('tactical_vgz_missions')) || [];
+        }
+
+        // UI Toast
+        function showToast(message, type = 'default') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let icon = 'info';
+            if(type === 'error') icon = 'alert-triangle';
+            if(type === 'success') icon = 'check-circle';
+            if(type === 'warning') icon = 'alert-circle';
+            
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 shrink-0"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- POSITIONS DB ---
+        function addPosition(e) {
+            e.preventDefault();
+            const input = document.getElementById('input-new-pos');
+            const name = input.value.trim().toUpperCase();
+            
+            if(!name) return;
+            if(positions.includes(name)) {
+                showToast('Така позиція вже існує', 'warning');
+                return;
             }
 
-            function extractNumberForAmmo(ammoStr) {
-                if (!ammoStr) return 0;
-                const nums = String(ammoStr).match(/\d+/g);
-                if (!nums) return 0;
-                return parseInt(nums[0], 10) || 0;
+            positions.push(name);
+            savePositions();
+            renderPositions();
+            renderMissions(); // оновлюємо селекти
+            input.value = '';
+            showToast('Позицію додано', 'success');
+        }
+
+        function deletePosition(name) {
+            if(!confirm(`Видалити позицію "${name}"?`)) return;
+            positions = positions.filter(p => p !== name);
+            savePositions();
+            renderPositions();
+            renderMissions();
+            generateResult();
+        }
+
+        function savePositions() {
+            localStorage.setItem('tactical_vgz_positions', JSON.stringify(positions));
+        }
+
+        function renderPositions() {
+            const container = document.getElementById('positions-list');
+            container.innerHTML = '';
+            
+            if(positions.length === 0) {
+                container.innerHTML = '<span class="text-xs text-gray-500 italic">База порожня</span>';
+                return;
             }
 
-            function calculateFireMissions(customData = null) {
-                const dataToProcess = customData || fireMissionsData;
-                if (!dataToProcess || dataToProcess.length === 0) {
-                    alert('Спершу завантажте Excel-файл (Fire Missions)!');
-                    return;
+            positions.forEach(p => {
+                const el = document.createElement('div');
+                el.className = 'flex items-center gap-1 bg-gray-900 border border-gray-700 rounded-full pl-3 pr-1 py-1 text-xs font-bold text-gray-300';
+                el.innerHTML = `
+                    <span>${p}</span>
+                    <button type="button" onclick="deletePosition('${p}')" class="text-gray-500 hover:text-red-400 p-0.5 rounded-full hover:bg-gray-800 transition-colors">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                container.appendChild(el);
+            });
+            lucide.createIcons();
+        }
+
+        // --- MISSIONS ---
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function addMission() {
+            if(positions.length === 0) {
+                showToast('Спершу додайте хоча б одну позицію в Базу', 'warning');
+                document.getElementById('input-new-pos').focus();
+                return;
+            }
+
+            missions.push({
+                id: generateId(),
+                pos: positions[0],
+                ammo: 0,
+                isFictitious: false
+            });
+            saveMissions();
+            renderMissions();
+            generateResult();
+        }
+
+        function updateMission(id, field, value) {
+            const m = missions.find(m => m.id === id);
+            if(m) {
+                if(field === 'isFictitious') m[field] = value === 'true' || value === true;
+                else m[field] = value;
+                saveMissions();
+                generateResult();
+            }
+        }
+
+        function deleteMission(id) {
+            missions = missions.filter(m => m.id !== id);
+            saveMissions();
+            renderMissions();
+            generateResult();
+        }
+
+        function saveMissions() {
+            localStorage.setItem('tactical_vgz_missions', JSON.stringify(missions));
+        }
+
+        function renderMissions() {
+            const container = document.getElementById('missions-list');
+            const emptyState = document.getElementById('empty-state');
+            container.innerHTML = '';
+            
+            if(missions.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            const posOptions = positions.map(p => `<option value="${p}">${p}</option>`).join('');
+
+            missions.forEach(m => {
+                const el = document.createElement('div');
+                el.className = `flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border ${m.isFictitious ? 'bg-yellow-900/10 border-yellow-700/50' : 'bg-gray-800 border-gray-700'} shadow-sm transition-colors`;
+                
+                el.innerHTML = `
+                    <div class="flex-1 flex items-center gap-2">
+                        <select onchange="updateMission('${m.id}', 'pos', this.value)" class="w-full bg-gray-900 text-white border border-gray-600 rounded p-2 text-sm focus:border-olive-500 focus:ring-1 focus:ring-olive-500 outline-none">
+                            ${positions.length === 0 ? '<option value="">Немає позицій</option>' : ''}
+                            ${positions.map(p => `<option value="${p}" ${m.pos === p ? 'selected' : ''}>${p}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 bg-gray-900 px-3 py-1.5 rounded border border-gray-600 focus-within:border-olive-500 focus-within:ring-1 focus-within:ring-olive-500 transition-colors cursor-text" onclick="this.querySelector('input').focus()">
+                            <span class="text-gray-400 text-xs font-bold uppercase">БК:</span>
+                            <input type="number" min="0" value="${m.ammo}" onchange="updateMission('${m.id}', 'ammo', this.value)" onkeyup="updateMission('${m.id}', 'ammo', this.value)" class="w-12 sm:w-16 bg-transparent text-white outline-none text-base text-center font-mono placeholder-gray-600" placeholder="0">
+                        </div>
+                        
+                        <label class="flex items-center cursor-pointer gap-2 select-none" title="Фіктивне ВгЗ">
+                            <div class="relative">
+                                <input type="checkbox" ${m.isFictitious ? 'checked' : ''} onchange="updateMission('${m.id}', 'isFictitious', this.checked); renderMissions();" class="sr-only toggle-checkbox">
+                                <div class="block toggle-label"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition transform ${m.isFictitious ? 'translate-x-full' : ''}"></div>
+                            </div>
+                            <span class="text-xs font-bold ${m.isFictitious ? 'text-yellow-500' : 'text-gray-500'}">Фікт.</span>
+                        </label>
+                        
+                        <button type="button" onclick="deleteMission('${m.id}')" class="text-red-400 hover:text-red-300 hover:bg-red-900/30 p-1.5 rounded-lg transition-colors ml-auto">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+            lucide.createIcons();
+        }
+
+        // --- RESULTS ---
+        function extractWeapon(posName) {
+            const match = posName.match(/\(([^)]+)\)[^(]*$/);
+            return match ? match[1].trim() : 'Інше';
+        }
+
+        function generateResult() {
+            const txt = document.getElementById('result-textarea');
+            if(missions.length === 0) {
+                txt.value = '';
+                return;
+            }
+
+            let realCount = 0;
+            let fictCount = 0;
+            let ammoStats = {}; // key: wpn
+            let grouped = {}; // key: "POS___isFict"
+
+            missions.forEach(m => {
+                // Ignore missions with deleted positions
+                if(!positions.includes(m.pos)) return;
+
+                const ammoNum = parseInt(m.ammo) || 0;
+                const wpn = extractWeapon(m.pos);
+
+                if(!ammoStats[wpn]) ammoStats[wpn] = { total: 0, real: 0, fict: 0 };
+                ammoStats[wpn].total += ammoNum;
+
+                if(m.isFictitious) {
+                    fictCount++;
+                    ammoStats[wpn].fict += ammoNum;
+                } else {
+                    realCount++;
+                    ammoStats[wpn].real += ammoNum;
                 }
 
-                document.getElementById('vgz-manual-list').innerHTML = ''; // Clear manual list
-
-                let aggregated = {};
-
-                dataToProcess.forEach(r => {
-                    const wCat = getCol(r, ['категорія зброї', 'категорія']) || '';
-                    const wName = getCol(r, ['назва зброї', 'зброя', 'озброєння', 'тип зброї']) || '';
-                    const weaponRaw = wCat + ' ' + wName;
-                    const weapon = weaponRaw.toLowerCase();
-                    if (!weapon.trim()) return;
-
-                    // Фільтр потрібної зброї
-                    let wType = '';
-                    if (weapon.includes('агс')) wType = 'АГС';
-                    else if (weapon.includes('спг')) wType = 'СПГ';
-                    else if (weapon.includes('мк') || weapon.includes('mk')) wType = 'МК-19';
-                    else if (weapon.includes('міномет') || weapon.includes('мін')) {
-                        if (weapon.includes('120') || weaponRaw.includes('120')) wType = '120мм';
-                        else if (weapon.includes('81') || weaponRaw.includes('81')) wType = '81мм';
-                        else if (weapon.includes('82') || weaponRaw.includes('82')) wType = '82мм';
-                        else if (weapon.includes('60') || weaponRaw.includes('60')) wType = '60мм';
-                        else wType = 'Міномет';
-                    }
-
-                    if (!wType) return; // Skip if not targeted weapon
-
-                    let posRaw = getCol(r, ['позиція', 'назва позиції', 'позивний репортера', 'позивний', 'репортер']) || 'НЕВІДОМА_ПОЗ';
-                    let cleanPos = posRaw.toString().trim().replace(/^["']|["']$/g, '').toUpperCase();
-
-                    let ammoStr = getCol(r, ['витрати', 'витрачено бк', 'витрачено', 'бк', 'кількість витраченого', 'витрата', 'використано (шт.)', 'використано']);
-                    let ammoNum = extractNumberForAmmo(ammoStr);
-
-                    let key = cleanPos + '___' + wType;
-                    if (!aggregated[key]) {
-                        aggregated[key] = { pos: cleanPos, wp: wType, vgz: 0, ammo: 0 };
-                    }
-
-                    aggregated[key].vgz += 1;
-                    aggregated[key].ammo += ammoNum;
-                });
-
-                const items = Object.values(aggregated);
-                if (items.length === 0) {
-                    alert('В екселі не знайдено ВгЗ для АГС, СПГ, МК-19 або мінометів.');
-                    return;
+                const key = `${m.pos}___${m.isFictitious}`;
+                if(!grouped[key]) {
+                    grouped[key] = { pos: m.pos, isFict: m.isFictitious, vgz: 0, ammo: 0 };
                 }
+                grouped[key].vgz++;
+                grouped[key].ammo += ammoNum;
+            });
 
-                // Populate manual list with aggregated data
-                items.forEach(item => {
-                    addManualVgzRow(item.pos, item.wp, item.vgz, item.ammo);
-                });
-
-                generateVgzText();
-                alert('Дані ВгЗ успішно імпортовано та згруповано!');
+            const totalCount = realCount + fictCount;
+            
+            let ammoStr = '';
+            for (let wpn in ammoStats) {
+                const s = ammoStats[wpn];
+                ammoStr += `\nЗагалом БК ${wpn}: ${s.total} (Реального: ${s.real}, Фіктивного: ${s.fict})`;
             }
 
-            function generateVgzText() {
-                const rows = document.querySelectorAll('#vgz-manual-list > div');
-                let result = '';
-                rows.forEach(row => {
-                    let pos = row.querySelector('.vgz-pos').value.trim();
-                    let wp = row.querySelector('.vgz-wp').value.trim();
-                    let vgz = row.querySelector('.vgz-count').value || '0';
-                    let ammo = row.querySelector('.vgz-ammo').value || '0';
+            let text = `Загалом ВгЗ: ${totalCount} (Реальних: ${realCount}, Фіктивних: ${fictCount})${ammoStr}\n\n`;
 
-                    if (pos && wp) {
-                        result += `* ВП "${pos}" (${wp}) ${vgz} ВгЗ - ${ammo} пострілів\n`;
-                    }
-                });
-                document.getElementById('vgz-result-textarea').value = result.trim();
-            }
+            Object.values(grouped).forEach(g => {
+                const fictMark = g.isFict ? ' (фіктивне)' : '';
+                text += `* ${g.pos} - ${g.vgz} ВгЗ - ${g.ammo} пострілів${fictMark}\n`;
+            });
 
-            function copyVgzResult(btn) {
-                const txt = document.getElementById('vgz-result-textarea');
-                txt.select();
-                document.execCommand("copy");
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✅ Скопійовано!';
-                setTimeout(() => btn.innerHTML = originalText, 2000);
+            txt.value = text.trim();
+        }
+
+        function copyResult(btn) {
+            const txt = document.getElementById('result-textarea');
+            if(!txt.value.trim()) {
+                showToast('Немає тексту для копіювання!', 'warning');
+                return;
             }
-        </script>
+            txt.select();
+            document.execCommand("copy");
+            
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Скопійовано';
+            btn.classList.add('bg-olive-600', 'border-olive-500');
+            btn.classList.remove('bg-gray-700', 'border-gray-600');
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('bg-olive-600', 'border-olive-500');
+                btn.classList.add('bg-gray-700', 'border-gray-600');
+                lucide.createIcons();
+            }, 2000);
+            
+            showToast('Результат скопійовано в буфер обміну', 'success');
+        }
+
+        let clearMissionsTimeout;
+        function clearMissions(btn) {
+            if(missions.length === 0) return;
+            if(!btn.classList.contains('confirm-mode')) {
+                btn.classList.add('confirm-mode', 'text-red-500', 'font-bold');
+                btn.innerText = 'Точно?';
+                clearMissionsTimeout = setTimeout(() => {
+                    btn.classList.remove('confirm-mode', 'text-red-500', 'font-bold');
+                    btn.innerText = 'Очистити ВгЗ';
+                }, 3000);
+            } else {
+                clearTimeout(clearMissionsTimeout);
+                missions = [];
+                saveMissions();
+                renderMissions();
+                generateResult();
+                showToast('Всі ВгЗ очищено', 'success');
+                btn.classList.remove('confirm-mode', 'text-red-500', 'font-bold');
+                btn.innerText = 'Очистити ВгЗ';
+            }
+        }
+
+        let clearAllTimeout;
+        function clearAllData(btn) {
+            if(!btn.classList.contains('confirm-mode')) {
+                btn.classList.add('confirm-mode', 'text-red-500', 'font-bold');
+                btn.innerText = 'Точно все?';
+                clearAllTimeout = setTimeout(() => {
+                    btn.classList.remove('confirm-mode', 'text-red-500', 'font-bold');
+                    btn.innerText = 'Очистити все';
+                }, 3000);
+            } else {
+                clearTimeout(clearAllTimeout);
+                positions = [];
+                missions = [];
+                savePositions();
+                saveMissions();
+                renderPositions();
+                renderMissions();
+                generateResult();
+                showToast('Дані очищено', 'success');
+                btn.classList.remove('confirm-mode', 'text-red-500', 'font-bold');
+                btn.innerText = 'Очистити все';
+            }
+        }
+
+        // Init App
+        renderPositions();
+        renderMissions();
+        generateResult();
+    </script>
 </body>
-
 </html>
