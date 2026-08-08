@@ -11,16 +11,43 @@
     <script src="xlsx.js"></script>
 
     <script>
-        // Ініціалізація налаштувань Tailwind (Графітова тема)
+        // Ініціалізація налаштувань Tailwind (Тактична тема)
         setTimeout(() => {
             if (typeof tailwind !== 'undefined') tailwind.config = { 
                 darkMode: 'class',
                 theme: {
                     extend: {
                         colors: {
-                            // Перетворюємо стандартні кольори на графітові (Gunmetal/Zinc)
-                            gray: tailwind.colors.zinc,
-                            slate: tailwind.colors.zinc
+                            // Тактичні відтінки (Stone для фону, Olive/Coyote для акцентів)
+                            gray: tailwind.colors.stone,
+                            slate: tailwind.colors.stone,
+                            olive: {
+                                400: '#84965c',
+                                500: '#5c693a',
+                                600: '#4b5320',
+                                700: '#3a4219',
+                                800: '#2c3311',
+                                900: '#1d2309',
+                            },
+                            coyote: {
+                                400: '#c5a365',
+                                500: '#a6824a',
+                                600: '#8c6833',
+                            }
+                        },
+                        animation: {
+                            'fade-in': 'fadeIn 0.3s ease-out forwards',
+                            'slide-up': 'slideUp 0.3s ease-out forwards',
+                        },
+                        keyframes: {
+                            fadeIn: {
+                                '0%': { opacity: '0' },
+                                '100%': { opacity: '1' },
+                            },
+                            slideUp: {
+                                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                                '100%': { opacity: '1', transform: 'translateY(0)' },
+                            }
                         }
                     }
                 }
@@ -33,10 +60,10 @@
         body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
-        #sidebar { transition: width 0.3s ease; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #8a8d86; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #44403c; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #44403c transparent; }
+        #sidebar { transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .sidebar-collapsed { width: 5rem !important; }
         .sidebar-collapsed .sidebar-text { display: none; }
         .sidebar-collapsed .justify-between { justify-content: center; }
@@ -52,8 +79,27 @@
             line-height: 1;
         }
 
-        .modal-overlay { display: none; align-items: center; justify-content: center; }
+        .modal-overlay { display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
         i[data-lucide] { display: inline-block; }
+        
+        /* Анімації вкладок */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out forwards; }
+        
+        /* Тактичний ховер-ефект на картках */
+        .tactical-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .tactical-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border-color: #5c693a; /* olive-500 */
+        }
+        .dark .tactical-card:hover {
+            border-color: #4b5320; /* olive-600 */
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden transition-colors duration-200">
@@ -84,7 +130,7 @@
     <!-- Обгортка основного додатку -->
     <div id="app-wrapper" class="h-screen flex flex-col md:flex-row">
         
-        <div id="toast" class="fixed top-4 right-4 bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-xl hidden z-[70] transition-opacity flex items-center space-x-2">
+        <div id="toast" class="fixed top-4 right-4 bg-olive-600 text-white px-4 py-3 rounded-lg shadow-xl hidden z-[70] transition-opacity flex items-center space-x-2">
             <i data-lucide="check" class="w-5 h-5"></i><span id="toast-msg" class="font-medium"></span>
         </div>
 
@@ -93,7 +139,7 @@
         </button>
 
         <div id="modal-confirm" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay p-4 z-[80]">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 text-center border dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6 modal-content modal-content text-center border dark:border-gray-700">
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4"><i data-lucide="alert-triangle" class="h-6 w-6 text-red-600 dark:text-red-400"></i></div>
                 <h3 id="confirm-msg" class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-6 whitespace-pre-wrap">Ви впевнені?</h3>
                 <div class="flex justify-center space-x-3">
@@ -106,13 +152,13 @@
         <div id="sidebar" class="w-full md:w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 flex flex-col shadow-xl z-10 shrink-0 h-auto md:h-full">
             <div class="p-4 flex items-center justify-between bg-slate-950/50 min-h-[72px]">
                 <div class="flex items-center space-x-3 overflow-hidden">
-                    <i data-lucide="shield-check" class="text-emerald-500 w-8 h-8 shrink-0"></i>
+                    <i data-lucide="shield-check" class="text-olive-500 w-8 h-8 shrink-0"></i>
                     <div class="sidebar-text">
                         <h1 class="text-xl font-bold text-white leading-tight">ТАКТ-ОБЛІК</h1>
                         <div class="flex items-center gap-1.5 mt-0.5">
-                            <span class="text-[9px] text-emerald-400 uppercase tracking-widest font-bold border border-emerald-500/30 bg-emerald-500/10 px-1 rounded inline-block">SECURE OFFLINE</span>
-                            <button onclick="openChangelogModal()" class="text-[10px] text-emerald-400 font-bold border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/30 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-1" title="Натисніть для перегляду історії оновлень">
-                                <span>📋 v1.0.0</span>
+                            <span class="text-[9px] text-olive-400 uppercase tracking-widest font-bold border border-olive-500/30 bg-olive-500/10 px-1 rounded inline-block">SECURE OFFLINE</span>
+                            <button onclick="openChangelogModal()" class="text-[10px] text-olive-400 font-bold border border-olive-500/40 bg-olive-500/15 hover:bg-olive-500/30 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-1" title="Натисніть для перегляду історії оновлень">
+                                <span>🎯 v1.1.0</span>
                             </button>
                         </div>
                     </div>
@@ -120,7 +166,7 @@
                 <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white hidden md:block shrink-0 p-1"><i data-lucide="menu" class="w-5 h-5"></i></button>
             </div>
             <nav class="flex-1 p-3 space-y-2 overflow-y-auto custom-scrollbar">
-                <button id="nav-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors bg-emerald-600 text-white" title="Зведення"><i data-lucide="activity" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Зведення</span></button>
+                <button id="nav-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors bg-olive-600 text-white" title="Зведення"><i data-lucide="activity" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Зведення</span></button>
                 <button id="nav-personnel" onclick="switchTab('personnel')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Списки"><i data-lucide="users" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Списки</span></button>
                 <button id="nav-positions" onclick="switchTab('positions')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Позиції"><i data-lucide="map" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Позиції</span></button>
                 <button id="nav-rotations" onclick="switchTab('rotations')" class="w-full flex items-center justify-between px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Планові ротації">
@@ -133,10 +179,10 @@
                 <button onclick="toggleDarkMode()" class="w-full flex items-center space-x-3 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm transition-colors justify-center md:justify-start" title="Темна/Світла тема"><i data-lucide="moon" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Тема інтерфейсу</span></button>
                 
                 <div class="flex items-center space-x-1">
-                    <button onclick="openExportModal()" class="flex-1 flex items-center space-x-3 px-3 py-2 bg-emerald-700/50 hover:bg-emerald-600 text-emerald-100 rounded-lg text-sm transition-colors justify-center md:justify-start border border-emerald-600/50" title="Експорт зашифрованої копії">
+                    <button onclick="openExportModal()" class="flex-1 flex items-center space-x-3 px-3 py-2 bg-olive-700/50 hover:bg-olive-600 text-olive-100 rounded-lg text-sm transition-colors justify-center md:justify-start border border-olive-600/50" title="Експорт зашифрованої копії">
                         <i data-lucide="lock" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Створити бекап</span>
                     </button>
-                    <button onclick="openBackupSettingsModal()" class="p-2 bg-emerald-700/50 hover:bg-emerald-600 text-emerald-100 rounded-lg border border-emerald-600/50 transition-colors shrink-0" title="Розклад нагадувань">
+                    <button onclick="openBackupSettingsModal()" class="p-2 bg-olive-700/50 hover:bg-olive-600 text-olive-100 rounded-lg border border-olive-600/50 transition-colors shrink-0" title="Розклад нагадувань">
                         <i data-lucide="clock" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -174,7 +220,7 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-                            <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center space-x-3 lg:space-x-4"><div class="p-2 lg:p-3 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-lg"><i data-lucide="users" class="w-5 h-5 lg:w-6 lg:h-6"></i></div><div><p class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 font-medium">Всього списком</p><p id="stat-total" class="text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">0</p></div></div>
+                            <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center tactical-card space-x-3 lg:space-x-4"><div class="p-2 lg:p-3 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-lg"><i data-lucide="users" class="w-5 h-5 lg:w-6 lg:h-6"></i></div><div><p class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 font-medium">Всього списком</p><p id="stat-total" class="text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">0</p></div></div>
                             <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl shadow-sm border border-green-200 dark:border-green-800/50 flex items-center space-x-3 lg:space-x-4"><div class="p-2 lg:p-3 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-lg"><i data-lucide="shield" class="w-5 h-5 lg:w-6 lg:h-6"></i></div><div><p class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 font-medium">В строю</p><p id="stat-combat" class="text-xl lg:text-2xl font-bold text-green-700 dark:text-green-400">0</p></div></div>
                             
                             <!-- ВІДЖЕТ НА БОЙОВИХ -->
@@ -239,10 +285,10 @@
                             </div>
                             <!-- QUICK FILTER CHIPS -->
                             <div id="quick-filter-chips" class="flex flex-wrap gap-1.5 w-full pt-1 border-t dark:border-gray-700/60">
-                                <button onclick="setQuickStatusFilter('all')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-emerald-600 text-white border-emerald-500 shadow-xs cursor-pointer" data-status="all">
+                                <button onclick="setQuickStatusFilter('all')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-olive-600 text-white border-olive-500 shadow-xs cursor-pointer" data-status="all">
                                     Всі <span id="chip-count-all" class="ml-1 opacity-80">(0)</span>
                                 </button>
-                                <button onclick="setQuickStatusFilter('ok')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-emerald-500/20 cursor-pointer" data-status="ok">
+                                <button onclick="setQuickStatusFilter('ok')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-olive-500/20 cursor-pointer" data-status="ok">
                                     🛡️ В строю <span id="chip-count-ok" class="ml-1 opacity-80">(0)</span>
                                 </button>
                                 <button onclick="setQuickStatusFilter('combat')" class="chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-blue-500/20 cursor-pointer" data-status="combat">
@@ -353,8 +399,8 @@
 
     <!-- MODALS -->
     <!-- Модалки для шифрування -->
-    <div id="modal-export-password" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30"><h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center"><i data-lucide="lock" class="w-5 h-5 mr-2"></i>Пароль резервної копії</h3><button onclick="closeModal('modal-export-password')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="executeEncryptedExport(event)" class="p-6 space-y-4"><div class="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 p-3 rounded-lg text-xs border border-yellow-200 dark:border-yellow-800/50">Придумайте пароль. Файл буде зашифровано алгоритмом AES-256. <b>Без цього пароля дані відновити неможливо!</b></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Пароль для файлу</label><input required type="password" id="export-pwd" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeModal('modal-export-password')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center"><i data-lucide="download" class="w-4 h-4 mr-2"></i>Завантажити</button></div></form></div></div>
-    <div id="modal-import-password" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30"><h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center"><i data-lucide="key" class="w-5 h-5 mr-2"></i>Введіть пароль</h3><button onclick="closeImportPasswordModal()" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="executeEncryptedImport(event)" class="p-6 space-y-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Пароль розшифровки</label><input required type="password" id="import-pwd" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeImportPasswordModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center"><i data-lucide="unlock" class="w-4 h-4 mr-2"></i>Відновити</button></div></form></div></div>
+    <div id="modal-export-password" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-olive-50 dark:bg-olive-900/30"><h3 class="font-bold text-lg text-olive-900 dark:text-olive-300 flex items-center"><i data-lucide="lock" class="w-5 h-5 mr-2"></i>Пароль резервної копії</h3><button onclick="closeModal('modal-export-password')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="executeEncryptedExport(event)" class="p-6 space-y-4"><div class="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 p-3 rounded-lg text-xs border border-yellow-200 dark:border-yellow-800/50">Придумайте пароль. Файл буде зашифровано алгоритмом AES-256. <b>Без цього пароля дані відновити неможливо!</b></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Пароль для файлу</label><input required type="password" id="export-pwd" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeModal('modal-export-password')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-olive-600 hover:bg-olive-700 text-white rounded-lg flex items-center"><i data-lucide="download" class="w-4 h-4 mr-2"></i>Завантажити</button></div></form></div></div>
+    <div id="modal-import-password" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-olive-50 dark:bg-olive-900/30"><h3 class="font-bold text-lg text-olive-900 dark:text-olive-300 flex items-center"><i data-lucide="key" class="w-5 h-5 mr-2"></i>Введіть пароль</h3><button onclick="closeImportPasswordModal()" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="executeEncryptedImport(event)" class="p-6 space-y-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Пароль розшифровки</label><input required type="password" id="import-pwd" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeImportPasswordModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-olive-600 hover:bg-olive-700 text-white rounded-lg flex items-center"><i data-lucide="unlock" class="w-4 h-4 mr-2"></i>Відновити</button></div></form></div></div>
     
     <!-- Існуючі модалки -->
     <div id="modal-bulk-status" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30"><h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center space-x-2"><i data-lucide="users-2" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i><span>Масовий статус</span></h3><button onclick="closeModal('modal-bulk-status')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-4"><div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-4 rounded-lg text-sm border border-blue-100 dark:border-blue-800/50 mb-2"><p>Вставте список ПІБ (по одному на рядок), ПІБ має точно збігатися з базою.</p></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Новий статус</label><select id="bulk-status-select" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Список ПІБ</label><textarea id="bulk-names" class="w-full h-40 p-3 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm whitespace-pre bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea></div></div><div class="px-6 py-4 border-t dark:border-gray-700 flex justify-end space-x-2 bg-gray-50 dark:bg-gray-800/80"><button onclick="closeModal('modal-bulk-status')" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button onclick="submitBulkStatus()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center"><i data-lucide="check-circle-2" class="w-4 h-4 mr-2"></i>Застосувати</button></div></div></div>
@@ -365,7 +411,7 @@
     
     <div id="modal-soldier" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80"><h3 id="soldier-modal-title" class="font-bold text-lg text-gray-800 dark:text-white">Додати бійця</h3><button type="button" onclick="closeModal('modal-soldier')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveSoldier(event)" class="p-6 space-y-4"><input type="hidden" id="s-id"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">ПІБ *</label><input required type="text" id="s-fullname" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="grid grid-cols-2 gap-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Позивний</label><input type="text" id="s-callsign" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Звання</label><select id="s-rank" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Підрозділ</label><input type="text" id="s-unit" list="unit-datalist" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div id="s-init-block" class="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border dark:border-gray-700 mt-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Поч. позиція</label><input type="text" id="s-pos-input" list="pos-datalist" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Статус</label><select id="s-status" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div></div><div class="pt-4 flex justify-between"><div><button type="button" id="s-delete-btn" onclick="deleteSoldier()" style="display:none;" class="text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg flex items-center space-x-1"><i data-lucide="trash-2" class="w-4 h-4"></i><span>Видалити</span></button></div><div class="space-x-2 flex"><button type="button" onclick="closeModal('modal-soldier')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Зберегти</button></div></div></form></div></div>
     
-    <div id="modal-move" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30"><h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center space-x-2"><i data-lucide="arrow-right-left" class="w-5 h-5"></i><span id="move-modal-title">Рух</span></h3><button type="button" onclick="closeModal('modal-move')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveMove(event)" class="p-6 space-y-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Новий Статус</label><div id="move-status-grid" class="grid grid-cols-2 gap-2"></div></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-2"><span>Нова Локація</span><div class="flex items-center gap-2"><button type="button" onclick="setMoveToPPD()" class="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-200 transition-colors font-bold shadow-sm flex items-center" title="Швидко перемістити в першу небойову позицію"><i data-lucide="home" class="w-3 h-3 mr-1"></i>В ППД</button><span class="text-[10px] text-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 px-2 py-0.5 rounded border">Поточна: <span id="m-current-pos-label" class="font-bold"></span></span></div></label><input type="text" id="m-pos-input" list="pos-datalist" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-lg font-medium"/></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Завдання</label><select id="m-task" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Примітка</label><input type="text" id="m-notes" placeholder="Введіть щоб зберегти, або зітріть щоб видалити..." class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeModal('modal-move')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4"></i><span>Зберегти</span></button></div></form></div></div>
+    <div id="modal-move" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30"><h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center space-x-2"><i data-lucide="arrow-right-left" class="w-5 h-5"></i><span id="move-modal-title">Рух</span></h3><button type="button" onclick="closeModal('modal-move')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="saveMove(event)" class="p-6 space-y-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Новий Статус</label><div id="move-status-grid" class="grid grid-cols-2 gap-2"></div></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-2"><span>Нова Локація</span><div class="flex items-center gap-2"><button type="button" onclick="setMoveToPPD()" class="text-[10px] bg-olive-100 text-olive-700 dark:bg-olive-900/50 dark:text-olive-400 px-2 py-0.5 rounded border border-olive-200 dark:border-olive-800 hover:bg-olive-200 transition-colors font-bold shadow-sm flex items-center" title="Швидко перемістити в першу небойову позицію"><i data-lucide="home" class="w-3 h-3 mr-1"></i>В ППД</button><span class="text-[10px] text-indigo-500 bg-indigo-50 dark:bg-indigo-900/50 px-2 py-0.5 rounded border">Поточна: <span id="m-current-pos-label" class="font-bold"></span></span></div></label><input type="text" id="m-pos-input" list="pos-datalist" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-lg font-medium"/></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Завдання</label><select id="m-task" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></select></div><div class="space-y-1 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Примітка</label><input type="text" id="m-notes" placeholder="Введіть щоб зберегти, або зітріть щоб видалити..." class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="pt-4 flex justify-end space-x-2"><button type="button" onclick="closeModal('modal-move')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center space-x-2"><i data-lucide="check" class="w-4 h-4"></i><span>Зберегти</span></button></div></form></div></div>
     
     <div id="modal-position" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80 shrink-0"><h3 id="pos-modal-title" class="font-bold text-lg text-gray-800 dark:text-white">Нова позиція</h3><button type="button" onclick="closeModal('modal-position')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><form onsubmit="savePosition(event)" class="p-6 overflow-y-auto custom-scrollbar space-y-6"><input type="hidden" id="p-id"><div class="space-y-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Назва позиції *</label><input required type="text" id="p-name" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="grid grid-cols-2 gap-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Група</label><input type="text" id="p-rop" list="rop-datalist" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Тип локації</label><select id="p-type" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" onchange="autoSelectIcon()"></select></div></div><div class="space-y-2 pt-2"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase flex justify-between"><span>Іконка</span></label><input type="hidden" id="p-icon" value="crosshair"><div id="p-icon-grid" class="grid grid-cols-5 sm:grid-cols-9 gap-2"></div></div></div><div class="border-t dark:border-gray-700 pt-4"><div class="flex justify-between items-center mb-3"><label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase flex items-center"><i data-lucide="package" class="w-4 h-4 mr-1"></i>ОВТ та Майно</label><button type="button" onclick="addEquipmentRow()" class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg px-2 py-1.5 flex items-center"><i data-lucide="plus" class="w-3 h-3 mr-1"></i>Додати</button></div><div id="p-equipment-list" class="space-y-2"></div></div><div class="pt-6 border-t dark:border-gray-700 flex justify-between items-center shrink-0"><div><button type="button" id="p-delete-btn" onclick="delPos()" style="display:none;" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 px-3 py-2 rounded-lg flex items-center space-x-1"><i data-lucide="trash-2" class="w-4 h-4"></i><span>Видалити</span></button></div><div class="flex space-x-2"><button type="button" onclick="closeModal('modal-position')" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">Скасувати</button><button type="submit" class="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white rounded-lg">Зберегти</button></div></div></form></div></div>
     
@@ -386,16 +432,16 @@
     <div id="modal-rotation" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/30 shrink-0"><h3 class="font-bold text-lg text-indigo-900 dark:text-indigo-300 flex items-center space-x-2"><i data-lucide="refresh-cw" class="w-5 h-5"></i><span>Планова ротація / Заявка</span></h3><button type="button" onclick="closeModal('modal-rotation')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 overflow-y-auto custom-scrollbar space-y-4 flex-1"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Назва (або старший) *</label><input required type="text" id="rot-name" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Напр: Заміна на СП-1"/></div><div class="space-y-1"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Плановий час *</label><input required type="datetime-local" id="rot-time" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/></div></div><div class="border-t dark:border-gray-700 pt-4 mt-4"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2 block">Особовий склад (Пошук)</label><div class="flex gap-2 mb-2"><select id="rot-dir" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-bold text-sm w-32 shrink-0"><option value="in">ЗАХОДИТЬ</option><option value="out">ВИХОДИТЬ</option></select><div class="relative flex-1"><input type="text" id="rot-search" oninput="handleRotSearch()" placeholder="Пошук бійця..." class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"/><i data-lucide="search" class="absolute left-3 top-2.5 text-gray-400 w-4 h-4"></i></div></div><ul id="rot-search-results" class="bg-gray-50 dark:bg-gray-800 rounded-lg border dark:border-gray-700 divide-y dark:divide-gray-700 mb-4 max-h-32 overflow-y-auto custom-scrollbar empty:hidden"></ul><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2 block">Учасники заявки</label><ul id="rot-members-list" class="space-y-2"></ul></div></div><div class="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-end shrink-0 space-x-2"><button type="button" onclick="closeModal('modal-rotation')" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium">Скасувати</button><button type="button" onclick="saveRotation()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium shadow-sm flex items-center"><i data-lucide="check" class="w-4 h-4 mr-2"></i>Зберегти</button></div></div></div>
 
     <!-- МОДАЛКА: НАЛАШТУВАННЯ БЕКАПІВ -->
-    <div id="modal-backup-settings" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30"><h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center"><i data-lucide="clock" class="w-5 h-5 mr-2"></i>Графік бекапів</h3><button onclick="closeModal('modal-backup-settings')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-4"><div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-lg text-xs border border-blue-100 dark:border-blue-800/50">Додайте час (ГГ:ХХ), коли програма має нагадати про необхідність створення резервної копії.</div><div class="flex gap-2"><input type="time" id="new-backup-time" class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/><button onclick="addBackupTime()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center font-bold"><i data-lucide="plus" class="w-4 h-4 mr-1"></i>Додати</button></div><div class="mt-4"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2 block">Встановлені нагадування:</label><ul id="backup-times-list" class="space-y-2"></ul></div></div><div class="px-6 py-4 border-t dark:border-gray-700 flex justify-end bg-gray-50 dark:bg-gray-800/80"><button onclick="closeModal('modal-backup-settings')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium">Закрити</button></div></div></div>
+    <div id="modal-backup-settings" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-olive-50 dark:bg-olive-900/30"><h3 class="font-bold text-lg text-olive-900 dark:text-olive-300 flex items-center"><i data-lucide="clock" class="w-5 h-5 mr-2"></i>Графік бекапів</h3><button onclick="closeModal('modal-backup-settings')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-4"><div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-lg text-xs border border-blue-100 dark:border-blue-800/50">Додайте час (ГГ:ХХ), коли програма має нагадати про необхідність створення резервної копії.</div><div class="flex gap-2"><input type="time" id="new-backup-time" class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/><button onclick="addBackupTime()" class="px-4 py-2 bg-olive-600 hover:bg-olive-700 text-white rounded-lg flex items-center font-bold"><i data-lucide="plus" class="w-4 h-4 mr-1"></i>Додати</button></div><div class="mt-4"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2 block">Встановлені нагадування:</label><ul id="backup-times-list" class="space-y-2"></ul></div></div><div class="px-6 py-4 border-t dark:border-gray-700 flex justify-end bg-gray-50 dark:bg-gray-800/80"><button onclick="closeModal('modal-backup-settings')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium">Закрити</button></div></div></div>
 
     <!-- МОДАЛЬНЕ ВІКНО CHANGELOG -->
     <div id="modal-changelog" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border dark:border-gray-700">
-            <div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-emerald-50 dark:bg-emerald-900/30">
-                <h3 class="font-bold text-lg text-emerald-900 dark:text-emerald-300 flex items-center space-x-2">
-                    <i data-lucide="shield-check" class="w-5 h-5 text-emerald-500"></i>
+            <div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-olive-50 dark:bg-olive-900/30">
+                <h3 class="font-bold text-lg text-olive-900 dark:text-olive-300 flex items-center space-x-2">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-olive-500"></i>
                     <span>📋 Історія оновлень (ТАКТ-ОБЛІК)</span>
-                    <span class="text-xs bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.0.0</span>
+                    <span class="text-xs bg-olive-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.1.0</span>
                 </h3>
                 <button onclick="closeModal('modal-changelog')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -404,7 +450,7 @@
             <div id="changelogModalList" class="p-6 overflow-y-auto max-h-[70vh] space-y-4 custom-scrollbar"></div>
             <div class="px-6 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-between items-center text-xs text-gray-500">
                 <span>📄 Автономна офлайн-система</span>
-                <button onclick="closeModal('modal-changelog')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors cursor-pointer">
+                <button onclick="closeModal('modal-changelog')" class="px-4 py-2 bg-olive-600 hover:bg-olive-700 text-white font-bold rounded-lg transition-colors cursor-pointer">
                     Зрозуміло
                 </button>
             </div>
@@ -624,9 +670,9 @@
         document.querySelectorAll('.chip-btn').forEach(btn => {
             const st = btn.getAttribute('data-status');
             if (st === currentQuickStatus) {
-                btn.className = 'chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-emerald-600 text-white border-emerald-500 shadow-xs cursor-pointer';
+                btn.className = 'chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-olive-600 text-white border-olive-500 shadow-xs cursor-pointer';
             } else {
-                btn.className = 'chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-emerald-500/20 cursor-pointer';
+                btn.className = 'chip-btn px-2.5 py-1 rounded-lg text-xs font-bold transition-all border bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-olive-500/20 cursor-pointer';
             }
         });
     }
@@ -652,9 +698,31 @@
     // ─── AUTONOMOUS CHANGELOG DATA (v1.0.0) ────────────────────────────────────
     const APP_CHANGELOG = [
         {
+            version: "1.1.0",
+            date: "08.08.2026",
+            isCurrent: true,
+            sections: [
+                {
+                    title: "🚀 Нові можливості",
+                    items: [
+                        "Додано функцію Drag-and-Drop: тепер бійців можна швидко перетягувати на позиції.",
+                        "Міні-Дашборди в заголовках категорій для зручного відображення статистики завдань.",
+                        "Нове Контекстне меню (правий клік по бійцю) для швидкої відправки на базу та зміни старшого."
+                    ]
+                },
+                {
+                    title: "🔧 Оптимізація та виправлення",
+                    items: [
+                        "Значно оптимізовано продуктивність Drag-and-Drop для усунення затримок на слабких ПК.",
+                        "Виправлено проблему з переносом довгих назв завдань, що ламали верстку карток."
+                    ]
+                }
+            ]
+        },
+        {
             version: "1.0.0",
             date: "02.08.2026",
-            isCurrent: true,
+            isCurrent: false,
             sections: [
                 {
                     title: "🎨 Тактичний редизайн (Tactical Pro UI)",
@@ -679,9 +747,9 @@
         if (!container) return;
         let html = '';
         APP_CHANGELOG.forEach(item => {
-            const borderClass = item.isCurrent ? 'border-l-4 border-emerald-500' : 'border-l-4 border-gray-500 opacity-80';
+            const borderClass = item.isCurrent ? 'border-l-4 border-olive-500' : 'border-l-4 border-gray-500 opacity-80';
             const currentBadge = item.isCurrent 
-                ? `<span class="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700">Поточна</span>` 
+                ? `<span class="bg-olive-100 text-olive-800 dark:bg-olive-900/80 dark:text-olive-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-olive-300 dark:border-olive-700">Поточна</span>` 
                 : '';
             html += `
             <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 ${borderClass} border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm">
@@ -697,7 +765,7 @@
             item.sections.forEach(sec => {
                 html += `
                     <div class="space-y-1">
-                        <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">${sec.title}</div>
+                        <div class="text-xs font-bold text-olive-600 dark:text-olive-400 uppercase tracking-wide">${sec.title}</div>
                         <ul class="space-y-1 text-xs text-gray-600 dark:text-gray-300 pl-2 list-disc list-inside">
                             ${sec.items.map(it => `<li>${it}</li>`).join('')}
                         </ul>
@@ -1043,7 +1111,7 @@
         
         list.innerHTML = backupSchedule.map((time, idx) => `
             <li class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg border border-gray-200 dark:border-gray-600">
-                <span class="font-bold text-gray-800 dark:text-gray-200 text-lg ml-2"><i data-lucide="clock" class="w-4 h-4 inline mr-1 text-emerald-500"></i>${time}</span>
+                <span class="font-bold text-gray-800 dark:text-gray-200 text-lg ml-2"><i data-lucide="clock" class="w-4 h-4 inline mr-1 text-olive-500"></i>${time}</span>
                 <button onclick="removeBackupTime(${idx})" class="p-1.5 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
             </li>
         `).join('');
@@ -1278,15 +1346,20 @@
             if (elTab) elTab.classList.add('hidden');
             const btn = el('nav-'+id);
             if (btn) {
-                btn.classList.remove('bg-emerald-600','text-white');
+                btn.classList.remove('bg-olive-600','text-white');
                 btn.classList.add('hover:bg-slate-800','hover:text-white','text-slate-300');
             }
         });
         const activeEl = el('tab-'+t);
-        if (activeEl) activeEl.classList.remove('hidden');
+        if (activeEl) {
+            activeEl.classList.remove('hidden');
+            activeEl.classList.remove('animate-fade-in');
+            void activeEl.offsetWidth;
+            activeEl.classList.add('animate-fade-in');
+        }
         const activeBtn = el('nav-'+t);
         if (activeBtn) {
-            activeBtn.classList.add('bg-emerald-600','text-white');
+            activeBtn.classList.add('bg-olive-600','text-white');
             activeBtn.classList.remove('hover:bg-slate-800','text-slate-300');
         }
         renderTab(t);
@@ -1453,7 +1526,7 @@
             
             const noteIcon = s.note ? `<button type="button" onclick="event.stopPropagation(); viewNote('${s.id}')" class="ml-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 shrink-0 bg-blue-50 dark:bg-blue-900/30 p-1 rounded-full border border-blue-200 dark:border-blue-800 transition-colors" title="Переглянути примітку"><i data-lucide="info" class="w-3.5 h-3.5"></i></button>` : '';
 
-            return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+            return `<tr draggable="true" ondragstart="handleDragStart(event, '${s.id}')" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-context-menu" oncontextmenu="openSoldierContextMenu(event, '${s.id}')">
                 <td class="px-6 py-3 whitespace-nowrap">
                     <div class="font-bold text-sm flex items-center">${esc(s.fullName) || 'Не вказано'} ${inRot} ${noteIcon}</div>
                     <div class="text-xs text-gray-500">${esc(s.rank)}${s.callsign ? ` • <span class="text-indigo-500 font-bold">"${esc(s.callsign)}"</span>` : ''}</div>
@@ -1538,12 +1611,12 @@
             }
         }
         const cH = s.callsign ? `<span class="font-black text-indigo-600 dark:text-indigo-400">"${esc(s.callsign)}"</span>` : '';
-        const tH = (s.currentTask && s.currentTask !== 'піхота') ? `<span class="uppercase font-bold text-blue-700 bg-blue-100 px-1 rounded">${esc(s.currentTask)}</span>` : '';
+        const tH = (s.currentTask && s.currentTask !== 'піхота') ? `<span class="uppercase font-bold text-blue-700 bg-blue-100 px-1 rounded whitespace-nowrap truncate max-w-[100px]" title="${esc(s.currentTask)}">${esc(s.currentTask)}</span>` : '';
         const rotDir = activeRotMap.get(s.id);
         const inRot = rotDir ? `<span class="inline-flex relative h-2 w-2 ml-1 mt-0.5 shrink-0" title="В ротації"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${rotDir==='in'?'bg-orange-400':'bg-indigo-400'} opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 ${rotDir==='in'?'bg-orange-500':'bg-indigo-500'}"></span></span>` : '';
         const noteIcon = s.note ? `<button type="button" onclick="event.stopPropagation(); viewNote('${s.id}')" class="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 shrink-0 bg-blue-50 dark:bg-blue-900/30 p-0.5 rounded-full transition-colors" title="Переглянути примітку"><i data-lucide="info" class="w-3 h-3"></i></button>` : '';
         
-        return `<li class="flex justify-between items-start py-1.5 px-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg border border-transparent leading-tight gap-1">
+        return `<li draggable="true" ondragstart="handleDragStart(event, '${s.id}')" class="flex justify-between items-start py-1.5 px-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg border border-transparent leading-tight gap-1 cursor-context-menu" oncontextmenu="openSoldierContextMenu(event, '${s.id}')">
             <div class="flex items-start flex-1 min-w-0 pr-1">
                 <button onclick="toggleCommander('${pos.id}','${s.id}')" class="p-1 shrink-0 mt-0.5"><i data-lucide="star" class="w-3.5 h-3.5 ${pos.commanderId === s.id ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300 dark:text-gray-600 hover:text-yellow-400'}"></i></button>
                 <div class="flex-1 min-w-0">
@@ -1577,6 +1650,17 @@
         const inFieldCount = personnel.filter(p => p.status === 'ok' && activePosIds.has(p.positionId)).length;
         if (el('pos-combat-count-badge')) el('pos-combat-count-badge').innerText = inFieldCount;
 
+        const taskCounts = {};
+        personnel.forEach(p => {
+            if (p.status === 'ok' && activePosIds.has(p.positionId)) {
+                const t = p.currentTask || 'піхота';
+                if (!t.toUpperCase().startsWith('ППД')) {
+                    taskCounts[t] = (taskCounts[t] || 0) + 1;
+                }
+            }
+        });
+
+
         const activeRotMap = getActiveRotationMap();
 
         const gl = groupOrder.length;
@@ -1586,6 +1670,22 @@
             const isC     = collapsedGroups[gName];
 
             const activeGroupPosCount = groupPositions.filter(p => (sbp[p.id] || []).length > 0).length;
+
+            const groupTaskCounts = {};
+            groupPositions.forEach(p => {
+                const sol = sbp[p.id] || [];
+                sol.forEach(s => {
+                    if (s.status === 'ok') {
+                        const t = s.currentTask || 'піхота';
+                        if (!t.toUpperCase().startsWith('ППД')) {
+                            groupTaskCounts[t] = (groupTaskCounts[t] || 0) + 1;
+                        }
+                    }
+                });
+            });
+            const groupRibbon = Object.keys(groupTaskCounts).sort((a,b) => groupTaskCounts[b] - groupTaskCounts[a]).map(t => {
+                return `<span class="flex items-center text-[9px] font-bold text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 px-1.5 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide cursor-default hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">${esc(t)} <span class="ml-1 text-[11px] font-black text-indigo-600 dark:text-indigo-400">${groupTaskCounts[t]}</span></span>`;
+            }).join('');
 
             const posCards = groupPositions.map((pos, pi) => {
                 const sol   = (sbp[pos.id] || []).slice().sort((a, b) => {
@@ -1609,7 +1709,11 @@
                 const eqBtn = (pos.equipment || []).length > 0
                     ? `<button onclick="viewEquipment('${pos.id}')" class="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 flex items-center"><i data-lucide="package" class="w-3 h-3 mr-1 text-blue-500"></i>${pos.equipment.length}</button>` : '';
 
-                return `<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border dark:border-gray-700 flex flex-col relative">
+                const hasRot = sol.some(s => activeRotMap.has(s.id));
+                const rotBadge = hasRot ? `<span class="absolute -top-1 -right-1 flex h-3 w-3" title="Є активна ротація!"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-orange-500 border border-white dark:border-gray-800"></span></span>` : '';
+
+                return `<div ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${pos.id}')" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border dark:border-gray-700 flex flex-col relative tactical-card group transition-colors">
+                    ${rotBadge}
                     <div class="px-3 py-2 border-b dark:border-gray-700 flex flex-col gap-2 ${hC}">
                         <div class="flex justify-between">
                             <div class="flex gap-2"><i data-lucide="${pos.icon || 'crosshair'}" class="w-4 h-4 ${isCom ? 'text-red-500' : 'text-gray-500'} mt-0.5"></i><h3 class="font-bold text-sm leading-tight">${esc(pos.name)}</h3></div>
@@ -1623,9 +1727,9 @@
                         </div>
                         <div class="flex justify-between bg-white/60 dark:bg-gray-800/60 p-1.5 rounded">
                             <div class="flex gap-2">${eqBtn}<span class="bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] font-bold border dark:border-gray-600 flex items-center"><i data-lucide="users" class="w-3 h-3 mr-1 text-gray-500"></i>${sol.length}</span></div>
-                            <div class="flex gap-1">
-                                <button onclick="openAddToPosModal('${pos.id}')"  class="text-gray-500 bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded border dark:border-gray-600 hover:bg-gray-100 hover:text-indigo-500 transition-colors"><i data-lucide="user-plus" class="w-3 h-3"></i></button>
-                                <button onclick="openPositionModal('${pos.id}')"  class="text-gray-500 bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded border dark:border-gray-600 hover:bg-gray-100 transition-colors"><i data-lucide="settings" class="w-3 h-3"></i></button>
+                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="openAddToPosModal('${pos.id}')"  class="text-gray-500 bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded border dark:border-gray-600 hover:bg-gray-100 hover:text-indigo-500 transition-colors" title="Додати бійця"><i data-lucide="user-plus" class="w-3 h-3"></i></button>
+                                <button onclick="openPositionModal('${pos.id}')"  class="text-gray-500 bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded border dark:border-gray-600 hover:bg-gray-100 transition-colors" title="Налаштування"><i data-lucide="settings" class="w-3 h-3"></i></button>
                             </div>
                         </div>
                     </div>${sh}
@@ -1635,9 +1739,14 @@
             return `<div class="bg-white/50 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100 dark:border-gray-700 mb-6 shadow-sm">
                 <div class="flex justify-between mb-4">
                     <div class="flex items-center">
-                        <h3 class="text-lg font-bold flex items-center cursor-pointer hover:text-indigo-500" onclick="toggleGroup(${jsEsc(gName)})">
-                            <i data-lucide="${isC ? 'folder-closed' : 'folder-open'}" class="w-6 h-6 mr-2 text-indigo-500"></i>
-                            ${esc(gName)} <span class="ml-3 text-[11px] bg-gray-200 dark:bg-gray-700 px-2 rounded-full">${activeGroupPosCount} поз.</span><span class="ml-2 text-[11px] text-indigo-700 bg-indigo-100 px-2 rounded-full">${gCount} чол.</span>
+                        <h3 class="text-lg font-bold flex items-center cursor-pointer hover:text-indigo-500 overflow-hidden" onclick="toggleGroup(${jsEsc(gName)})">
+                            <i data-lucide="${isC ? 'folder-closed' : 'folder-open'}" class="w-6 h-6 mr-2 text-indigo-500 shrink-0"></i>
+                            <span class="shrink-0">${esc(gName)}</span> 
+                            <span class="ml-3 text-[11px] bg-gray-200 dark:bg-gray-700 px-2 rounded-full shrink-0">${activeGroupPosCount} поз.</span>
+                            <span class="ml-2 text-[11px] text-indigo-700 bg-indigo-100 px-2 rounded-full shrink-0">${gCount} чол.</span>
+                            <div class="ml-4 flex gap-1.5 overflow-x-auto custom-scrollbar pb-1">
+                                ${groupRibbon}
+                            </div>
                         </h3>
                         <button onclick="openGroupModal(${jsEsc(gName)})" class="ml-3 text-gray-400 hover:text-blue-500 p-1 rounded border dark:border-gray-700 bg-white dark:bg-gray-800" title="Налаштування групи"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                         <button onclick="toggleAllInGroup(${jsEsc(gName)})" class="ml-2 text-gray-400 hover:text-indigo-500 p-1 rounded border dark:border-gray-700 bg-white dark:bg-gray-800" title="Згорнути/Розгорнути всі позиції"><i data-lucide="chevrons-up-down" class="w-4 h-4"></i></button>
@@ -2532,7 +2641,7 @@
                 let currPosColor = 'text-gray-700 dark:text-gray-300';
                 if (m.dir === 'in' && m.targetPosId) {
                     currPosColor = (s.positionId === m.targetPosId) 
-                        ? 'text-emerald-600 dark:text-emerald-400' 
+                        ? 'text-olive-600 dark:text-olive-400' 
                         : 'text-orange-600 dark:text-orange-400';
                 }
                 
@@ -2582,7 +2691,7 @@
                 <div class="p-3">
                     <ul class="space-y-1">${membersHtml}</ul>
                 </div>
-                ${allDone ? `<div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"><button onclick="completeRotation(${rIdx})" class="w-full bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-emerald-50 dark:text-emerald-400 px-4 py-2 rounded-lg font-bold shadow-sm transition-colors text-sm border border-slate-500 dark:border-slate-600">Всі на місцях. Завершити!</button></div>` : ''}
+                ${allDone ? `<div class="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50"><button onclick="completeRotation(${rIdx})" class="w-full bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-olive-50 dark:text-olive-400 px-4 py-2 rounded-lg font-bold shadow-sm transition-colors text-sm border border-slate-500 dark:border-slate-600">Всі на місцях. Завершити!</button></div>` : ''}
             </div>`;
         }).join('');
 
@@ -2772,7 +2881,162 @@
         });
     }
 
+    // --- CONTEXT MENU LOGIC ---
+    let currentCtxSoldierId = null;
+    function openSoldierContextMenu(e, soldierId) {
+        e.preventDefault();
+        currentCtxSoldierId = soldierId;
+        const s = personnel.find(x => x.id === soldierId);
+        if(!s) return;
+
+        const cm = el('soldier-context-menu');
+        cm.classList.remove('hidden');
+        
+        // Position it near mouse
+        let x = e.pageX;
+        let y = e.pageY;
+        // Keep it inside viewport
+        if(x + 200 > window.innerWidth) x -= 200;
+        if(y + 250 > window.innerHeight) y -= 250;
+        
+        cm.style.left = x + 'px';
+        cm.style.top = y + 'px';
+
+        // Populate tasks dropdown
+        const tSel = el('ctx-task-select');
+        tSel.innerHTML = '<option value="" disabled selected>-- Обрати завдання --</option>' + 
+                         TASKS.map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    document.addEventListener('click', (e) => {
+        const cm = el('soldier-context-menu');
+        if(cm && !cm.contains(e.target)) {
+            cm.classList.add('hidden');
+        }
+    });
+
+    function cmAction(action) {
+        const s = personnel.find(x => x.id === currentCtxSoldierId);
+        if(!s) return;
+        
+        el('soldier-context-menu').classList.add('hidden');
+        
+        if (action === 'commander') {
+            const pos = positions.find(p => p.id === s.positionId);
+            if (pos) { pos.commanderId = s.id; saveState(); showToast('Призначено старшим'); }
+        } else if (action === 'ppd') {
+            // Find base position named 'ППД (База)' or similar
+            const basePos = positions.find(p => p.name === 'ППД (База)') || positions.find(p => p.type === 'baze');
+            if (basePos) {
+                const oldPosId = s.positionId;
+                s.positionId = basePos.id;
+                s.currentTask = 'ППД';
+                s.deploymentStartTime = null;
+                handleJournalTracking(s.id, oldPosId, basePos.id);
+                saveState(); showToast('Переміщено на ППД');
+            } else {
+                showToast('Позицію ППД не знайдено!');
+            }
+        } else if (action === 'edit') {
+            openMoveModal(s.id);
+        }
+    }
+
+    function cmChangeTask(task) {
+        if(!task) return;
+        const s = personnel.find(x => x.id === currentCtxSoldierId);
+        if(!s) return;
+        el('soldier-context-menu').classList.add('hidden');
+        s.currentTask = task;
+        saveState(); showToast('Завдання оновлено');
+    }
+
+    // --- DRAG AND DROP LOGIC ---
+    let draggedSoldierId = null;
+
+    function handleDragStart(e, soldierId) {
+        draggedSoldierId = soldierId;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', soldierId); // Required for some browsers
+        setTimeout(() => e.target.classList.add('opacity-50'), 0);
+    }
+
+    let lastHoveredCard = null;
+
+    function handleDragOver(e) {
+        e.preventDefault(); 
+        e.dataTransfer.dropEffect = 'move';
+        
+        const card = e.target.closest('.tactical-card');
+        if (card !== lastHoveredCard) {
+            if (lastHoveredCard) {
+                lastHoveredCard.classList.remove('border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50');
+            }
+            if (card) {
+                card.classList.add('border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50');
+            }
+            lastHoveredCard = card;
+        }
+    }
+
+    function handleDragLeave(e) {
+        const card = e.target.closest('.tactical-card');
+        // We don't strictly need to remove it on every leave because dragOver will manage it when moving to another card.
+        // But if dragging completely out of any card, we can try to clean up:
+        if (card && card === lastHoveredCard && !card.contains(e.relatedTarget)) {
+            card.classList.remove('border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50');
+            lastHoveredCard = null;
+        }
+    }
+
+    function handleDrop(e, targetPosId) {
+        e.preventDefault();
+        const card = e.target.closest('.tactical-card');
+        if (card) card.classList.remove('border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50');
+
+        if (!draggedSoldierId) return;
+
+        const s = personnel.find(x => x.id === draggedSoldierId);
+        if (!s) return;
+
+        if (s.positionId !== targetPosId) {
+            const oldPosId = s.positionId;
+            s.positionId = targetPosId;
+            
+            const targetPos = positions.find(p => p.id === targetPosId);
+            if (targetPos && targetPos.type === 'baze') {
+                s.currentTask = 'ППД';
+                s.deploymentStartTime = null;
+            }
+
+            handleJournalTracking(s.id, oldPosId, targetPosId);
+            saveState(); // includes re-render
+            showToast('Переміщено!');
+        }
+        draggedSoldierId = null;
+    }
+    
+    document.addEventListener('dragend', (e) => {
+        if(e.target && e.target.classList) {
+            e.target.classList.remove('opacity-50');
+        }
+    });
+
+
     </script>
+    
+    <!-- CONTEXT MENU HTML -->
+    <div id="soldier-context-menu" class="hidden absolute z-[100] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border dark:border-gray-700 w-48 py-1 text-sm flex flex-col">
+        <button onclick="cmAction('commander')" class="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"><i data-lucide="star" class="w-4 h-4 mr-2 text-yellow-500"></i> Старший</button>
+        <button onclick="cmAction('ppd')" class="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"><i data-lucide="home" class="w-4 h-4 mr-2 text-green-500"></i> На ППД</button>
+        <button onclick="cmAction('edit')" class="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"><i data-lucide="edit" class="w-4 h-4 mr-2 text-blue-500"></i> Редагувати</button>
+        <div class="border-t dark:border-gray-700 my-1"></div>
+        <div class="px-2 py-1">
+            <select id="ctx-task-select" onchange="cmChangeTask(this.value)" class="w-full text-xs p-1.5 rounded bg-gray-100 dark:bg-gray-700 border dark:border-gray-600 outline-none">
+            </select>
+        </div>
+    </div>
+
     </div> <!-- Закриття app-wrapper -->
 </body>
 </html>

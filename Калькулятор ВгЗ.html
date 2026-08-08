@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор ВгЗ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0b0b;
+            --panel-bg: #121212;
+            --text-main: #e0e0e0;
+            --accent: #4caf50;
+            --accent-hover: #45a049;
+            --border: #222;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+            --purple: #9c27b0;
+            --nav-width: 220px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            padding-top: 60px;
+            padding-left: calc(var(--nav-width) + 40px);
+            transition: padding-left 0.3s ease;
+        }
+
+
+
+        h1,
+        h2,
+        h3 {
+            color: #fff;
+            margin-top: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #0f0f0f;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .top-bar h1 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        .btn-settings {
+            background: transparent;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-settings:hover {
+            background: #222;
+        }
+
+        /* Бічна навігація */
+
+
+
+
+
+
+
+
+        .nav-short {
+            font-weight: bold;
+            color: #aaa;
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+
+
+
+
+
+
+
+
+
+        .nav-count {
+            background: #2a2a2a;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .nav-count.non-zero {
+            background: var(--accent);
+        }
+
+        .nav-count.hidden {
+            display: none;
+        }
+
+        .settings-panel {
+            display: none;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 30px;
+            transition: 0.3s;
+            scroll-margin-top: 80px;
+        }
+
+        .file-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .file-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 0.85em;
+            color: #aaa;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            background-color: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .btn-action {
+            background-color: #2196f3;
+        }
+
+        .btn-action:hover {
+            background-color: #1e88e5;
+        }
+
+        .report-section {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .constructor-item {
+            background-color: #181818;
+            border-left: 4px solid var(--info);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .constructor-item.warning {
+            border-left-color: var(--warning);
+        }
+
+        .constructor-item.success {
+            border-left-color: var(--accent);
+        }
+
+        .constructor-item.danger {
+            border-left-color: var(--danger);
+            background-color: #2a1111;
+        }
+
+        .constructor-item.uav-item {
+            border-left-color: var(--purple);
+            background-color: #2a1e2e;
+        }
+
+        .constructor-item.manual-card {
+            border-left-style: dashed;
+            border-left-color: #888;
+            background-color: #151515;
+        }
+
+        .constructor-item.has-enemy-cas {
+            background-color: #3b1c1c !important;
+            border-left-color: var(--danger) !important;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+        }
+
+        .constructor-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .constructor-controls label {
+            margin-right: -5px;
+            font-size: 0.85em;
+        }
+
+        .input-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .cat-badge {
+            background-color: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            color: #ccc;
+        }
+
+        .uav-warning {
+            color: #ff8a80;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .final-record {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            background: #181818;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #2f2f2f;
+        }
+
+        .record-text {
+            flex-grow: 1;
+            background: transparent;
+            color: #fff;
+            border: 1px dashed #444;
+            padding: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 15px;
+            border-radius: 4px;
+            line-height: 1.4;
+            min-height: 40px;
+            white-space: pre-wrap;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .loss-cb-group {
+            display: flex;
+            gap: 15px;
+            background: #0f0f0f;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        .loss-cb-group label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #ddd;
+        }
+
+        .loss-details-row {
+            display: none;
+            gap: 10px;
+            margin-top: 5px;
+            padding-left: 10px;
+            border-left: 2px solid #555;
+        }
+
+        .loss-details-row.active {
+            display: flex;
+            align-items: center;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 8px 8px 0 0;
+            background-color: #161616;
+        }
+
+        .section-header:hover {
+            background-color: #1c1c1c;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            pointer-events: none;
+            font-size: 1.1em;
+            color: var(--accent);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-icon {
+            font-size: 18px;
+            color: #aaa;
+            transition: transform 0.3s;
+            pointer-events: none;
+        }
+
+        .panel-body {
+            padding: 20px;
+            display: block;
+        }
+
+        .panel.collapsed .panel-body {
+            display: none;
+        }
+
+        .panel.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .panel.collapsed .section-header {
+            border-radius: 8px;
+            border-bottom: none;
+        }
+
+        .list-header-wrap {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+
+        .list-header-wrap h3 {
+            margin: 0;
+        }
+
+        .total-badge {
+            background: #222;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        body {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar">
+        <h1>🎯 Калькулятор ВгЗ <span style="font-size: 14px; font-weight: normal; background-color: #ffaa00; color: #000; padding: 2px 8px; border-radius: 4px; margin-left: 10px; vertical-align: middle;">Тестова бета-версія в розробці</span></h1>
+    </div>
+
+    <div class="container" style="margin-top: 20px;">
+        <div class="panel" id="panel-fire-calculator">
+            <div class="section-header">
+                <h2>Калькулятор ВгЗ (АГС, СПГ, МК-19, Міномети)</h2>
+            </div>
+            <div class="panel-body">
+                <p style="color:#aaa; font-size:14px; margin-top:0;">Ви можете завантажити файл
+                    "fire-missions-report.xlsx" сюди для швидкого підрахунку, або додати рядки вручну.</p>
+
+                <div style="display:flex; gap:10px; margin-bottom: 15px; flex-wrap: wrap;">
+                    <input type="file" id="file-vgz-standalone" accept=".xlsx, .xls" style="display:none;"
+                        onchange="handleVgzFileUpload(event)">
+                    <button class="btn-action" onclick="document.getElementById('file-vgz-standalone').click()">📂
+                        Завантажити Excel (тільки для ВгЗ)</button>
+                </div>
+
+                <div id="vgz-manual-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;">
+                    <!-- Ручні рядки -->
+                </div>
+
+                <button class="btn-small" style="margin-bottom: 15px;" onclick="addManualVgzRow()">+ Додати позицію
+                    вручну</button>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h3 style="margin: 0; color: var(--accent); font-size: 1.05em;">📊 Результат ВгЗ:</h3>
+                    <button class="btn-small btn-action" onclick="copyVgzResult(this)">📋 Копіювати результат</button>
+                </div>
+                <textarea id="vgz-result-textarea" rows="8"
+                    style="width: 100%; box-sizing: border-box; background: #101010; color: #fff; border: 1px dashed #444; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 4px; resize: vertical;"
+                    placeholder="Тут з'явиться підсумок по ВгЗ..."></textarea>
+            </div>
+        </div>
+
+        <script>
+            function getCol(row, possibleNames) {
+                for (let key in row) {
+                    let cleanKey = key.replace(/^\uFEFF/, '').trim().toLowerCase();
+                    if (possibleNames.includes(cleanKey)) {
+                        let val = row[key];
+                        return val !== undefined && val !== null ? val.toString().trim() : '';
+                    }
+                }
+                return '';
+            }
+
+            function parseExcelFile(file) {
+                return new Promise((resolve, reject) => {
+                    if (!file) resolve([]);
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, { type: 'array' });
+                            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+                            resolve(json);
+                        } catch (err) { reject(err); }
+                    };
+                    reader.onerror = (err) => reject(err);
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            let fireMissionsData = [];
+
+            async function handleVgzFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                try {
+                    // Використовуємо існуючу функцію parseExcelFile (визначену вище)
+                    const data = await parseExcelFile(file);
+                    calculateFireMissions(data);
+                    event.target.value = ''; // Скинути інпут
+                } catch (err) {
+                    alert('Помилка при зчитуванні Excel файлу');
+                    console.error(err);
+                }
+            }
+            function addManualVgzRow(pos = '', wp = '', vgz = 1, ammo = 0) {
+                const container = document.getElementById('vgz-manual-list');
+                const row = document.createElement('div');
+                row.style = 'display:flex; gap:10px; align-items:center; background:#181818; padding:8px; border:1px solid #333; border-radius:4px; margin-bottom: 5px; flex-wrap: wrap;';
+                row.innerHTML = `
+                <input type="text" class="vgz-pos" placeholder="Позиція (напр. КАВУН)" value="${pos}" style="flex:1; min-width: 120px; padding:6px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;" oninput="generateVgzText()">
+                <input type="text" class="vgz-wp" placeholder="Зброя (напр. 82мм, АГС, СПГ)" value="${wp}" style="flex:1; min-width: 120px; padding:6px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;" oninput="generateVgzText()">
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="color:#aaa; font-size:12px;">ВгЗ:</span>
+                    <input type="number" min="0" class="vgz-count" value="${vgz}" style="width:60px; padding:6px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;" oninput="generateVgzText()">
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="color:#aaa; font-size:12px;">Пострілів:</span>
+                    <input type="number" min="0" class="vgz-ammo" value="${ammo}" style="width:70px; padding:6px; background:#111; color:#fff; border:1px solid #444; border-radius:4px;" oninput="generateVgzText()">
+                </div>
+                <button type="button" class="btn-icon" style="color:var(--danger); padding:0 8px;" onclick="this.parentElement.remove(); generateVgzText();">✖</button>
+            `;
+                container.appendChild(row);
+                generateVgzText();
+            }
+
+            function extractNumberForAmmo(ammoStr) {
+                if (!ammoStr) return 0;
+                const nums = String(ammoStr).match(/\d+/g);
+                if (!nums) return 0;
+                return parseInt(nums[0], 10) || 0;
+            }
+
+            function calculateFireMissions(customData = null) {
+                const dataToProcess = customData || fireMissionsData;
+                if (!dataToProcess || dataToProcess.length === 0) {
+                    alert('Спершу завантажте Excel-файл (Fire Missions)!');
+                    return;
+                }
+
+                document.getElementById('vgz-manual-list').innerHTML = ''; // Clear manual list
+
+                let aggregated = {};
+
+                dataToProcess.forEach(r => {
+                    const wCat = getCol(r, ['категорія зброї', 'категорія']) || '';
+                    const wName = getCol(r, ['назва зброї', 'зброя', 'озброєння', 'тип зброї']) || '';
+                    const weaponRaw = wCat + ' ' + wName;
+                    const weapon = weaponRaw.toLowerCase();
+                    if (!weapon.trim()) return;
+
+                    // Фільтр потрібної зброї
+                    let wType = '';
+                    if (weapon.includes('агс')) wType = 'АГС';
+                    else if (weapon.includes('спг')) wType = 'СПГ';
+                    else if (weapon.includes('мк') || weapon.includes('mk')) wType = 'МК-19';
+                    else if (weapon.includes('міномет') || weapon.includes('мін')) {
+                        if (weapon.includes('120') || weaponRaw.includes('120')) wType = '120мм';
+                        else if (weapon.includes('81') || weaponRaw.includes('81')) wType = '81мм';
+                        else if (weapon.includes('82') || weaponRaw.includes('82')) wType = '82мм';
+                        else if (weapon.includes('60') || weaponRaw.includes('60')) wType = '60мм';
+                        else wType = 'Міномет';
+                    }
+
+                    if (!wType) return; // Skip if not targeted weapon
+
+                    let posRaw = getCol(r, ['позиція', 'назва позиції', 'позивний репортера', 'позивний', 'репортер']) || 'НЕВІДОМА_ПОЗ';
+                    let cleanPos = posRaw.toString().trim().replace(/^["']|["']$/g, '').toUpperCase();
+
+                    let ammoStr = getCol(r, ['витрати', 'витрачено бк', 'витрачено', 'бк', 'кількість витраченого', 'витрата', 'використано (шт.)', 'використано']);
+                    let ammoNum = extractNumberForAmmo(ammoStr);
+
+                    let key = cleanPos + '___' + wType;
+                    if (!aggregated[key]) {
+                        aggregated[key] = { pos: cleanPos, wp: wType, vgz: 0, ammo: 0 };
+                    }
+
+                    aggregated[key].vgz += 1;
+                    aggregated[key].ammo += ammoNum;
+                });
+
+                const items = Object.values(aggregated);
+                if (items.length === 0) {
+                    alert('В екселі не знайдено ВгЗ для АГС, СПГ, МК-19 або мінометів.');
+                    return;
+                }
+
+                // Populate manual list with aggregated data
+                items.forEach(item => {
+                    addManualVgzRow(item.pos, item.wp, item.vgz, item.ammo);
+                });
+
+                generateVgzText();
+                alert('Дані ВгЗ успішно імпортовано та згруповано!');
+            }
+
+            function generateVgzText() {
+                const rows = document.querySelectorAll('#vgz-manual-list > div');
+                let result = '';
+                rows.forEach(row => {
+                    let pos = row.querySelector('.vgz-pos').value.trim();
+                    let wp = row.querySelector('.vgz-wp').value.trim();
+                    let vgz = row.querySelector('.vgz-count').value || '0';
+                    let ammo = row.querySelector('.vgz-ammo').value || '0';
+
+                    if (pos && wp) {
+                        result += `* ВП "${pos}" (${wp}) ${vgz} ВгЗ - ${ammo} пострілів\n`;
+                    }
+                });
+                document.getElementById('vgz-result-textarea').value = result.trim();
+            }
+
+            function copyVgzResult(btn) {
+                const txt = document.getElementById('vgz-result-textarea');
+                txt.select();
+                document.execCommand("copy");
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Скопійовано!';
+                setTimeout(() => btn.innerHTML = originalText, 2000);
+            }
+        </script>
+</body>
+
+</html>

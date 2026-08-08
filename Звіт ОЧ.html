@@ -1497,6 +1497,9 @@
 
                             <!-- 2. Ударні та спеціальні місії -->
                             <div class="uav-strike-card">
+                                <div style="margin-bottom: 12px; padding: 0 5px;">
+                                    <input type="text" id="uavTimePeriod" class="text-input" placeholder="Власний проміжок часу (напр. з 18:00 05.08 до 06:00 06.08)" style="width: 100%; border: 1px dashed #444; background: #111;" oninput="triggerPreview()">
+                                </div>
                                 <div class="uav-strike-header">
                                     <div class="uav-col-type">🎯 Ударні / Спец. місії</div>
                                     <div class="uav-col-all">📊 Всього вильотів</div>
@@ -2423,11 +2426,23 @@
             // 3.1.2
             let uavRows = [];
             if (getNum('uavRecF') > 0) uavRows.push(`- Розвідувальні місії: **${getNum('uavRecF')}** вильотів, **${getNum('uavRecH')}** год. **${getNum('uavRecM')}** хв.`);
+            
+            let strikeRows = [];
             [uavStrikeLine('FPV-Камікадзе', 'uavFpvT', 'uavFpvO', 'uavFpvFail'),
             uavStrikeLine('Скид з важкого бомбера', 'uavHeavyDropT', 'uavHeavyDropO', 'uavHeavyDropFail'),
             uavStrikeLine('Скид з БпЛА', 'uavDropT', 'uavDropO', 'uavDropFail'),
             uavStrikeLine('Мінування', 'uavMineT', 'uavMineO', 'uavMineFail'),
-            uavStrikeLine('Доставка', 'uavDelT', 'uavDelO', 'uavDelFail')].forEach(row => { if (row) uavRows.push(row); });
+            uavStrikeLine('Доставка', 'uavDelT', 'uavDelO', 'uavDelFail')].forEach(row => { if (row) strikeRows.push(row); });
+            
+            if (strikeRows.length) {
+                let uavTimeStr = getVal('uavTimePeriod');
+                if (uavTimeStr) {
+                    uavRows.push(`<b>- Ударні / Спец. місії (${esc(uavTimeStr)}):</b>`);
+                    uavRows.push(...strikeRows.map(r => '&nbsp;&nbsp;' + r));
+                } else {
+                    uavRows.push(...strikeRows);
+                }
+            }
 
             let uavParts = [];
             if (uavRows.length) uavParts.push(uavRows.join('<br>'));
