@@ -6,41 +6,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Звіт ПБД</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0b0b0b;
-            --panel-bg: #121212;
+            --bg-color: #050505;
+            --panel-bg: rgba(20, 20, 20, 0.6);
             --text-main: #e0e0e0;
-            --accent: #4caf50;
-            --accent-hover: #45a049;
-            --border: #222;
-            --danger: #f44336;
-            --warning: #ff9800;
-            --info: #2196f3;
-            --purple: #9c27b0;
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --border: rgba(255, 255, 255, 0.08);
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --purple: #8b5cf6;
             --nav-width: 220px;
+            --glass-bg: rgba(15, 15, 15, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, rgba(16, 185, 129, 0.03), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.03), transparent 40%);
+            background-attachment: fixed;
             color: var(--text-main);
             margin: 0;
             padding: 20px;
-            padding-top: 60px;
+            padding-top: 80px;
             padding-left: calc(var(--nav-width) + 40px);
-            transition: padding-left 0.3s ease;
+            transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body.sidebar-hidden {
             padding-left: calc(75px + 40px);
         }
 
-        h1,
-        h2,
-        h3 {
+        h1, h2, h3 {
             color: #fff;
             margin-top: 0;
+            font-weight: 600;
+            letter-spacing: -0.02em;
         }
 
         .container {
@@ -53,164 +60,194 @@
             top: 0;
             left: 0;
             right: 0;
-            background: #0f0f0f;
-            padding: 10px 20px;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 12px 20px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .top-bar h1 {
             margin: 0;
-            font-size: 20px;
-            color: var(--accent);
+            font-size: 22px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .btn-settings {
-            background: transparent;
-            border: 1px solid #444;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: #ccc;
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: 500;
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.2s ease;
         }
 
         .btn-settings:hover {
-            background: #222;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transform: translateY(-1px);
         }
 
-        /* Бічна навігація */
         .side-nav {
             position: fixed;
-            top: 60px;
+            top: 61px;
             left: 0;
             bottom: 0;
             width: var(--nav-width);
-            background: #0f0f0f;
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(10px);
             border-right: 1px solid var(--border);
             padding: 20px 0;
             overflow-y: auto;
             z-index: 900;
-            transition: width 0.3s ease;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .side-nav.hidden {
-            width: 75px;
+        .side-nav::-webkit-scrollbar {
+            width: 6px;
+        }
+        .side-nav::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
         }
 
-        .side-nav.hidden .nav-text {
-            display: none;
-        }
-
-        .side-nav.hidden a {
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 5px;
-            gap: 5px;
-            text-align: center;
-        }
-
-        .nav-short {
-            font-weight: bold;
-            color: #aaa;
-            font-size: 0.9em;
-            margin-right: 5px;
-        }
-
-        .side-nav.hidden .nav-short {
-            margin-right: 0;
-            color: #888;
-        }
-
-        .side-nav a:hover .nav-short,
-        .side-nav a.active .nav-short {
-            color: #fff;
+        body.sidebar-hidden .side-nav {
+            width: 65px;
         }
 
         .side-nav a {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            color: #aaa;
+            padding: 12px 20px;
+            color: #a0a0a0;
             text-decoration: none;
-            padding: 10px 20px;
-            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
             font-size: 14px;
-            transition: 0.2s;
+            font-weight: 500;
+            position: relative;
         }
 
-        .side-nav a:hover,
-        .side-nav a.active {
-            background: #181818;
+        .side-nav a:hover, .side-nav a.active {
             color: #fff;
-            border-left-color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .side-nav a.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-short {
+            display: none;
+            font-weight: bold;
+            color: var(--accent);
+            min-width: 35px;
+        }
+
+        body.sidebar-hidden .nav-short {
+            display: inline-block;
+        }
+
+        body.sidebar-hidden .nav-text {
+            display: none;
         }
 
         .nav-count {
-            background: #2a2a2a;
+            background: rgba(255, 255, 255, 0.1);
             color: #fff;
-            padding: 2px 6px;
-            border-radius: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
             font-size: 11px;
-            font-weight: bold;
-            min-width: 20px;
-            text-align: center;
+            margin-left: auto;
+            font-weight: 600;
+            transition: 0.2s;
         }
 
-        .nav-count.non-zero {
+        .side-nav a.active .nav-count,
+        .side-nav a:hover .nav-count {
             background: var(--accent);
+            color: #000;
         }
 
-        .nav-count.hidden {
-            display: none;
+        body.sidebar-hidden .nav-count {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            padding: 1px 5px;
+            font-size: 9px;
+            opacity: 0.8;
         }
 
         .settings-panel {
             display: none;
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--glass-shadow);
         }
 
         .settings-panel.active {
             display: block;
+            animation: fadeIn 0.3s ease;
         }
 
         .panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
             margin-bottom: 30px;
-            transition: 0.3s;
-            scroll-margin-top: 80px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            scroll-margin-top: 90px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .panel:hover {
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
 
         .file-inputs {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
         .file-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
 
         label {
-            font-weight: bold;
-            font-size: 0.85em;
-            color: #aaa;
+            font-weight: 500;
+            font-size: 13px;
+            color: #94a3b8;
+            letter-spacing: 0.02em;
         }
 
         input[type="file"],
@@ -218,67 +255,116 @@
         input[type="number"],
         select,
         textarea {
-            background-color: #1a1a1a;
+            background-color: rgba(255, 255, 255, 0.03);
             color: #fff;
-            border: 1px solid #333;
-            padding: 8px 10px;
-            border-radius: 4px;
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 8px;
             font-family: inherit;
             font-size: 14px;
+            transition: all 0.2s ease;
         }
 
         input:focus,
         select:focus,
         textarea:focus {
+            background-color: rgba(255, 255, 255, 0.05);
             border-color: var(--accent);
             outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
 
         textarea {
             resize: vertical;
+            line-height: 1.5;
         }
 
         button {
-            background-color: var(--accent);
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
             color: white;
             border: none;
             padding: 10px 20px;
-            font-size: 15px;
-            border-radius: 4px;
+            font-size: 14px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: 0.2s;
-            font-weight: bold;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
 
         button:hover {
-            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
         }
 
         .btn-small {
-            padding: 6px 12px;
-            font-size: 13px;
+            padding: 6px 14px;
+            font-size: 12px;
+            border-radius: 6px;
         }
 
         .btn-action {
-            background-color: #2196f3;
+            background: linear-gradient(135deg, var(--info), #2563eb);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
         }
 
         .btn-action:hover {
-            background-color: #1e88e5;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-toggle-sidebar {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            color: #aaa;
+            font-size: 18px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-toggle-sidebar:hover {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            transform: none;
+            box-shadow: none;
         }
 
         .report-section {
-            margin-top: 10px;
+            margin-top: 15px;
             display: none;
         }
 
         .constructor-item {
-            background-color: #181818;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
             border-left: 4px solid var(--info);
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border-radius: 8px;
             position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .constructor-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255,255,255,0.1);
         }
 
         .constructor-item.warning {
@@ -291,127 +377,137 @@
 
         .constructor-item.danger {
             border-left-color: var(--danger);
-            background-color: #2a1111;
+            background: linear-gradient(to right, rgba(239, 68, 68, 0.05), transparent);
         }
 
         .constructor-item.uav-item {
             border-left-color: var(--purple);
-            background-color: #2a1e2e;
+            background: linear-gradient(to right, rgba(139, 92, 246, 0.05), transparent);
         }
 
         .constructor-item.manual-card {
             border-left-style: dashed;
-            border-left-color: #888;
-            background-color: #151515;
+            border-left-color: #64748b;
         }
 
         .constructor-item.has-enemy-cas {
-            background-color: #3b1c1c !important;
             border-left-color: var(--danger) !important;
-            box-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.15) inset;
         }
 
         .constructor-controls {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 12px;
+            margin-top: 12px;
             align-items: center;
             flex-wrap: wrap;
         }
 
         .constructor-controls label {
             margin-right: -5px;
-            font-size: 0.85em;
+            font-size: 13px;
         }
 
         .input-wrap {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
         }
 
         .cat-badge {
-            background-color: #333;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
             margin-left: 10px;
-            color: #ccc;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
         }
 
         .uav-warning {
-            color: #ff8a80;
-            font-size: 0.85em;
-            font-weight: bold;
+            color: #fca5a5;
+            font-size: 12px;
+            font-weight: 600;
             margin-left: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
         }
 
         .final-record {
             display: flex;
             align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 10px;
-            background: #181818;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #2f2f2f;
+            gap: 12px;
+            margin-bottom: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
         }
 
         .record-text {
             flex-grow: 1;
             background: transparent;
-            color: #fff;
-            border: 1px dashed #444;
-            padding: 8px;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 15px;
-            border-radius: 4px;
-            line-height: 1.4;
+            color: #f8fafc;
+            border: 1px dashed #475569;
+            padding: 10px 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            border-radius: 6px;
+            line-height: 1.5;
             min-height: 40px;
             white-space: pre-wrap;
+            transition: border-color 0.2s;
         }
-
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-danger:hover {
-            background-color: #d32f2f;
+        
+        .record-text:focus {
+            border-color: var(--accent);
+            border-style: solid;
         }
 
         .loss-cb-group {
             display: flex;
-            gap: 15px;
-            background: #0f0f0f;
-            padding: 8px 12px;
-            border-radius: 4px;
-            border: 1px solid #333;
+            gap: 20px;
+            background: rgba(255,255,255,0.02);
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
         }
 
         .loss-cb-group label {
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 5px;
-            color: #ddd;
+            gap: 8px;
+            color: #cbd5e1;
+            transition: color 0.2s;
+        }
+        
+        .loss-cb-group label:hover {
+            color: #fff;
+        }
+        
+        input[type="checkbox"] {
+            accent-color: var(--accent);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
         }
 
         .loss-details-row {
             display: none;
-            gap: 10px;
-            margin-top: 5px;
-            padding-left: 10px;
-            border-left: 2px solid #555;
+            gap: 12px;
+            margin-top: 8px;
+            padding-left: 12px;
+            border-left: 2px solid #334155;
         }
 
         .loss-details-row.active {
             display: flex;
             align-items: center;
+            animation: fadeIn 0.3s ease;
         }
 
         .section-header {
@@ -419,22 +515,23 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
-            padding: 15px 20px;
+            padding: 18px 25px;
             cursor: pointer;
             user-select: none;
-            border-radius: 8px 8px 0 0;
-            background-color: #161616;
+            border-radius: 12px 12px 0 0;
+            background: rgba(255,255,255,0.02);
+            transition: background 0.2s;
         }
 
         .section-header:hover {
-            background-color: #1c1c1c;
+            background: rgba(255,255,255,0.04);
         }
 
         .section-header h2 {
             margin: 0;
             pointer-events: none;
-            font-size: 1.1em;
-            color: var(--accent);
+            font-size: 16px;
+            color: #f8fafc;
         }
 
         .header-controls {
@@ -444,14 +541,14 @@
         }
 
         .toggle-icon {
-            font-size: 18px;
-            color: #aaa;
-            transition: transform 0.3s;
+            font-size: 20px;
+            color: #64748b;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
         }
 
         .panel-body {
-            padding: 20px;
+            padding: 25px;
             display: block;
         }
 
@@ -464,7 +561,7 @@
         }
 
         .panel.collapsed .section-header {
-            border-radius: 8px;
+            border-radius: 12px;
             border-bottom: none;
         }
 
@@ -472,23 +569,142 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 25px;
             margin-bottom: 15px;
         }
 
         .list-header-wrap h3 {
             margin: 0;
+            font-size: 16px;
+            color: #cbd5e1;
         }
 
         .total-badge {
-            background: #222;
+            background: rgba(255, 255, 255, 0.1);
             color: #fff;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: bold;
+            font-size: 12px;
+            font-weight: 600;
         }
-    </style>
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    
+        /* Settings panel specific styles */
+        input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
+        }
+        
+        input[type="file"]::file-selector-button {
+            margin-right: 12px;
+            padding: 8px 16px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        textarea#pos-dict, textarea#weapon-dict {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #10b981;
+            font-size: 13px;
+            padding: 15px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 8px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+            line-height: 1.6;
+        }
+        
+        textarea#pos-dict:focus, textarea#weapon-dict:focus {
+            border-color: #10b981;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3), 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        .settings-panel h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .settings-btn-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            padding-top: 15px;
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .btn-export {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+        }
+        .btn-export:hover {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            box-shadow: 0 6px 15px rgba(14, 165, 233, 0.3);
+        }
+        
+        .btn-import {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+        }
+        .btn-import:hover {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            box-shadow: 0 6px 15px rgba(245, 158, 11, 0.3);
+        }
+    
+        .drop-zone {
+            border: 2px dashed #475569;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .file-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            display: inline-block;
+        }
+
+        .file-badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+    
+        </style>
 </head>
 
 <body>
@@ -500,13 +716,16 @@
             <h1 style="display: flex; align-items: center; gap: 10px;">
                 <span>Генератор звіту для ПБД</span>
                 <button type="button" onclick="openChangelogModal()"
-                    style="font-size: 11px; background: #059669; color: #fff; border: none; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
-                    title="Натисніть для перегляду історії оновлень">
-                    📋 v1.1.0
+                    style="font-size: 11px; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #fff; border: none; padding: 4px 12px; border-radius: 20px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2); letter-spacing: 0.5px;"
+                    title="Відкрити історію оновлень програми">
+                    🚀 v1.2.0
                 </button>
             </h1>
         </div>
-        <button class="btn-settings" onclick="toggleSettings()">⚙️ Налаштування та Файли</button>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-settings" onclick="toggleTab('files-panel')" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);">📄 Файли</button>
+            <button class="btn-settings" onclick="toggleTab('settings-panel')">⚙️ Налаштування</button>
+        </div>
     </div>
 
     <!-- Бічне меню -->
@@ -529,60 +748,59 @@
 
     <div class="container">
 
-        <div id="settings-panel" class="settings-panel active">
-            <h2>Завантаження даних (.xlsx, .xls, .csv)</h2>
-            <div class="file-inputs">
-                <div class="file-group">
-                    <label>Події (events-report)</label>
-                    <input type="file" id="file-events" accept=".xlsx, .xls, .csv">
-                </div>
-                <div class="file-group">
-                    <label>Вогневі задачі (fire-missions)</label>
-                    <input type="file" id="file-fire" accept=".xlsx, .xls, .csv">
-                </div>
-                <div class="file-group">
-                    <label>БпЛА (uav-report)</label>
-                    <input type="file" id="file-uav" accept=".xlsx, .xls, .csv">
-                </div>
-                <div class="file-group">
-                    <label>Назва підрозділу (для шаблонів)</label>
-                    <input type="text" id="unit-name" value="1 мб 111 овмбр">
+        <!-- FILES TAB -->
+        <div id="files-panel" class="settings-panel active">
+            <h2>📄 Завантаження файлів</h2>
+            <div class="file-inputs" style="display: block;">
+                <div class="drop-zone" id="drop-zone">
+                    <input type="file" id="file-all" accept=".xlsx, .xls, .csv" multiple style="display: none;">
+                    <div style="font-size: 32px; margin-bottom: 10px;">📥</div>
+                    <div style="font-size: 15px; margin-bottom: 5px; color: #fff; font-weight: 500;">Перетягніть файли сюди або натисніть</div>
+                    <div style="font-size: 12px; color: #94a3b8;">Потрібні: Події (events), Вогневі (fire), БпЛА (uav)</div>
+                    <div id="drop-badges" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <span class="file-badge" id="badge-events">❌ Події не знайдено</span>
+                        <span class="file-badge" id="badge-fire">❌ Вогневі не знайдено</span>
+                        <span class="file-badge" id="badge-uav">❌ БпЛА не знайдено</span>
+                    </div>
                 </div>
             </div>
+            
+            <button onclick="processFiles()" style="width: 100%; font-size: 16px; padding: 15px; letter-spacing: 1px; margin-top: 10px;">
+                🔄 Згенерувати всі звіти
+            </button>
+        </div>
 
-            <div class="file-group" style="margin-bottom: 20px;">
-                <label>Словник позицій (Формат: Шукана назва = Як виводити)</label>
-                <textarea id="pos-dict" rows="5"
-                    placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;"></textarea>
-                <small style="color:#888;">Програма ігнорує регістр і лапки при пошуку. Зберігається
-                    автоматично.</small>
+        <!-- SETTINGS TAB -->
+        <div id="settings-panel" class="settings-panel">
+            <h2>⚙️ Налаштування</h2>
+            <div class="file-group" style="margin-bottom: 15px;">
+                <label>🏢 Назва підрозділу (для шаблонів)</label>
+                <input type="text" id="unit-name" value="1 мб 111 овмбр" style="width: 100%; box-sizing: border-box;">
             </div>
 
-            <div class="file-group" style="margin-bottom: 20px;">
-                <label>Словник зброї ОВгП за позиціями (Формат: Назва позиції = Зброя)</label>
-                <textarea id="weapon-dict" rows="5"
-                    placeholder="Гниль = УПІК 82 (82мм)&#10;Квадрат= КБА-222 (120мм)&#10;Баран = МП-120 (120мм)"></textarea>
-                <small style="color:#888;">Використовується для заміни загального &quot;міномет&quot; на конкретну
-                    систему озброєння. Зберігається автоматично.</small>
+            <div class="file-group"  style="margin-bottom: 15px;">
+                <label>📖 Словник позицій <span style="font-size: 11px; color: #64748b; font-weight: normal; margin-left: 5px;">(Формат: Шукана назва = Як виводити)</span></label>
+                <textarea id="pos-dict" rows="6"
+                    placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;" style="width: 100%; box-sizing: border-box;"></textarea>
+                <small style="color:#64748b; display: flex; align-items: center; gap: 5px; margin-top: 5px;"><i>💡 Програма ігнорує регістр і лапки при пошуку. Зберігається автоматично.</i></small>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                <button type="button" onclick="openSettingsExportModal()"
-                    style="background-color: #2563eb; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;"
-                    title="Заберегти зашифрований файл налаштувань Звіту ПБД">
-                    🔒 Експорт налаштувань (.enc)
+            <div class="file-group" style="margin-bottom: 15px;">
+                <label>⚔️ Словник зброї ОВгП за позиціями <span style="font-size: 11px; color: #64748b; font-weight: normal; margin-left: 5px;">(Формат: Назва позиції = Зброя)</span></label>
+                <textarea id="weapon-dict" rows="6"
+                    placeholder="Гниль = УПІК 82 (82мм)&#10;Квадрат= КБА-222 (120мм)&#10;Баран = МП-120 (120мм)" style="width: 100%; box-sizing: border-box;"></textarea>
+                <small style="color:#64748b; display: flex; align-items: center; gap: 5px; margin-top: 5px;"><i>💡 Використовується для заміни загального "міномет" на конкретну систему озброєння. Зберігається автоматично.</i></small>
+            </div>
+
+            <div class="settings-btn-row">
+                <button type="button" onclick="openSettingsExportModal()" class="btn-export" title="Зберегти налаштування у файл для перенесення на інший ПК">
+                    💾 Експорт налаштувань (.enc)
                 </button>
-                <button type="button" onclick="triggerSettingsImport()"
-                    style="background-color: #059669; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;"
-                    title="Завантажити налаштування Звіту ПБД із зашифрованого файлу">
-                    🔓 Імпорт налаштувань (.enc)
+                <button type="button" onclick="triggerSettingsImport()" class="btn-import" title="Завантажити раніше збережені налаштування з файлу">
+                    📂 Імпорт налаштувань (.enc)
                 </button>
-                <input type="file" id="settingsFileInput" accept=".enc" style="display: none;"
-                    onchange="handleSettingsFileSelected(event)" />
+                <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
             </div>
-
-            <button onclick="processFiles()" style="width: 100%; padding: 15px; font-size: 18px;">🔄 Згенерувати всі
-                звіти</button>
         </div>
 
         <datalist id="saved-positions"></datalist>
@@ -1074,8 +1292,25 @@
             document.body.classList.toggle('sidebar-hidden');
         }
 
-        function toggleSettings() {
-            document.getElementById('settings-panel').classList.toggle('active');
+        function toggleTab(tabId) {
+            const filesPanel = document.getElementById('files-panel');
+            const settingsPanel = document.getElementById('settings-panel');
+            
+            if (tabId === 'files-panel') {
+                if (filesPanel.classList.contains('active')) {
+                    filesPanel.classList.remove('active');
+                } else {
+                    filesPanel.classList.add('active');
+                    settingsPanel.classList.remove('active');
+                }
+            } else {
+                if (settingsPanel.classList.contains('active')) {
+                    settingsPanel.classList.remove('active');
+                } else {
+                    settingsPanel.classList.add('active');
+                    filesPanel.classList.remove('active');
+                }
+            }
         }
 
         function togglePanel(panelId) {
@@ -1316,8 +1551,68 @@
             });
         }
 
+        
+        let dropEventsFile = null;
+        let dropFireFile = null;
+        let dropUavFile = null;
+
+        function setupDropZone() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-all');
+            if(!dropZone) return;
+            
+            dropZone.addEventListener('click', () => fileInput.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    handleDroppedFiles(e.dataTransfer.files);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleDroppedFiles(e.target.files);
+                }
+            });
+        }
+
+        function handleDroppedFiles(files) {
+            Array.from(files).forEach(file => {
+                const name = file.name.toLowerCase();
+                if (name.includes('events')) {
+                    dropEventsFile = file;
+                    document.getElementById('badge-events').innerHTML = `✅ ${file.name}`;
+                    document.getElementById('badge-events').classList.add('success');
+                } else if (name.includes('fire')) {
+                    dropFireFile = file;
+                    document.getElementById('badge-fire').innerHTML = `✅ ${file.name}`;
+                    document.getElementById('badge-fire').classList.add('success');
+                } else if (name.includes('uav') || name.includes('бпла')) {
+                    dropUavFile = file;
+                    document.getElementById('badge-uav').innerHTML = `✅ ${file.name}`;
+                    document.getElementById('badge-uav').classList.add('success');
+                }
+            });
+        }
+
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            setupDropZone();
+        });
+
         async function processFiles() {
-            if (!document.getElementById('file-events').files[0] || !document.getElementById('file-fire').files[0] || !document.getElementById('file-uav').files[0]) {
+            if (!dropEventsFile || !dropFireFile || !dropUavFile) {
                 alert("Завантажте 3 обов'язкові файли."); return;
             }
 
@@ -1326,12 +1621,13 @@
             localStorage.setItem('saved-weapon-dict', document.getElementById('weapon-dict').value);
 
             try {
-                eventsData = await parseExcelFile(document.getElementById('file-events').files[0]);
-                fireMissionsData = await parseExcelFile(document.getElementById('file-fire').files[0]);
-                uavData = await parseExcelFile(document.getElementById('file-uav').files[0]);
+                eventsData = await parseExcelFile(dropEventsFile);
+                fireMissionsData = await parseExcelFile(dropFireFile);
+                uavData = await parseExcelFile(dropUavFile);
 
                 buildPosMap();
                 buildWeaponMap();
+                document.getElementById('files-panel').classList.remove('active');
                 document.getElementById('settings-panel').classList.remove('active');
 
                 ['report-1-list', 'report-3-1-1', 'report-2-fpv', 'report-2-drop', 'report-2-mortar', 'report-2-art', 'report-2-other', 'report-3-fpv', 'report-3-drop', 'report-3-heavy', 'report-3-delivery', 'report-4-ovgp', 'report-4-gen'].forEach(id => {
@@ -2321,7 +2617,7 @@
                         if (p2.toLowerCase().includes('відсутні')) {
                             return match;
                         }
-                        return p1 + `<span style="background: blue; mso-highlight: blue; color: white;"><b>${p2}</b></span>`;
+                        return p1 + `<span style="background: blue; mso-highlight: blue; color: white;"><b>${p2}</b></span><span style="mso-highlight: none; background: transparent;">&#8203;</span>`;
                     });
 
                     // 2. Весь рядок отримує жовтий фон
@@ -2329,7 +2625,7 @@
                 } else {
                     // Правила для інших списків (наприклад, 1.2 Знищені цілі)
                     // Виділяємо ЗНИЩЕНО та ПОРАНЕНО жовтим фоном і жирним шрифтом (до коми, крапки або кінця)
-                    formattedLine = formattedLine.replace(/(ЗНИЩЕНО[^,;.]*[.,;]?|ПОРАНЕНО[^,;.]*[.,;]?)/gi, '<span style="background: yellow; mso-highlight: yellow;"><b>$1</b></span>&nbsp;');
+                    formattedLine = formattedLine.replace(/(ЗНИЩЕНО[^,;.]*[.,;]?|ПОРАНЕНО[^,;.]*[.,;]?)/gi, '<span style="background: yellow; mso-highlight: yellow;"><b>$1</b></span><span style="mso-highlight: none; background: transparent;">&#8203;</span>');
                 }
 
                 // Весь текст робимо курсивом
@@ -2338,26 +2634,41 @@
 
             if (!plainText.trim()) return alert("Список порожній.");
 
-            try {
-                if (navigator.clipboard && window.ClipboardItem) {
-                    const typeText = new Blob([plainText.trim()], { type: 'text/plain' });
-                    const typeHtml = new Blob([htmlText], { type: 'text/html' });
-                    const data = [new ClipboardItem({ 'text/plain': typeText, 'text/html': typeHtml })];
-                    await navigator.clipboard.write(data);
-                } else {
-                    await navigator.clipboard.writeText(plainText.trim());
-                }
+            // Глобальний метод перехоплення події 'copy' для вставки "сирого" HTML без цензури браузера
+            const msoHtml = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+                <head></head>
+                <body>
+                    <div style="font-size: 13pt; font-family: 'Times New Roman', serif;">
+                        ${htmlText}
+                    </div>
+                </body>
+                </html>
+            `;
 
+            const copyListener = function(e) {
+                e.clipboardData.setData('text/plain', plainText.trim());
+                e.clipboardData.setData('text/html', msoHtml);
+                e.preventDefault();
+            };
+
+            document.addEventListener('copy', copyListener);
+            
+            let success = false;
+            try {
+                success = document.execCommand('copy');
+            } catch (err) {
+                console.error(err);
+            }
+
+            document.removeEventListener('copy', copyListener);
+
+            if (success) {
                 const ob = btn.style.backgroundColor, ot = btn.innerText;
                 btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
                 setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
-            } catch (e) {
-                // Запасний варіант, якщо ClipboardItem не підтримується
-                navigator.clipboard.writeText(plainText.trim()).then(() => {
-                    const ob = btn.style.backgroundColor, ot = btn.innerText;
-                    btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
-                    setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
-                }).catch(err => alert("Помилка копіювання: " + err));
+            } else {
+                alert("Помилка копіювання. Ваш браузер блокує прямий доступ до буфера.");
             }
         }
 
@@ -2373,6 +2684,8 @@
             uNameInput.addEventListener('input', function () { localStorage.setItem('saved-unit-name', this.value); });
             posDictInput.addEventListener('input', function () { localStorage.setItem('saved-pos-dict', this.value); });
             weaponDictInput.addEventListener('input', function () { localStorage.setItem('saved-weapon-dict', this.value); });
+            
+            
 
             document.addEventListener('input', (e) => {
                 if (e.target && e.target.classList.contains('record-text')) {
@@ -2547,10 +2860,12 @@
                 if (s['saved-pos-dict'] !== undefined) {
                     document.getElementById('pos-dict').value = s['saved-pos-dict'];
                     localStorage.setItem('saved-pos-dict', s['saved-pos-dict']);
+                    
                 }
                 if (s['saved-weapon-dict'] !== undefined) {
                     document.getElementById('weapon-dict').value = s['saved-weapon-dict'];
                     localStorage.setItem('saved-weapon-dict', s['saved-weapon-dict']);
+                    
                 }
 
                 closeSettingsImportModal();
@@ -2567,9 +2882,31 @@
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.2.0",
+                date: "11.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🎨 Тотальний редизайн UI/UX",
+                        items: [
+                            "<b>Новий преміум-дизайн</b>: Повністю оновлено інтерфейс додатка (градієнти, тіні, ефекти наведення).",
+                            "<b>Єдина зона Drag-and-Drop</b>: Завантаження трьох файлів одним перетягуванням.",
+                            "<b>Розподіл логіки (Вкладки)</b>: Окрема вкладка для щоденної генерації і окрема для налаштувань.",
+                            "<b>Оптимізація текстових полів</b>: Словники тепер виглядають як зручні редактори коду."
+                        ]
+                    },
+                    {
+                        title: "🛠 Виправлення помилок (Bug Fixes)",
+                        items: [
+                            "<b>Збереження маркерів у Word</b>: Жовтий колір більше не зникає при копіюванні у Word завдяки inline-стилям."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.1.0",
                 date: "05.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "💥 Оновлення для мінометів",
@@ -2669,7 +3006,7 @@
                 <h3 style="margin: 0; font-size: 18px; color: #34d399; display: flex; align-items: center; gap: 8px;">
                     📋 <span>Історія оновлень (Звіт ПБД)</span>
                     <span
-                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.1.0</span>
+                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.2.0</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">✕</button>
