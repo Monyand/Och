@@ -1,0 +1,1 @@
+const mgrs = require('mgrs'); const pt = mgrs.toPoint('37UDQ0378937610'); const [lon, lat] = pt; console.log('Lat:', lat, 'Lon:', lon); fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon + '&zoom=12', {headers: {'User-Agent': 'NodeJS'}}).then(r=>r.json()).then(d=>console.log(d.display_name)).catch(console.error);

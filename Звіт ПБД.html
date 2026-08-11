@@ -495,11 +495,13 @@
 
     <div class="top-bar">
         <div class="header-title">
-            <button class="btn-toggle-sidebar" id="toggle-sidebar-btn"
-                onclick="toggleSidebar()" title="Сховати/Показати меню">☰</button>
+            <button class="btn-toggle-sidebar" id="toggle-sidebar-btn" onclick="toggleSidebar()"
+                title="Сховати/Показати меню">☰</button>
             <h1 style="display: flex; align-items: center; gap: 10px;">
                 <span>Генератор звіту для ПБД</span>
-                <button type="button" onclick="openChangelogModal()" style="font-size: 11px; background: #059669; color: #fff; border: none; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Натисніть для перегляду історії оновлень">
+                <button type="button" onclick="openChangelogModal()"
+                    style="font-size: 11px; background: #059669; color: #fff; border: none; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"
+                    title="Натисніть для перегляду історії оновлень">
                     📋 v1.1.0
                 </button>
             </h1>
@@ -565,13 +567,18 @@
             </div>
 
             <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                <button type="button" onclick="openSettingsExportModal()" style="background-color: #2563eb; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;" title="Заберегти зашифрований файл налаштувань Звіту ПБД">
+                <button type="button" onclick="openSettingsExportModal()"
+                    style="background-color: #2563eb; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;"
+                    title="Заберегти зашифрований файл налаштувань Звіту ПБД">
                     🔒 Експорт налаштувань (.enc)
                 </button>
-                <button type="button" onclick="triggerSettingsImport()" style="background-color: #059669; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;" title="Завантажити налаштування Звіту ПБД із зашифрованого файлу">
+                <button type="button" onclick="triggerSettingsImport()"
+                    style="background-color: #059669; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;"
+                    title="Завантажити налаштування Звіту ПБД із зашифрованого файлу">
                     🔓 Імпорт налаштувань (.enc)
                 </button>
-                <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
+                <input type="file" id="settingsFileInput" accept=".enc" style="display: none;"
+                    onchange="handleSettingsFileSelected(event)" />
             </div>
 
             <button onclick="processFiles()" style="width: 100%; padding: 15px; font-size: 18px;">🔄 Згенерувати всі
@@ -1045,7 +1052,7 @@
 
         </div>
 
-        </div>
+    </div>
     </div>
 
     <script>
@@ -2296,17 +2303,62 @@
             }
         }
 
-        window.copyReportList = function (id, btn) {
-            let t = '';
+        window.copyReportList = async function (id, btn) {
+            let plainText = '';
+            let htmlText = '';
+
             document.getElementById(id).querySelectorAll('.record-text').forEach((ta) => {
-                t += `${ta.value.trim()}\n`;
+                let line = ta.value.trim();
+                if (!line) return;
+                plainText += line + '\n';
+
+                let formattedLine = line;
+
+                if (id === 'report-3-1-1') {
+                    // Спеціальні правила для пункту 3.1.1 (Бойові зіткнення)
+                    // 1. Синій фон для власних втрат (після слова "Втрати:" до крапки)
+                    formattedLine = formattedLine.replace(/(Втрати:\s*)([^.]+)/gi, function (match, p1, p2) {
+                        if (p2.toLowerCase().includes('відсутні')) {
+                            return match;
+                        }
+                        return p1 + `<span style="background: blue; mso-highlight: blue; color: white;"><b>${p2}</b></span>`;
+                    });
+
+                    // 2. Весь рядок отримує жовтий фон
+                    formattedLine = `<span style="background: yellow; mso-highlight: yellow;">${formattedLine}</span>`;
+                } else {
+                    // Правила для інших списків (наприклад, 1.2 Знищені цілі)
+                    // Виділяємо ЗНИЩЕНО та ПОРАНЕНО жовтим фоном і жирним шрифтом (до коми, крапки або кінця)
+                    formattedLine = formattedLine.replace(/(ЗНИЩЕНО[^,;.]*[.,;]?|ПОРАНЕНО[^,;.]*[.,;]?)/gi, '<span style="background: yellow; mso-highlight: yellow;"><b>$1</b></span>&nbsp;');
+                }
+
+                // Весь текст робимо курсивом
+                htmlText += `<i>${formattedLine}</i><br>`;
             });
-            if (!t.trim()) return alert("Список порожній.");
-            navigator.clipboard.writeText(t.trim()).then(() => {
+
+            if (!plainText.trim()) return alert("Список порожній.");
+
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    const typeText = new Blob([plainText.trim()], { type: 'text/plain' });
+                    const typeHtml = new Blob([htmlText], { type: 'text/html' });
+                    const data = [new ClipboardItem({ 'text/plain': typeText, 'text/html': typeHtml })];
+                    await navigator.clipboard.write(data);
+                } else {
+                    await navigator.clipboard.writeText(plainText.trim());
+                }
+
                 const ob = btn.style.backgroundColor, ot = btn.innerText;
                 btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
                 setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
-            }).catch(e => alert("Помилка: " + e));
+            } catch (e) {
+                // Запасний варіант, якщо ClipboardItem не підтримується
+                navigator.clipboard.writeText(plainText.trim()).then(() => {
+                    const ob = btn.style.backgroundColor, ot = btn.innerText;
+                    btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
+                    setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
+                }).catch(err => alert("Помилка копіювання: " + err));
+            }
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -2375,7 +2427,7 @@
             combined.set(salt, 0);
             combined.set(iv, salt.byteLength);
             combined.set(new Uint8Array(encrypted), salt.byteLength + iv.byteLength);
-            
+
             let binary = '';
             for (let i = 0; i < combined.byteLength; i++) {
                 binary += String.fromCharCode(combined[i]);
@@ -2391,11 +2443,11 @@
             const raw = atob(base64Data);
             const combined = new Uint8Array(new ArrayBuffer(raw.length));
             for (let i = 0; i < raw.length; i++) combined[i] = raw.charCodeAt(i);
-            
+
             const salt = combined.slice(0, 16);
             const iv = combined.slice(16, 28);
             const encrypted = combined.slice(28);
-            
+
             const key = await deriveCryptoKey(password, salt);
             const decrypted = await crypto.subtle.decrypt(
                 { name: "AES-GCM", iv: iv }, key, encrypted
@@ -2548,8 +2600,8 @@
             let html = '';
             APP_CHANGELOG.forEach(item => {
                 const borderClass = item.isCurrent ? 'border-left: 4px solid #10b981;' : 'border-left: 4px solid #6b7280; opacity: 0.8;';
-                const currentBadge = item.isCurrent 
-                    ? `<span style="background: #064e3b; color: #a7f3d0; font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; border: 1px solid #047857;">Поточна</span>` 
+                const currentBadge = item.isCurrent
+                    ? `<span style="background: #064e3b; color: #a7f3d0; font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; border: 1px solid #047857;">Поточна</span>`
                     : '';
                 html += `
                 <div style="background: #262626; border-radius: 8px; padding: 12px; ${borderClass} border: 1px solid #333; margin-bottom: 12px;">
@@ -2608,48 +2660,69 @@
     </script>
 
     <!-- МОДАЛЬНЕ ВІКНО CHANGELOG ЗВІТУ ПБД -->
-    <div id="modal-changelog" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 550px; overflow: hidden; padding: 20px; color: #fff; max-height: 80vh; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+    <div id="modal-changelog"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div
+            style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 550px; overflow: hidden; padding: 20px; color: #fff; max-height: 80vh; display: flex; flex-direction: column;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
                 <h3 style="margin: 0; font-size: 18px; color: #34d399; display: flex; align-items: center; gap: 8px;">
                     📋 <span>Історія оновлень (Звіт ПБД)</span>
-                    <span style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.1.0</span>
+                    <span
+                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.1.0</span>
                 </h3>
-                <button onclick="closeChangelogModal()" style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">✕</button>
+                <button onclick="closeChangelogModal()"
+                    style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">✕</button>
             </div>
             <div id="changelogModalList" style="overflow-y: auto; flex: 1; padding-right: 5px;"></div>
-            <div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #888;">
+            <div
+                style="border-top: 1px solid #333; padding-top: 10px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #888;">
                 <span>📄 Офлайн-система Звіт ПБД</span>
-                <button onclick="closeChangelogModal()" style="padding: 6px 14px; background: #059669; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Зрозуміло</button>
+                <button onclick="closeChangelogModal()"
+                    style="padding: 6px 14px; background: #059669; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Зрозуміло</button>
             </div>
         </div>
     </div>
 
     <!-- МОДАЛКА: Експорт налаштувань Звіт ПБД -->
-    <div id="modal-settings-export-pwd" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; padding: 20px; color: #fff;">
+    <div id="modal-settings-export-pwd"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div
+            style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; padding: 20px; color: #fff;">
             <h3 style="margin-top: 0; font-size: 18px; color: #60a5fa;">🔒 Експорт налаштувань Звіту ПБД (.enc)</h3>
-            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Введіть пароль для шифрування словника позицій, словника зброї та назви підрозділу. Без пароля відкрити файл буде неможливо!</p>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Введіть пароль для шифрування словника
+                позицій, словника зброї та назви підрозділу. Без пароля відкрити файл буде неможливо!</p>
             <form onsubmit="executeSettingsExport(event)">
-                <input required type="password" id="settings-export-pwd" placeholder="Пароль шифрування..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 15px; font-size: 14px;" />
+                <input required type="password" id="settings-export-pwd" placeholder="Пароль шифрування..."
+                    style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 15px; font-size: 14px;" />
                 <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" onclick="closeSettingsExportModal()" style="padding: 8px 14px; background: #333; color: #ccc; border: none; border-radius: 6px; cursor: pointer;">Скасувати</button>
-                    <button type="submit" style="padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🔒 Завантажити .enc</button>
+                    <button type="button" onclick="closeSettingsExportModal()"
+                        style="padding: 8px 14px; background: #333; color: #ccc; border: none; border-radius: 6px; cursor: pointer;">Скасувати</button>
+                    <button type="submit"
+                        style="padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🔒
+                        Завантажити .enc</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- МОДАЛКА: Імпорт налаштувань Звіт ПБД -->
-    <div id="modal-settings-import-pwd" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; padding: 20px; color: #fff;">
+    <div id="modal-settings-import-pwd"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div
+            style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; padding: 20px; color: #fff;">
             <h3 style="margin-top: 0; font-size: 18px; color: #34d399;">🔓 Розшифровка та імпорт (.enc)</h3>
-            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Файл розпізнано як налаштування Звіту ПБД. Введіть пароль для розшифрування та застосування словників.</p>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Файл розпізнано як налаштування Звіту ПБД.
+                Введіть пароль для розшифрування та застосування словників.</p>
             <form onsubmit="executeSettingsImport(event)">
-                <input required type="password" id="settings-import-pwd" placeholder="Пароль розшифрування..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 15px; font-size: 14px;" />
+                <input required type="password" id="settings-import-pwd" placeholder="Пароль розшифрування..."
+                    style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 15px; font-size: 14px;" />
                 <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" onclick="closeSettingsImportModal()" style="padding: 8px 14px; background: #333; color: #ccc; border: none; border-radius: 6px; cursor: pointer;">Скасувати</button>
-                    <button type="submit" style="padding: 8px 16px; background: #059669; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🔓 Застосувати</button>
+                    <button type="button" onclick="closeSettingsImportModal()"
+                        style="padding: 8px 14px; background: #333; color: #ccc; border: none; border-radius: 6px; cursor: pointer;">Скасувати</button>
+                    <button type="submit"
+                        style="padding: 8px 16px; background: #059669; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🔓
+                        Застосувати</button>
                 </div>
             </form>
         </div>
