@@ -723,13 +723,14 @@
                 <button type="button" onclick="openChangelogModal()"
                     style="font-size: 11px; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #fff; border: none; padding: 4px 12px; border-radius: 20px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2); letter-spacing: 0.5px;"
                     title="Відкрити історію оновлень програми">
-                    🚀 v1.2.1
+                    🚀 v1.2.2
                 </button>
             </h1>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-settings" onclick="toggleTab('files-panel')" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);">📄 Файли</button>
-            <button class="btn-settings" onclick="toggleTab('settings-panel')">⚙️ Налаштування</button>
+                <div style="display: flex; gap: 10px;">
+            <button class="btn-settings" onclick="clearAppMemory()" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" title="Очистити всі поточні звіти та видалити пам'ять">🗑 Очистити звіт</button>
+            <button class="btn-settings" onclick="toggleTab('files-panel')" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);">📂 Файли</button>
+            <button class="btn-settings" onclick="toggleTab('settings-panel')">⚙ Налаштування</button>
         </div>
     </div>
 
@@ -1616,6 +1617,83 @@
             setupDropZone();
         });
 
+        
+        // ─── MEMORY (АВТОЗБЕРЕЖЕННЯ) ─────────────────────────────────
+        function saveAppMemory() {
+            const container = document.getElementById('reports-container');
+            if (!container || container.style.display === 'none') return;
+            
+            // Sync textareas and inputs to attributes so innerHTML captures their state
+            container.querySelectorAll('textarea').forEach(ta => {
+                ta.textContent = ta.value; 
+            });
+            container.querySelectorAll('input').forEach(inp => {
+                if (inp.type === 'checkbox' || inp.type === 'radio') {
+                    if (inp.checked) inp.setAttribute('checked', 'checked');
+                    else inp.removeAttribute('checked');
+                } else {
+                    inp.setAttribute('value', inp.value);
+                }
+            });
+            container.querySelectorAll('select').forEach(sel => {
+                sel.querySelectorAll('option').forEach(opt => {
+                    if (opt.value === sel.value) opt.setAttribute('selected', 'selected');
+                    else opt.removeAttribute('selected');
+                });
+            });
+
+            localStorage.setItem('zvit_memory_html', container.innerHTML);
+            
+            // Save counters memory as well to restore sidebar
+            const counters = {};
+            document.querySelectorAll('.nav-count').forEach(el => counters[el.id] = el.innerText);
+            localStorage.setItem('zvit_memory_counters', JSON.stringify(counters));
+            
+            // Save docx generation visibility
+            const docxBtn = document.getElementById('fab-download-docx');
+            if (docxBtn) {
+                localStorage.setItem('zvit_memory_docx_btn', docxBtn.style.display);
+            }
+        }
+
+        function clearAppMemory() {
+            if (!confirm("🗑 Ви дійсно хочете очистити звіт? Усі згенеровані та додані вручну записи будуть видалені!")) return;
+            localStorage.removeItem('zvit_memory_html');
+            localStorage.removeItem('zvit_memory_counters');
+            localStorage.removeItem('zvit_memory_docx_btn');
+            location.reload();
+        }
+
+        window.addEventListener('load', () => {
+            // Load memory if exists
+            const memory = localStorage.getItem('zvit_memory_html');
+            if (memory) {
+                document.getElementById('reports-container').innerHTML = memory;
+                document.getElementById('reports-container').style.display = 'block';
+                
+                try {
+                    const counters = JSON.parse(localStorage.getItem('zvit_memory_counters') || '{}');
+                    for (let id in counters) {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.innerText = counters[id];
+                            el.classList.toggle('non-zero', parseInt(counters[id]) > 0);
+                            el.classList.toggle('hidden', parseInt(counters[id]) === 0);
+                        }
+                    }
+                } catch(e) {}
+                
+                const docxBtnDisp = localStorage.getItem('zvit_memory_docx_btn');
+                const docxBtn = document.getElementById('fab-download-docx');
+                if (docxBtnDisp && docxBtn) {
+                    docxBtn.style.display = docxBtnDisp;
+                }
+            }
+            
+            // Autosave every 2 seconds
+            setInterval(saveAppMemory, 2000);
+        });
+        
         async function processFiles() {
             if (!dropEventsFile || !dropFireFile || !dropUavFile) {
                 alert("Завантажте 3 обов'язкові файли."); return;
@@ -2633,7 +2711,7 @@
                 }
 
                 // Кожен рядок робимо окремим параграфом (замість <br>), щоб Word коректно розумів відступи і не було "сірого фону"
-                htmlText += `<p style="margin: 0; padding: 0;"><i>${formattedLine}</i></p>`;
+                htmlText += `<p style="margin: 0; padding: 0; font-weight: normal;"><i>${formattedLine}</i></p>`;
             });
 
             if (!plainText.trim()) return alert("Список порожній.");
@@ -2643,7 +2721,7 @@
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
                 <head></head>
                 <body>
-                    <div style="font-size: 13pt; font-family: 'Times New Roman', serif;">
+                    <div style="font-size: 13pt; font-family: 'Times New Roman', serif; font-weight: normal;">
                         ${htmlText}
                     </div>
                 </body>
@@ -2886,6 +2964,26 @@
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.2.2",
+                date: "12.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "💾 Пам'ять та Автозбереження",
+                        items: [
+                            "<b>Автозбереження стану</b>: Тепер усі згенеровані звіти, набрані вручну тексти та вибрані галочки автоматично зберігаються кожні 2 секунди. Оновлення сторінки чи випадкове закриття більше не стирають ваш звіт!",
+                            "<b>Кнопка Очистити</b>: Додано червону кнопку «Очистити звіт» у верхнє меню для швидкого та повного скидання пам'яті перед початком нового дня."
+                        ]
+                    },
+                    {
+                        title: "🛠 Інші виправлення",
+                        items: [
+                            "<b>Форматування Word</b>: Додано жорстку заборону жирного шрифту при копіюванні. Тепер при вставці результати не стають жирними без вашого бажання."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.2.1",
                 date: "12.08.2026",
                 isCurrent: true,
@@ -3025,7 +3123,7 @@
                 <h3 style="margin: 0; font-size: 18px; color: #34d399; display: flex; align-items: center; gap: 8px;">
                     📋 <span>Історія оновлень (Звіт ПБД)</span>
                     <span
-                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.2.1</span>
+                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.2.2</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">✕</button>
