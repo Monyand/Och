@@ -2684,53 +2684,17 @@
 
         window.copyReportList = async function (id, btn) {
             let plainText = '';
-            let htmlText = '';
 
             document.getElementById(id).querySelectorAll('.record-text').forEach((ta) => {
                 let line = ta.value.trim();
                 if (!line) return;
                 plainText += line + '\n';
-
-                let formattedLine = line;
-
-                if (id === 'report-3-1-1') {
-                    // Спеціальні правила для пункту 3.1.1 (Бойові зіткнення)
-                    // Синій фон для власних втрат (до кінця рядка)
-                    formattedLine = formattedLine.replace(/(Втрати:\s*)(.*)/gi, function (match, p1, p2) {
-                        if (p2.toLowerCase().includes('відсутні') || p2.toLowerCase().includes('немає')) {
-                            return match;
-                        }
-                        return p1 + `<span style="background: #00b0f0; mso-highlight: cyan;">${p2}</span>`;
-                    });
-
-                    // Весь рядок отримує жовтий фон
-                    formattedLine = `<span style="background: yellow; mso-highlight: yellow;">${formattedLine}</span>`;
-                } else {
-                    // Правила для інших списків (виділяємо результати жовтим до кінця рядка)
-                    formattedLine = formattedLine.replace(/(ЗНИЩЕНО.*|ПОРАНЕНО.*|ВБИТО.*|Доставлено.*|Заборона дії.*|Подавлення.*)/gi, '<span style="background: yellow; mso-highlight: yellow;">$1</span>');
-                }
-
-                // Кожен рядок робимо окремим параграфом (замість <br>), щоб Word коректно розумів відступи і не було "сірого фону"
-                htmlText += `<p style="margin: 0; padding: 0; font-weight: normal;"><i>${formattedLine}</i></p>`;
             });
 
             if (!plainText.trim()) return alert("Список порожній.");
 
-            // Глобальний метод перехоплення події 'copy' для вставки "сирого" HTML без цензури браузера
-            const msoHtml = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-                <head></head>
-                <body>
-                    <div style="font-size: 13pt; font-family: 'Times New Roman', serif; font-weight: normal;">
-                        ${htmlText}
-                    </div>
-                </body>
-                </html>
-            `;
-
             const copyListener = function(e) {
                 e.clipboardData.setData('text/plain', plainText.trim());
-                e.clipboardData.setData('text/html', msoHtml);
                 e.preventDefault();
             };
 
@@ -2749,8 +2713,6 @@
                 const ob = btn.style.backgroundColor, ot = btn.innerText;
                 btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
                 setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
-            } else {
-                alert("Помилка копіювання. Ваш браузер блокує прямий доступ до буфера.");
             }
         }
 
