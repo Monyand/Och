@@ -226,12 +226,13 @@
             { id: '14.5', name: '14.5х114 мм (КПВТ)', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?' },
 
             // Постріли до РПГ та легке піхотне озброєння
-            { id: 'PG7V', name: 'Постріл ПГ-7В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*7[\\s\\-_]*[vвmмsс1]*' },
-            { id: 'OG7V', name: 'Постріл ОГ-7В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]gi?|[oо]гі?)[\\s\\-_]*7[\\s\\-_]*[vвmaма]*' },
-            { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', idPattern: 'rhew[\\s\\-_]*9[\\s\\-_]*ma' },
-            { id: 'PG9V', name: 'Постріл ПГ-9В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*9[\\s\\-_]*[vв]?' },
+            { id: 'PG7V', name: 'Постріл ПГ-7В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?7[\\s\\-_]*[vвmмsсlлrр1]*' },
+            { id: 'OG7V', name: 'Постріл ОГ-7В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]gi?|[oо]гі?)[\\s\\-_]*0?7[\\s\\-_]*[vвmaма]*' },
+            { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', idPattern: 'rhew[\\s\\-_]*0?9[\\s\\-_]*ma' },
+            { id: 'PG9V', name: 'Постріл ПГ-9В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?9[\\s\\-_]*[vв]?' },
             { id: 'BULLSPIKE', name: 'Bullspike AT', idPattern: 'bull?spike(?:[\\s\\-]*at)?' },
             { id: 'RPV16', name: 'РПВ-16', idPattern: 'рпв(?:[\\s\\-]*16)?(?:[\\s\\-]*01)?' },
+            { id: 'VPR20', name: 'ВПР-20', idPattern: '(?:впр|vpr)[\\s\\-_]*20' },
             { id: 'AT4', name: 'АТ-4', idPattern: '(?:(?:рпг|гранатомет)[\\s\\-_]*)?(?:ат|at)[\\s\\-]*4(?:[\\s\\-]*(?:cs|кс|сs|сз)[-_\\s]*(?:rs|рс))?' },
             { id: 'RPG18', name: 'РПГ-18 (Муха)', idPattern: '(?:рпг|rpg)[\\s\\-_]*18' },
             { id: 'RPG22', name: 'РПГ-22 (Нетто)', idPattern: '(?:рпг|rpg)[\\s\\-_]*22' },
@@ -332,7 +333,7 @@
 
                 // КРОК 2: Гранати/постріли без кількості (якщо галочка)
                 if (assumeOne) {
-                    const implicitConfigs = ['GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'VOG', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'BULLSPIKE', 'RPV16', 'AT4'];
+                    const implicitConfigs = ['GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'VOG', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'BULLSPIKE', 'RPV16', 'VPR20', 'AT4'];
                     implicitConfigs.forEach(id => {
                         const conf = ammoConfigs.find(c => c.id === id);
                         if (!conf) return;

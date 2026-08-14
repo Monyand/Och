@@ -124,7 +124,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.8.0</span>
+                    <span>🚀 v1.8.1</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -1314,9 +1314,22 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.8.1",
+                date: "14.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🛠 Виправлення зведеної матриці позицій",
+                        color: "rose",
+                        items: [
+                            "<b>Очищення назв підрозділів</b>: Прибрано суфікс <code>2 мб</code> / <code>2мб</code> біля назв підрозділів <code>вмз</code> та <code>втз</code> у зведеній матриці позицій («Додаток 2 (РОП та ПБД)»)."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.8.0",
                 date: "13.08.2026",
-                isCurrent: true,
                 sections: [
                     {
                         title: "✨ Глобальне візуальне оновлення (Додаток 6)",
@@ -2790,6 +2803,10 @@
             if (name.includes("ісв") || name.includes("исв") || name.includes("icv") || name.includes("isv") || name.includes("icb")) {
                 return "ісв";
             }
+
+            // Прибираємо допис "2 мб" / "2мб" біля вмз та втз
+            name = name.replace(/\b(вмз|втз)[\s_\-]*(?:2[\s_\-]*мб|\d+[\s_\-]*мб)\b/gi, '$1');
+            name = name.replace(/\b(?:2[\s_\-]*мб|\d+[\s_\-]*мб)[\s_\-]*(вмз|втз)\b/gi, '$1');
 
             name = name.replace(/рбпак/g, 'РБпАК');
             name = name.replace(/рбак/g, 'РБпАК');
