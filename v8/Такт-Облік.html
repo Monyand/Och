@@ -5,10 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ТАКТ-ОБЛІК</title>
     
-    <!-- Локальні ресурси (100% Air-Gapped Офлайн) -->
+    <!-- Локальні ресурси з автоматичним резервним завантаженням (CDN Fallback) -->
     <script src="tailwind.js"></script>
+    <script>
+        if (typeof tailwind === 'undefined') {
+            document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+        }
+    </script>
     <script src="lucide.js"></script>
+    <script>
+        if (typeof lucide === 'undefined') {
+            document.write('<script src="https://unpkg.com/lucide@latest"><\/script>');
+        }
+    </script>
     <script src="xlsx.js"></script>
+    <script>
+        if (typeof XLSX === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');
+        }
+    </script>
 
     <script>
         // Ініціалізація налаштувань Tailwind (Тактична тема)
