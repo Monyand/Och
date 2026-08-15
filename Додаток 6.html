@@ -120,25 +120,36 @@
         <!-- Шапка з кнопками -->
         <div class="bg-slate-800 dark:bg-gray-950 p-4 text-white flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <h1 class="text-xl font-bold">Автоматизатор Додатку 6</h1>
+                <h1 class="text-xl font-black font-mono tracking-wider flex items-center gap-2 select-none">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 drop-shadow-[0_0_14px_rgba(45,212,191,0.55)]">
+                        DODATOK_6.EXE
+                    </span>
+                    <span class="text-cyan-400 font-bold animate-pulse inline-block -ml-1 text-lg">_</span>
+                    <span class="group px-2 py-0.5 text-[10px] font-mono font-extrabold bg-purple-950/80 text-purple-300 rounded border border-purple-500/50 shadow-[0_0_12px_rgba(168,85,247,0.35)] hover:shadow-[0_0_18px_rgba(168,85,247,0.6)] flex items-center gap-1 transition-all hover:scale-105 cursor-default"
+                        title="Cheats Enabled: WHOSYOURDADDY active">
+                        <span class="inline-block animate-pulse">👾</span>
+                        <span class="tracking-wide">GOD_MODE</span>
+                    </span>
+                </h1>
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.8.2</span>
+                    <span>🚀 v1.8.3</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Кнопка Налаштувань -->
+                <!-- Кнопка Налаштувань Cyberpunk Edition -->
                 <button onclick="openSettings()"
-                    class="p-2 rounded-full bg-slate-700 hover:bg-slate-600 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors focus:outline-none flex items-center justify-center"
-                    title="Налаштування розподілу та автозамін">
-                    <svg class="w-5 h-5 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="group flex items-center gap-2 bg-slate-700/80 hover:bg-slate-700 dark:bg-gray-900/90 hover:dark:bg-gray-850 px-3.5 py-1.5 rounded-lg border border-teal-500/40 hover:border-teal-400 text-teal-300 hover:text-teal-200 shadow-[0_0_12px_rgba(20,184,166,0.25)] hover:shadow-[0_0_20px_rgba(20,184,166,0.5)] transition-all duration-200 focus:outline-none text-xs font-mono font-bold hover:-translate-y-0.5"
+                    title="Налаштування розподілу, словників та автозамін">
+                    <svg class="w-4 h-4 text-teal-400 animate-[spin_8s_linear_infinite] group-hover:animate-[spin_2s_linear_infinite] transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
                         </path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
+                    <span class="tracking-wide">SYS_CONFIG()</span>
                 </button>
                 <!-- Кнопка Теми -->
                 <button onclick="toggleDarkMode()"
@@ -245,61 +256,64 @@
                                     class="hidden" onchange="handleImportPosFilesSelect(event)">
                             </div>
 
-                            <!-- Група 2: ОБРОБКА (Яскрава) -->
+                            <!-- Група 2: ОБРОБКА (Warcraft III God Mode / 1-Hit Kill) -->
                             <div class="flex items-center ml-2">
                                 <button onclick="standardizeTasks()"
-                                    class="group flex items-center bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-lg shadow-md shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all focus:outline-none text-sm hover:-translate-y-0.5"
-                                    title="Стандартизувати позиції">
-                                    <svg class="w-5 h-5 mr-2 animate-pulse" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                        </path>
+                                    class="group relative flex items-center bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:via-indigo-500 hover:to-purple-500 text-white font-bold py-2 px-3.5 rounded-lg border border-indigo-400/40 hover:border-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:shadow-[0_0_25px_rgba(168,85,247,0.65)] transition-all duration-200 focus:outline-none hover:-translate-y-0.5"
+                                    title="Warcraft III Cheat: Стандартизувати та нормалізувати всі позиції ВОП/РОП в один клік">
+                                    <svg class="w-4 h-4 mr-2 text-yellow-300 group-hover:scale-110 group-hover:rotate-12 transition-transform drop-shadow-[0_0_8px_rgba(253,224,71,0.8)]"
+                                        fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                                     </svg>
-                                    <span class="font-mono uppercase tracking-widest text-[11px] font-bold">>
-                                        run_standardize()</span>
+                                    <span
+                                        class="font-mono uppercase tracking-wider text-[11px] font-extrabold text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]">WHOSYOURDADDY()</span>
+                                    <span
+                                        class="ml-2 px-1.5 py-0.5 text-[9px] font-mono font-extrabold bg-black/40 text-amber-300 rounded border border-amber-400/30 group-hover:border-amber-300/60 transition-colors">⚡ 1-HIT KILL</span>
                                 </button>
                             </div>
 
-                            <!-- Група 3: ЕКСПОРТ -->
+                            <!-- Група 3: ЕКСПОРТ (Cyber Data Exfil) -->
                             <div
                                 class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 ml-2">
                                 <span
-                                    class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider ml-2 mr-1">Експорт:</span>
+                                    class="text-[10px] font-mono font-extrabold text-teal-500/80 dark:text-teal-400/80 uppercase tracking-wider ml-2 mr-1">EXFIL //</span>
 
                                 <button onclick="downloadPivotReport()"
-                                    class="group flex items-center bg-white dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium py-1.5 px-3 rounded-md border border-gray-200 dark:border-gray-700 transition-all shadow-sm focus:outline-none text-xs">
+                                    class="group flex items-center bg-white dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-gray-700 dark:text-gray-200 hover:text-purple-600 dark:hover:text-purple-300 font-mono font-bold py-1.5 px-3 rounded-md border border-gray-200 dark:border-gray-700 hover:border-purple-400/50 transition-all shadow-sm hover:shadow-[0_0_12px_rgba(168,85,247,0.35)] focus:outline-none text-xs hover:-translate-y-0.5"
+                                    title="Завантажити зведену матрицю позицій (Excel)">
                                     <svg class="w-4 h-4 mr-1.5 text-purple-500 group-hover:scale-110 transition-transform"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                         </path>
                                     </svg>
-                                    <span>Матриця ВОП</span>
+                                    <span>DUMP_MATRIX.XLSX</span>
                                 </button>
 
                                 <button onclick="downloadAllCategoriesExcel()"
-                                    class="group flex items-center bg-white dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium py-1.5 px-3 rounded-md border border-gray-200 dark:border-gray-700 transition-all shadow-sm focus:outline-none text-xs">
+                                    class="group flex items-center bg-white dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-300 font-mono font-bold py-1.5 px-3 rounded-md border border-gray-200 dark:border-gray-700 hover:border-emerald-400/50 transition-all shadow-sm hover:shadow-[0_0_12px_rgba(16,185,129,0.35)] focus:outline-none text-xs hover:-translate-y-0.5"
+                                    title="Завантажити єдиний звіт по всіх 4 категоріях (ВОП, РОП, БРО, Забезпечення БД)">
                                     <svg class="w-4 h-4 mr-1.5 text-emerald-500 group-hover:scale-110 transition-transform"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
                                         </path>
                                     </svg>
-                                    <span>Всі категорії</span>
+                                    <span>ALL_TIERS [270k..30k]</span>
                                 </button>
                             </div>
 
                             <!-- Очистити -->
                             <button onclick="clearData()"
-                                class="flex items-center bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 font-medium py-1.5 px-3 rounded-md transition-all focus:outline-none text-xs group">
-                                <svg class="w-4 h-4 mr-1 group-hover:text-red-500 transition-colors" fill="none"
+                                class="flex items-center bg-transparent hover:bg-red-50 dark:hover:bg-red-950/30 text-gray-400 hover:text-red-400 dark:text-gray-500 dark:hover:text-red-400 font-mono font-bold py-1.5 px-3 rounded-md border border-transparent hover:border-red-500/30 transition-all hover:shadow-[0_0_10px_rgba(239,68,68,0.25)] focus:outline-none text-xs group hover:-translate-y-0.5"
+                                title="Очистити всі завантажені дані з пам'яті">
+                                <svg class="w-4 h-4 mr-1 group-hover:text-red-400 transition-colors" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                     </path>
                                 </svg>
-                                <span>Очистити</span>
+                                <span>PURGE_MEMORY</span>
                             </button>
                         </div>
                     </div>
@@ -329,7 +343,8 @@
                         <div id="duplicatesAlert"
                             class="hidden items-center gap-2 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200 px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-700/60 text-xs font-semibold">
                             <span>⚠️ Дублювання/опечатки: <b id="dupCount" class="font-bold">0</b></span>
-                            <div class="flex items-center gap-1.5 ml-1 border-l border-red-300 dark:border-red-700/60 pl-2">
+                            <div
+                                class="flex items-center gap-1.5 ml-1 border-l border-red-300 dark:border-red-700/60 pl-2">
                                 <button onclick="downloadDuplicatesReport()" title="Завантажити Excel-звіт"
                                     class="hover:opacity-75 transition-opacity cursor-pointer">📊</button>
                                 <button onclick="toggleAlertDetails('duplicatesAlert', 'dupDetailsList')"
@@ -437,7 +452,8 @@
                     <div
                         class="flex justify-between items-center pb-2.5 border-b border-gray-200 dark:border-gray-700 mb-3">
                         <h3 id="alertDrawerTitle"
-                            class="font-bold text-sm sm:text-base text-gray-900 dark:text-gray-100 flex items-center gap-2"></h3>
+                            class="font-bold text-sm sm:text-base text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        </h3>
                         <button onclick="closeAlertDrawer()" title="Закрити панель деталей"
                             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1314,9 +1330,26 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
-                version: "1.8.2",
+                version: "1.8.3",
                 date: "15.08.2026",
                 isCurrent: true,
+                sections: [
+                    {
+                        title: "👾 Кіберпанк UI та виправлення матриці",
+                        color: "purple",
+                        items: [
+                            "<b>Очищення підрозділів у матриці</b>: Повністю усунено залишковий суфікс <code>2 мб</code> біля назв <code>вмз</code>, <code>втз</code>, <code>врб</code>, <code>ісв</code> у Листі 2 зведеної матриці («Додаток 2 (РОП та ПБД)») завдяки прямому зіставленню та подвійній консолідації ключів.",
+                            "<b>Cyberpunk Header</b>: Шапка отримала неоновий заголовок <code>DODATOK_6.EXE</code> з термінальним курсором <code>_</code> та анімованим бейджем <code>[👾 GOD_MODE]</code>.",
+                            "<b>Warcraft III Cheat</b>: Кнопка нормалізації отримала легендарний стиль <code>⚔️ WHOSYOURDADDY()</code> <code>[⚡ 1-HIT KILL]</code> з неоновим сяйвом.",
+                            "<b>SYS_CONFIG()</b>: Кнопка налаштувань отримала назву <code>SYS_CONFIG()</code> з безперервною плавною анімацією обертання шестірні.",
+                            "<b>Cyber Data Exfil</b>: Блок експорту переведено на стиль <code>EXFIL //</code> з кнопками <code>DUMP_MATRIX.XLSX</code>, <code>ALL_TIERS [270k..30k]</code> та <code>PURGE_MEMORY</code>."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.8.2",
+                date: "15.08.2026",
                 sections: [
                     {
                         title: "📐 Оптимізація макета та редизайн панелі деталей",
@@ -2816,13 +2849,29 @@
 
             name = name.toLowerCase();
 
+            // Точна ідентифікація спеціальних підрозділів (без прив'язки до regex word boundaries)
             if (name.includes("ісв") || name.includes("исв") || name.includes("icv") || name.includes("isv") || name.includes("icb")) {
                 return "ісв";
             }
+            if (name.includes("вмз") || name.includes("vmz")) {
+                return "вмз";
+            }
+            if (name.includes("втз") || name.includes("vtz")) {
+                return "втз";
+            }
+            if (name.includes("врб") || name.includes("vrb")) {
+                return "врб";
+            }
+            if (name.includes("вуз") || name.includes("vuz")) {
+                return "вуз";
+            }
+            if (name.includes("вуп") || name.includes("vup")) {
+                return "вуп";
+            }
 
-            // Прибираємо допис "2 мб" / "2мб" біля вмз та втз
-            name = name.replace(/\b(вмз|втз)[\s_\-]*(?:2[\s_\-]*мб|\d+[\s_\-]*мб)\b/gi, '$1');
-            name = name.replace(/\b(?:2[\s_\-]*мб|\d+[\s_\-]*мб)[\s_\-]*(вмз|втз)\b/gi, '$1');
+            // Очищення будь-яких суфіксів батальйонів (2мб, 2 мб, 1мб, 3мб тощо)
+            name = name.replace(/\d+[\s_\-]*мб/gi, '');
+            name = name.replace(/мб[\s_\-]*\d+/gi, '');
 
             name = name.replace(/рбпак/g, 'РБпАК');
             name = name.replace(/рбак/g, 'РБпАК');
@@ -2833,7 +2882,7 @@
             name = name.replace(/(^|\s)мб(\s|$)/g, '$1мінбатр$2');
             if (name.trim() === 'мб') name = 'мінбатр';
 
-            return name || String(fileName);
+            return name.trim() || String(fileName);
         }
 
         function downloadPivotReport() {
@@ -3024,7 +3073,15 @@
                 const lines = [];
                 let total = 0;
 
-                for (let [unit, cnt] of Object.entries(unitMap)) {
+                const cleanMap = {};
+                for (let [unit, cnt] of Object.entries(unitMap || {})) {
+                    if (cnt > 0) {
+                        let cUnit = cleanUnitName(unit);
+                        cleanMap[cUnit] = (cleanMap[cUnit] || 0) + cnt;
+                    }
+                }
+
+                for (let [unit, cnt] of Object.entries(cleanMap)) {
                     if (cnt > 0) {
                         lines.push(`${unit} - ${cnt} в/сл`);
                         total += cnt;
@@ -3976,7 +4033,7 @@
                 invalidTasksList.forEach(p => {
                     let li = document.createElement('li');
                     li.className = "flex flex-col sm:flex-row sm:items-center justify-between p-2 px-3 rounded-lg bg-pink-50/80 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/50 gap-2";
-                    
+
                     let reasonBadge = "";
                     if (p.name === "[ВІДСУТНІЙ В/С]") {
                         reasonBadge = `<span class="text-xs font-semibold text-pink-700 dark:text-pink-300 bg-pink-100 dark:bg-pink-900/60 px-2 py-0.5 rounded border border-pink-200 dark:border-pink-800/60">на позиції <b class="font-bold">${p.task}</b> не вписано о/с</span>`;
