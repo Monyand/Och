@@ -1,287 +1,295 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" class="dark">
 
 <head>
     <meta charset="UTF-8">
-    <title>Парсер БЧС в DOCX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор звітів з таблиць БЧС</title>
     <!-- SheetJS для читання Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- docx для створення Word файлів -->
     <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
     <!-- JSZip для створення архіву -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            padding: 20px;
-            background-color: #1e1e1e;
-            color: #f0f0f0;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #2d2d2d;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-        }
-
-        h2 {
-            text-align: center;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        p.subtitle {
-            text-align: center;
-            color: #aaa;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .settings-panel {
-            background: #383838;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            border: 1px solid #444;
-        }
-
-        .settings-panel h3 {
-            margin-top: 0;
-            font-size: 16px;
-            margin-bottom: 15px;
-            color: #64b5f6;
-            border-bottom: 1px solid #555;
-            padding-bottom: 5px;
-        }
-
-        .grid-settings {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-group label {
-            font-size: 12px;
-            margin-bottom: 5px;
-            color: #ccc;
-        }
-
-        .input-group input[type="text"],
-        .input-group input[type="number"] {
-            padding: 8px;
-            background: #222;
-            border: 1px solid #555;
-            border-radius: 4px;
-            color: #fff;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .input-group input[type="text"] {
-            text-transform: uppercase;
-        }
-
-        /* Стилі для вибору статусів */
-        .preset-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-
-        .btn-preset {
-            width: auto;
-            padding: 6px 12px;
-            font-size: 12px;
-            background: #444;
-            color: #eee;
-            border: 1px solid #666;
-            border-radius: 4px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-preset:hover {
-            background: #64b5f6;
-            color: #111;
-            border-color: #64b5f6;
-        }
-
-        .btn-preset-accent {
-            background: #1976D2;
-            border-color: #2196F3;
-            color: white;
-        }
-
-        .btn-preset-accent:hover {
-            background: #2196F3;
-            color: white;
-        }
-
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 10px;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: flex-start;
-            font-size: 13px;
-            cursor: pointer;
-            color: #ddd;
-            line-height: 1.3;
-        }
-
-        .checkbox-label input {
-            margin-right: 8px;
-            cursor: pointer;
-            width: 16px;
-            height: 16px;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-
-        .checkbox-label:hover {
-            color: #fff;
-        }
-
-        .file-upload-wrapper {
-            margin-bottom: 20px;
-        }
-
-        input[type="file"] {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            background: #3d3d3d;
-            border: 1px dashed #777;
-            border-radius: 4px;
-            color: #fff;
-            cursor: pointer;
-            box-sizing: border-box;
-        }
-
-        input[type="file"]:hover {
-            border-color: #2196F3;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        button:hover {
-            background: #1976D2;
-        }
-
-        #status {
-            margin-top: 20px;
-            text-align: center;
-            font-weight: bold;
-            min-height: 24px;
-            word-wrap: break-word;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, .3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+                    }
+                }
             }
+        };
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #475569; }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
         }
+        .pulse-blue { animation: pulse-glow 3s infinite ease-in-out; }
     </style>
 </head>
 
-<body>
-    <div class="container">
-        <h2>Генератор звітів з таблиць БЧС</h2>
-        <p class="subtitle">Матричний парсер (автоматично знаходить колонки за їх назвами у шапці)</p>
+<body class="bg-slate-950 text-slate-200 min-h-screen flex flex-col items-center p-4 sm:p-8 selection:bg-blue-500/30">
 
-        <div class="settings-panel">
-            <h3>⚙️ Базові налаштування (Літери з Excel)</h3>
-            <div class="grid-settings">
-                <div class="input-group">
-                    <label>Колонка "Звання" (напр. F)</label>
-                    <input type="text" id="colRank" value="C" maxlength="2">
+    <div class="w-full max-w-6xl space-y-6">
+
+        <!-- Шапка програми -->
+        <header class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-slate-900 border border-slate-800/90 rounded-2xl p-5 shadow-xl">
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
+                    <i data-lucide="users" class="w-6 h-6"></i>
                 </div>
-                <div class="input-group">
-                    <label>Колонка "ПІБ" (напр. G)</label>
-                    <input type="text" id="colName" value="E" maxlength="2">
-                </div>
-                <div class="input-group">
-                    <label>Колонка "Посада/Підрозділ" (напр. AG)</label>
-                    <input type="text" id="colPosition" value="B" maxlength="2">
-                </div>
-                <div class="input-group">
-                    <label>Рядок з назвами статусів (№)</label>
-                    <input type="number" id="rowHeaders" value="2" min="1" max="10">
-                </div>
-                <div class="input-group">
-                    <label>Рядок, де починаються люди (№)</label>
-                    <input type="number" id="rowDataStart" value="4" min="2" max="20">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-2xl font-bold text-white tracking-tight">Генератор звітів з таблиць БЧС</h1>
+                        <button onclick="openChangelogModal()" class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
+                            ⚡ v1.1.0
+                        </button>
+                    </div>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Матричний парсер статусів особового складу та формування окремих Word-документів (.zip)</p>
                 </div>
             </div>
-        </div>
 
-        <div class="settings-panel">
-            <h3>🎯 Які статуси виокремлювати в Word файли?</h3>
-            <div class="preset-buttons">
-                <button type="button" class="btn-preset btn-preset-accent" onclick="setPreset('set1')">⚔️ Набір 1
-                    (Забезпечення БД, РОБ, ВОП/РОП)</button>
-                <button type="button" class="btn-preset btn-preset-accent" onclick="setPreset('set2')">📋 Набір 2 (Все
-                    інше)</button>
-                <button type="button" class="btn-preset" onclick="setPreset('all')">☑️ Обрати все</button>
-                <button type="button" class="btn-preset" onclick="setPreset('none')">⬜ Очистити</button>
+            <div class="flex items-center gap-2">
+                <span class="text-[11px] font-mono text-slate-500 flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span>BATCH_PARSER</span>
+                </span>
             </div>
-            <div class="checkbox-grid" id="statusCheckboxes">
-                <!-- Сюди генеруються чекбокси -->
+        </header>
+
+        <!-- Робоча сітка -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Ліва колонка: Налаштування та Файли (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col space-y-5">
+
+                <!-- Картка 1: Базові налаштування колонок Excel -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="sliders" class="w-4 h-4 text-blue-400"></i>
+                            <h2 class="font-semibold text-slate-200 text-sm">Колонки та рядки (Excel)</h2>
+                        </div>
+                        <button type="button" onclick="resetDefaultSettings()" class="text-[11px] font-mono text-slate-500 hover:text-slate-300 transition-colors cursor-pointer">
+                            За замовчуванням
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="flex flex-col space-y-1">
+                            <label class="text-[11px] font-semibold text-slate-400">Звання</label>
+                            <input type="text" id="colRank" value="C" maxlength="2"
+                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
+                        </div>
+                        <div class="flex flex-col space-y-1">
+                            <label class="text-[11px] font-semibold text-slate-400">ПІБ</label>
+                            <input type="text" id="colName" value="E" maxlength="2"
+                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
+                        </div>
+                        <div class="flex flex-col space-y-1">
+                            <label class="text-[11px] font-semibold text-slate-400">Посада/Підр.</label>
+                            <input type="text" id="colPosition" value="B" maxlength="2"
+                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
+                        </div>
+                        <div class="flex flex-col space-y-1 col-span-3 sm:col-span-1">
+                            <label class="text-[11px] font-semibold text-slate-400">Рядок статусів</label>
+                            <input type="number" id="rowHeaders" value="2" min="1" max="10"
+                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono font-bold text-sm outline-none focus:border-blue-500">
+                        </div>
+                        <div class="flex flex-col space-y-1 col-span-3 sm:col-span-2">
+                            <label class="text-[11px] font-semibold text-slate-400">Початок даних (Люди)</label>
+                            <input type="number" id="rowDataStart" value="4" min="2" max="20"
+                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono font-bold text-sm outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Картка 2: Завантаження файлів БЧС (Drag & Drop) -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+                            <h2 class="font-semibold text-slate-200 text-sm">Файли БЧС (.xlsx, .csv)</h2>
+                        </div>
+                        <span id="files-count-badge" class="text-[11px] font-mono text-slate-500">0 файлів</span>
+                    </div>
+
+                    <div id="drop-zone"
+                        class="border-2 border-dashed border-slate-700 hover:border-blue-500/80 hover:bg-slate-800/40 transition-all rounded-xl p-6 text-center cursor-pointer flex flex-col items-center justify-center group">
+                        <input type="file" id="upload" accept=".xlsx, .xls, .csv, .ods" multiple class="hidden">
+                        <div class="w-12 h-12 rounded-full bg-slate-800 group-hover:bg-blue-500/20 text-slate-400 group-hover:text-blue-400 flex items-center justify-center mb-3 transition-colors">
+                            <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-200 group-hover:text-blue-300 transition-colors">
+                            Натисніть або перетягніть файли сюди
+                        </p>
+                        <p class="text-xs text-slate-500 mt-1">Підтримується вибір кількох файлів БЧС</p>
+                        
+                        <div id="selected-files-list" class="mt-3 w-full space-y-1.5 hidden max-h-32 overflow-y-auto custom-scrollbar text-left">
+                            <!-- Список обраних файлів -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Головна кнопка дії -->
+                <button id="btn-generate" onclick="processFiles()"
+                    class="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-blue-600 text-white font-bold text-base tracking-wider uppercase flex items-center justify-center gap-2.5 shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all pulse-blue cursor-pointer">
+                    <i data-lucide="archive" class="w-5 h-5"></i>
+                    <span>Згенерувати документи (ZIP)</span>
+                </button>
+
+                <div id="status"></div>
+            </div>
+
+            <!-- Права колонка: Вибір статусів та Прев'ю (7 cols) -->
+            <div class="lg:col-span-7 flex flex-col space-y-5">
+
+                <!-- Картка 3: Пресети та Чекбокси статусів -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between mb-3.5 pb-2 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check-square" class="w-4 h-4 text-blue-400"></i>
+                            <h2 class="font-semibold text-slate-200 text-sm">Статуси для виокремлення в Word</h2>
+                        </div>
+                        <span id="selected-statuses-count" class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                            0 обрано
+                        </span>
+                    </div>
+
+                    <!-- 4 Фірмові кнопки пресетів -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button type="button" onclick="setPreset('set1')" 
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-all cursor-pointer flex items-center gap-1.5">
+                            ⚔️ Набір 1 (Забезпечення БД, РОБ, ВОП/РОП)
+                        </button>
+                        <button type="button" onclick="setPreset('set2')" 
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 transition-all cursor-pointer flex items-center gap-1.5">
+                            📋 Набір 2 (Все інше)
+                        </button>
+                        <button type="button" onclick="setPreset('all')" 
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all cursor-pointer flex items-center gap-1">
+                            ☑️ Обрати все
+                        </button>
+                        <button type="button" onclick="setPreset('none')" 
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-red-300 border border-slate-700 transition-all cursor-pointer flex items-center gap-1">
+                            ⬜ Очистити
+                        </button>
+                    </div>
+
+                    <!-- Сітка чекбоксів 19 статусів -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-72 overflow-y-auto custom-scrollbar p-1" id="statusCheckboxes">
+                        <!-- Динамічно заповнюється -->
+                    </div>
+                </div>
+
+                <!-- Картка 4: Попередній перегляд результатів парсингу -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex-1 flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-400"></i>
+                            <h3 class="font-semibold text-slate-200 text-sm">Зведення знайденого особового складу</h3>
+                        </div>
+                        <span id="preview-summary-badge" class="hidden font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            0 осіб
+                        </span>
+                    </div>
+
+                    <div id="preview-container" class="flex-1 flex flex-col justify-center text-center">
+                        <div id="preview-empty" class="text-slate-600 py-6">
+                            <i data-lucide="file-check" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
+                            <p class="text-xs text-slate-500">Завантажте файли БЧС та натисніть «Згенерувати документи»</p>
+                        </div>
+                        <div id="preview-results-list" class="hidden space-y-2 text-left max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                            <!-- Картки знайдених статусів -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Футер -->
+        <footer class="pt-4 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>🛡️ Модуль обробки штату та бойового чисельного складу (БЧС)</span>
+            <span class="font-mono text-slate-600">Inter / JetBrains Mono • Word Таблиці: Times New Roman</span>
+        </footer>
+
+    </div>
+
+    <!-- MODAL: CHANGELOG -->
+    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                        <i data-lucide="history" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Історія оновлень</h2>
+                        <p class="text-xs text-slate-400">Парсер БЧС та генератор звітів DOCX</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-changelog')" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
+                <!-- v1.1.0 -->
+                <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.1.0 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">16.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Tactical Dark UI:</strong> Повний редизайн інтерфейсу на Tailwind CSS, Lucide Icons та типографіку Inter/JetBrains Mono.</li>
+                        <li><strong class="text-white">Drag & Drop:</strong> Зручне завантаження кількох файлів БЧС одночасно.</li>
+                        <li><strong class="text-white">Live Summary:</strong> Інтерактивна панель попереднього перегляду знайденого особового складу за статусами.</li>
+                        <li><strong class="text-white">Швидкі пресети:</strong> Збережено готові набори 1 та 2 для швидкого вибору категорій.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.0.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.0.0</span>
+                        <span class="text-[11px] font-mono text-slate-500">Базовий реліз</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li>Матричне зіставлення назв колонок статусів у шапці Excel.</li>
+                        <li>Генерація окремих Word-документів з таблицями для кожного статусу.</li>
+                        <li>Автоматичне пакування згенерованих файлів у єдиний ZIP-архів.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-950/60 border-t border-slate-800 text-right">
+                <button onclick="closeModal('modal-changelog')" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer">
+                    Закрити
+                </button>
             </div>
         </div>
-
-        <div class="file-upload-wrapper">
-            <label for="upload" style="display:block; margin-bottom:8px; font-weight:bold;">Завантажте файли БЧС (.xlsx,
-                .csv):</label>
-            <input type="file" id="upload" accept=".xlsx, .xls, .csv, .ods" multiple />
-        </div>
-
-        <button onclick="processFiles()">Згенерувати документи (ZIP)</button>
-        <div id="status"></div>
     </div>
 
     <script>
-        // Повний список статусів з вашого запиту
         const ALL_STATUSES = [
             "Забезпечення БД", "РОБ", "ВОП, РОП", "ОУВ, ОСУВ, ОТУ",
             "Відряд. Інші в/ч виконання", "Відряд. Інші види ЗСУ",
@@ -292,6 +300,31 @@
         ];
 
         const SET_1 = ["Забезпечення БД", "РОБ", "ВОП, РОП"];
+
+        function openModal(id) { 
+            const m = document.getElementById(id);
+            if (!m) return;
+            m.classList.remove('hidden'); 
+            m.classList.add('flex');
+            lucide.createIcons();
+        }
+        function closeModal(id) { 
+            const m = document.getElementById(id);
+            if (!m) return;
+            m.classList.add('hidden'); 
+            m.classList.remove('flex');
+        }
+
+        function openChangelogModal() { openModal('modal-changelog'); }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal('modal-changelog');
+        });
+
+        function updateSelectedStatusesCount() {
+            const checked = document.querySelectorAll('input[name="statusFilter"]:checked').length;
+            document.getElementById('selected-statuses-count').innerText = `${checked} обрано`;
+        }
 
         function setPreset(type) {
             const checkboxes = document.querySelectorAll('input[name="statusFilter"]');
@@ -306,22 +339,74 @@
                     cb.checked = false;
                 }
             });
+            updateSelectedStatusesCount();
         }
 
-        // Генеруємо чекбокси при завантаженні
-        window.onload = () => {
-            const grid = document.getElementById('statusCheckboxes');
-            ALL_STATUSES.forEach(status => {
-                const label = document.createElement('label');
-                label.className = 'checkbox-label';
-                // Ставимо галочки за замовчуванням на критичні
-                const isChecked = ["СЗЧ", "200", "Полон", "Безвісти зниклі", "Лікування ТРИВАЛЕ"].includes(status) ? "checked" : "";
-                label.innerHTML = `<input type="checkbox" name="statusFilter" value="${status}" ${isChecked}> ${status}`;
-                grid.appendChild(label);
-            });
-        };
+        function resetDefaultSettings() {
+            document.getElementById('colRank').value = 'C';
+            document.getElementById('colName').value = 'E';
+            document.getElementById('colPosition').value = 'B';
+            document.getElementById('rowHeaders').value = 2;
+            document.getElementById('rowDataStart').value = 4;
+            setPreset('set1');
+        }
 
-        // Конвертер літери колонки в індекс
+        // Drag & Drop
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('upload');
+
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT') fileInput.click();
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500', 'bg-slate-800/60');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-blue-500', 'bg-slate-800/60');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-slate-800/60');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                renderSelectedFiles(fileInput.files);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            renderSelectedFiles(fileInput.files);
+        });
+
+        function renderSelectedFiles(files) {
+            const list = document.getElementById('selected-files-list');
+            const badge = document.getElementById('files-count-badge');
+            
+            if (!files || files.length === 0) {
+                list.classList.add('hidden');
+                badge.innerText = '0 файлів';
+                return;
+            }
+
+            badge.innerText = `${files.length} ${files.length === 1 ? 'файл' : 'файлів'}`;
+            badge.classList.add('text-emerald-400');
+            list.innerHTML = '';
+            list.classList.remove('hidden');
+
+            Array.from(files).forEach(f => {
+                const el = document.createElement('div');
+                el.className = 'flex items-center justify-between text-xs px-2.5 py-1 rounded bg-slate-950 border border-slate-800 font-mono text-slate-300';
+                el.innerHTML = `
+                    <span class="truncate max-w-[220px] font-semibold">${escapeHtml(f.name)}</span>
+                    <span class="text-[10px] text-slate-500">${(f.size / 1024).toFixed(1)} KB</span>
+                `;
+                list.appendChild(el);
+            });
+        }
+
         function letterToIndex(letter) {
             let str = String(letter).toUpperCase().replace(/[^A-Z]/g, '');
             if (!str) return 0;
@@ -329,10 +414,9 @@
             for (let i = 0; i < str.length; i++) {
                 index = index * 26 + (str.charCodeAt(i) - 64);
             }
-            return index - 1; // 0-based
+            return index - 1;
         }
 
-        // Очищення стрічок (для порівняння заголовків з переносами рядків в Excel)
         function cleanString(str) {
             if (str === undefined || str === null) return "";
             return String(str).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -343,10 +427,11 @@
             return new docx.TableCell({
                 children: [
                     new docx.Paragraph({
-                        children: [new docx.TextRun({ text: safeText, bold: isHeader, size: 22 })],
+                        children: [new docx.TextRun({ text: safeText, bold: isHeader, size: 24, font: "Times New Roman" })],
                         alignment: isHeader ? docx.AlignmentType.CENTER : docx.AlignmentType.LEFT
                     })
-                ]
+                ],
+                margins: { top: 100, bottom: 100, left: 100, right: 100 }
             });
         }
 
@@ -359,23 +444,35 @@
             });
         }
 
+        function setStatus(msg, type = "info") {
+            const statusDiv = document.getElementById('status');
+            if (type === "loading") {
+                statusDiv.innerHTML = `<div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 flex items-center justify-center gap-2 text-xs font-mono"><span class="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span> <span>${msg}</span></div>`;
+            } else if (type === "success") {
+                statusDiv.innerHTML = `<div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/50 text-emerald-300 text-xs font-mono flex items-center justify-center gap-2"><span>✅</span> <span>${msg}</span></div>`;
+            } else if (type === "error") {
+                statusDiv.innerHTML = `<div class="p-3 rounded-xl bg-rose-950/40 border border-rose-800/50 text-rose-300 text-xs font-mono flex items-center justify-center gap-2"><span>❌</span> <span>${msg}</span></div>`;
+            } else {
+                statusDiv.innerHTML = `<div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-blue-400 text-xs font-mono text-center">${msg}</div>`;
+            }
+        }
+
         async function processFiles() {
             const fileInput = document.getElementById('upload');
-            const statusDiv = document.getElementById('status');
 
             if (typeof docx === 'undefined') {
-                statusDiv.innerHTML = '<span style="color:#ff5252;">Помилка: Бібліотека DOCX не завантажилась.</span>';
+                setStatus("Бібліотека DOCX не завантажилась.", "error");
                 return;
             }
 
             const selectedStatuses = Array.from(document.querySelectorAll('input[name="statusFilter"]:checked')).map(cb => cb.value);
 
             if (selectedStatuses.length === 0) {
-                statusDiv.innerHTML = '<span style="color:#ffd740;">Оберіть хоча б один статус для парсингу!</span>';
+                setStatus("Оберіть хоча б один статус для парсингу!", "error");
                 return;
             }
             if (!fileInput.files.length) {
-                statusDiv.innerHTML = '<span style="color:#ff5252;">Завантажте хоча б один файл!</span>';
+                setStatus("Завантажте хоча б один файл БЧС!", "error");
                 return;
             }
 
@@ -383,13 +480,11 @@
             const nameIdx = letterToIndex(document.getElementById('colName').value);
             const posIdx = letterToIndex(document.getElementById('colPosition').value);
 
-            // Excel рядки зазвичай нумеруються з 1, масиви в JS - з 0
             const headerRowIdx = parseInt(document.getElementById('rowHeaders').value) - 1;
             const dataStartIdx = parseInt(document.getElementById('rowDataStart').value) - 1;
 
-            statusDiv.innerHTML = '<span class="spinner"></span> <span style="color:#2196F3;">Аналіз таблиць та пошук колонок...</span>';
+            setStatus("Аналіз таблиць БЧС та пошук колонок...", "loading");
 
-            // Структура для збереження результатів: { "СЗЧ": [ {rank, name, pos}, ... ], "200": [ ... ] }
             const statusData = {};
             selectedStatuses.forEach(s => statusData[s] = []);
 
@@ -398,18 +493,15 @@
                     const data = await readFileAsync(file);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                    // Читаємо як масив масивів
                     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
                     if (json.length <= headerRowIdx) continue;
 
                     const headerRow = json[headerRowIdx];
 
-                    // Шукаємо індекси колонок для кожного обраного статусу
                     const statusColumnMap = {};
                     selectedStatuses.forEach(targetStatus => {
                         const cleanTarget = cleanString(targetStatus);
-                        // Проходимось по шапці, шукаємо співпадіння
                         for (let c = 0; c < headerRow.length; c++) {
                             if (cleanString(headerRow[c]) === cleanTarget) {
                                 statusColumnMap[targetStatus] = c;
@@ -418,22 +510,18 @@
                         }
                     });
 
-                    // Проходимо по людях (починаючи з вказаного рядка)
                     for (let rowIndex = dataStartIdx; rowIndex < json.length; rowIndex++) {
                         const row = json[rowIndex];
                         if (!row) continue;
 
                         const name = String(row[nameIdx] || "").trim();
-                        // Якщо немає ПІБ - пропускаємо рядок
                         if (!name || name === "0" || name.toLowerCase().includes("разом")) continue;
 
                         const rank = String(row[rankIdx] || "").trim();
                         const position = String(row[posIdx] || "").trim();
 
-                        // Перевіряємо кожен обраний статус
                         for (const [statusName, colIndex] of Object.entries(statusColumnMap)) {
                             const cellValue = String(row[colIndex] || "").trim();
-                            // Якщо в клітинці є щось крім пустоти або нуля (напр. "1", "+", "так")
                             if (cellValue && cellValue !== "0" && cellValue !== "-") {
                                 statusData[statusName].push({
                                     rank: rank,
@@ -446,19 +534,22 @@
                     }
                 }
 
-                statusDiv.innerHTML = '<span class="spinner"></span> <span style="color:#2196F3;">Генерація окремих Word документів...</span>';
+                // Відображення прев'ю знайдених людей
+                renderLivePreview(statusData);
+
+                setStatus("Генерація Word-документів...", "loading");
 
                 const zip = new JSZip();
                 let filesAdded = 0;
+                let totalPeopleFound = 0;
                 const docPromises = [];
 
-                // Створюємо документ для кожного статусу, де є люди
                 for (const [statusName, peopleArray] of Object.entries(statusData)) {
                     if (peopleArray.length === 0) continue;
+                    totalPeopleFound += peopleArray.length;
 
                     let tableRows = [];
 
-                    // Шапка таблиці в Word
                     tableRows.push(new docx.TableRow({
                         children: [
                             createDocxCell('№', true),
@@ -492,15 +583,15 @@
                             children: [
                                 new docx.Paragraph({
                                     children: [
-                                        new docx.TextRun({ text: `Список особового складу: `, size: 24 }),
-                                        new docx.TextRun({ text: statusName.toUpperCase(), bold: true, size: 28 })
+                                        new docx.TextRun({ text: `Список особового складу: `, size: 24, font: "Times New Roman" }),
+                                        new docx.TextRun({ text: statusName.toUpperCase(), bold: true, size: 28, font: "Times New Roman" })
                                     ],
                                     alignment: docx.AlignmentType.CENTER,
                                     spacing: { after: 300 }
                                 }),
                                 new docx.Paragraph({
                                     children: [
-                                        new docx.TextRun({ text: `Всього осіб: ${peopleArray.length}`, size: 20, italics: true })
+                                        new docx.TextRun({ text: `Всього осіб: ${peopleArray.length}`, size: 22, italics: true, font: "Times New Roman" })
                                     ],
                                     alignment: docx.AlignmentType.RIGHT,
                                     spacing: { after: 200 }
@@ -514,7 +605,6 @@
                     });
 
                     const promise = docx.Packer.toBlob(doc).then(blob => {
-                        // Очищаємо назву файлу від заборонених символів
                         const safeFileName = statusName.replace(/[\\/*?:"<>|]/g, "_");
                         zip.file(`Список_${safeFileName}.docx`, blob);
                         filesAdded++;
@@ -526,31 +616,109 @@
                 await Promise.all(docPromises);
 
                 if (filesAdded > 0) {
-                    statusDiv.innerHTML = '<span class="spinner"></span> <span style="color:#2196F3;">Завантаження ZIP архіву...</span>';
+                    setStatus("Пакування та завантаження ZIP архіву...", "loading");
 
                     const zipBlob = await zip.generateAsync({ type: "blob" });
-
                     const url = window.URL.createObjectURL(zipBlob);
                     const a = document.createElement("a");
                     a.href = url;
-                    // Додаємо дату до назви архіву
                     const today = new Date().toLocaleDateString('uk-UA').replace(/\./g, '-');
                     a.download = `Звіти_БЧС_${today}.zip`;
                     document.body.appendChild(a);
                     a.click();
-                    window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
 
-                    statusDiv.innerHTML = `<span style="color:#4CAF50;">✅ Готово! Знайдено людей у ${filesAdded} статусах. Архів завантажено.</span>`;
+                    setStatus(`✅ Готово! Знайдено ${totalPeopleFound} осіб у ${filesAdded} статусах. Архів завантажено.`, "success");
                 } else {
-                    statusDiv.innerHTML = `<span style="color:#ffd740;">За обраними статусами людей не знайдено (можливо, не співпали назви колонок).</span>`;
+                    setStatus("За обраними статусами людей не знайдено (перевірте назви колонок або рядки шапки).", "error");
                 }
 
             } catch (error) {
                 console.error("Помилка:", error);
-                statusDiv.innerHTML = `<span style="color:#ff5252;">Сталася помилка: ${error.message}</span>`;
+                setStatus(`Сталася помилка: ${error.message}`, "error");
             }
         }
+
+        function renderLivePreview(statusData) {
+            const emptyState = document.getElementById('preview-empty');
+            const resultsList = document.getElementById('preview-results-list');
+            const summaryBadge = document.getElementById('preview-summary-badge');
+
+            let totalCount = 0;
+            let activeStatuses = 0;
+            let html = '';
+
+            for (const [statusName, people] of Object.entries(statusData)) {
+                if (people.length === 0) continue;
+                totalCount += people.length;
+                activeStatuses++;
+
+                html += `
+                    <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-blue-300 font-mono">${escapeHtml(statusName)}</span>
+                            <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 font-mono font-bold text-[11px]">${people.length} осіб</span>
+                        </div>
+                        <div class="text-[11px] text-slate-400 space-y-1 max-h-24 overflow-y-auto custom-scrollbar font-mono">
+                            ${people.slice(0, 10).map((p, idx) => `<div>${idx + 1}. <span class="text-white">${escapeHtml(p.name)}</span> (${escapeHtml(p.rank || '—')}, ${escapeHtml(p.position || '—')})</div>`).join('')}
+                            ${people.length > 10 ? `<div class="text-slate-500 italic">... та ще ${people.length - 10} осіб</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (totalCount > 0) {
+                emptyState.classList.add('hidden');
+                resultsList.classList.remove('hidden');
+                resultsList.innerHTML = html;
+                summaryBadge.classList.remove('hidden');
+                summaryBadge.innerText = `${totalCount} осіб у ${activeStatuses} статусах`;
+            } else {
+                emptyState.classList.remove('hidden');
+                resultsList.classList.add('hidden');
+                resultsList.innerHTML = '';
+                summaryBadge.classList.add('hidden');
+            }
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Ініціалізація
+        window.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('statusCheckboxes');
+            grid.innerHTML = '';
+
+            ALL_STATUSES.forEach(status => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 p-2 rounded-lg bg-slate-950 border border-slate-800/80 hover:border-slate-700 cursor-pointer text-xs transition-all select-none group';
+                
+                const isSet1 = SET_1.includes(status);
+                const isCritical = ["СЗЧ", "200", "Полон", "Безвісти зниклі", "Лікування ТРИВАЛЕ"].includes(status);
+                
+                let badgeClass = 'text-slate-300';
+                if (isSet1) badgeClass = 'text-amber-300 font-semibold';
+                else if (isCritical) badgeClass = 'text-red-300';
+
+                label.innerHTML = `
+                    <input type="checkbox" name="statusFilter" value="${escapeHtml(status)}" ${isSet1 ? "checked" : ""} 
+                        onchange="updateSelectedStatusesCount()"
+                        class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-500 focus:ring-0 cursor-pointer">
+                    <span class="${badgeClass} group-hover:text-white transition-colors truncate">${escapeHtml(status)}</span>
+                `;
+                grid.appendChild(label);
+            });
+
+            updateSelectedStatusesCount();
+            lucide.createIcons();
+        });
     </script>
 </body>
 

@@ -1619,7 +1619,11 @@
 
         
         // ─── MEMORY (АВТОЗБЕРЕЖЕННЯ) ─────────────────────────────────
+        let autosaveTimer = null;
+        let isClearingMemory = false;
+
         function saveAppMemory() {
+            if (isClearingMemory) return;
             const container = document.getElementById('reports-container');
             if (!container || container.style.display === 'none') return;
             
@@ -1658,9 +1662,17 @@
 
         function clearAppMemory() {
             if (!confirm("🗑 Ви дійсно хочете очистити звіт? Усі згенеровані та додані вручну записи будуть видалені!")) return;
+            isClearingMemory = true;
+            if (autosaveTimer) clearInterval(autosaveTimer);
             localStorage.removeItem('zvit_memory_html');
             localStorage.removeItem('zvit_memory_counters');
             localStorage.removeItem('zvit_memory_docx_btn');
+            
+            const container = document.getElementById('reports-container');
+            if (container) {
+                container.innerHTML = '';
+                container.style.display = 'none';
+            }
             location.reload();
         }
 
@@ -1691,7 +1703,7 @@
             }
             
             // Autosave every 2 seconds
-            setInterval(saveAppMemory, 2000);
+            autosaveTimer = setInterval(saveAppMemory, 2000);
         });
         
         async function processFiles() {

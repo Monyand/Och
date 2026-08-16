@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Журнал ВгЗ</title>
+    <title>Калькулятор ВгЗ | Журнал вогневих завдань</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -18,43 +18,19 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace']
-                    },
-                    colors: {
-                        gray: tailwind.colors.stone,
-                        slate: tailwind.colors.stone,
-                        olive: {
-                            400: '#84965c',
-                            500: '#5c693a',
-                            600: '#4b5320',
-                            700: '#3a4219',
-                            800: '#2c3311',
-                            900: '#1d2309',
-                        },
-                        coyote: {
-                            400: '#c5a365',
-                            500: '#a6824a',
-                            600: '#8c6833',
-                        }
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
                     }
                 }
             }
         };
     </script>
     <style>
-        body { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #6b7280; }
-        
-        .modal-overlay { display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal-content { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes slideUp {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #475569; }
         
         /* Hide number input spinners */
         input[type="number"]::-webkit-inner-spin-button, 
@@ -69,169 +45,207 @@
         
         #toast-container {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 24px;
+            right: 24px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
         .toast {
-            background-color: #1f2937;
-            color: #f9fafb;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border-left: 4px solid #4b5320;
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+            border-left: 4px solid #3b82f6;
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            animation: slideIn 0.3s ease-out forwards;
+            font-size: 13px;
+            font-weight: 600;
+            animation: slideIn 0.25s ease-out forwards;
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(15px);
         }
         .toast.toast-error { border-left-color: #ef4444; }
         .toast.toast-warning { border-left-color: #f59e0b; }
         .toast.toast-success { border-left-color: #10b981; }
         
-        @keyframes slideIn {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeOut {
-            to { opacity: 0; transform: translateY(-10px); }
-        }
+        @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
 
-        /* Custom Toggle Switch */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #f59e0b; /* yellow-500 */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
         }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #f59e0b; /* yellow-500 */
-        }
-        .toggle-checkbox {
-            right: 0;
-            z-index: 1;
-            border-color: #4b5563; /* gray-600 */
-            transition: all 0.3s;
-        }
-        .toggle-label {
-            width: 2.5rem;
-            height: 1.25rem;
-            background-color: #4b5563; /* gray-600 */
-            border-radius: 9999px;
-            transition: all 0.3s;
-        }
+        .pulse-amber { animation: pulse-glow 3s infinite ease-in-out; }
     </style>
 </head>
 
-<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center p-4 sm:p-8">
+<body class="bg-slate-950 text-slate-200 min-h-screen flex flex-col items-center p-4 sm:p-8 selection:bg-amber-500/30">
 
     <div id="toast-container"></div>
 
-    <!-- Header -->
-    <div class="w-full max-w-[1400px] flex justify-between items-center bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md mb-6">
-        <h1 class="text-xl font-bold text-olive-400 flex items-center gap-2">
-            <i data-lucide="crosshair" class="w-6 h-6"></i>
-            Калькулятор ВгЗ
-            <span class="text-xs bg-coyote-500 text-black px-2 py-0.5 rounded-full font-bold ml-2">PRO</span>
-            <button onclick="openChangelogModal()" class="text-[10px] text-olive-400 font-bold border border-olive-500/40 bg-olive-500/15 hover:bg-olive-500/30 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-1 ml-2" title="Історія оновлень">
-                <span>🎯 v1.1.0</span>
-            </button>
-        </h1>
-        <button onclick="clearAllData(this)" class="text-xs text-gray-500 hover:text-red-400 transition-colors underline w-24 text-right">Очистити все</button>
-    </div>
+    <div class="w-full max-w-[1440px] space-y-6">
 
-    <!-- Main Grid -->
-    <div class="w-full max-w-[1400px] grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <!-- Left Column: Positions Database -->
-        <div class="lg:col-span-3 bg-gray-800 rounded-xl border border-gray-700 shadow-md flex flex-col h-fit">
-            <div class="bg-gray-800/80 border-b border-gray-700 p-4 flex items-center gap-2">
-                <i data-lucide="database" class="w-5 h-5 text-coyote-500"></i>
-                <h2 class="text-base font-bold text-white">База позицій</h2>
-            </div>
-            
-            <div class="p-4 space-y-4">
-                <form id="form-add-pos" class="flex gap-2" onsubmit="addPosition(event)">
-                    <input type="text" id="input-new-pos" placeholder="Напр: АЛЬФА (120ММ)" required class="flex-1 bg-gray-900 text-white border border-gray-600 rounded p-2 text-sm focus:border-coyote-500 focus:ring-1 focus:ring-coyote-500 outline-none transition-colors">
-                    <button type="submit" class="bg-coyote-600 hover:bg-coyote-700 text-white p-2 rounded transition-colors" title="Додати">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                    </button>
-                </form>
-
-                <div id="positions-list" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto custom-scrollbar">
-                    <!-- Позиції будуть тут -->
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-slate-900 border border-slate-800/90 rounded-2xl p-5 shadow-xl">
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-inner">
+                    <i data-lucide="crosshair" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-2xl font-bold text-white tracking-tight">Калькулятор ВгЗ</h1>
+                        <span class="text-[11px] bg-slate-800 text-amber-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono font-bold">
+                            FIRE_CONTROL
+                        </span>
+                        <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
+                            🎯 v1.2.0
+                        </button>
+                    </div>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Журнал обліку вогневих завдань та підрахунку витрати боєприпасів за калібрами</p>
                 </div>
             </div>
-        </div>
 
-        <!-- Middle Column: VgZ Missions -->
-        <div class="lg:col-span-5 bg-gray-800 rounded-xl border border-gray-700 shadow-md h-fit overflow-hidden">
-                <div class="bg-gray-800/80 border-b border-gray-700 p-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div id="header-stats-badge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-slate-400">
+                    <span class="text-slate-300 font-bold" id="stat-header-vgz">0 ВгЗ</span>
+                    <span class="text-slate-600">•</span>
+                    <span class="text-amber-400 font-bold" id="stat-header-ammo">0 БК</span>
+                </div>
+                <button onclick="clearAllData(this)" class="px-3 py-1.5 text-xs text-slate-400 hover:text-red-400 hover:bg-red-950/30 border border-slate-800 hover:border-red-900/50 rounded-lg transition-all cursor-pointer font-medium">
+                    Очистити все
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: Positions Database (3 cols) -->
+            <div class="lg:col-span-3 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl flex flex-col h-fit overflow-hidden">
+                <div class="bg-slate-800/60 border-b border-slate-800 px-4 py-3.5 flex justify-between items-center">
                     <div class="flex items-center gap-2">
-                        <i data-lucide="target" class="w-5 h-5 text-olive-500"></i>
-                        <h2 class="text-base font-bold text-white">Вогневі завдання</h2>
+                        <i data-lucide="database" class="w-4 h-4 text-amber-400"></i>
+                        <h2 class="text-sm font-bold text-white">База позицій</h2>
+                    </div>
+                    <span id="positions-count-badge" class="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                        0
+                    </span>
+                </div>
+                
+                <div class="p-4 space-y-4">
+                    <form id="form-add-pos" class="flex gap-2" onsubmit="addPosition(event)">
+                        <input type="text" id="input-new-pos" placeholder="Напр: АЛЬФА (120ММ)" required 
+                            class="flex-1 bg-slate-950 text-white border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono uppercase focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all placeholder:text-slate-600">
+                        <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-2 rounded-lg font-bold transition-all shadow-sm active:scale-95 cursor-pointer" title="Додати позицію">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+
+                    <div id="positions-list" class="flex flex-wrap gap-2 max-h-72 overflow-y-auto custom-scrollbar pt-2 border-t border-slate-800/80">
+                        <!-- Позиції будуть тут -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Column: VgZ Missions (5 cols) -->
+            <div class="lg:col-span-5 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl h-fit overflow-hidden flex flex-col">
+                <div class="bg-slate-800/60 border-b border-slate-800 px-4 py-3.5 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="target" class="w-4 h-4 text-amber-400"></i>
+                        <h2 class="text-sm font-bold text-white">Вогневі завдання</h2>
+                        <span id="missions-count-badge" class="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 ml-1">
+                            0
+                        </span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="clearMissions(this)" class="text-xs text-red-400 hover:text-red-300 transition-colors underline mr-2 w-24 text-right">
+                        <button onclick="clearMissions(this)" class="text-xs text-slate-400 hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-slate-800 cursor-pointer font-medium">
                             Очистити ВгЗ
                         </button>
-                        <button onclick="addMission()" class="bg-olive-600 hover:bg-olive-700 text-white font-bold py-1.5 px-3 rounded shadow-sm transition-colors flex items-center gap-2 text-sm">
-                            <i data-lucide="plus" class="w-4 h-4"></i> ВгЗ
+                        <button onclick="addMission()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1.5 px-3.5 rounded-lg shadow-sm transition-all flex items-center gap-1.5 text-xs active:scale-95 cursor-pointer">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Додати ВгЗ
                         </button>
                     </div>
                 </div>
                 
-                <div class="p-4 bg-gray-900/30">
-                    <div id="missions-list" class="space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar pr-2">
+                <div class="p-4 bg-slate-950/40">
+                    <div id="missions-list" class="space-y-2.5 max-h-[520px] overflow-y-auto custom-scrollbar pr-1">
                         <!-- ВгЗ будуть тут -->
                     </div>
                     
-                    <div id="empty-state" class="text-center py-8 text-gray-500 hidden">
-                        <i data-lucide="clipboard-list" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
-                        <p class="text-sm">Журнал порожній. Додайте ВгЗ.</p>
+                    <div id="empty-state" class="text-center py-12 text-slate-500">
+                        <div class="w-12 h-12 rounded-full bg-slate-800/60 border border-slate-700 flex items-center justify-center mx-auto mb-3 text-slate-600">
+                            <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-400">Журнал завдань порожній</p>
+                        <p class="text-xs text-slate-600 mt-1 max-w-xs mx-auto">Додайте позицію в лівій колонці та натисніть «Додати ВгЗ» для початку розрахунку.</p>
                     </div>
                 </div>
             </div>
 
-        <!-- Right Column: Result Panel -->
-        <div class="lg:col-span-4 bg-[#1a1c14] rounded-xl border-2 border-olive-700 shadow-lg overflow-hidden relative h-fit">
-            <div class="absolute inset-0 bg-olive-900/10 pointer-events-none"></div>
-            <div class="relative bg-olive-900/50 border-b border-olive-800 p-4 flex justify-between items-center">
-                <h3 class="text-olive-400 font-bold flex items-center gap-2 text-base">
-                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i> ФІНАЛЬНИЙ ЗВІТ
-                </h3>
-                <button onclick="copyResult(this)" class="bg-olive-600 hover:bg-olive-500 text-white py-1.5 px-4 rounded shadow-sm transition-colors flex items-center gap-2 text-sm font-bold border border-olive-500">
-                    <i data-lucide="copy" class="w-4 h-4"></i> Скопіювати
-                </button>
+            <!-- Right Column: Result Panel (4 cols) -->
+            <div class="lg:col-span-4 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative h-fit flex flex-col">
+                <div class="bg-slate-800/80 border-b border-slate-800 px-4 py-3.5 flex justify-between items-center backdrop-blur-sm">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-400"></i>
+                        <h3 class="text-white font-bold text-sm">Фінальний звіт</h3>
+                    </div>
+                    <button onclick="copyResult(this)" class="bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-3.5 rounded-lg shadow-sm transition-all flex items-center gap-1.5 text-xs font-bold active:scale-95 cursor-pointer">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> 
+                        <span id="copy-btn-text">Скопіювати</span>
+                    </button>
+                </div>
+
+                <!-- Міні-зведення по калібрах -->
+                <div id="ammo-chips-container" class="p-3 bg-slate-950/60 border-b border-slate-800/80 flex flex-wrap gap-2 text-xs font-mono">
+                    <span class="text-slate-500 text-xs italic">Очікування даних...</span>
+                </div>
+
+                <div class="p-4">
+                    <textarea id="result-textarea" rows="14" readonly 
+                        class="w-full bg-slate-950 text-amber-300 border border-slate-800 rounded-xl p-3.5 font-mono text-xs leading-relaxed focus:outline-none focus:border-amber-500 custom-scrollbar resize-y shadow-inner select-text" 
+                        placeholder="Додайте позиції та ВгЗ, щоб згенерувати звіт..."></textarea>
+                </div>
             </div>
-            <div class="relative p-4">
-                <textarea id="result-textarea" rows="15" readonly class="w-full bg-black/40 text-coyote-300 border border-dashed border-olive-700/50 rounded-lg p-4 font-mono text-base font-bold tracking-wide focus:outline-none focus:border-olive-500 custom-scrollbar resize-y shadow-inner leading-relaxed" placeholder="Додайте позиції та ВгЗ, щоб згенерувати звіт..."></textarea>
-            </div>
+
         </div>
+
+        <!-- Footer -->
+        <footer class="pt-4 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>🛡️ Тактичний розрахунок вогневих завдань та витрати БК</span>
+            <span class="font-mono text-slate-600">Inter / JetBrains Mono • Автозбереження у браузері</span>
+        </footer>
+
     </div>
 
-    <!-- MODALS -->
-    <div id="modal-changelog" class="modal-overlay fixed inset-0 z-[100] bg-black/60">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col modal-content border dark:border-gray-700">
-            <div class="p-6 flex justify-between items-center border-b border-gray-100 dark:border-gray-700/80 bg-gray-50/50 dark:bg-gray-900/20 rounded-t-xl">
+    <!-- MODAL: CHANGELOG -->
+    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-olive-100 dark:bg-olive-900/30 flex items-center justify-center text-olive-600 dark:text-olive-400">
-                        <i data-lucide="file-clock" class="w-5 h-5"></i>
+                    <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <i data-lucide="history" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-black text-gray-900 dark:text-white">Історія оновлень</h2>
-                        <p class="text-xs text-gray-500 font-bold">Останні зміни та нові функції Калькулятора ВгЗ</p>
+                        <h2 class="text-lg font-bold text-white">Історія оновлень</h2>
+                        <p class="text-xs text-slate-400">Калькулятор вогневих завдань</p>
                     </div>
                 </div>
-                <button onclick="closeModal('modal-changelog')" class="text-gray-400 hover:text-gray-600 dark:hover:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button onclick="closeModal('modal-changelog')" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-gray-800 space-y-6" id="changelogModalList">
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm" id="changelogModalList">
+                <!-- Динамічно заповнюється з APP_CHANGELOG -->
+            </div>
+            <div class="px-6 py-3 bg-slate-950/60 border-t border-slate-800 text-right">
+                <button onclick="closeModal('modal-changelog')" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer">
+                    Закрити
+                </button>
             </div>
         </div>
     </div>
@@ -239,51 +253,77 @@
     <script>
         const APP_CHANGELOG = [
             {
-                version: "1.1.0",
-                date: "08.08.2026",
+                version: "1.2.0",
+                date: "16.08.2026",
                 isCurrent: true,
                 sections: [
                     {
-                        title: "🎨 Оптимізація інтерфейсу",
+                        title: "🎨 Повний Tactical Dark редизайн",
                         items: [
-                            "Новий Layout: Дизайн переведено на зручну 3-х колонкову сітку (Позиції, Завдання, Звіт).",
-                            "Покращення UX: Видалено демо-підказки та тестові дані. Прибрано дефолтні стрілочки для вводу чисел у полях БК.",
-                            "Безпечне Очищення: Системні вікна confirm() замінено на стильні вбудовані кнопки з двоетапним підтвердженням."
+                            "Переведено на фірмовий темний стиль slate-950 з типографікою Inter та JetBrains Mono.",
+                            "Кнопки швидкого регулювання БК [-] та [+] для кожного завдання.",
+                            "Швидкі пресети калібрів (+120ММ, +82ММ, +СПГ-9, +АГС-17) для миттєвого створення позицій.",
+                            "Інтерактивні чіпи зведення по калібрах у панелі фінального звіту."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.1.0",
+                date: "08.08.2026",
+                isCurrent: false,
+                sections: [
+                    {
+                        title: "🛠 Оптимізація інтерфейсу",
+                        items: [
+                            "Новий Layout: Дизайн переведено на 3-колонкову сітку (Позиції, Завдання, Звіт).",
+                            "Безпечне очищення з двоетапним підтвердженням замість системного confirm()."
                         ]
                     }
                 ]
             }
         ];
 
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function openModal(id) { 
+            const m = document.getElementById(id);
+            if (!m) return;
+            m.classList.remove('hidden'); 
+            m.classList.add('flex');
+            lucide.createIcons();
+        }
+        function closeModal(id) { 
+            const m = document.getElementById(id);
+            if (!m) return;
+            m.classList.add('hidden'); 
+            m.classList.remove('flex');
+        }
         
         function renderChangelogModal() {
             const container = document.getElementById('changelogModalList');
             if (!container) return;
             let html = '';
             APP_CHANGELOG.forEach(item => {
-                const borderClass = item.isCurrent ? 'border-l-4 border-olive-500' : 'border-l-4 border-gray-500 opacity-80';
+                const borderClass = item.isCurrent ? 'border-l-2 border-amber-500' : 'border-l-2 border-slate-700 opacity-80';
                 const currentBadge = item.isCurrent 
-                    ? `<span class="bg-olive-100 text-olive-800 dark:bg-olive-900/80 dark:text-olive-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-olive-300 dark:border-olive-700">АКТУАЛЬНО</span>` 
+                    ? `<span class="bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-amber-500/40">АКТУАЛЬНО</span>` 
                     : '';
                 html += `
-                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 ${borderClass} border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2">
-                        <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>🚀 Версія ${item.version}</span>
+                <div class="relative pl-5 ${borderClass} space-y-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                            <span>🎯 Версія ${item.version}</span>
                             ${currentBadge}
                         </h4>
-                        <span class="text-xs text-gray-500 font-mono font-bold">${item.date}</span>
+                        <span class="text-xs text-slate-500 font-mono font-bold">${item.date}</span>
                     </div>
-                    <div class="space-y-4 pt-1">
+                    <div class="space-y-3 pt-1">
                         ${item.sections.map(sec => `
                             <div>
-                                <h5 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">${sec.title}</h5>
-                                <ul class="space-y-1.5">
+                                <h5 class="text-xs font-bold text-slate-300 mb-1.5">${sec.title}</h5>
+                                <ul class="space-y-1">
                                     ${sec.items.map(bullet => `
-                                        <li class="flex items-start text-xs text-gray-600 dark:text-gray-400 leading-relaxed gap-2">
-                                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-olive-500 shrink-0 mt-0.5"></i>
+                                        <li class="flex items-start text-xs text-slate-400 leading-relaxed gap-2">
+                                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5"></i>
                                             <span>${bullet}</span>
                                         </li>
                                     `).join('')}
@@ -308,26 +348,17 @@
             }
         });
 
-        // App state Lucide
-        lucide.createIcons();
+        // App state
+        let positions = [];
+        let missions = [];
 
-        // State
-        let positions;
-        let missions;
-
-        if (localStorage.getItem('tactical_vgz_positions') === null) {
-            positions = [];
-            localStorage.setItem('tactical_vgz_positions', JSON.stringify(positions));
-        } else {
+        try {
             positions = JSON.parse(localStorage.getItem('tactical_vgz_positions')) || [];
-        }
+        } catch(e) { positions = []; }
 
-        if (localStorage.getItem('tactical_vgz_missions') === null) {
-            missions = [];
-            localStorage.setItem('tactical_vgz_missions', JSON.stringify(missions));
-        } else {
+        try {
             missions = JSON.parse(localStorage.getItem('tactical_vgz_missions')) || [];
-        }
+        } catch(e) { missions = []; }
 
         // UI Toast
         function showToast(message, type = 'default') {
@@ -340,19 +371,19 @@
             if(type === 'success') icon = 'check-circle';
             if(type === 'warning') icon = 'alert-circle';
             
-            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 shrink-0"></i><span>${message}</span>`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
             container.appendChild(toast);
             lucide.createIcons();
             
             setTimeout(() => {
-                toast.style.animation = 'fadeOut 0.3s ease-in forwards';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+                toast.style.animation = 'fadeOut 0.25s ease-in forwards';
+                setTimeout(() => toast.remove(), 250);
+            }, 2500);
         }
 
         // --- POSITIONS DB ---
         function addPosition(e) {
-            e.preventDefault();
+            if(e) e.preventDefault();
             const input = document.getElementById('input-new-pos');
             const name = input.value.trim().toUpperCase();
             
@@ -365,40 +396,46 @@
             positions.push(name);
             savePositions();
             renderPositions();
-            renderMissions(); // оновлюємо селекти
+            renderMissions();
+            generateResult();
             input.value = '';
-            showToast('Позицію додано', 'success');
+            showToast(`Позицію "${name}" додано`, 'success');
         }
 
+
+
         function deletePosition(name) {
-            if(!confirm(`Видалити позицію "${name}"?`)) return;
             positions = positions.filter(p => p !== name);
             savePositions();
             renderPositions();
             renderMissions();
             generateResult();
+            showToast(`Позицію видалено`, 'default');
         }
 
         function savePositions() {
             localStorage.setItem('tactical_vgz_positions', JSON.stringify(positions));
+            document.getElementById('positions-count-badge').innerText = positions.length;
         }
 
         function renderPositions() {
             const container = document.getElementById('positions-list');
             container.innerHTML = '';
+            document.getElementById('positions-count-badge').innerText = positions.length;
             
             if(positions.length === 0) {
-                container.innerHTML = '<span class="text-xs text-gray-500 italic">База порожня</span>';
+                container.innerHTML = '<span class="text-xs text-slate-500 italic py-2">База позицій порожня</span>';
                 return;
             }
 
             positions.forEach(p => {
+                const wpn = extractWeapon(p);
                 const el = document.createElement('div');
-                el.className = 'flex items-center gap-1 bg-gray-900 border border-gray-700 rounded-full pl-3 pr-1 py-1 text-xs font-bold text-gray-300';
+                el.className = 'flex items-center gap-1.5 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-lg pl-2.5 pr-1.5 py-1 text-xs font-mono text-slate-300 shadow-sm transition-all group';
                 el.innerHTML = `
-                    <span>${p}</span>
-                    <button type="button" onclick="deletePosition('${p}')" class="text-gray-500 hover:text-red-400 p-0.5 rounded-full hover:bg-gray-800 transition-colors">
-                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    <span class="font-bold text-white">${escapeHtml(p)}</span>
+                    <button type="button" onclick="deletePosition('${escapeHtml(p)}')" class="text-slate-500 hover:text-red-400 p-0.5 rounded transition-colors cursor-pointer" title="Видалити">
+                        <i data-lucide="x" class="w-3 h-3"></i>
                     </button>
                 `;
                 container.appendChild(el);
@@ -421,7 +458,7 @@
             missions.push({
                 id: generateId(),
                 pos: positions[0],
-                ammo: 0,
+                ammo: 10,
                 isFictitious: false
             });
             saveMissions();
@@ -429,10 +466,22 @@
             generateResult();
         }
 
+        function stepMissionAmmo(id, delta) {
+            const m = missions.find(m => m.id === id);
+            if(m) {
+                let current = parseInt(m.ammo) || 0;
+                m.ammo = Math.max(0, current + delta);
+                saveMissions();
+                renderMissions();
+                generateResult();
+            }
+        }
+
         function updateMission(id, field, value) {
             const m = missions.find(m => m.id === id);
             if(m) {
                 if(field === 'isFictitious') m[field] = value === 'true' || value === true;
+                else if(field === 'ammo') m[field] = Math.max(0, parseInt(value) || 0);
                 else m[field] = value;
                 saveMissions();
                 generateResult();
@@ -448,12 +497,14 @@
 
         function saveMissions() {
             localStorage.setItem('tactical_vgz_missions', JSON.stringify(missions));
+            document.getElementById('missions-count-badge').innerText = missions.length;
         }
 
         function renderMissions() {
             const container = document.getElementById('missions-list');
             const emptyState = document.getElementById('empty-state');
             container.innerHTML = '';
+            document.getElementById('missions-count-badge').innerText = missions.length;
             
             if(missions.length === 0) {
                 emptyState.classList.remove('hidden');
@@ -461,38 +512,48 @@
             }
             emptyState.classList.add('hidden');
 
-            const posOptions = positions.map(p => `<option value="${p}">${p}</option>`).join('');
-
             missions.forEach(m => {
+                const isFict = m.isFictitious;
                 const el = document.createElement('div');
-                el.className = `flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border ${m.isFictitious ? 'bg-yellow-900/10 border-yellow-700/50' : 'bg-gray-800 border-gray-700'} shadow-sm transition-colors`;
+                el.className = `p-3 rounded-xl border transition-all ${isFict ? 'bg-amber-950/20 border-amber-700/50 shadow-inner' : 'bg-slate-950 border-slate-800 hover:border-slate-700'} shadow-sm space-y-2.5`;
                 
                 el.innerHTML = `
-                    <div class="flex-1 flex items-center gap-2">
-                        <select onchange="updateMission('${m.id}', 'pos', this.value)" class="w-full bg-gray-900 text-white border border-gray-600 rounded p-2 text-sm focus:border-olive-500 focus:ring-1 focus:ring-olive-500 outline-none">
-                            ${positions.length === 0 ? '<option value="">Немає позицій</option>' : ''}
-                            ${positions.map(p => `<option value="${p}" ${m.pos === p ? 'selected' : ''}>${p}</option>`).join('')}
-                        </select>
-                    </div>
-                    
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2 bg-gray-900 px-3 py-1.5 rounded border border-gray-600 focus-within:border-olive-500 focus-within:ring-1 focus-within:ring-olive-500 transition-colors cursor-text" onclick="this.querySelector('input').focus()">
-                            <span class="text-gray-400 text-xs font-bold uppercase">БК:</span>
-                            <input type="number" min="0" value="${m.ammo}" onchange="updateMission('${m.id}', 'ammo', this.value)" onkeyup="updateMission('${m.id}', 'ammo', this.value)" class="w-12 sm:w-16 bg-transparent text-white outline-none text-base text-center font-mono placeholder-gray-600" placeholder="0">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex-1 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${isFict ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}"></span>
+                            <select onchange="updateMission('${m.id}', 'pos', this.value)" 
+                                class="w-full bg-slate-900 text-white font-mono font-bold text-xs border border-slate-700 rounded-lg p-2 focus:border-amber-500 outline-none">
+                                ${positions.length === 0 ? '<option value="">Немає позицій</option>' : ''}
+                                ${positions.map(p => `<option value="${escapeHtml(p)}" ${m.pos === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
+                            </select>
                         </div>
-                        
-                        <label class="flex items-center cursor-pointer gap-2 select-none" title="Фіктивне ВгЗ">
-                            <div class="relative">
-                                <input type="checkbox" ${m.isFictitious ? 'checked' : ''} onchange="updateMission('${m.id}', 'isFictitious', this.checked); renderMissions();" class="sr-only toggle-checkbox">
-                                <div class="block toggle-label"></div>
-                                <div class="dot absolute left-1 top-1 bg-white w-3 h-3 rounded-full transition transform ${m.isFictitious ? 'translate-x-full' : ''}"></div>
-                            </div>
-                            <span class="text-xs font-bold ${m.isFictitious ? 'text-yellow-500' : 'text-gray-500'}">Фікт.</span>
-                        </label>
-                        
-                        <button type="button" onclick="deleteMission('${m.id}')" class="text-red-400 hover:text-red-300 hover:bg-red-900/30 p-1.5 rounded-lg transition-colors ml-auto">
+                        <button type="button" onclick="deleteMission('${m.id}')" 
+                            class="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-900 transition-colors cursor-pointer" title="Видалити ВгЗ">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3 pt-1 border-t border-slate-800/60">
+                        <!-- Регулятор БК -->
+                        <div class="flex items-center gap-1.5 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
+                            <span class="text-slate-400 text-[11px] font-mono font-bold uppercase">БК:</span>
+                            <button type="button" onclick="stepMissionAmmo('${m.id}', -1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer">-</button>
+                            <input type="number" min="0" value="${m.ammo}" 
+                                onchange="updateMission('${m.id}', 'ammo', this.value)" 
+                                onkeyup="updateMission('${m.id}', 'ammo', this.value)" 
+                                class="w-10 bg-transparent text-amber-300 outline-none text-xs text-center font-mono font-bold">
+                            <button type="button" onclick="stepMissionAmmo('${m.id}', 1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer">+</button>
+                        </div>
+
+                        <!-- Перемикач Фіктивне -->
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" ${isFict ? 'checked' : ''} 
+                                onchange="updateMission('${m.id}', 'isFictitious', this.checked); renderMissions();" 
+                                class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer">
+                            <span class="text-xs font-mono font-bold ${isFict ? 'text-amber-400' : 'text-slate-500'}">
+                                ${isFict ? '⚠️ Фіктивне' : 'Реальне'}
+                            </span>
+                        </label>
                     </div>
                 `;
                 container.appendChild(el);
@@ -502,38 +563,68 @@
 
         // --- RESULTS ---
         function extractWeapon(posName) {
-            const match = posName.match(/\(([^)]+)\)[^(]*$/);
-            return match ? match[1].trim() : 'Інше';
+            const match = posName.match(/\((.+)\)\s*$/);
+            if (match) return match[1].trim().toUpperCase();
+            const fallback = posName.match(/\(([^)]+)\)/);
+            return fallback ? fallback[1].trim().toUpperCase() : 'ІНШЕ';
+        }
+
+        function formatShotsPlural(n) {
+            const count = parseInt(n) || 0;
+            const num = Math.abs(count) % 100;
+            const n1 = num % 10;
+            if (num > 10 && num < 20) return `${count} пострілів`;
+            if (n1 > 1 && n1 < 5) return `${count} постріли`;
+            if (n1 === 1) return `${count} постріл`;
+            return `${count} пострілів`;
         }
 
         function generateResult() {
             const txt = document.getElementById('result-textarea');
+            const chipsContainer = document.getElementById('ammo-chips-container');
+
             if(missions.length === 0) {
                 txt.value = '';
+                chipsContainer.innerHTML = '<span class="text-slate-500 text-xs italic">Очікування даних...</span>';
+                updateHeaderStats(0, 0);
                 return;
             }
 
             let realCount = 0;
             let fictCount = 0;
-            let ammoStats = {}; // key: wpn
-            let grouped = {}; // key: "POS___isFict"
+            let totalAmmoOverall = 0;
+            let weaponStats = {}; 
+            let grouped = {}; 
 
             missions.forEach(m => {
-                // Ignore missions with deleted positions
                 if(!positions.includes(m.pos)) return;
 
                 const ammoNum = parseInt(m.ammo) || 0;
                 const wpn = extractWeapon(m.pos);
+                totalAmmoOverall += ammoNum;
 
-                if(!ammoStats[wpn]) ammoStats[wpn] = { total: 0, real: 0, fict: 0 };
-                ammoStats[wpn].total += ammoNum;
+                if(!weaponStats[wpn]) {
+                    weaponStats[wpn] = {
+                        vgzTotal: 0,
+                        vgzReal: 0,
+                        vgzFict: 0,
+                        ammoTotal: 0,
+                        ammoReal: 0,
+                        ammoFict: 0
+                    };
+                }
+
+                weaponStats[wpn].vgzTotal++;
+                weaponStats[wpn].ammoTotal += ammoNum;
 
                 if(m.isFictitious) {
                     fictCount++;
-                    ammoStats[wpn].fict += ammoNum;
+                    weaponStats[wpn].vgzFict++;
+                    weaponStats[wpn].ammoFict += ammoNum;
                 } else {
                     realCount++;
-                    ammoStats[wpn].real += ammoNum;
+                    weaponStats[wpn].vgzReal++;
+                    weaponStats[wpn].ammoReal += ammoNum;
                 }
 
                 const key = `${m.pos}___${m.isFictitious}`;
@@ -545,21 +636,60 @@
             });
 
             const totalCount = realCount + fictCount;
+            updateHeaderStats(totalCount, totalAmmoOverall);
+
+            // Оновлення карток аналітики по калібрах
+            let chipsHtml = '';
+            for (let wpn in weaponStats) {
+                const s = weaponStats[wpn];
+                chipsHtml += `
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono flex-1 min-w-[200px] space-y-1.5 shadow-sm">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-1">
+                            <span class="font-bold text-amber-400 text-sm">${escapeHtml(wpn)}</span>
+                            <span class="text-[11px] text-slate-300 font-bold">${s.vgzTotal} ВгЗ • ${formatShotsPlural(s.ammoTotal)}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1 text-[11px]">
+                            <div class="text-emerald-400 flex items-center gap-1">
+                                <span class="text-slate-500 font-semibold">Реал:</span>
+                                <span>${s.vgzReal} ВгЗ (${s.ammoReal})</span>
+                            </div>
+                            <div class="text-amber-400 flex items-center gap-1">
+                                <span class="text-slate-500 font-semibold">Фікт:</span>
+                                <span>${s.vgzFict} ВгЗ (${s.ammoFict})</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            chipsContainer.innerHTML = chipsHtml || '<span class="text-slate-500 text-xs italic">Немає витрати</span>';
             
-            let ammoStr = '';
-            for (let wpn in ammoStats) {
-                const s = ammoStats[wpn];
-                ammoStr += `\nЗагалом БК ${wpn}: ${s.total} (Реального: ${s.real}, Фіктивного: ${s.fict})`;
+            let weaponSummaryLines = [];
+            for (let wpn in weaponStats) {
+                const s = weaponStats[wpn];
+                weaponSummaryLines.push(`• ${wpn}: ${s.vgzTotal} ВгЗ (Реальних: ${s.vgzReal}, Фікт: ${s.vgzFict}) — ${formatShotsPlural(s.ammoTotal)} (Реального: ${s.ammoReal}, Фікт: ${s.ammoFict})`);
             }
 
-            let text = `Загалом ВгЗ: ${totalCount} (Реальних: ${realCount}, Фіктивних: ${fictCount})${ammoStr}\n\n`;
+            let text = `Загалом ВгЗ: ${totalCount} (Реальних: ${realCount}, Фіктивних: ${fictCount})\n\n`;
+            if (weaponSummaryLines.length > 0) {
+                text += `Зведення за озброєнням:\n${weaponSummaryLines.join('\n')}\n\n`;
+            }
 
+            text += `По позиціях:\n`;
             Object.values(grouped).forEach(g => {
                 const fictMark = g.isFict ? ' (фіктивне)' : '';
-                text += `* ${g.pos} - ${g.vgz} ВгЗ - ${g.ammo} пострілів${fictMark}\n`;
+                text += `* ${g.pos} - ${g.vgz} ВгЗ - ${formatShotsPlural(g.ammo)}${fictMark}\n`;
             });
 
             txt.value = text.trim();
+        }
+
+        function updateHeaderStats(vgzCount, ammoCount) {
+            const badge = document.getElementById('header-stats-badge');
+            if(badge) {
+                badge.classList.remove('hidden');
+                document.getElementById('stat-header-vgz').innerText = `${vgzCount} ВгЗ`;
+                document.getElementById('stat-header-ammo').innerText = `${ammoCount} БК`;
+            }
         }
 
         function copyResult(btn) {
@@ -568,33 +698,31 @@
                 showToast('Немає тексту для копіювання!', 'warning');
                 return;
             }
-            txt.select();
-            document.execCommand("copy");
             
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Скопійовано';
-            btn.classList.add('bg-olive-600', 'border-olive-500');
-            btn.classList.remove('bg-gray-700', 'border-gray-600');
-            lucide.createIcons();
-            
-            setTimeout(() => {
-                btn.innerHTML = originalHtml;
-                btn.classList.remove('bg-olive-600', 'border-olive-500');
-                btn.classList.add('bg-gray-700', 'border-gray-600');
-                lucide.createIcons();
-            }, 2000);
-            
-            showToast('Результат скопійовано в буфер обміну', 'success');
+            navigator.clipboard.writeText(txt.value).then(() => {
+                const label = document.getElementById('copy-btn-text');
+                label.innerText = 'Скопійовано!';
+                btn.classList.add('bg-emerald-500');
+                showToast('Результат скопійовано у буфер!', 'success');
+                setTimeout(() => {
+                    label.innerText = 'Скопіювати';
+                    btn.classList.remove('bg-emerald-500');
+                }, 2000);
+            }).catch(() => {
+                txt.select();
+                document.execCommand("copy");
+                showToast('Результат скопійовано у буфер!', 'success');
+            });
         }
 
         let clearMissionsTimeout;
         function clearMissions(btn) {
             if(missions.length === 0) return;
             if(!btn.classList.contains('confirm-mode')) {
-                btn.classList.add('confirm-mode', 'text-red-500', 'font-bold');
+                btn.classList.add('confirm-mode', 'text-red-400', 'font-bold');
                 btn.innerText = 'Точно?';
                 clearMissionsTimeout = setTimeout(() => {
-                    btn.classList.remove('confirm-mode', 'text-red-500', 'font-bold');
+                    btn.classList.remove('confirm-mode', 'text-red-400', 'font-bold');
                     btn.innerText = 'Очистити ВгЗ';
                 }, 3000);
             } else {
@@ -604,7 +732,7 @@
                 renderMissions();
                 generateResult();
                 showToast('Всі ВгЗ очищено', 'success');
-                btn.classList.remove('confirm-mode', 'text-red-500', 'font-bold');
+                btn.classList.remove('confirm-mode', 'text-red-400', 'font-bold');
                 btn.innerText = 'Очистити ВгЗ';
             }
         }
@@ -612,10 +740,10 @@
         let clearAllTimeout;
         function clearAllData(btn) {
             if(!btn.classList.contains('confirm-mode')) {
-                btn.classList.add('confirm-mode', 'text-red-500', 'font-bold');
+                btn.classList.add('confirm-mode', 'text-red-400', 'font-bold');
                 btn.innerText = 'Точно все?';
                 clearAllTimeout = setTimeout(() => {
-                    btn.classList.remove('confirm-mode', 'text-red-500', 'font-bold');
+                    btn.classList.remove('confirm-mode', 'text-red-400', 'font-bold');
                     btn.innerText = 'Очистити все';
                 }, 3000);
             } else {
@@ -627,16 +755,28 @@
                 renderPositions();
                 renderMissions();
                 generateResult();
-                showToast('Дані очищено', 'success');
-                btn.classList.remove('confirm-mode', 'text-red-500', 'font-bold');
+                showToast('Всі дані очищено', 'success');
+                btn.classList.remove('confirm-mode', 'text-red-400', 'font-bold');
                 btn.innerText = 'Очистити все';
             }
         }
 
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         // Init App
-        renderPositions();
-        renderMissions();
-        generateResult();
+        window.addEventListener('DOMContentLoaded', () => {
+            renderPositions();
+            renderMissions();
+            generateResult();
+            lucide.createIcons();
+        });
     </script>
 </body>
 </html>
