@@ -56,7 +56,7 @@
                 <div class="flex items-center gap-3">
                     <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Форматер Майна</h1>
                     <span class="text-xs bg-blue-600/80 text-white font-mono font-bold px-2.5 py-0.5 rounded-full shadow-sm">
-                        🚀 v1.1.0
+                        🚀 v1.2.0
                     </span>
                 </div>
                 <p class="text-slate-400 text-sm mt-1">Вставте будь-який сирий текст списків майна — отримайте ідеально чистий стандартизований шаблон.</p>
@@ -171,14 +171,22 @@
         const btnDemo = document.getElementById('btn-demo');
         const statsBadge = document.getElementById('stats-badge');
 
-        const demoText = `- Бронежилет Корсар М3с - 2 шт (втрачено під час штурму)
+        const demoText = `По Службі ЗББР:
+- Магазин під патрон 5,45х39 мм на 30 патронів – 4 шт.
+- Коліматорний приціл Bushnell TRS-25 - 1 к-кт
+- Пристрій метальний учбово-симуляційний – 1 шт.
+
+По Службі ОВТ та МСВ:
+- Бронежилет Корсар М3с - 2 шт (втрачено під час штурму)
 * Шолом кевларовий ТОР-Д	- 1 шт.	(солдат Іванов І.І.)
 • Навушники активні Earmor M32 - 1 пара
-- Радіостанція Motorola DP4800e 2 шт. на позиції СП-4
+- Протигаз ПМК-2 – 1 шт.
+- Панчохи захисні – 1 пара
 - Спальний мішок зимовий -- 3 шт
-- Тактичні рукавиці Mechanix  -  2 пари (знищено)
-- Рюкзак рейдовий 80л - 1 к-кт (сержант Петренко)
-- Термобілизна Level 2 - 4 компл.`;
+
+Майно медичного пункту:
+- Аптечка медична індивідуальна АМЗІ - 1 шт.
+- Джгут-турнікет CAT G7 – 3 шт.`;
 
         // Оновлення номерів рядків
         function updateLineNumbers() {
@@ -215,20 +223,37 @@
 
             lines.forEach(line => {
                 let text = line.trim();
-                if (!text) return; // Пропускаємо повністю пусті рядки
-                validCount++;
+                if (!text) {
+                    if (resultLines.length > 0 && resultLines[resultLines.length - 1] !== '') {
+                        resultLines.push('');
+                    }
+                    return;
+                }
+
+                // Перевірка, чи рядок є заголовком служби / розділу
+                const isHeaderCandidate = text.endsWith(':') ||
+                    /^(?:по\s+служб[іе]|служб[ае]|майно|по\s+груп[іе]|груп[ае]|відділення|взвод|рота|батальйон|підрозділ)/i.test(text);
 
                 // 1. Прибираємо початкові маркери (тире, крапки, зірочки, маркери списку, нумерацію 1., 2))
-                text = text.replace(/^[-•*–—\s\d.)]+/, '').trim();
+                let cleanText = text.replace(/^[-•*–—\s\d.)]+/, '').trim();
 
                 // 2. Шукаємо ОСТАННЄ входження кількості та одиниці виміру в рядку
                 const qtyRegex = /[-\s–—]*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|т\.?|пара|пар|пари|к-кт|к-т|комплект(?:и)?|компл\.?|од\.?)/gi;
                 let lastMatch = null;
                 let match;
 
-                while ((match = qtyRegex.exec(text)) !== null) {
+                while ((match = qtyRegex.exec(cleanText)) !== null) {
                     lastMatch = match;
                 }
+
+                // Якщо це заголовок розділу (без кількості)
+                if (isHeaderCandidate && !lastMatch) {
+                    let headerName = cleanText.replace(/[:.;,\s]+$/, '').trim();
+                    resultLines.push(`${headerName}:`);
+                    return;
+                }
+
+                validCount++;
 
                 if (lastMatch) {
                     const quantity = lastMatch[1].replace(',', '.');
@@ -249,7 +274,7 @@
                     }
 
                     // Назва — це все, що було ДО знайденої кількості
-                    let name = text.substring(0, lastMatch.index).trim();
+                    let name = cleanText.substring(0, lastMatch.index).trim();
 
                     // Прибираємо зайві пробіли та табуляції всередині назви
                     name = name.replace(/\s+/g, ' ');
@@ -260,12 +285,12 @@
                     // Прибираємо тире, коми, двокрапки в кінці назви
                     name = name.replace(/[-–—\s:.,;]+$/, '');
 
-                    // Формуємо фінальний стандартизований рядок
+                    // Формуємо фінальний стандартизований рядок строго з початку рядка
                     resultLines.push(`${name} – ${quantity} ${unit};`);
                 } else {
                     // Якщо не знайдено одиниці виміру, очищаємо рядок від сміття та залишаємо
-                    text = text.replace(/\s+/g, ' ').replace(/[.;\s]+$/, '');
-                    resultLines.push(`${text};`);
+                    cleanText = cleanText.replace(/\s+/g, ' ').replace(/[.;\s]+$/, '');
+                    resultLines.push(`${cleanText};`);
                 }
             });
 
@@ -275,7 +300,7 @@
             btnDownload.disabled = !hasData;
 
             if (hasData) {
-                statsBadge.textContent = `${resultLines.length} поз.`;
+                statsBadge.textContent = `${validCount} поз.`;
                 statsBadge.classList.remove('hidden');
             } else {
                 statsBadge.classList.add('hidden');

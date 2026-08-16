@@ -225,12 +225,13 @@
 
             const docChildren = [];
             for (const [taskName, people] of Object.entries(groupedData)) {
-                docChildren.push(new docx.Paragraph({ 
-                    children: [new docx.TextRun({ text: taskName, bold: true, size: 26, font: "Times New Roman" })], 
-                    spacing: { before: 300, after: 150 } 
-                }));
-                
                 if (outputFormat === 'table') {
+                    // Заголовок БР перед таблицею
+                    docChildren.push(new docx.Paragraph({ 
+                        children: [new docx.TextRun({ text: taskName, bold: true, size: 26, font: "Times New Roman" })], 
+                        spacing: { before: 300, after: 150 } 
+                    }));
+
                     // Табличний вивід (ЗВАННЯ / ПІБ / ПОСАДА)
                     const tableRows = [new docx.TableRow({ children: [
                         createDocxCell('№', true, 5), 
@@ -253,19 +254,28 @@
                         columnWidths: [500, 2000, 3000, 4500] 
                     }));
                 } else {
-                    // Текстовий вивід без нумерації
-                    people.forEach((p) => {
-                        let textLine = "";
-                        if (p.rank) textLine += p.rank;
-                        if (p.name) textLine += (textLine ? " " : "") + p.name;
-                        if (p.pos) textLine += (textLine ? ", " : "") + p.pos;
-                        
-                        docChildren.push(new docx.Paragraph({
-                            children: [new docx.TextRun({ text: textLine, size: 26, font: "Times New Roman" })],
-                            spacing: { after: 100 },
-                            alignment: docx.AlignmentType.LEFT
-                        }));
-                    });
+                    // Текстовий вивід у вигляді єдиного суцільного абзацу з червоним рядком
+                    let cleanTaskName = taskName.trim().replace(/[:\s]+$/, '') + ': ';
+
+                    const peopleParts = people.map(p => {
+                        let text = "";
+                        if (p.rank) text += p.rank;
+                        if (p.name) text += (text ? " " : "") + p.name;
+                        if (p.pos) text += (text ? ", " : "") + p.pos;
+                        return text.replace(/[;,\s]+$/, '');
+                    }).filter(t => t.length > 0);
+
+                    const peopleText = peopleParts.join("; ") + (peopleParts.length > 0 ? "." : "");
+
+                    docChildren.push(new docx.Paragraph({
+                        children: [
+                            new docx.TextRun({ text: cleanTaskName, bold: true, size: 26, font: "Times New Roman" }),
+                            new docx.TextRun({ text: peopleText, bold: false, size: 26, font: "Times New Roman" })
+                        ],
+                        indent: { firstLine: 720 }, // 1.25 см (абзацний відступ)
+                        spacing: { before: 0, after: 0, line: 240 },
+                        alignment: docx.AlignmentType.BOTH
+                    }));
                 }
             }
             
