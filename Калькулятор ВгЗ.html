@@ -103,7 +103,7 @@
                             FIRE_CONTROL
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            🎯 v1.2.0
+                            🎯 v1.3.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Журнал обліку вогневих завдань та підрахунку витрати боєприпасів за калібрами</p>
@@ -200,9 +200,28 @@
                     </button>
                 </div>
 
-                <!-- Міні-зведення по калібрах -->
-                <div id="ammo-chips-container" class="p-3 bg-slate-950/60 border-b border-slate-800/80 flex flex-wrap gap-2 text-xs font-mono">
-                    <span class="text-slate-500 text-xs italic">Очікування даних...</span>
+                <!-- Панель перемикання вкладок аналітики -->
+                <div class="bg-slate-950/90 px-3 pt-2.5 pb-2 border-b border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+                        <button id="tab-btn-weapons" onclick="switchAnalyticsTab('weapons')" 
+                            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 bg-amber-500 text-slate-950 font-bold shadow-sm cursor-pointer">
+                            <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+                            <span>За озброєнням</span>
+                        </button>
+                        <button id="tab-btn-positions" onclick="switchAnalyticsTab('positions')" 
+                            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 cursor-pointer">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                            <span>За позиціями (ВП)</span>
+                        </button>
+                    </div>
+                    <span id="tab-summary-badge" class="font-mono text-[11px] text-amber-300 font-bold px-2 py-1 bg-slate-900 border border-slate-800 rounded-lg">
+                        0 ВгЗ • 0 БК
+                    </span>
+                </div>
+
+                <!-- Контейнер для таблиць аналітики -->
+                <div id="ammo-chips-container" class="p-3 bg-slate-950/60 border-b border-slate-800/80 overflow-x-auto custom-scrollbar">
+                    <span class="text-slate-500 text-xs italic py-1 block text-center">Очікування даних...</span>
                 </div>
 
                 <div class="p-4">
@@ -253,9 +272,24 @@
     <script>
         const APP_CHANGELOG = [
             {
+                version: "1.3.0",
+                date: "17.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "📊 Тактичні таблиці аналітики та оновлені картки",
+                        items: [
+                            "Дві тактичні таблиці з перемикачем вкладок «За озброєнням» та «За позиціями (ВП)» з підсумковим рядком «РАЗОМ».",
+                            "Компактні картки завдань із порядковою нумерацією (#1, #2...), кнопкою дублювання [📑] та сегментним перемикачем Реал/Фікт.",
+                            "Порожнє поле БК за замовчуванням (з плейсхолдером 0) для швидкого ручного вводу."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.2.0",
                 date: "16.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🎨 Повний Tactical Dark редизайн",
@@ -458,7 +492,7 @@
             missions.push({
                 id: generateId(),
                 pos: positions[0],
-                ammo: 10,
+                ammo: '',
                 isFictitious: false
             });
             saveMissions();
@@ -481,11 +515,28 @@
             const m = missions.find(m => m.id === id);
             if(m) {
                 if(field === 'isFictitious') m[field] = value === 'true' || value === true;
-                else if(field === 'ammo') m[field] = Math.max(0, parseInt(value) || 0);
+                else if(field === 'ammo') m[field] = value === '' ? '' : Math.max(0, parseInt(value) || 0);
                 else m[field] = value;
                 saveMissions();
                 generateResult();
             }
+        }
+
+        function duplicateMission(id) {
+            const original = missions.find(m => m.id === id);
+            if (!original) return;
+            const index = missions.findIndex(m => m.id === id);
+            const newMission = {
+                id: generateId(),
+                pos: original.pos,
+                ammo: original.ammo,
+                isFictitious: original.isFictitious
+            };
+            missions.splice(index + 1, 0, newMission);
+            saveMissions();
+            renderMissions();
+            generateResult();
+            showToast('ВгЗ продубльовано', 'success');
         }
 
         function deleteMission(id) {
@@ -512,48 +563,60 @@
             }
             emptyState.classList.add('hidden');
 
-            missions.forEach(m => {
+            missions.forEach((m, idx) => {
                 const isFict = m.isFictitious;
                 const el = document.createElement('div');
-                el.className = `p-3 rounded-xl border transition-all ${isFict ? 'bg-amber-950/20 border-amber-700/50 shadow-inner' : 'bg-slate-950 border-slate-800 hover:border-slate-700'} shadow-sm space-y-2.5`;
+                el.className = `p-2.5 rounded-xl border transition-all ${isFict ? 'bg-amber-950/20 border-amber-600/40 shadow-inner' : 'bg-slate-900/90 border-slate-800 hover:border-slate-700'} shadow-sm space-y-2`;
                 
                 el.innerHTML = `
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex-1 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full ${isFict ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}"></span>
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800 shrink-0">
+                            #${idx + 1}
+                        </span>
+                        <div class="flex-1 min-w-0">
                             <select onchange="updateMission('${m.id}', 'pos', this.value)" 
-                                class="w-full bg-slate-900 text-white font-mono font-bold text-xs border border-slate-700 rounded-lg p-2 focus:border-amber-500 outline-none">
+                                class="w-full bg-slate-950 text-white font-mono font-bold text-xs border border-slate-700/80 rounded-lg py-1.5 px-2.5 focus:border-amber-500 outline-none truncate cursor-pointer">
                                 ${positions.length === 0 ? '<option value="">Немає позицій</option>' : ''}
                                 ${positions.map(p => `<option value="${escapeHtml(p)}" ${m.pos === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('')}
                             </select>
                         </div>
-                        <button type="button" onclick="deleteMission('${m.id}')" 
-                            class="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-900 transition-colors cursor-pointer" title="Видалити ВгЗ">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
+                        <div class="flex items-center gap-0.5 shrink-0">
+                            <button type="button" onclick="duplicateMission('${m.id}')" 
+                                class="text-slate-400 hover:text-amber-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer" title="Дублювати ВгЗ">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" onclick="deleteMission('${m.id}')" 
+                                class="text-slate-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer" title="Видалити ВгЗ">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="flex items-center justify-between gap-3 pt-1 border-t border-slate-800/60">
+                    <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
                         <!-- Регулятор БК -->
-                        <div class="flex items-center gap-1.5 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
-                            <span class="text-slate-400 text-[11px] font-mono font-bold uppercase">БК:</span>
-                            <button type="button" onclick="stepMissionAmmo('${m.id}', -1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer">-</button>
-                            <input type="number" min="0" value="${m.ammo}" 
+                        <div class="flex items-center gap-1 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800">
+                            <span class="text-slate-400 text-[10px] font-mono font-bold uppercase mr-0.5">БК:</span>
+                            <button type="button" onclick="stepMissionAmmo('${m.id}', -1)" class="w-5 h-5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer active:scale-90">-</button>
+                            <input type="number" min="0" value="${m.ammo !== '' && m.ammo !== undefined ? m.ammo : ''}" placeholder="0" 
                                 onchange="updateMission('${m.id}', 'ammo', this.value)" 
                                 onkeyup="updateMission('${m.id}', 'ammo', this.value)" 
-                                class="w-10 bg-transparent text-amber-300 outline-none text-xs text-center font-mono font-bold">
-                            <button type="button" onclick="stepMissionAmmo('${m.id}', 1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer">+</button>
+                                class="w-10 bg-transparent text-amber-300 placeholder-slate-600 outline-none text-xs text-center font-mono font-bold">
+                            <button type="button" onclick="stepMissionAmmo('${m.id}', 1)" class="w-5 h-5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer active:scale-90">+</button>
                         </div>
 
-                        <!-- Перемикач Фіктивне -->
-                        <label class="flex items-center gap-2 cursor-pointer select-none">
-                            <input type="checkbox" ${isFict ? 'checked' : ''} 
-                                onchange="updateMission('${m.id}', 'isFictitious', this.checked); renderMissions();" 
-                                class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer">
-                            <span class="text-xs font-mono font-bold ${isFict ? 'text-amber-400' : 'text-slate-500'}">
-                                ${isFict ? '⚠️ Фіктивне' : 'Реальне'}
-                            </span>
-                        </label>
+                        <!-- Тактичний сегментний перемикач Реал / Фікт -->
+                        <div class="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-[11px] font-mono font-bold">
+                            <button type="button" onclick="updateMission('${m.id}', 'isFictitious', false); renderMissions();" 
+                                class="px-2 py-1 rounded transition-all flex items-center gap-1 cursor-pointer ${!isFict ? 'bg-emerald-950 border border-emerald-700/60 text-emerald-300 shadow-sm' : 'text-slate-500 hover:text-slate-300'}">
+                                <span class="w-1.5 h-1.5 rounded-full ${!isFict ? 'bg-emerald-400' : 'bg-slate-600'}"></span>
+                                <span>Реальне</span>
+                            </button>
+                            <button type="button" onclick="updateMission('${m.id}', 'isFictitious', true); renderMissions();" 
+                                class="px-2 py-1 rounded transition-all flex items-center gap-1 cursor-pointer ${isFict ? 'bg-amber-950 border border-amber-600/70 text-amber-300 shadow-sm' : 'text-slate-500 hover:text-slate-300'}">
+                                <span class="w-1.5 h-1.5 rounded-full ${isFict ? 'bg-amber-400' : 'bg-slate-600'}"></span>
+                                <span>Фіктивне</span>
+                            </button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(el);
@@ -579,13 +642,35 @@
             return `${count} пострілів`;
         }
 
+        let currentAnalyticsTab = 'weapons';
+
+        function switchAnalyticsTab(tab) {
+            currentAnalyticsTab = tab;
+            const btnWpn = document.getElementById('tab-btn-weapons');
+            const btnPos = document.getElementById('tab-btn-positions');
+            if (!btnWpn || !btnPos) return;
+
+            if (tab === 'weapons') {
+                btnWpn.className = "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 bg-amber-500 text-slate-950 font-bold shadow-sm cursor-pointer";
+                btnPos.className = "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 cursor-pointer";
+            } else {
+                btnPos.className = "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 bg-amber-500 text-slate-950 font-bold shadow-sm cursor-pointer";
+                btnWpn.className = "px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 cursor-pointer";
+            }
+            if (window.lucide) lucide.createIcons();
+            generateResult();
+        }
+
+        // --- CALCULATION ENGINE ---
         function generateResult() {
             const txt = document.getElementById('result-textarea');
             const chipsContainer = document.getElementById('ammo-chips-container');
-
+            const tabBadge = document.getElementById('tab-summary-badge');
+            
             if(missions.length === 0) {
-                txt.value = '';
-                chipsContainer.innerHTML = '<span class="text-slate-500 text-xs italic">Очікування даних...</span>';
+                if (txt) txt.value = '';
+                chipsContainer.innerHTML = '<span class="text-slate-500 text-xs italic py-1 block text-center">Очікування вогневих завдань...</span>';
+                if (tabBadge) tabBadge.innerText = '0 ВгЗ • 0 БК';
                 updateHeaderStats(0, 0);
                 return;
             }
@@ -593,16 +678,19 @@
             let realCount = 0;
             let fictCount = 0;
             let totalAmmoOverall = 0;
-            let weaponStats = {}; 
-            let grouped = {}; 
+            let grouped = {};
+            let weaponStats = {};
+            let positionStats = {};
 
             missions.forEach(m => {
                 if(!positions.includes(m.pos)) return;
 
                 const ammoNum = parseInt(m.ammo) || 0;
-                const wpn = extractWeapon(m.pos);
+                const posName = m.pos;
+                const wpn = extractWeapon(posName);
                 totalAmmoOverall += ammoNum;
 
+                // Статистика за озброєнням
                 if(!weaponStats[wpn]) {
                     weaponStats[wpn] = {
                         vgzTotal: 0,
@@ -613,18 +701,37 @@
                         ammoFict: 0
                     };
                 }
-
                 weaponStats[wpn].vgzTotal++;
                 weaponStats[wpn].ammoTotal += ammoNum;
+
+                // Статистика за конкретними позиціями (ВП)
+                if(!positionStats[posName]) {
+                    positionStats[posName] = {
+                        pos: posName,
+                        wpn: wpn,
+                        vgzTotal: 0,
+                        vgzReal: 0,
+                        vgzFict: 0,
+                        ammoTotal: 0,
+                        ammoReal: 0,
+                        ammoFict: 0
+                    };
+                }
+                positionStats[posName].vgzTotal++;
+                positionStats[posName].ammoTotal += ammoNum;
 
                 if(m.isFictitious) {
                     fictCount++;
                     weaponStats[wpn].vgzFict++;
                     weaponStats[wpn].ammoFict += ammoNum;
+                    positionStats[posName].vgzFict++;
+                    positionStats[posName].ammoFict += ammoNum;
                 } else {
                     realCount++;
                     weaponStats[wpn].vgzReal++;
                     weaponStats[wpn].ammoReal += ammoNum;
+                    positionStats[posName].vgzReal++;
+                    positionStats[posName].ammoReal += ammoNum;
                 }
 
                 const key = `${m.pos}___${m.isFictitious}`;
@@ -637,31 +744,137 @@
 
             const totalCount = realCount + fictCount;
             updateHeaderStats(totalCount, totalAmmoOverall);
+            if (tabBadge) tabBadge.innerText = `${totalCount} ВгЗ • ${totalAmmoOverall} БК`;
 
-            // Оновлення карток аналітики по калібрах
-            let chipsHtml = '';
-            for (let wpn in weaponStats) {
-                const s = weaponStats[wpn];
-                chipsHtml += `
-                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono flex-1 min-w-[200px] space-y-1.5 shadow-sm">
-                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-1">
-                            <span class="font-bold text-amber-400 text-sm">${escapeHtml(wpn)}</span>
-                            <span class="text-[11px] text-slate-300 font-bold">${s.vgzTotal} ВгЗ • ${formatShotsPlural(s.ammoTotal)}</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-1 text-[11px]">
-                            <div class="text-emerald-400 flex items-center gap-1">
-                                <span class="text-slate-500 font-semibold">Реал:</span>
-                                <span>${s.vgzReal} ВгЗ (${s.ammoReal})</span>
-                            </div>
-                            <div class="text-amber-400 flex items-center gap-1">
-                                <span class="text-slate-500 font-semibold">Фікт:</span>
-                                <span>${s.vgzFict} ВгЗ (${s.ammoFict})</span>
-                            </div>
-                        </div>
+            // Побудова таблиці відповідно до активної вкладки
+            const weaponKeys = Object.keys(weaponStats);
+            const posKeys = Object.keys(positionStats);
+
+            if (weaponKeys.length === 0 && posKeys.length === 0) {
+                chipsContainer.innerHTML = '<span class="text-slate-500 text-xs italic py-1 block text-center">Немає проведених вогневих завдань</span>';
+            } else if (currentAnalyticsTab === 'weapons') {
+                // ТАБЛИЦЯ: ЗА ОЗБРОЄННЯМ
+                let rowsHtml = '';
+                let totalRealVgz = 0;
+                let totalRealAmmo = 0;
+                let totalFictVgz = 0;
+                let totalFictAmmo = 0;
+
+                for (let wpn of weaponKeys) {
+                    const s = weaponStats[wpn];
+                    totalRealVgz += s.vgzReal;
+                    totalRealAmmo += s.ammoReal;
+                    totalFictVgz += s.vgzFict;
+                    totalFictAmmo += s.ammoFict;
+
+                    rowsHtml += `
+                        <tr class="hover:bg-slate-900/50 transition-colors">
+                            <td class="py-2 px-2.5 font-bold text-amber-400 whitespace-nowrap">${escapeHtml(wpn)}</td>
+                            <td class="py-2 px-2 text-center font-bold text-slate-200">${s.vgzTotal}</td>
+                            <td class="py-2 px-2 text-center font-bold text-slate-200">${s.ammoTotal}</td>
+                            <td class="py-2 px-2 text-center text-emerald-300 font-semibold bg-emerald-950/20 whitespace-nowrap">
+                                ${s.vgzReal} <span class="text-slate-400 text-[10px]">(${s.ammoReal})</span>
+                            </td>
+                            <td class="py-2 px-2.5 text-center text-amber-300 font-semibold bg-amber-950/20 whitespace-nowrap">
+                                ${s.vgzFict} <span class="text-slate-400 text-[10px]">(${s.ammoFict})</span>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                chipsContainer.innerHTML = `
+                    <div class="w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950/90 shadow-sm">
+                        <table class="w-full text-left font-mono text-[11px] border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800 text-[10px] uppercase font-bold tracking-wider">
+                                    <th class="py-2 px-2.5">Озброєння</th>
+                                    <th class="py-2 px-2 text-center">ВгЗ</th>
+                                    <th class="py-2 px-2 text-center">БК</th>
+                                    <th class="py-2 px-2 text-center text-emerald-400 bg-emerald-950/30">🟢 Реал (ВгЗ/БК)</th>
+                                    <th class="py-2 px-2.5 text-center text-amber-400 bg-amber-950/30">⚠️ Фікт (ВгЗ/БК)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/60">
+                                ${rowsHtml}
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-slate-900/95 border-t border-slate-700/80 text-white font-bold text-[11px]">
+                                    <td class="py-2 px-2.5 text-slate-300 uppercase">РАЗОМ:</td>
+                                    <td class="py-2 px-2 text-center text-amber-300 font-black">${totalCount}</td>
+                                    <td class="py-2 px-2 text-center text-amber-300 font-black">${totalAmmoOverall}</td>
+                                    <td class="py-2 px-2 text-center text-emerald-400 bg-emerald-950/40 font-black">
+                                        ${totalRealVgz} <span class="text-emerald-200/80 text-[10px]">(${totalRealAmmo})</span>
+                                    </td>
+                                    <td class="py-2 px-2.5 text-center text-amber-400 bg-amber-950/40 font-black">
+                                        ${totalFictVgz} <span class="text-amber-200/80 text-[10px]">(${totalFictAmmo})</span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                `;
+            } else {
+                // ТАБЛИЦЯ: ЗА ПОЗИЦІЯМИ (ВП)
+                let posRowsHtml = '';
+                let totalRealVgz = 0;
+                let totalRealAmmo = 0;
+                let totalFictVgz = 0;
+                let totalFictAmmo = 0;
+
+                for (let posName of posKeys) {
+                    const s = positionStats[posName];
+                    totalRealVgz += s.vgzReal;
+                    totalRealAmmo += s.ammoReal;
+                    totalFictVgz += s.vgzFict;
+                    totalFictAmmo += s.ammoFict;
+
+                    posRowsHtml += `
+                        <tr class="hover:bg-slate-900/50 transition-colors">
+                            <td class="py-2 px-2.5 font-bold text-amber-400 whitespace-nowrap">${escapeHtml(s.pos)}</td>
+                            <td class="py-2 px-2 text-center font-bold text-slate-200">${s.vgzTotal}</td>
+                            <td class="py-2 px-2 text-center font-bold text-slate-200">${s.ammoTotal}</td>
+                            <td class="py-2 px-2 text-center text-emerald-300 font-semibold bg-emerald-950/20 whitespace-nowrap">
+                                ${s.vgzReal} <span class="text-slate-400 text-[10px]">(${s.ammoReal})</span>
+                            </td>
+                            <td class="py-2 px-2.5 text-center text-amber-300 font-semibold bg-amber-950/20 whitespace-nowrap">
+                                ${s.vgzFict} <span class="text-slate-400 text-[10px]">(${s.ammoFict})</span>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                chipsContainer.innerHTML = `
+                    <div class="w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950/90 shadow-sm">
+                        <table class="w-full text-left font-mono text-[11px] border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900/90 text-slate-400 border-b border-slate-800 text-[10px] uppercase font-bold tracking-wider">
+                                    <th class="py-2 px-2.5">Позиція (ВП)</th>
+                                    <th class="py-2 px-2 text-center">ВгЗ</th>
+                                    <th class="py-2 px-2 text-center">БК</th>
+                                    <th class="py-2 px-2 text-center text-emerald-400 bg-emerald-950/30">🟢 Реал (ВгЗ/БК)</th>
+                                    <th class="py-2 px-2.5 text-center text-amber-400 bg-amber-950/30">⚠️ Фікт (ВгЗ/БК)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/60">
+                                ${posRowsHtml}
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-slate-900/95 border-t border-slate-700/80 text-white font-bold text-[11px]">
+                                    <td class="py-2 px-2.5 text-slate-300 uppercase">РАЗОМ:</td>
+                                    <td class="py-2 px-2 text-center text-amber-300 font-black">${totalCount}</td>
+                                    <td class="py-2 px-2 text-center text-amber-300 font-black">${totalAmmoOverall}</td>
+                                    <td class="py-2 px-2 text-center text-emerald-400 bg-emerald-950/40 font-black">
+                                        ${totalRealVgz} <span class="text-emerald-200/80 text-[10px]">(${totalRealAmmo})</span>
+                                    </td>
+                                    <td class="py-2 px-2.5 text-center text-amber-400 bg-amber-950/40 font-black">
+                                        ${totalFictVgz} <span class="text-amber-200/80 text-[10px]">(${totalFictAmmo})</span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 `;
             }
-            chipsContainer.innerHTML = chipsHtml || '<span class="text-slate-500 text-xs italic">Немає витрати</span>';
             
             let weaponSummaryLines = [];
             for (let wpn in weaponStats) {

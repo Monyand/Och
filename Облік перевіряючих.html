@@ -79,7 +79,7 @@
                         <div class="flex items-center gap-2.5">
                             <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Облік перевіряючих</h1>
                             <button onclick="openModal('modal-changelog')" title="Історія оновлень" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm">
-                                ⚡ v1.1.0
+                                ⚡ v1.2.0
                             </button>
                         </div>
                         <p class="text-slate-400 text-xs md:text-sm mt-0.5">Автоматичний парсер бойових розпоряджень (БР) та генератор офіційного звіту .docx</p>
@@ -195,7 +195,7 @@
                         </div>
                         <div class="flex flex-col space-y-1">
                             <label class="text-[11px] font-semibold text-slate-400">Формат звіту</label>
-                            <select id="outputFormat"
+                            <select id="outputFormat" onchange="if(loadedWorkbook) processData(false);"
                                 class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-md text-slate-200 font-semibold text-xs outline-none focus:border-blue-500">
                                 <option value="text" selected>Простий текст (абзац)</option>
                                 <option value="table">Таблиця Word</option>
@@ -205,7 +205,7 @@
                 </div>
 
                 <!-- Головна кнопка генерації -->
-                <button id="btn-generate" onclick="processData()"
+                <button id="btn-generate" onclick="processData(true)"
                     class="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-base tracking-wider uppercase flex items-center justify-center gap-2.5 shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all pulse-gold cursor-pointer">
                     <i data-lucide="file-check-2" class="w-5 h-5"></i>
                     <span>Опрацювати та Завантажити .docx</span>
@@ -233,7 +233,7 @@
                                 <i id="copy-icon" data-lucide="copy" class="w-3.5 h-3.5"></i>
                                 <span id="copy-text">Копіювати</span>
                             </button>
-                            <button id="btn-download-docx" onclick="processData()"
+                            <button id="btn-download-docx" onclick="processData(true)"
                                 class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm font-bold cursor-pointer"
                                 disabled>
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -277,7 +277,7 @@
             val = Math.max(1, Math.min(31, val + delta));
             input.value = val;
             updateDateBadge();
-            if (loadedWorkbook) processData();
+            if (loadedWorkbook) processData(false);
         }
 
         function updateDateBadge() {
@@ -288,7 +288,7 @@
 
         document.getElementById('targetDate').addEventListener('input', () => {
             updateDateBadge();
-            if (loadedWorkbook) processData();
+            if (loadedWorkbook) processData(false);
         });
 
         function resetDefaultColumns() {
@@ -298,7 +298,7 @@
             document.getElementById('colDateStart').value = 'D';
             document.getElementById('rowDataStart').value = 2;
             document.getElementById('outputFormat').value = 'text';
-            if (loadedWorkbook) processData();
+            if (loadedWorkbook) processData(false);
         }
 
         // Drag & Drop
@@ -342,8 +342,7 @@
             try {
                 const data = await readFileAsync(file);
                 loadedWorkbook = XLSX.read(data, { type: 'array' });
-                setStatus("Файл успішно завантажено! Опрацьовую...", "info");
-                processData();
+                processData(false);
             } catch (err) {
                 console.error(err);
                 setStatus("Помилка читання файлу Excel!", "error");
@@ -406,7 +405,34 @@
             return `${dayStr}.${month}.${year}`;
         }
 
-        async function processData() {
+        function cleanSpaces(str) {
+            if (str === undefined || str === null) return "";
+            return String(str)
+                .replace(/[\r\n\t]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function formatPeopleLine(people) {
+            const peopleParts = people.map(p => {
+                const rank = cleanSpaces(p.rank);
+                const name = cleanSpaces(p.name);
+                const pos = cleanSpaces(p.pos);
+
+                let parts = [];
+                if (rank) parts.push(rank);
+                if (name) parts.push(name);
+                let personText = parts.join(' ');
+                if (pos) {
+                    personText += (personText ? ', ' : '') + pos;
+                }
+                return cleanSpaces(personText.replace(/[;,\s]+$/, ''));
+            }).filter(t => t.length > 0);
+
+            return peopleParts.join('; ') + (peopleParts.length > 0 ? '.' : '');
+        }
+
+        async function processData(shouldDownload = false) {
             const targetDate = parseInt(document.getElementById('targetDate').value);
 
             if (isNaN(targetDate) || targetDate < 1 || targetDate > 31) {
@@ -418,7 +444,9 @@
                 return;
             }
 
-            setStatus("Парсинг та генерація звіту...", "loading");
+            if (shouldDownload) {
+                setStatus("Генерація Word-документа...", "loading");
+            }
 
             const worksheet = loadedWorkbook.Sheets[loadedWorkbook.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
@@ -443,9 +471,9 @@
                 const row = json[r];
                 if (!row || row.length === 0) continue;
 
-                let rawPos = String(row[posIdx] || "").trim();
-                let rawRank = String(row[rankIdx] || "").trim();
-                let rawName = String(row[nameIdx] || "").trim();
+                let rawPos = cleanSpaces(row[posIdx]);
+                let rawRank = cleanSpaces(row[rankIdx]);
+                let rawName = cleanSpaces(row[nameIdx]);
 
                 let isBR = false;
                 for (let c = dateStartIdx; c <= dateStartIdx + 35; c++) {
@@ -458,7 +486,7 @@
                 if (isBR) {
                     let taskText = (rawPos || rawName);
                     taskText = taskText.replace(/дд\.мм\.(рррр|202\d)/gi, dateStr);
-                    currentTaskText = taskText;
+                    currentTaskText = cleanSpaces(taskText);
                     memRank = "";
                     memPos = "";
                     memName = "";
@@ -497,13 +525,18 @@
                 return;
             }
 
-            // Побудова DOCX
+            if (!shouldDownload) {
+                setStatus(`✅ Знайдено ${brCount} БР (${totalPeopleCount} осіб) на ${dateStr}`, "success");
+                return;
+            }
+
+            // Побудова та скачування DOCX (лише якщо shouldDownload === true)
             try {
                 const docChildren = [];
                 for (const [taskName, people] of Object.entries(groupedData)) {
                     if (outputFormat === 'table') {
                         docChildren.push(new docx.Paragraph({
-                            children: [new docx.TextRun({ text: taskName, bold: true, size: 26, font: "Times New Roman" })],
+                            children: [new docx.TextRun({ text: cleanSpaces(taskName), bold: true, size: 26, font: "Times New Roman" })],
                             spacing: { before: 300, after: 150 }
                         }));
 
@@ -519,9 +552,9 @@
                         people.forEach((p, i) => tableRows.push(new docx.TableRow({
                             children: [
                                 createDocxCell(i + 1, false, 5),
-                                createDocxCell(p.rank, false, 20),
-                                createDocxCell(p.name, false, 30),
-                                createDocxCell(p.pos, false, 45)
+                                createDocxCell(cleanSpaces(p.rank), false, 20),
+                                createDocxCell(cleanSpaces(p.name), false, 30),
+                                createDocxCell(cleanSpaces(p.pos), false, 45)
                             ]
                         })));
 
@@ -531,17 +564,8 @@
                             columnWidths: [500, 2000, 3000, 4500]
                         }));
                     } else {
-                        let cleanTaskName = taskName.trim().replace(/[:\s]+$/, '') + ': ';
-
-                        const peopleParts = people.map(p => {
-                            let text = "";
-                            if (p.rank) text += p.rank;
-                            if (p.name) text += (text ? " " : "") + p.name;
-                            if (p.pos) text += (text ? ", " : "") + p.pos;
-                            return text.replace(/[;,\s]+$/, '');
-                        }).filter(t => t.length > 0);
-
-                        const peopleText = peopleParts.join("; ") + (peopleParts.length > 0 ? "." : "");
+                        let cleanTaskName = cleanSpaces(taskName).replace(/[:\s]+$/, '') + ': ';
+                        const peopleText = formatPeopleLine(people);
 
                         docChildren.push(new docx.Paragraph({
                             children: [
@@ -566,7 +590,7 @@
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
 
-                setStatus(`✅ Успішно! Згенеровано файл за ${dateStr} (${brCount} БР, ${totalPeopleCount} осіб)`, "success");
+                setStatus(`✅ Успішно завантажено файл за ${dateStr}!`, "success");
             } catch (err) {
                 console.error(err);
                 setStatus("Помилка генерації Word-документа!", "error");
@@ -592,17 +616,8 @@
             let plainTextLines = [];
 
             for (const [taskName, people] of Object.entries(groupedData)) {
-                let cleanTaskName = taskName.trim().replace(/[:\s]+$/, '') + ': ';
-
-                const peopleParts = people.map(p => {
-                    let text = "";
-                    if (p.rank) text += p.rank;
-                    if (p.name) text += (text ? " " : "") + p.name;
-                    if (p.pos) text += (text ? ", " : "") + p.pos;
-                    return text.replace(/[;,\s]+$/, '');
-                }).filter(t => t.length > 0);
-
-                const peopleText = peopleParts.join("; ") + (peopleParts.length > 0 ? "." : "");
+                let cleanTaskName = cleanSpaces(taskName).replace(/[:\s]+$/, '') + ': ';
+                const peopleText = formatPeopleLine(people);
 
                 html += `
                     <div class="p-3.5 rounded-lg bg-slate-950 border border-slate-800 text-[13px]">
@@ -699,17 +714,29 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.1.0 -->
+                <!-- v1.2.0 -->
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.0 (Поточна)</span>
-                        <span class="text-[11px] font-mono text-slate-500">16.08.2026</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.0 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">17.08.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Tactical Dark UI:</strong> Повний редизайн інтерфейсу на Tailwind CSS та іконки Lucide.</li>
-                        <li><strong class="text-white">Live Preview:</strong> Миттєвий попередній перегляд розпарсених БР і кнопка швидкого копіювання в буфер.</li>
-                        <li><strong class="text-white">Єдиний абзац БР:</strong> Текстовий звіт у Word формується суцільним абзацом із червоним рядком 1.25 см, жирною шапкою та крапкою з комою між бійцями.</li>
-                        <li><strong class="text-white">Drag & Drop:</strong> Зручне перетягування файлів таблиці Excel безпосередньо у вікно програми.</li>
+                        <li><strong class="text-white">Вимкнено автозавантаження файлів:</strong> Генерація Word-документа (.docx) тепер відбувається виключно за явної команди користувача (кнопка «Завантажити .docx»), а зміна дати оновлює лише Live Preview.</li>
+                        <li><strong class="text-white">Повна нормалізація пробілів:</strong> Автоматичне згортання подвійних/потрійних пробілів у ПІБ, званнях, посадах та вичищення зайвих відступів перед розділовими знаками.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.1.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.1.0</span>
+                        <span class="text-[11px] font-mono text-slate-500">16.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li><strong class="text-slate-300">Tactical Dark UI:</strong> Повний редизайн інтерфейсу на Tailwind CSS та іконки Lucide.</li>
+                        <li><strong class="text-slate-300">Live Preview:</strong> Миттєвий попередній перегляд розпарсених БР і кнопка швидкого копіювання в буфер.</li>
+                        <li><strong class="text-slate-300">Єдиний абзац БР:</strong> Текстовий звіт у Word формується суцільним абзацом із червоним рядком 1.25 см, жирною шапкою та крапкою з комою між бійцями.</li>
+                        <li><strong class="text-slate-300">Drag & Drop:</strong> Зручне перетягування файлів таблиці Excel безпосередньо у вікно програми.</li>
                     </ul>
                 </div>
 
