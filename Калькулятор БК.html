@@ -65,7 +65,7 @@
                             AMMO_PARSER
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.1.0
+                            ⚡ v1.1.1
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -247,15 +247,22 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.0 (Tactical Dark UI)</span>
-                        <span class="text-[11px] font-mono text-slate-500">17.08.2026</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.1 (Постріли OGS-7MA)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">18.08.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Повний Tactical Dark редизайн:</strong> Уніфіковано під єдиний стандарт комплексу (Slate-950, Inter, JetBrains Mono, Lucide Icons).</li>
-                        <li><strong class="text-white">Аналітичні плашки:</strong> Підрахунок загальної кількості витраченого БК, кількості категорій та рядків у реальному часі.</li>
-                        <li><strong class="text-white">Швидкі пресети:</strong> Кнопки вставки зразків за категоріями (5.45/7.62, Гранати, РПГ/ВОГ).</li>
-                        <li><strong class="text-white">Тактична таблиця результатів:</strong> Кольорові категорійні іконки, моноширинні розрядні числа з роздільниками тисяч.</li>
-                        <li><strong class="text-white">Покращений блок уваги:</strong> Чітке виділення нерозпізнаних рядків з номерами.</li>
+                        <li><strong class="text-white">Розширене розпізнавання РПГ:</strong> Додано безпомилковий парсинг для болгарських осколкових пострілів `OGS-7MA`, `OGS-7`, `ОГС-7МА`, `OG-7MA`, а також модифікацій `PG-7VM`, `PG-7VS`.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.1.0 (Tactical Dark UI)</span>
+                        <span class="text-[11px] font-mono text-slate-500">17.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li><strong class="text-slate-200">Повний Tactical Dark редизайн:</strong> Уніфіковано під єдиний стандарт комплексу (Slate-950, Inter, JetBrains Mono, Lucide Icons).</li>
+                        <li><strong class="text-slate-200">Аналітичні плашки:</strong> Підрахунок загальної кількості витраченого БК, категорій та рядків у реальному часі.</li>
+                        <li><strong class="text-slate-200">Швидкі пресети:</strong> Кнопки вставки зразків за категоріями (5.45/7.62, Гранати, РПГ/ВОГ).</li>
                     </ul>
                 </div>
             </div>
@@ -356,9 +363,8 @@ GHO - 2
             { id: '12.7', name: '12.7 мм (неуточнений)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7' },
             { id: '14.5', name: '14.5х114 мм (КПВТ)', icon: '⚡', category: 'heavy_mg', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?' },
 
-            // Постріли до РПГ та легке піхотне озброєння
-            { id: 'PG7V', name: 'Постріл ПГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?7[\\s\\-_]*[vвmмsсlлrр1]*' },
-            { id: 'OG7V', name: 'Постріл ОГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]gi?|[oо]гі?)[\\s\\-_]*0?7[\\s\\-_]*[vвmaма]*' },
+            { id: 'PG7V', name: 'Постріл ПГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?7[\\s\\-_]*[vвmмsсlлrрtт]*' },
+            { id: 'OG7V', name: 'Постріл ОГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]g[si]?|[oо]г[сі]?)[\\s\\-_]*0?7[\\s\\-_]*[vвmмaаwksct]*' },
             { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', icon: '🚀', category: 'rpg', idPattern: 'rhew[\\s\\-_]*0?9[\\s\\-_]*ma' },
             { id: 'PG9V', name: 'Постріл ПГ-9В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?9[\\s\\-_]*[vв]?' },
             { id: 'BULLSPIKE', name: 'Bullspike AT', icon: '🚀', category: 'rpg', idPattern: 'bull?spike(?:[\\s\\-]*at)?' },
