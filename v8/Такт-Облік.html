@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk" class="">
+<html lang="uk" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -176,49 +176,55 @@
             <button onclick="cancelTargetMode()" class="bg-indigo-800 hover:bg-indigo-900 px-3 py-1 rounded text-xs transition-colors shadow font-bold border border-indigo-500">Скасувати (Esc)</button>
         </div>
 
-        <div id="sidebar" class="w-full md:w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 flex flex-col shadow-xl z-10 shrink-0 h-auto md:h-full">
-            <div class="p-4 flex items-center justify-between bg-slate-950/50 min-h-[72px]">
-                <div class="flex items-center space-x-3 overflow-hidden">
-                    <i data-lucide="shield-check" class="text-olive-500 w-8 h-8 shrink-0"></i>
-                    <div class="sidebar-text">
-                        <h1 class="text-xl font-bold text-white leading-tight">ТАКТ-ОБЛІК</h1>
-                        <div class="flex items-center gap-1.5 mt-0.5">
-                            <span class="text-[9px] text-olive-400 uppercase tracking-widest font-bold border border-olive-500/30 bg-olive-500/10 px-1 rounded inline-block">SECURE OFFLINE</span>
-                            <button onclick="openChangelogModal()" class="text-[10px] text-olive-400 font-bold border border-olive-500/40 bg-olive-500/15 hover:bg-olive-500/30 px-1.5 py-0.5 rounded transition-all cursor-pointer inline-flex items-center gap-1" title="Натисніть для перегляду історії оновлень">
-                                <span>🎯 v1.2.0</span>
+        <div id="sidebar" class="w-full md:w-72 bg-slate-900 dark:bg-slate-950 text-slate-300 flex flex-col shadow-xl z-10 shrink-0 h-auto md:h-full border-r border-slate-800">
+            <div class="px-3.5 py-3 flex items-center justify-between bg-slate-950 min-h-[72px] border-b border-slate-800/80">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 shadow-inner">
+                        <i data-lucide="shield-check" class="text-emerald-400 w-5 h-5"></i>
+                    </div>
+                    <div class="sidebar-text min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <h1 class="text-sm font-extrabold text-white leading-tight font-sans tracking-tight">ТАКТ-ОБЛІК</h1>
+                            <button onclick="openChangelogModal()" class="text-[10px] text-amber-400 font-mono font-bold border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-1.5 py-0.5 rounded-full transition-all cursor-pointer whitespace-nowrap inline-flex items-center shrink-0" title="Натисніть для перегляду історії оновлень">
+                                ⚡ v1.3.0
                             </button>
+                        </div>
+                        <div class="mt-0.5">
+                            <span class="text-[8px] text-blue-400 uppercase tracking-wider font-mono font-bold border border-slate-800 bg-slate-900 px-1.5 py-0.5 rounded inline-block">TAKT_ACCOUNT</span>
                         </div>
                     </div>
                 </div>
-                <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white hidden md:block shrink-0 p-1"><i data-lucide="menu" class="w-5 h-5"></i></button>
+                <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white hidden md:flex shrink-0 p-1.5 rounded-lg hover:bg-slate-800 transition-colors items-center justify-center ml-1" title="Згорнути/Розгорнути меню">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
             </div>
-            <nav class="flex-1 p-3 space-y-2 overflow-y-auto custom-scrollbar">
-                <button id="nav-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors bg-olive-600 text-white" title="Зведення"><i data-lucide="activity" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Зведення</span></button>
-                <button id="nav-personnel" onclick="switchTab('personnel')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Списки"><i data-lucide="users" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Списки</span></button>
-                <button id="nav-positions" onclick="switchTab('positions')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Позиції"><i data-lucide="map" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Позиції</span></button>
-                <button id="nav-rotations" onclick="switchTab('rotations')" class="w-full flex items-center justify-between px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Планові ротації">
+            <nav class="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
+                <button id="nav-dashboard" onclick="switchTab('dashboard')" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition-all border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)] font-semibold" title="Зведення"><i data-lucide="activity" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Зведення</span></button>
+                <button id="nav-personnel" onclick="switchTab('personnel')" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition-all border text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent font-medium" title="Списки"><i data-lucide="users" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Списки</span></button>
+                <button id="nav-positions" onclick="switchTab('positions')" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition-all border text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent font-medium" title="Позиції"><i data-lucide="map" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Позиції</span></button>
+                <button id="nav-rotations" onclick="switchTab('rotations')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all border text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent font-medium" title="Планові ротації">
                     <div class="flex items-center space-x-3"><i data-lucide="refresh-cw" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Ротації</span></div>
                     <span id="rotations-badge" class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">0</span>
                 </button>
-                <button id="nav-journal" onclick="switchTab('journal')" class="w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors hover:bg-slate-800 hover:text-white" title="Журнал виходів"><i data-lucide="book-open" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Журнал виходів</span></button>
+                <button id="nav-journal" onclick="switchTab('journal')" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl transition-all border text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border-transparent font-medium" title="Журнал виходів"><i data-lucide="book-open" class="w-5 h-5 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Журнал виходів</span></button>
             </nav>
-            <div class="p-3 bg-slate-800/50 dark:bg-slate-900 mt-auto border-t border-slate-700/50 space-y-2">
-                <button onclick="toggleDarkMode()" class="w-full flex items-center space-x-3 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm transition-colors justify-center md:justify-start" title="Темна/Світла тема"><i data-lucide="moon" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Тема інтерфейсу</span></button>
+            <div class="p-3 bg-slate-950 mt-auto border-t border-slate-800/80 space-y-2">
+                <button onclick="toggleDarkMode()" class="w-full flex items-center space-x-3 px-3 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl text-sm font-medium transition-all justify-center md:justify-start hover:border-slate-700" title="Темна/Світла тема"><i data-lucide="moon" class="w-4 h-4 shrink-0 text-amber-400"></i><span class="sidebar-text whitespace-nowrap">Тема інтерфейсу</span></button>
                 
-                <div class="flex items-center space-x-1">
-                    <button onclick="openExportModal()" class="flex-1 flex items-center space-x-3 px-3 py-2 bg-olive-700/50 hover:bg-olive-600 text-olive-100 rounded-lg text-sm transition-colors justify-center md:justify-start border border-olive-600/50" title="Експорт зашифрованої копії">
+                <div class="flex items-center space-x-1.5">
+                    <button onclick="openExportModal()" class="flex-1 flex items-center space-x-2.5 px-3 py-2 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-400 rounded-xl text-sm font-medium transition-all justify-center md:justify-start border border-emerald-800/40 hover:border-emerald-700/60" title="Експорт зашифрованої копії">
                         <i data-lucide="lock" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Створити бекап</span>
                     </button>
-                    <button onclick="openBackupSettingsModal()" class="p-2 bg-olive-700/50 hover:bg-olive-600 text-olive-100 rounded-lg border border-olive-600/50 transition-colors shrink-0" title="Розклад нагадувань">
+                    <button onclick="openBackupSettingsModal()" class="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-800 hover:border-slate-700 transition-all shrink-0" title="Розклад нагадувань">
                         <i data-lucide="clock" class="w-4 h-4"></i>
                     </button>
                 </div>
 
-                <label class="w-full flex items-center space-x-3 px-3 py-2 border border-slate-600 text-slate-400 hover:bg-slate-700 hover:text-white rounded-lg text-sm cursor-pointer transition-colors justify-center md:justify-start" title="Відновити дані">
-                    <i data-lucide="file-key-2" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Відновити з бекапу</span>
+                <label class="w-full flex items-center space-x-3 px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white rounded-xl text-sm font-medium cursor-pointer transition-all justify-center md:justify-start hover:border-slate-700" title="Відновити дані">
+                    <i data-lucide="file-key-2" class="w-4 h-4 shrink-0 text-blue-400"></i><span class="sidebar-text whitespace-nowrap">Відновити з бекапу</span>
                     <input type="file" accept=".enc,.json" onchange="handleFileSelect(event)" class="hidden"/>
                 </label>
-                <button onclick="wipeAllDataPrompt()" class="w-full flex items-center space-x-3 px-3 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-300 rounded-lg text-sm transition-colors justify-center md:justify-start border border-red-900/50 mt-4" title="Повністю очистити всі дані з пристрою">
+                <button onclick="wipeAllDataPrompt()" class="w-full flex items-center space-x-3 px-3 py-2 bg-red-950/25 hover:bg-red-900/45 text-red-400 hover:text-red-300 rounded-xl text-sm font-medium transition-all justify-center md:justify-start border border-red-900/40 hover:border-red-800/60 mt-2" title="Повністю очистити всі дані з пристрою">
                     <i data-lucide="bomb" class="w-4 h-4 shrink-0"></i><span class="sidebar-text whitespace-nowrap">Очистити базу</span>
                 </button>
             </div>
@@ -359,18 +365,18 @@
 
                     <!-- TAB: POSITIONS -->
                     <div id="tab-positions" class="space-y-6 hidden">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b dark:border-gray-700 pb-4 gap-4">
-                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
-                                Карта бойових позицій
-                                <span class="bg-indigo-100 text-indigo-800 text-sm font-bold px-2 py-1 rounded-lg border border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800 flex items-center shadow-sm" title="Особового складу на бойових">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4 gap-4">
+                            <h2 class="text-2xl font-extrabold text-white flex items-center gap-3">
+                                <span>Карта бойових позицій</span>
+                                <span class="bg-rose-500/15 text-rose-400 text-xs font-mono font-bold px-2.5 py-1 rounded-xl border border-rose-500/30 flex items-center shadow-sm" title="Особового складу на бойових">
                                     <i data-lucide="swords" class="w-4 h-4 mr-1.5"></i><span id="pos-combat-count-badge">0</span>
                                 </span>
                             </h2>
                             <div class="flex gap-2 w-full sm:w-auto">
-                                <button onclick="toggleSortingLock()" id="btn-lock-sort" class="bg-gray-100 dark:bg-gray-800 text-gray-500 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-lg flex items-center text-sm transition-colors flex-1 sm:flex-none justify-center">
+                                <button onclick="toggleSortingLock()" id="btn-lock-sort" class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3.5 py-2 rounded-xl flex items-center text-sm font-medium transition-all flex-1 sm:flex-none justify-center">
                                     <i data-lucide="lock" class="w-4 h-4 mr-2"></i><span>Закріплено</span>
                                 </button>
-                                <button onclick="openPositionModal()" class="bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 text-white px-4 py-2 rounded-lg flex items-center space-x-2 text-sm flex-1 sm:flex-none justify-center"><i data-lucide="plus" class="w-4 h-4"></i><span>Додати локацію</span></button>
+                                <button onclick="openPositionModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl flex items-center space-x-2 text-sm shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-all flex-1 sm:flex-none justify-center"><i data-lucide="plus" class="w-4 h-4"></i><span>Додати локацію</span></button>
                             </div>
                         </div>
                         <div id="positions-container" class="space-y-8"></div>
@@ -462,22 +468,22 @@
     <div id="modal-backup-settings" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm overflow-hidden border dark:border-gray-700"><div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-olive-50 dark:bg-olive-900/30"><h3 class="font-bold text-lg text-olive-900 dark:text-olive-300 flex items-center"><i data-lucide="clock" class="w-5 h-5 mr-2"></i>Графік бекапів</h3><button onclick="closeModal('modal-backup-settings')" class="text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 space-y-4"><div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 p-3 rounded-lg text-xs border border-blue-100 dark:border-blue-800/50">Додайте час (ГГ:ХХ), коли програма має нагадати про необхідність створення резервної копії.</div><div class="flex gap-2"><input type="time" id="new-backup-time" class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"/><button onclick="addBackupTime()" class="px-4 py-2 bg-olive-600 hover:bg-olive-700 text-white rounded-lg flex items-center font-bold"><i data-lucide="plus" class="w-4 h-4 mr-1"></i>Додати</button></div><div class="mt-4"><label class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2 block">Встановлені нагадування:</label><ul id="backup-times-list" class="space-y-2"></ul></div></div><div class="px-6 py-4 border-t dark:border-gray-700 flex justify-end bg-gray-50 dark:bg-gray-800/80"><button onclick="closeModal('modal-backup-settings')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium">Закрити</button></div></div></div>
 
     <!-- МОДАЛЬНЕ ВІКНО CHANGELOG -->
-    <div id="modal-changelog" class="fixed inset-0 bg-black/50 backdrop-blur-sm modal-overlay z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border dark:border-gray-700">
-            <div class="px-6 py-4 border-b dark:border-gray-700 flex justify-between items-center bg-olive-50 dark:bg-olive-900/30">
-                <h3 class="font-bold text-lg text-olive-900 dark:text-olive-400 flex items-center space-x-2">
-                    <i data-lucide="shield-check" class="w-5 h-5 text-olive-500"></i>
+    <div id="modal-changelog" class="fixed inset-0 bg-black/60 backdrop-blur-sm modal-overlay z-50">
+        <div class="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-800 flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+                <h3 class="font-extrabold text-base text-white flex items-center space-x-2">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
                     <span>📋 Історія оновлень (ТАКТ-ОБЛІК)</span>
-                    <span class="text-xs bg-olive-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.1.0</span>
+                    <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold px-2 py-0.5 rounded-full ml-1">v1.3.0</span>
                 </h3>
-                <button onclick="closeModal('modal-changelog')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <button onclick="closeModal('modal-changelog')" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <div id="changelogModalList" class="p-6 overflow-y-auto max-h-[70vh] space-y-4 custom-scrollbar"></div>
-            <div class="px-6 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex justify-between items-center text-xs text-gray-500">
+            <div class="px-6 py-3 border-t border-slate-800 bg-slate-950 flex justify-between items-center text-xs text-slate-400">
                 <span>📄 Автономна офлайн-система</span>
-                <button onclick="closeModal('modal-changelog')" class="px-4 py-2 bg-olive-600 hover:bg-olive-700 text-white font-bold rounded-lg transition-colors cursor-pointer">
+                <button onclick="closeModal('modal-changelog')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-colors cursor-pointer">
                     Зрозуміло
                 </button>
             </div>
@@ -516,8 +522,56 @@
     const el  = id => document.getElementById(id);
     const val = id => el(id).value;
 
-    function openModal(id)  { el(id).style.display = 'flex'; }
-    function closeModal(id) { el(id).style.display = 'none'; }
+    function openModal(id)  { 
+        const m = el(id);
+        if (m) {
+            m.style.display = 'flex';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
+    function closeModal(id) { 
+        const m = el(id);
+        if (m) m.style.display = 'none'; 
+    }
+
+    // ─── ТЕМА ТА САЙДБАР ──────────────────────────────────────────────────────
+    let isDarkMode = localStorage.getItem('tactical_dark_mode') !== 'false'; // Dark mode default
+    let isSidebarCollapsed = localStorage.getItem('tactical_sidebar_collapsed') === 'true';
+
+    function applyTheme() {
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }
+
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        localStorage.setItem('tactical_dark_mode', isDarkMode ? 'true' : 'false');
+        applyTheme();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        showToast(isDarkMode ? '🌙 Нічний режим увімкнено' : '☀️ Денний режим увімкнено');
+    }
+
+    function applySidebarState() {
+        const sb = el('sidebar');
+        if (!sb) return;
+        if (isSidebarCollapsed) {
+            sb.classList.add('sidebar-collapsed');
+            document.body.classList.add('sidebar-hidden');
+        } else {
+            sb.classList.remove('sidebar-collapsed');
+            document.body.classList.remove('sidebar-hidden');
+        }
+    }
+
+    function toggleSidebar() {
+        isSidebarCollapsed = !isSidebarCollapsed;
+        localStorage.setItem('tactical_sidebar_collapsed', isSidebarCollapsed ? 'true' : 'false');
+        applySidebarState();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
 
     // ─── КОНСТАНТИ ────────────────────────────────────────────────────────────
     const RANKS = ['Солдат','Ст. солдат','Мл. сержант','Сержант','Ст. сержант','Мл. лейтенант','Лейтенант','Ст. лейтенант','Капітан','Майор'];
@@ -552,9 +606,6 @@
     let backupSchedule   = JSON.parse(localStorage.getItem('tactical_backup_schedule')) || ['10:00', '17:30', '20:00'];
     let lastBackupTime   = parseInt(localStorage.getItem('tactical_last_backup_time'))  || 0;
 
-    let isDarkMode         = localStorage.getItem('tactical_dark_mode')         === 'true';
-    let isSidebarCollapsed = localStorage.getItem('tactical_sidebar_collapsed') === 'true';
-    
     let isSortingLocked    = localStorage.getItem('tactical_sorting_locked') !== 'false';
 
     let activeTab           = 'dashboard';
@@ -722,12 +773,27 @@
         if (el('chip-count-detached')) el('chip-count-detached').innerText = `(${detachedCount})`;
     }
 
-    // ─── AUTONOMOUS CHANGELOG DATA (v1.0.0) ────────────────────────────────────
+    // ─── AUTONOMOUS CHANGELOG DATA ───────────────────────────────────────────
     const APP_CHANGELOG = [
         {
-            version: "1.2.0",
-            date: "08.08.2026",
+            version: "1.3.0",
+            date: "18.08.2026",
             isCurrent: true,
+            sections: [
+                {
+                    title: "🛡️ Tactical Dark редизайн та типографіка",
+                    items: [
+                        "<b>Темна тема за замовчуванням</b>: Впроваджено фірмову палітру <code>Slate-950/900/800</code> та коректно налаштовано перемикання тем зі збереженням у <code>localStorage</code>.",
+                        "<b>Типографіка</b>: Шрифти Inter для інтерфейсу та JetBrains Mono для кодів, таймерів, статусів і версій.",
+                        "<b>Тактичний бейдж та модал оновлень</b>: Додано бейдж <code>TAKT_ACCOUNT</code>, клікабельний <code>⚡ v1.3.0</code> та інтерактивне вікно перегляду історії оновлень."
+                    ]
+                }
+            ]
+        },
+        {
+            version: "1.2.0",
+            date: "15.08.2026",
+            isCurrent: false,
             sections: [
                 {
                     title: "🎯 Нові функції",
@@ -798,27 +864,27 @@
         if (!container) return;
         let html = '';
         APP_CHANGELOG.forEach(item => {
-            const borderClass = item.isCurrent ? 'border-l-4 border-olive-500' : 'border-l-4 border-gray-500 opacity-80';
+            const borderStyle = item.isCurrent ? 'border-left: 4px solid #10b981;' : 'border-left: 4px solid #334155; opacity: 0.85;';
             const currentBadge = item.isCurrent 
-                ? `<span class="bg-olive-100 text-olive-800 dark:bg-olive-900/80 dark:text-olive-300 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-olive-300 dark:border-olive-700">Поточна</span>` 
+                ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] px-2 py-0.5 rounded font-bold">Поточна</span>` 
                 : '';
             html += `
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 ${borderClass} border border-gray-200 dark:border-gray-700 space-y-3 shadow-sm">
-                <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700/80 pb-2">
-                    <h4 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+            <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3" style="${borderStyle}">
+                <div class="flex justify-between items-center border-b border-slate-800/80 pb-2">
+                    <h4 class="font-bold text-sm text-white flex items-center gap-2">
                         <span>🚀 Версія ${item.version}</span>
                         ${currentBadge}
                     </h4>
-                    <span class="text-xs font-mono text-gray-400">${item.date}</span>
+                    <span class="text-xs text-slate-400 font-mono">${item.date}</span>
                 </div>
                 <div class="space-y-3">
             `;
             item.sections.forEach(sec => {
                 html += `
-                    <div class="space-y-2">
-                        <div class="text-sm font-bold text-olive-600 dark:text-olive-400 uppercase tracking-wide">${sec.title}</div>
-                        <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-200 pl-5 list-disc marker:text-gray-400">
-                            ${sec.items.map(it => `<li class="pl-1 leading-relaxed">${it}</li>`).join('')}
+                    <div class="space-y-1">
+                        <div class="text-xs font-bold text-blue-400 uppercase tracking-wide">${sec.title}</div>
+                        <ul class="text-xs text-slate-300 space-y-1 list-disc pl-4">
+                            ${sec.items.map(it => `<li>${it}</li>`).join('')}
                         </ul>
                     </div>
                 `;
@@ -826,6 +892,7 @@
             html += `</div></div>`;
         });
         container.innerHTML = html;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function openChangelogModal() {
@@ -1392,13 +1459,17 @@
     // ─── TABS ─────────────────────────────────────────────────────────────────
     function switchTab(t) {
         activeTab = t;
+        const activeClasses = ['bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/30', 'shadow-[0_0_15px_rgba(16,185,129,0.1)]', 'font-semibold'];
+        const inactiveClasses = ['text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800/60', 'border-transparent', 'font-medium'];
+
         ['dashboard','personnel','positions','journal','rotations'].forEach(id => {
             const elTab = el('tab-'+id);
             if (elTab) elTab.classList.add('hidden');
             const btn = el('nav-'+id);
             if (btn) {
-                btn.classList.remove('bg-olive-600','text-white');
-                btn.classList.add('hover:bg-slate-800','hover:text-white','text-slate-300');
+                btn.classList.remove(...activeClasses);
+                btn.classList.remove('bg-olive-600', 'text-white');
+                btn.classList.add(...inactiveClasses);
             }
         });
         const activeEl = el('tab-'+t);
@@ -1410,10 +1481,11 @@
         }
         const activeBtn = el('nav-'+t);
         if (activeBtn) {
-            activeBtn.classList.add('bg-olive-600','text-white');
-            activeBtn.classList.remove('hover:bg-slate-800','text-slate-300');
+            activeBtn.classList.remove(...inactiveClasses);
+            activeBtn.classList.add(...activeClasses);
         }
         renderTab(t);
+        scheduleIcons();
     }
 
     function renderTab(t) {
@@ -1648,34 +1720,99 @@
         openModal('modal-equipment-view'); scheduleIcons();
     }
 
+    function getTaskChipColor(task) {
+        const t = (task || '').toLowerCase().trim();
+        if (!t) return 'bg-slate-800 text-slate-300 border-slate-700';
+
+        // 1. Піхота / Стрільці
+        if (t === 'піхота' || t.includes('стріл') || t.includes('піхот')) 
+            return 'bg-teal-950/50 text-teal-300 border-teal-800/60';
+
+        // 2. Медицина / Медевак
+        if (t.includes('мед') || t.includes('евак') || t.includes('госп')) 
+            return 'bg-emerald-950/50 text-emerald-300 border-emerald-800/60';
+
+        // 3. БПЛА / Аеро / Дрони / Рекон / Розвідка / РЕР
+        if (t.includes('бпла') || t.includes('дрон') || t.includes('рекон') || t.includes('розвід') || t.includes('рер') || t.includes('аеро')) 
+            return 'bg-sky-950/50 text-sky-300 border-sky-800/60';
+
+        // 4. Облаштування / Інженер / ІСВ / Сапери / Фортифікація
+        if (t.includes('облаштування') || t.includes('інженер') || t.includes('ісв') || t.includes('сапер') || t.includes('фортифік')) 
+            return 'bg-orange-950/50 text-orange-300 border-orange-800/60';
+
+        // 5. Зв'язок / РЕБ / Радіо / IT
+        if (t.includes('зв') || t.includes('реб') || t.includes('радіо') || t.includes('it')) 
+            return 'bg-indigo-950/50 text-indigo-300 border-indigo-800/60';
+
+        // 6. Вогнева підтримка / МБ / Міномет / ТСП / Арта / ППО / ПТРК / Гранатомет / Кулемет / Вогн
+        if (t.includes('вогн') || t.includes('мб') || t.includes('тсп') || t.includes('ппо') || t.includes('міномет') || t.includes('арт') || t.includes('птрк') || t.includes('кулемет') || t.includes('гранат') || t.includes('штурм')) 
+            return 'bg-rose-950/50 text-rose-300 border-rose-800/60';
+
+        // 7. Бронегрупа / Танк / БМП / БТР / Мехвод / Водій
+        if (t.includes('брон') || t.includes('танк') || t.includes('бмп') || t.includes('бтр') || t.includes('водій') || t.includes('мехвод')) 
+            return 'bg-amber-950/50 text-amber-300 border-amber-800/60';
+
+        // 8. Логістика / Постачання / Склад / Забезпечення
+        if (t.includes('лог') || t.includes('постач') || t.includes('склад') || t.includes('забезп') || t.includes('кухар')) 
+            return 'bg-blue-950/50 text-blue-300 border-blue-800/60';
+
+        // 9. Резерв / Охорона / Черговий
+        if (t.includes('резерв') || t.includes('охорон') || t.includes('чергов')) 
+            return 'bg-purple-950/50 text-purple-300 border-purple-800/60';
+
+        // 10. Детермінований тактичний колір для інших завдань
+        const colors = [
+            'bg-cyan-950/50 text-cyan-300 border-cyan-800/60',
+            'bg-violet-950/50 text-violet-300 border-violet-800/60',
+            'bg-fuchsia-950/50 text-fuchsia-300 border-fuchsia-800/60',
+            'bg-lime-950/50 text-lime-300 border-lime-800/60',
+            'bg-pink-950/50 text-pink-300 border-pink-800/60'
+        ];
+        let hash = 0;
+        for (let i = 0; i < t.length; i++) hash = (hash * 31 + t.charCodeAt(i)) >>> 0;
+        return colors[hash % colors.length];
+    }
+
     function buildPosSoldierRowHtml(s, pos, isCom, activeRotMap) {
         let tB = '';
         if (s.deploymentStartTime && isCom) {
             const d = Math.floor((Date.now() - new Date(s.deploymentStartTime)) / 86400000);
             if (d > 0) {
-                let col = 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/40 dark:text-green-400 dark:border-green-800';
-                if (d > 30) col = 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-400 dark:border-red-800 font-black animate-pulse';
-                else if (d > 20) col = 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/40 dark:text-orange-400 dark:border-orange-800';
-                else if (d > 10) col = 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-400 dark:border-yellow-800';
+                let col = 'bg-emerald-950/60 text-emerald-300 border-emerald-800/70';
+                if (d > 30) col = 'bg-rose-950/70 text-rose-300 border-rose-800/80 font-black animate-pulse';
+                else if (d > 20) col = 'bg-amber-950/70 text-amber-300 border-amber-800/80';
+                else if (d > 10) col = 'bg-yellow-950/60 text-yellow-300 border-yellow-800/70';
                 
-                tB = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border flex items-center shadow-sm ${col}" title="Днів в полях: ${d}"><i data-lucide="clock" class="w-2.5 h-2.5 mr-0.5"></i>${d}д</span>`;
+                tB = `<span class="text-xs font-mono font-black px-2 py-0.5 rounded-md border flex items-center shadow-sm ${col}" title="Днів в полях: ${d}"><i data-lucide="clock" class="w-3 h-3 mr-1"></i>${d}д</span>`;
             }
         }
-        const cH = s.callsign ? `<span class="font-black text-indigo-600 dark:text-indigo-400">"${esc(s.callsign)}"</span>` : '';
-        const tH = (s.currentTask && s.currentTask !== 'піхота') ? `<span class="uppercase font-bold text-blue-700 bg-blue-100 px-1 rounded whitespace-nowrap truncate max-w-[100px]" title="${esc(s.currentTask)}">${esc(s.currentTask)}</span>` : '';
+        const tH = (s.currentTask && s.currentTask !== 'піхота') ? `<span class="uppercase font-mono font-bold ${getTaskChipColor(s.currentTask)} px-1.5 py-0.5 rounded text-[10.5px] whitespace-nowrap truncate max-w-[110px] shadow-sm" title="${esc(s.currentTask)}">${esc(s.currentTask)}</span>` : '';
         const rotDir = activeRotMap.get(s.id);
-        const inRot = rotDir ? `<span class="inline-flex relative h-2 w-2 ml-1 mt-0.5 shrink-0" title="В ротації"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${rotDir==='in'?'bg-orange-400':'bg-indigo-400'} opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 ${rotDir==='in'?'bg-orange-500':'bg-indigo-500'}"></span></span>` : '';
-        const noteIcon = s.note ? `<button type="button" onclick="event.stopPropagation(); viewNote('${s.id}')" class="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 shrink-0 bg-blue-50 dark:bg-blue-900/30 p-0.5 rounded-full transition-colors" title="Переглянути примітку"><i data-lucide="info" class="w-3 h-3"></i></button>` : '';
+        const inRot = rotDir ? `<span class="inline-flex relative h-2.5 w-2.5 ml-1 mt-0.5 shrink-0" title="В ротації"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${rotDir==='in'?'bg-amber-400':'bg-blue-400'} opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 ${rotDir==='in'?'bg-amber-500':'bg-blue-500'}"></span></span>` : '';
+        const noteIcon = s.note ? `<button type="button" onclick="event.stopPropagation(); viewNote('${s.id}')" class="ml-1 text-blue-400 hover:text-blue-300 shrink-0 bg-blue-950/40 p-0.5 rounded-full border border-blue-800/40 transition-colors" title="Переглянути примітку"><i data-lucide="info" class="w-3 h-3"></i></button>` : '';
+
+        const hasCallsign = !!s.callsign?.trim();
+        const mainTitle = hasCallsign ? esc(s.callsign.trim()) : (esc(s.fullName) || 'Невідомо');
+        const titleClass = hasCallsign 
+            ? (pos.commanderId === s.id ? 'font-mono font-extrabold text-[14px] text-amber-300' : 'font-mono font-extrabold text-[14px] text-emerald-400') 
+            : (pos.commanderId === s.id ? 'font-bold text-[13.5px] text-amber-300' : 'font-bold text-[13.5px] text-slate-100');
+
+        const subName = hasCallsign && s.fullName ? `<span class="text-slate-300 font-medium truncate">${esc(s.fullName)}</span>` : '';
+        const subUnit = s.unit ? `<span class="text-slate-500 font-normal truncate">${hasCallsign && s.fullName ? '· ' : ''}${esc(s.unit)}</span>` : '';
         
-        return `<li draggable="true" ondragstart="handleDragStart(event, '${s.id}')" class="group/row flex justify-between items-start py-1.5 px-2 hover:bg-gray-50/80 dark:hover:bg-white/5 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-white/10 leading-tight gap-1 cursor-context-menu transition-all hover:translate-x-1" oncontextmenu="openSoldierContextMenu(event, '${s.id}')">
-            <div class="flex items-start flex-1 min-w-0 pr-1">
-                <button onclick="toggleCommander('${pos.id}','${s.id}')" class="p-1 shrink-0 mt-0.5"><i data-lucide="star" class="w-3.5 h-3.5 ${pos.commanderId === s.id ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300 dark:text-gray-600 hover:text-yellow-400'}"></i></button>
+        return `<li draggable="true" ondragstart="handleDragStart(event, '${s.id}')" class="group/row flex justify-between items-center py-2 px-2.5 hover:bg-slate-900/90 rounded-xl border border-transparent hover:border-slate-800 text-xs leading-tight gap-2 cursor-context-menu transition-all hover:translate-x-1" oncontextmenu="openSoldierContextMenu(event, '${s.id}')">
+            <div class="flex items-start flex-1 min-w-0 pr-1 gap-1.5">
+                <button onclick="toggleCommander('${pos.id}','${s.id}')" class="p-1 shrink-0 mt-0.5 hover:scale-110 transition-transform" title="Старший позиції"><i data-lucide="star" class="w-3.5 h-3.5 ${pos.commanderId === s.id ? 'text-amber-400 fill-amber-400' : 'text-slate-600 hover:text-amber-300'}"></i></button>
                 <div class="flex-1 min-w-0">
-                    <p class="font-bold text-[13px] ${pos.commanderId === s.id ? 'text-yellow-700 dark:text-yellow-400' : ''} truncate flex items-center gap-1">${esc(s.fullName) || 'Невідомо'} ${inRot} ${noteIcon}</p>
-                    <div class="flex items-center gap-1.5 text-[10px] mt-0.5">${cH}${tH}<span class="text-gray-500 truncate">${esc(s.unit) || '—'}</span></div>
+                    <p class="${titleClass} truncate flex items-center gap-1.5 leading-snug">${mainTitle} ${inRot} ${noteIcon}</p>
+                    <div class="flex items-center gap-1.5 text-[11.5px] mt-0.5 flex-wrap">${subName}${subUnit}${tH}</div>
                 </div>
             </div>
-            <div class="flex items-center gap-1 shrink-0 mt-1">${tB}${s.status !== 'ok' ? `<span class="text-[9px] font-bold px-1 rounded bg-red-100 text-red-800 shrink-0">${esc(s.status)}</span>` : ''}<button onclick="openMoveModal('${s.id}')" class="text-gray-400 hover:text-indigo-500 bg-gray-100 dark:bg-gray-700 p-1 rounded shrink-0"><i data-lucide="arrow-right-left" class="w-3 h-3"></i></button></div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                ${tB}
+                ${s.status !== 'ok' ? `<span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-rose-950/60 text-rose-300 border border-rose-800/60 shrink-0">${esc(s.status)}</span>` : ''}
+                <button onclick="openMoveModal('${s.id}')" class="text-slate-500 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 p-1.5 rounded-lg shrink-0 transition-all opacity-40 group-hover/row:opacity-100" title="Перемістити бійця"><i data-lucide="arrow-right-left" class="w-3.5 h-3.5"></i></button>
+            </div>
         </li>`;
     }
 
@@ -1686,8 +1823,8 @@
                 ? '<i data-lucide="lock" class="w-4 h-4 mr-2"></i><span>Закріплено</span>' 
                 : '<i data-lucide="unlock" class="w-4 h-4 mr-2"></i><span>Ред. порядок</span>';
             lockBtn.className = isSortingLocked 
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 border border-gray-300 dark:border-gray-600 px-3 py-2 rounded-lg flex items-center text-sm transition-colors flex-1 sm:flex-none justify-center'
-                : 'bg-orange-100 text-orange-700 border border-orange-300 dark:bg-orange-900/30 dark:border-orange-800 dark:text-orange-400 px-3 py-2 rounded-lg flex items-center text-sm font-bold transition-colors flex-1 sm:flex-none justify-center';
+                ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3.5 py-2 rounded-xl flex items-center text-sm font-medium transition-all flex-1 sm:flex-none justify-center'
+                : 'bg-amber-950/40 text-amber-300 border border-amber-800/60 px-3.5 py-2 rounded-xl flex items-center text-sm font-bold transition-all flex-1 sm:flex-none justify-center';
         }
 
         // ОПТИМІЗАЦІЯ: Використовуємо готовий кеш замість перебудови
@@ -1710,7 +1847,6 @@
                 }
             }
         });
-
 
         const activeRotMap = getActiveRotationMap();
 
@@ -1738,7 +1874,8 @@
                 });
                 if (Object.keys(groupTaskCounts).length > 0) {
                     const ribbonContent = Object.keys(groupTaskCounts).sort((a,b) => groupTaskCounts[b] - groupTaskCounts[a]).map(t => {
-                        return `<span class="flex items-center text-[9px] font-bold text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 px-1.5 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide cursor-default hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">${esc(t)} <span class="ml-1 text-[11px] font-black text-indigo-600 dark:text-indigo-400">${groupTaskCounts[t]}</span></span>`;
+                        const chipClass = getTaskChipColor(t);
+                        return `<span class="flex items-center text-[9px] font-mono font-bold border px-1.5 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide cursor-default transition-colors ${chipClass}">${esc(t)} <span class="ml-1 text-[11px] font-black opacity-90">${groupTaskCounts[t]}</span></span>`;
                     }).join('');
                     groupRibbon = `<div class="ml-4 flex gap-1.5 overflow-x-auto custom-scrollbar pb-1">${ribbonContent}</div>`;
                 }
@@ -1751,77 +1888,74 @@
                     return 0;
                 });
                 const isCom = COMBAT_TYPES.has(pos.type);
-                const hC    = isCom ? 'bg-red-50/50 dark:bg-red-900/20 border-red-100' : 'bg-gray-50 dark:bg-gray-800 border-gray-200';
 
                 let sh = '';
                 if (!collapsedPositions[pos.id]) {
                     if (sol.length === 0) {
-                        sh = '<div class="p-4 text-center text-xs text-gray-500/80 dark:text-gray-500 italic">Порожня</div>';
+                        sh = '<div class="p-3 text-center text-xs text-slate-500 italic font-mono">── Порожня ──</div>';
                     } else {
                         const lis = sol.map(s => buildPosSoldierRowHtml(s, pos, isCom, activeRotMap)).join('');
-                        sh = `<div class="p-2 overflow-y-auto max-h-64 custom-scrollbar"><ul class="space-y-0.5 divide-y divide-gray-100/50 dark:divide-white/5">${lis}</ul></div>`;
+                        sh = `<div class="p-2 overflow-y-auto max-h-80 custom-scrollbar"><ul class="space-y-0.5 divide-y divide-slate-800/60">${lis}</ul></div>`;
                     }
                 }
 
                 const eqBtn = (pos.equipment || []).length > 0
-                    ? `<button onclick="viewEquipment('${pos.id}')" class="text-[10px] text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 flex items-center"><i data-lucide="package" class="w-3 h-3 mr-1 text-blue-500"></i>${pos.equipment.length}</button>` : '';
+                    ? `<button onclick="viewEquipment('${pos.id}')" class="text-[10px] font-mono font-bold text-blue-400 bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-800/40 flex items-center shrink-0" title="ОВТ"><i data-lucide="package" class="w-3 h-3 mr-1 text-blue-400"></i>${pos.equipment.length}</button>` : '';
 
                 const hasRot = sol.some(s => activeRotMap.has(s.id));
-                const rotBadge = hasRot ? `<span class="absolute -top-1 -right-1 flex h-3 w-3" title="Є активна ротація!"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-orange-500 border border-white dark:border-[#1e1515]"></span></span>` : '';
+                const rotBadge = hasRot ? `<span class="absolute -top-1 -right-1 flex h-3 w-3" title="Є активна ротація!"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-slate-900"></span></span>` : '';
 
                 const cardClasses = isCom 
-                    ? 'bg-white dark:bg-[#15171e] border-rose-200/70 dark:border-rose-900/40 shadow-sm ring-1 ring-rose-500/10' 
-                    : 'bg-white dark:bg-[#15171e] border-gray-200 dark:border-white/5 shadow-sm';
+                    ? 'bg-slate-950/90 border-slate-800/90 shadow-sm ring-1 ring-rose-500/10 hover:border-slate-700' 
+                    : 'bg-slate-950/90 border-slate-800 shadow-sm hover:border-slate-700';
                 
                 const headerClasses = isCom 
-                    ? 'bg-gradient-to-r from-rose-50/60 via-transparent to-transparent dark:from-rose-950/25 dark:via-transparent dark:to-transparent border-b border-rose-100 dark:border-rose-900/30' 
-                    : 'bg-gradient-to-r from-gray-50 to-transparent dark:from-gray-800/40 dark:to-transparent border-b border-gray-200 dark:border-white/5';
+                    ? 'bg-gradient-to-r from-rose-950/20 via-slate-900/60 to-slate-900/40 border-b border-rose-900/30' 
+                    : 'bg-slate-900/60 border-b border-slate-800/80';
 
-                return `<div ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${pos.id}')" onclick="if(window.isMovingSoldierId) handleTargetModeDrop('${pos.id}')" class="rounded-xl border flex flex-col relative tactical-card group transition-colors ${cardClasses}">
+                return `<div ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${pos.id}')" onclick="if(window.isMovingSoldierId) handleTargetModeDrop('${pos.id}')" class="rounded-2xl border flex flex-col relative tactical-card group transition-all duration-200 ${cardClasses}">
                     ${rotBadge}
-                    <div class="px-3 py-2 flex flex-col gap-2 ${headerClasses}">
-                        <div class="flex justify-between">
-                            <div class="flex gap-2"><i data-lucide="${pos.icon || 'crosshair'}" class="w-4 h-4 ${isCom ? 'text-rose-500 dark:text-rose-400' : 'text-gray-500'} mt-0.5"></i><h3 class="font-bold text-sm leading-tight">${esc(pos.name)}</h3></div>
-                            <div class="flex">
-                                ${!isSortingLocked ? `
-                                <button onclick="movePositionOrder('${pos.id}',-1)" class="${pi === 0 ? 'hidden' : ''} p-1"><i data-lucide="arrow-up" class="w-3 h-3 text-gray-400 hover:text-gray-800 dark:hover:text-white"></i></button>
-                                <button onclick="movePositionOrder('${pos.id}',1)"  class="${pi === groupPositions.length-1 ? 'hidden' : ''} p-1"><i data-lucide="arrow-down" class="w-3 h-3 text-gray-400 hover:text-gray-800 dark:hover:text-white"></i></button>
-                                ` : ''}
-                                <button onclick="togglePos('${pos.id}')" class="p-1 ml-1"><i data-lucide="${collapsedPositions[pos.id] ? 'chevron-down' : 'chevron-up'}" class="w-4 h-4 text-gray-400"></i></button>
-                            </div>
+                    <div class="px-3 py-2 flex items-center justify-between ${headerClasses} rounded-t-2xl gap-2 min-h-[42px]">
+                        <div class="flex items-center gap-2 min-w-0 flex-1">
+                            <i data-lucide="${pos.icon || 'crosshair'}" class="w-4 h-4 ${isCom ? 'text-rose-400' : 'text-slate-400'} shrink-0"></i>
+                            <h3 class="font-extrabold text-sm text-white leading-tight truncate" title="${esc(pos.name)}">${esc(pos.name)}</h3>
+                            <span class="bg-slate-800 text-slate-300 border border-slate-700 px-1.5 py-0.5 rounded-md font-mono text-[10px] font-bold flex items-center shrink-0" title="Кількість бійців"><i data-lucide="users" class="w-2.5 h-2.5 mr-1 text-slate-400"></i>${sol.length}</span>
+                            ${eqBtn}
                         </div>
-                        <div class="flex justify-between bg-white/60 dark:bg-black/20 p-1.5 rounded-lg border border-transparent dark:border-white/5">
-                            <div class="flex gap-2">${eqBtn}<span class="bg-white dark:bg-white/10 px-1.5 py-0.5 rounded text-[10px] font-bold border border-gray-100 dark:border-transparent dark:text-gray-300 flex items-center shadow-sm"><i data-lucide="users" class="w-3 h-3 mr-1 text-gray-500 dark:text-gray-400"></i>${sol.length}</span></div>
-                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="openAddToPosModal('${pos.id}')"  class="text-gray-500 dark:text-gray-400 bg-white dark:bg-white/10 px-1.5 py-0.5 rounded border border-gray-100 dark:border-transparent hover:bg-gray-100 dark:hover:bg-white/20 hover:text-indigo-500 transition-colors shadow-sm" title="Додати бійця"><i data-lucide="user-plus" class="w-3 h-3"></i></button>
-                                <button onclick="openPositionModal('${pos.id}')"  class="text-gray-500 dark:text-gray-400 bg-white dark:bg-white/10 px-1.5 py-0.5 rounded border border-gray-100 dark:border-transparent hover:bg-gray-100 dark:hover:bg-white/20 transition-colors shadow-sm" title="Налаштування"><i data-lucide="settings" class="w-3 h-3"></i></button>
-                            </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="openAddToPosModal('${pos.id}')" class="text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 px-1.5 py-0.5 rounded-md text-[11px] font-medium transition-colors shadow-sm hidden group-hover:inline-flex items-center gap-0.5" title="Додати бійця"><i data-lucide="user-plus" class="w-3 h-3"></i><span>+ Боєць</span></button>
+                            <button onclick="openPositionModal('${pos.id}')" class="text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 p-1 rounded-md transition-colors shadow-sm hidden group-hover:inline-flex" title="Налаштування"><i data-lucide="settings" class="w-3 h-3"></i></button>
+                            ${!isSortingLocked ? `
+                            <button onclick="movePositionOrder('${pos.id}',-1)" class="${pi === 0 ? 'hidden' : ''} p-0.5 text-slate-400 hover:text-white rounded"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>
+                            <button onclick="movePositionOrder('${pos.id}',1)" class="${pi === groupPositions.length-1 ? 'hidden' : ''} p-0.5 text-slate-400 hover:text-white rounded"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>
+                            ` : ''}
+                            <button onclick="togglePos('${pos.id}')" class="p-0.5 text-slate-400 hover:text-white rounded ml-0.5"><i data-lucide="${collapsedPositions[pos.id] ? 'chevron-down' : 'chevron-up'}" class="w-4 h-4"></i></button>
                         </div>
                     </div>${sh}
                 </div>`;
             }).join('');
 
-            return `<div class="bg-white/50 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100 dark:border-gray-700 mb-6 shadow-sm">
-                <div class="flex justify-between mb-4">
-                    <div class="flex items-center">
-                        <h3 class="text-lg font-bold flex items-center cursor-pointer hover:text-indigo-500 overflow-hidden" onclick="toggleGroup(${jsEsc(gName)})">
-                            <i data-lucide="${isC ? 'folder-closed' : 'folder-open'}" class="w-6 h-6 mr-2 text-indigo-500 shrink-0"></i>
+            return `<div class="bg-slate-900/40 backdrop-blur-sm p-4.5 rounded-2xl border border-slate-800/80 mb-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center min-w-0 flex-1">
+                        <h3 class="text-base font-extrabold text-white flex items-center cursor-pointer hover:text-emerald-400 transition-colors overflow-hidden" onclick="toggleGroup(${jsEsc(gName)})">
+                            <i data-lucide="${isC ? 'folder-closed' : 'folder-open'}" class="w-5 h-5 mr-2 text-emerald-400 shrink-0"></i>
                             <span class="shrink-0">${esc(gName)}</span> 
-                            <span class="ml-3 text-[11px] bg-gray-200 dark:bg-gray-700 px-2 rounded-full shrink-0">${activeGroupPosCount} поз.</span>
-                            <span class="ml-2 text-[11px] text-indigo-700 bg-indigo-100 px-2 rounded-full shrink-0">${gCount} чол.</span>
+                            <span class="ml-3 text-[11px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-lg shrink-0">${activeGroupPosCount} поз.</span>
+                            <span class="ml-2 text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-2 py-0.5 rounded-lg shrink-0">${gCount} чол.</span>
                             ${groupRibbon}
                         </h3>
-                        <button onclick="openGroupModal(${jsEsc(gName)})" class="ml-3 text-gray-400 hover:text-blue-500 p-1 rounded border dark:border-gray-700 bg-white dark:bg-gray-800" title="Налаштування групи"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button onclick="toggleAllInGroup(${jsEsc(gName)})" class="ml-2 text-gray-400 hover:text-indigo-500 p-1 rounded border dark:border-gray-700 bg-white dark:bg-gray-800" title="Згорнути/Розгорнути всі позиції"><i data-lucide="chevrons-up-down" class="w-4 h-4"></i></button>
+                        <button onclick="openGroupModal(${jsEsc(gName)})" class="ml-3 text-slate-400 hover:text-white p-1 rounded-lg border border-slate-800 bg-slate-900 transition-colors" title="Налаштування групи"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="toggleAllInGroup(${jsEsc(gName)})" class="ml-1.5 text-slate-400 hover:text-white p-1 rounded-lg border border-slate-800 bg-slate-900 transition-colors" title="Згорнути/Розгорнути всі позиції"><i data-lucide="chevrons-up-down" class="w-3.5 h-3.5"></i></button>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-1 shrink-0">
                         ${!isSortingLocked ? `
-                        <button onclick="moveGroupOrder(${jsEsc(gName)},-1)" class="${gi === 0 ? 'hidden' : ''} p-1"><i data-lucide="arrow-up" class="w-4 h-4 text-gray-400 hover:text-gray-800 dark:hover:text-white"></i></button>
-                        <button onclick="moveGroupOrder(${jsEsc(gName)},1)"  class="${gi === gl - 1 ? 'hidden' : ''} p-1"><i data-lucide="arrow-down" class="w-4 h-4 text-gray-400 hover:text-gray-800 dark:hover:text-white"></i></button>
+                        <button onclick="moveGroupOrder(${jsEsc(gName)},-1)" class="${gi === 0 ? 'hidden' : ''} p-1 text-slate-400 hover:text-white rounded"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
+                        <button onclick="moveGroupOrder(${jsEsc(gName)},1)"  class="${gi === gl - 1 ? 'hidden' : ''} p-1 text-slate-400 hover:text-white rounded"><i data-lucide="arrow-down" class="w-4 h-4"></i></button>
                         ` : ''}
                     </div>
                 </div>
-                <div class="grid gap-4 ${isC ? 'hidden' : ''}" style="grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));">${posCards}</div>
+                <div class="grid gap-4 ${isC ? 'hidden' : ''}" style="grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));">${posCards}</div>
             </div>`;
         }).join('');
 
