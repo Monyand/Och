@@ -10,33 +10,33 @@
     <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg-color: #070a12;
+            --bg-color: #020617;
             --panel-bg: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border: #1e293b;
             --border-hover: #334155;
-            --input-bg: #090d16;
-            --section-header-bg: #1e293b;
+            --input-bg: #020617;
+            --section-header-bg: #0b1329;
             --section-header-text: #f8fafc;
-            --gray-light: #162032;
-            --preview-bg: #060911;
+            --gray-light: #020617;
+            --preview-bg: #020617;
             --preview-box-bg: #ffffff;
             /* Page stays white/classic for accurate paper rendering */
             --preview-text: #000000;
             --accent: #3b82f6;
             --accent-hover: #60a5fa;
             --success: #10b981;
-            --danger: #f87171;
-            --warning: #fbbf24;
-            --radius: 0.625rem;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 0.75rem;
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
         }
 
         * {
@@ -56,31 +56,61 @@
         }
 
         .header {
-            background-color: rgba(15, 23, 42, 0.85);
+            background-color: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(12px);
-            padding: 0.75rem 2rem;
+            padding: 0.85rem 1.5rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 50;
             box-shadow: var(--shadow-md);
+            gap: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .header-icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 0.75rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #60a5fa;
+            flex-shrink: 0;
         }
 
         .header h1 {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 800;
             letter-spacing: -0.025em;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            margin: 0;
+            color: #ffffff;
         }
 
         .header h1 span {
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ffffff;
+        }
+
+        .badge-tactical {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            background: #1e293b;
+            color: #60a5fa;
+            border: 1px solid #334155;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
         }
 
         .header-actions {
@@ -97,9 +127,9 @@
             display: flex;
             align-items: center;
             gap: 0.35rem;
-            background: var(--gray-light);
+            background: rgba(15, 23, 42, 0.8);
             padding: 0.35rem 0.6rem;
-            border-radius: 0.375rem;
+            border-radius: 0.5rem;
             border: 1px solid var(--border);
         }
 
@@ -1325,20 +1355,30 @@
 
     <!-- HEADER PANEL -->
     <div class="header">
-        <h1>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round" class="icon-accent">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            <span>Доповідь ОЧ 2 МБ 125 ОВМБр</span>
-            <button type="button" onclick="openChangelogModal()" class="btn-version" title="Натисніть для перегляду історії оновлень">
-                🚀 v1.1.1
-            </button>
-        </h1>
+        <div class="header-left">
+            <div class="header-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </div>
+            <div>
+                <h1>
+                    <span>Доповідь ОЧ (КСП)</span>
+                    <span class="badge-tactical">TACTICAL_DOCX</span>
+                    <button type="button" onclick="openChangelogModal()" class="btn-version" title="Натисніть для перегляду історії оновлень">
+                        ⚡ v1.2.0
+                    </button>
+                </h1>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 1px;">
+                    Генератор бойової доповіді оперативного чергового з живим переглядом та експортом у Word
+                </div>
+            </div>
+        </div>
         <div class="header-actions">
             <!-- AUTO SAVE STATE -->
             <div class="save-status">
@@ -2977,9 +3017,24 @@ ${customTasksHtml}
         // МОДАЛЬНЕ ВІКНО CHANGELOG (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.2.0",
+                date: "18.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🛡️ Tactical Dark редизайн та уніфікація",
+                        items: [
+                            "<b>Єдиний стандарт комплексу</b>: Інтерфейс переведено на фірмову палітру <code>Slate-950/900/800</code>, додано бейдж <code>TACTICAL_DOCX</code> та клікабельний бейдж <code>⚡ v1.2.0</code>.",
+                            "<b>Типографіка</b>: Впроваджено шрифти Inter для UI та JetBrains Mono для кодів і номерів.",
+                            "<b>Ергономіка шапки</b>: Додано інформативний підзаголовок та оновлену іконку доповіді."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.1.1",
                 date: "06.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🎨 Оптимізація інтерфейсу",
@@ -3118,7 +3173,7 @@ ${customTasksHtml}
             <div class="modal-header">
                 <h3 style="font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
                     <span>📋 Історія оновлень (Звіт ОЧ)</span>
-                    <span class="btn-version">v1.1.1</span>
+                    <span class="btn-version">v1.2.0</span>
                 </h3>
                 <button type="button" onclick="closeChangelogModal()" class="btn-icon" style="width:28px; height:28px; font-size:1rem;">×</button>
             </div>

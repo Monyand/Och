@@ -6,23 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Звіт ПБД</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #050505;
-            --panel-bg: rgba(20, 20, 20, 0.6);
-            --text-main: #e0e0e0;
+            --bg-color: #020617;
+            --panel-bg: #0f172a;
+            --text-main: #f8fafc;
             --accent: #10b981;
             --accent-hover: #059669;
-            --border: rgba(255, 255, 255, 0.08);
+            --border: #1e293b;
+            --border-hover: #334155;
             --danger: #ef4444;
             --warning: #f59e0b;
             --info: #3b82f6;
             --purple: #8b5cf6;
             --nav-width: 220px;
-            --glass-bg: rgba(15, 15, 15, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.05);
-            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --glass-border: #1e293b;
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
         }
 
         body {
@@ -60,25 +63,54 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(5, 5, 5, 0.85);
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            padding: 12px 20px;
+            padding: 10px 20px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .badge-tactical {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            background: #1e293b;
+            color: #60a5fa;
+            border: 1px solid #334155;
+            padding: 2px 8px;
+            border-radius: 9999px;
+        }
+
+        .btn-version {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fcd34d;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-version:hover {
+            background: rgba(245, 158, 11, 0.3);
+            transform: scale(1.05);
         }
 
         .top-bar h1 {
             margin: 0;
-            font-size: 22px;
+            font-size: 18px;
             color: #fff;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .btn-settings {
@@ -88,7 +120,7 @@
             padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             display: flex;
             align-items: center;
@@ -108,7 +140,7 @@
             left: 0;
             bottom: 0;
             width: var(--nav-width);
-            background: rgba(10, 10, 10, 0.6);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(10px);
             border-right: 1px solid var(--border);
             padding: 20px 0;
@@ -715,21 +747,21 @@
 <body>
 
     <div class="top-bar">
-        <div class="header-title">
+        <div class="header-title" style="display: flex; align-items: center; gap: 12px;">
             <button class="btn-toggle-sidebar" id="toggle-sidebar-btn" onclick="toggleSidebar()"
                 title="Сховати/Показати меню">☰</button>
-            <h1 style="display: flex; align-items: center; gap: 10px;">
+            <h1 style="display: flex; align-items: center; gap: 10px; font-size: 18px; margin: 0; font-weight: 800;">
                 <span>Генератор звіту для ПБД</span>
-                <button type="button" onclick="openChangelogModal()"
-                    style="font-size: 11px; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #fff; border: none; padding: 4px 12px; border-radius: 20px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2); letter-spacing: 0.5px;"
+                <span class="badge-tactical">PBD_REPORT</span>
+                <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
-                    🚀 v1.2.2
+                    ⚡ v1.3.0
                 </button>
             </h1>
         </div>
-                <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; align-items: center;">
             <button class="btn-settings" onclick="clearAppMemory()" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" title="Очистити всі поточні звіти та видалити пам'ять">🗑 Очистити звіт</button>
-            <button class="btn-settings" onclick="toggleTab('files-panel')" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);">📂 Файли</button>
+            <button class="btn-settings" onclick="toggleTab('files-panel')" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2); color: #fff;">📂 Файли</button>
             <button class="btn-settings" onclick="toggleTab('settings-panel')">⚙ Налаштування</button>
         </div>
     </div>
@@ -2938,9 +2970,24 @@
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.3.0",
+                date: "18.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🛡️ Tactical Dark редизайн та типографіка",
+                        items: [
+                            "<b>Єдиний стандарт комплексу</b>: Інтерфейс переведено на фірмову палітру <code>Slate-950/900/800</code>, додано бейдж <code>PBD_REPORT</code> та клікабельний бейдж <code>⚡ v1.3.0</code>.",
+                            "<b>Типографіка</b>: Впроваджено шрифти Inter для UI та JetBrains Mono для кодів і номерів.",
+                            "<b>Оновлена шапка та бічне меню</b>: Ергономічне темне скло та покращені кольори для легкого читання під час бойової роботи."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.2.2",
                 date: "12.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "💾 Пам'ять та Автозбереження",

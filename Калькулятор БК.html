@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Аналізатор витрати БК</title>
+    <title>Калькулятор БК | Аналізатор витрати боєприпасів</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -25,16 +25,17 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f1f5f9;
         }
 
-        /* Стилізація скролбару для краси */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #020617;
         }
 
         ::-webkit-scrollbar-thumb {
@@ -48,125 +49,160 @@
     </style>
 </head>
 
-<body class="min-h-screen bg-slate-950 text-slate-300 p-4 md:p-8 font-sans selection:bg-blue-500/30">
-    <div class="max-w-5xl mx-auto space-y-6">
+<body class="min-h-screen bg-slate-950 text-slate-200 p-3 sm:p-6 font-sans selection:bg-blue-500/30 flex flex-col justify-between">
+    <div class="max-w-6xl w-full mx-auto space-y-5">
 
-        <header class="mb-6 flex flex-col md:flex-row md:justify-between md:items-end gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-white mb-2">Лічильник витрати БК</h1>
-                <p class="text-slate-400 text-sm">Вставте текст. Дані автоматично зберігаються у вашому браузері.</p>
+        <!-- Tactical Header -->
+        <header class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 bg-slate-900 border border-slate-800/90 rounded-2xl p-5 shadow-xl">
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
+                    <i data-lucide="crosshair" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Калькулятор БК</h1>
+                        <span class="text-[11px] bg-slate-800 text-blue-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono font-bold">
+                            AMMO_PARSER
+                        </span>
+                        <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
+                            ⚡ v1.1.0
+                        </button>
+                    </div>
+                    <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <button id="btn-insert-sample" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm">
+                    <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i> Зразок
+                </button>
+                <button id="btn-clear" class="px-3.5 py-2 bg-slate-800 hover:bg-red-950/60 text-slate-300 hover:text-red-300 border border-slate-700 hover:border-red-800/60 rounded-xl transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i> Очистити
+                </button>
+                <button id="btn-download" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-30 disabled:cursor-not-allowed">
+                    <i data-lucide="download" class="w-4 h-4 text-blue-400"></i> Завантажити .txt
+                </button>
+                <button id="btn-copy" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-emerald-900/40 transition-all flex items-center gap-2 text-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i data-lucide="clipboard-copy" class="w-4 h-4" id="copy-icon"></i>
+                    <span id="copy-text">Скопіювати звіт</span>
+                </button>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
-            <!-- Ліва колонка -->
-            <div class="flex flex-col space-y-3">
-                <div
-                    class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden flex flex-col h-[550px]">
-                    <div
-                        class="bg-slate-800/80 px-4 py-3 border-b border-slate-700/50 flex justify-between items-center z-10">
-                        <h2 class="font-semibold text-slate-200">Сирі дані (звіти)</h2>
-                        <button id="btn-clear" class="text-slate-400 hover:text-red-400 transition-colors p-1"
-                            title="Очистити все">
-                            <i data-lucide="trash-2" class="w-[18px] h-[18px]"></i>
-                        </button>
-                    </div>
-                    <div class="flex flex-1 overflow-hidden relative bg-slate-900/50">
-                        <div id="line-numbers"
-                            class="w-12 bg-slate-900/80 text-slate-500 font-mono text-[13px] text-right pt-4 pb-4 pr-3 border-r border-slate-800 overflow-hidden select-none"
-                            style="line-height: 1.5rem;">
-                            <!-- Номери рядків будуть тут -->
+            <!-- Ліва колонка: Редактор сирих даних -->
+            <div class="flex flex-col space-y-4">
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col h-[520px]">
+                    <div class="bg-slate-950/70 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="code-2" class="w-4 h-4 text-blue-400"></i>
+                            <h2 class="font-bold text-xs uppercase tracking-wider text-slate-200">Сирі дані (текст донесень)</h2>
                         </div>
-                        <textarea id="input-text"
-                            class="flex-1 w-full h-full pt-4 pb-4 px-4 font-mono text-[13px] text-slate-200 bg-transparent resize-none outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500/50 placeholder-slate-600"
-                            style="line-height: 1.5rem; white-space: pre;" wrap="off"
-                            placeholder="Вставляйте сюди текст..."></textarea>
+                        <span id="editor-lines-badge" class="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
+                            0 рядків
+                        </span>
+                    </div>
+
+                    <div class="flex flex-1 overflow-hidden relative bg-slate-950/30">
+                        <div id="line-numbers" class="w-12 bg-slate-950/80 text-slate-600 font-mono text-xs text-right pt-4 pb-4 pr-3 border-r border-slate-800/80 overflow-hidden select-none" style="line-height: 1.5rem;">
+                        </div>
+                        <textarea id="input-text" class="flex-1 w-full h-full pt-4 pb-4 px-4 font-mono text-xs text-slate-100 bg-transparent resize-none outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500/40 placeholder-slate-600" style="line-height: 1.5rem; white-space: pre;" wrap="off" placeholder="Вставляйте сюди текст донесень (наприклад: 120 шт 5.45, 2 гранати Ф1, 100 7.62х54)..."></textarea>
                     </div>
                 </div>
 
-                <!-- Панель налаштувань -->
-                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 p-4 flex items-center space-x-3">
-                    <i data-lucide="settings" class="text-slate-500 w-5 h-5"></i>
-                    <label class="flex items-center space-x-3 cursor-pointer select-none group">
-                        <div class="relative flex items-center justify-center">
-                            <input type="checkbox" id="assume-grenade"
-                                class="peer appearance-none w-5 h-5 border-2 border-slate-600 rounded bg-slate-800 checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-1 focus:ring-offset-slate-900 transition-all cursor-pointer">
-                            <svg class="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <span class="text-sm text-slate-300 font-medium group-hover:text-slate-200 transition-colors">
-                            Рахувати згадку гранати без вказаної кількості як 1 шт.
+                <!-- Панель налаштувань та швидкі пресети -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl p-4 space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                            <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i> Параметри розпізнавання
+                        </span>
+                    </div>
+
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none bg-slate-950 p-2.5 rounded-xl border border-slate-800 hover:border-slate-700 transition group">
+                        <input type="checkbox" id="assume-grenade" class="rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-0 w-4 h-4 cursor-pointer">
+                        <span class="text-xs text-slate-300 group-hover:text-white transition-colors">
+                            Рахувати згадку гранати або пострілу без кількості як <strong class="text-amber-400 font-mono">1 шт</strong>.
                         </span>
                     </label>
+
+                    <div class="pt-1">
+                        <div class="text-[11px] font-mono text-slate-400 mb-1.5 flex items-center gap-1">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Швидкі приклади:
+                        </div>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button onclick="insertSamplePreset('all')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-[11px] font-mono transition cursor-pointer">Всі типи</button>
+                            <button onclick="insertSamplePreset('small_arms')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-[11px] font-mono transition cursor-pointer">5.45 / 7.62</button>
+                            <button onclick="insertSamplePreset('grenades')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-[11px] font-mono transition cursor-pointer">Гранати (Ф1, GHO)</button>
+                            <button onclick="insertSamplePreset('heavy')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-[11px] font-mono transition cursor-pointer">РПГ / ВОГ / 12.7</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Права колонка -->
-            <div class="flex flex-col space-y-6">
-                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden flex flex-col">
-                    <div
-                        class="bg-blue-950/30 px-4 py-3 border-b border-blue-900/50 flex flex-wrap gap-2 justify-between items-center">
-                        <h2 class="font-semibold text-blue-400">Підсумований результат</h2>
-                        <div class="flex space-x-2">
-                            <button id="btn-download"
-                                class="flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors bg-slate-800 border border-slate-700 text-blue-400 hover:bg-slate-700 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed">
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                                <span class="hidden sm:inline">Завантажити</span>
-                            </button>
-                            <button id="btn-copy"
-                                class="flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-all bg-slate-800 border border-slate-700 text-blue-400 hover:bg-slate-700 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed">
-                                <i data-lucide="clipboard-copy" class="w-4 h-4" id="copy-icon"></i>
-                                <span class="hidden sm:inline" id="copy-text">Копіювати</span>
-                            </button>
-                        </div>
+            <!-- Права колонка: Аналітика та таблиця результатів -->
+            <div class="flex flex-col space-y-4">
+
+                <!-- Статистичні плашки -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-center shadow-xl">
+                        <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Всього БК</div>
+                        <div id="stat-total-ammo" class="text-xl sm:text-2xl font-bold font-mono text-white mt-0.5">0</div>
                     </div>
-
-                    <div class="p-0 overflow-auto max-h-[500px]">
-                        <table id="results-table" class="w-full text-left border-collapse hidden">
-                            <thead>
-                                <tr class="bg-slate-800/50 border-b border-slate-700/50">
-                                    <th class="px-4 py-3 text-sm font-semibold text-slate-400">Тип боєприпасу</th>
-                                    <th class="px-4 py-3 text-sm font-semibold text-slate-400 w-32 text-right">Кількість
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="results-body" class="divide-y divide-slate-800/50">
-                                <!-- Результати -->
-                            </tbody>
-                        </table>
-
-                        <div id="no-results" class="flex flex-col items-center justify-center py-12 text-slate-600">
-                            <i data-lucide="info" class="w-12 h-12 mb-4 opacity-20"></i>
-                            <p>Немає розпізнаних даних</p>
-                        </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-center shadow-xl">
+                        <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Категорій</div>
+                        <div id="stat-total-types" class="text-xl sm:text-2xl font-bold font-mono text-blue-400 mt-0.5">0</div>
                     </div>
-
-                    <!-- Статистика опрацювання -->
-                    <div id="stats-container"
-                        class="bg-slate-900/80 px-4 py-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 hidden">
-                        <div class="flex items-center space-x-1.5">
-                            <i data-lucide="file-text" class="w-[14px] h-[14px] text-slate-500"></i>
-                            <span>Опрацьовано рядків з текстом:</span>
-                        </div>
-                        <span id="stats-numbers" class="font-mono font-medium">0 / 0</span>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-center shadow-xl">
+                        <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Опрацьовано</div>
+                        <div id="stat-lines-ratio" class="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-0.5">0 / 0</div>
                     </div>
                 </div>
 
-                <!-- Блок з помилками -->
-                <div id="errors-container"
-                    class="bg-orange-900/20 rounded-xl border border-orange-800/50 p-4 shadow-inner hidden">
-                    <div class="flex items-start space-x-3">
-                        <i data-lucide="alert-triangle" class="text-orange-500 mt-0.5 flex-shrink-0 w-5 h-5"></i>
-                        <div class="w-full overflow-hidden">
-                            <h3 class="text-sm font-bold text-orange-400 mb-1">Потребує уваги (нерозпізнані дані):</h3>
-                            <p class="text-xs text-orange-300/80 mb-2">Ці рядки не вдалося повністю розпізнати (там є
-                                невідомий текст, зайві цифри або це пусті пропуски):</p>
-                            <ul id="errors-list"
-                                class="text-xs space-y-1 text-orange-300 font-mono bg-orange-950/40 p-2 rounded border border-orange-900/50 max-h-32 overflow-y-auto">
-                                <!-- Помилки -->
+                <!-- Таблиця результатів -->
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col min-h-[380px]">
+                    <div class="bg-slate-950/70 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="table-properties" class="w-4 h-4 text-emerald-400"></i>
+                            <h2 class="font-bold text-xs uppercase tracking-wider text-slate-200">Підсумований результат</h2>
+                        </div>
+                        <span id="results-count-badge" class="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
+                            0 позицій
+                        </span>
+                    </div>
+
+                    <div class="p-0 overflow-auto flex-1 max-h-[460px]">
+                        <table id="results-table" class="w-full text-left border-collapse hidden">
+                            <thead>
+                                <tr class="bg-slate-950/60 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    <th class="px-4 py-2.5">Тип боєприпасу</th>
+                                    <th class="px-4 py-2.5 w-36 text-right">Кількість</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-body" class="divide-y divide-slate-800/60 font-mono text-xs">
+                                <!-- Рядки підсумку -->
+                            </tbody>
+                        </table>
+
+                        <div id="no-results" class="flex flex-col items-center justify-center py-20 text-slate-500">
+                            <i data-lucide="inbox" class="w-12 h-12 mb-3 opacity-30 text-slate-400"></i>
+                            <p class="text-xs">Введіть текст донесень зліва для підрахунку</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок з нерозпізнаними даними -->
+                <div id="errors-container" class="bg-amber-950/20 rounded-2xl border border-amber-900/40 p-4 shadow-xl hidden">
+                    <div class="flex items-start gap-3">
+                        <i data-lucide="alert-triangle" class="text-amber-400 mt-0.5 shrink-0 w-5 h-5"></i>
+                        <div class="w-full overflow-hidden space-y-2">
+                            <div>
+                                <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">Потребує уваги (нерозпізнані дані)</h3>
+                                <p class="text-[11px] text-amber-200/70">У цих рядках є невідомий текст, зайві цифри або пропущені позначення калібрів:</p>
+                            </div>
+                            <ul id="errors-list" class="text-xs space-y-1 text-amber-200 font-mono bg-slate-950/80 p-2.5 rounded-xl border border-amber-900/30 max-h-36 overflow-y-auto">
+                                <!-- Список рядків з помилками -->
                             </ul>
                         </div>
                     </div>
@@ -175,8 +211,59 @@
             </div>
         </div>
 
-        <div class="text-center text-xs text-slate-600 mt-8">
-            Підтримує: 5.45, 7.62 (x39, x51, x54), 5.56, 12 кал, 12.7 (x99, x108), 40х46, ГХО, Ф1, РГД-5, М67, РГН, РГО, РГТ-27С, ВОГ.
+        <!-- Footnote info -->
+        <div class="bg-slate-900/60 border border-slate-800/60 rounded-2xl p-3.5 text-center text-xs text-slate-500 flex flex-wrap justify-center items-center gap-2">
+            <span class="font-bold text-slate-400">Підтримувані калібри:</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">5.45х39</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">7.62 (x39, x51, x54)</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">5.56x45</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12х70</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12.7 (x99, x108)</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">14.5x114</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">40х46</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Гранати (Ф1, GHO, M67, РГД-5, РГН, РГО, РГТ-27С)</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">РПГ / ВОГ / АТ4 / RHEW</span>
+        </div>
+
+    </div>
+
+    <!-- Модальне вікно Changelog -->
+    <div id="changelog-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                        <i data-lucide="history" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white tracking-tight">Історія оновлень</h2>
+                        <p class="text-xs text-slate-400">Калькулятор БК — Аналізатор донесень</p>
+                    </div>
+                </div>
+                <button onclick="closeChangelogModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
+                <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.0 (Tactical Dark UI)</span>
+                        <span class="text-[11px] font-mono text-slate-500">17.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Повний Tactical Dark редизайн:</strong> Уніфіковано під єдиний стандарт комплексу (Slate-950, Inter, JetBrains Mono, Lucide Icons).</li>
+                        <li><strong class="text-white">Аналітичні плашки:</strong> Підрахунок загальної кількості витраченого БК, кількості категорій та рядків у реальному часі.</li>
+                        <li><strong class="text-white">Швидкі пресети:</strong> Кнопки вставки зразків за категоріями (5.45/7.62, Гранати, РПГ/ВОГ).</li>
+                        <li><strong class="text-white">Тактична таблиця результатів:</strong> Кольорові категорійні іконки, моноширинні розрядні числа з роздільниками тисяч.</li>
+                        <li><strong class="text-white">Покращений блок уваги:</strong> Чітке виділення нерозпізнаних рядків з номерами.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-950/60 border-t border-slate-800 text-right">
+                <button onclick="closeChangelogModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-colors cursor-pointer">
+                    Закрити
+                </button>
+            </div>
         </div>
     </div>
 
@@ -187,23 +274,30 @@
         // DOM Елементи
         const inputTextArea = document.getElementById('input-text');
         const lineNumbersDiv = document.getElementById('line-numbers');
+        const editorLinesBadge = document.getElementById('editor-lines-badge');
         const checkboxGrenade = document.getElementById('assume-grenade');
         const resultsTable = document.getElementById('results-table');
         const resultsBody = document.getElementById('results-body');
+        const resultsCountBadge = document.getElementById('results-count-badge');
         const noResults = document.getElementById('no-results');
         const errorsContainer = document.getElementById('errors-container');
         const errorsList = document.getElementById('errors-list');
-        const statsContainer = document.getElementById('stats-container');
-        const statsNumbers = document.getElementById('stats-numbers');
+        const statTotalAmmo = document.getElementById('stat-total-ammo');
+        const statTotalTypes = document.getElementById('stat-total-types');
+        const statLinesRatio = document.getElementById('stat-lines-ratio');
         const btnCopy = document.getElementById('btn-copy');
         const btnDownload = document.getElementById('btn-download');
+        const btnClear = document.getElementById('btn-clear');
+        const btnInsertSample = document.getElementById('btn-insert-sample');
         const copyText = document.getElementById('copy-text');
+        const changelogModal = document.getElementById('changelog-modal');
 
         // Стан
         let currentResults = [];
 
-        // Дефолтний текст (додав перевірки нових калібрів та помилок)
-        const defaultText = `10 12*70
+        // Дефолтні пресети текстів
+        const samplePresets = {
+            all: `10 12*70
 120 шт-5.45х39
 ручна граната Ф1-1шт, ГХО - 2
 200 7.62х54
@@ -213,66 +307,85 @@
 2 шт (ВОГ) 40х46
 200 12.7*99
 150 шт 12.7х108
-5 шт 12.7
-6 шт 12/7
-100 шт 12/7
-100 шт 12*7*99
-50 шт 12-7-108
 2 гранати Ф1
 2 гранати 40х46
 150 шт
-90`;
+90`,
+            small_arms: `120 шт 5.45х39
+240 шт 5.45х39
+100 7.62х39
+150 7.62x54
+200 7.62x51 NATO
+60 шт 5.56х45
+15 шт 12х70`,
+            grenades: `ручна граната Ф1 - 2 шт
+3 шт РГД-5
+GHO - 2
+1 шт М67
+РГН - 1
+РГТ-27С 2 шт`,
+            heavy: `200 12.7х99
+150 12.7х108
+50 шт 14.5х114
+2 постріли ПГ-7В
+1 ОГ-7В
+4 шт ВОГ-25
+2 шт 40х46
+1 шт Bullspike AT
+РПВ-16 1 шт`
+        };
 
-        // Конфігурація типів БК (порядок дуже важливий: спочатку точні, потім загальні)
+        // Конфігурація типів БК
         const ammoConfigs = [
             // 5.45
-            { id: '5.45', name: '5.45х39 мм', idPattern: '5[.,/]45(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39)?' },
+            { id: '5.45', name: '5.45х39 мм', icon: '🎯', category: 'small', idPattern: '5[.,/]45(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39)?' },
             // 7.62
-            { id: '7.62x54', name: '7.62х54 мм', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*54' },
-            { id: '7.62x51', name: '7.62х51 мм (NATO)', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:51|52)' },
-            { id: '7.62x39', name: '7.62х39 мм', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39' },
-            { id: '7.62', name: '7.62 мм (неуточнений)', idPattern: '7[.,]62' },
+            { id: '7.62x54', name: '7.62х54 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*54' },
+            { id: '7.62x51', name: '7.62х51 мм (NATO)', icon: '🎯', category: 'small', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:51|52)' },
+            { id: '7.62x39', name: '7.62х39 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39' },
+            { id: '7.62', name: '7.62 мм (неуточнений)', icon: '🎯', category: 'small', idPattern: '7[.,]62' },
             // 5.56
-            { id: '5.56', name: '5.56х45 мм (NATO)', idPattern: '5[.,]56(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?(?:[\\s\\-_]*uar(?:\\-?15)?)?' },
+            { id: '5.56', name: '5.56х45 мм (NATO)', icon: '🎯', category: 'small', idPattern: '5[.,]56(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?(?:[\\s\\-_]*uar(?:\\-?15)?)?' },
 
             // Гладкоствол 12х70
-            { id: '12x70', name: '12 калібр (12х70)', idPattern: '12[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*70|12[\\s\\-/]+7(?![0-9])|12[\\s\\-]*кал(?:ібр)?' },
+            { id: '12x70', name: '12 калібр (12х70)', icon: '🎯', category: 'small', idPattern: '12[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*70|12[\\s\\-/]+7(?![0-9])|12[\\s\\-]*кал(?:ібр)?' },
 
             // Кулемети 12.7 та 14.5
-            { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99' },
-            { id: '12.7x108', name: '12.7х108 мм (ДШК/Утьос)', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*108' },
-            { id: '12.7', name: '12.7 мм (неуточнений)', idPattern: '12[.,]7' },
-            { id: '14.5', name: '14.5х114 мм (КПВТ)', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?' },
+            { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99' },
+            { id: '12.7x108', name: '12.7х108 мм (ДШК/Утьос)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*108' },
+            { id: '12.7', name: '12.7 мм (неуточнений)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7' },
+            { id: '14.5', name: '14.5х114 мм (КПВТ)', icon: '⚡', category: 'heavy_mg', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?' },
 
             // Постріли до РПГ та легке піхотне озброєння
-            { id: 'PG7V', name: 'Постріл ПГ-7В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?7[\\s\\-_]*[vвmмsсlлrр1]*' },
-            { id: 'OG7V', name: 'Постріл ОГ-7В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]gi?|[oо]гі?)[\\s\\-_]*0?7[\\s\\-_]*[vвmaма]*' },
-            { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', idPattern: 'rhew[\\s\\-_]*0?9[\\s\\-_]*ma' },
-            { id: 'PG9V', name: 'Постріл ПГ-9В', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?9[\\s\\-_]*[vв]?' },
-            { id: 'BULLSPIKE', name: 'Bullspike AT', idPattern: 'bull?spike(?:[\\s\\-]*at)?' },
-            { id: 'RPV16', name: 'РПВ-16', idPattern: 'рпв(?:[\\s\\-]*16)?(?:[\\s\\-]*01)?' },
-            { id: 'VPR20', name: 'ВПР-20', idPattern: '(?:впр|vpr)[\\s\\-_]*20' },
-            { id: 'AT4', name: 'АТ-4', idPattern: '(?:(?:рпг|гранатомет)[\\s\\-_]*)?(?:ат|at)[\\s\\-]*4(?:[\\s\\-]*(?:cs|кс|сs|сз)[-_\\s]*(?:rs|рс))?' },
-            { id: 'RPG18', name: 'РПГ-18 (Муха)', idPattern: '(?:рпг|rpg)[\\s\\-_]*18' },
-            { id: 'RPG22', name: 'РПГ-22 (Нетто)', idPattern: '(?:рпг|rpg)[\\s\\-_]*22' },
-            { id: 'RPG26', name: 'РПГ-26 (Аглень)', idPattern: '(?:рпг|rpg)[\\s\\-_]*26' },
-            { id: 'RPG76', name: 'РПГ-76 (Комар)', idPattern: '(?:рпг|rpg)[\\s\\-_]*76' },
+            { id: 'PG7V', name: 'Постріл ПГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?7[\\s\\-_]*[vвmмsсlлrр1]*' },
+            { id: 'OG7V', name: 'Постріл ОГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]gi?|[oо]гі?)[\\s\\-_]*0?7[\\s\\-_]*[vвmaма]*' },
+            { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', icon: '🚀', category: 'rpg', idPattern: 'rhew[\\s\\-_]*0?9[\\s\\-_]*ma' },
+            { id: 'PG9V', name: 'Постріл ПГ-9В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?9[\\s\\-_]*[vв]?' },
+            { id: 'BULLSPIKE', name: 'Bullspike AT', icon: '🚀', category: 'rpg', idPattern: 'bull?spike(?:[\\s\\-]*at)?' },
+            { id: 'RPV16', name: 'РПВ-16', icon: '🚀', category: 'rpg', idPattern: 'рпв(?:[\\s\\-]*16)?(?:[\\s\\-]*01)?' },
+            { id: 'VPR20', name: 'ВПР-20', icon: '🚀', category: 'rpg', idPattern: '(?:впр|vpr)[\\s\\-_]*20' },
+            { id: 'AT4', name: 'АТ-4', icon: '🚀', category: 'rpg', idPattern: '(?:(?:рпг|гранатомет)[\\s\\-_]*)?(?:ат|at)[\\s\\-]*4(?:[\\s\\-]*(?:cs|кс|сs|сз)[-_\\s]*(?:rs|рс))?' },
+            { id: 'RPG18', name: 'РПГ-18 (Муха)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*18' },
+            { id: 'RPG22', name: 'РПГ-22 (Нетто)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*22' },
+            { id: 'RPG26', name: 'РПГ-26 (Аглень)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*26' },
+            { id: 'RPG76', name: 'РПГ-76 (Комар)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*76' },
+            
             // 40х46 та ВОГ
-            { id: '40x46', name: '40х46 мм', idPattern: '(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?[\\s\\-]*)?40[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*46(?:[\\s\\-]*\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?)?' },
-            { id: 'GHO', name: 'GHO', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:gho|goh|гхо|гох)[\\s\\-_]*1?\\.?' },
-            { id: 'F1', name: 'Граната Ф-1', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:mle[\\s\\-]*)?(?:ф|f)[- ]?1[aа]?' },
-            { id: 'M67', name: 'Граната М67', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:m[- ]?67|м[- ]?67)' },
-            { id: 'RGN', name: 'Граната РГН', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgn|ргн)[а-яіїєґ]*' },
-            { id: 'RGO', name: 'Граната РГО', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgo|рго|rg0|рг0)[а-яіїєґ]*' },
-            { id: 'RGD5', name: 'Граната РГД-5', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:ргд|rgd)[\\s\\-]*5?' },
-            { id: 'RG42', name: 'Граната РГ-42', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rg|рг|pg|пг|рg|pг)[\\s\\-_]*42' },
-            { id: 'RGT27S', name: 'Граната РГТ-27С', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' },
-            { id: 'VOG', name: 'ВОГ (17/25)', idPattern: '(?:вог|vog)[а-яіїєґa-z]*[- ]?(?:17|25)?' }
+            { id: '40x46', name: '40х46 мм', icon: '💣', category: 'grenade', idPattern: '(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?[\\s\\-]*)?40[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*46(?:[\\s\\-]*\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?)?' },
+            { id: 'GHO', name: 'GHO', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:gho|goh|гхо|гох)[\\s\\-_]*1?\\.?' },
+            { id: 'F1', name: 'Граната Ф-1', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:mle[\\s\\-]*)?(?:ф|f)[- ]?1[aа]?' },
+            { id: 'M67', name: 'Граната М67', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:m[- ]?67|м[- ]?67)' },
+            { id: 'RGN', name: 'Граната РГН', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgn|ргн)[а-яіїєґ]*' },
+            { id: 'RGO', name: 'Граната РГО', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgo|рго|rg0|рг0)[а-яіїєґ]*' },
+            { id: 'RGD5', name: 'Граната РГД-5', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:ргд|rgd)[\\s\\-]*5?' },
+            { id: 'RG42', name: 'Граната РГ-42', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rg|рг|pg|пг|рg|pг)[\\s\\-_]*42' },
+            { id: 'RGT27S', name: 'Граната РГТ-27С', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' },
+            { id: 'VOG', name: 'ВОГ (17/25)', icon: '💣', category: 'grenade', idPattern: '(?:вог|vog)[а-яіїєґa-z]*[- ]?(?:17|25)?' }
         ];
 
         // Завантаження з LocalStorage
         const savedData = localStorage.getItem('ammoData');
-        inputTextArea.value = savedData !== null ? savedData : defaultText;
+        inputTextArea.value = savedData !== null ? savedData : samplePresets.all;
         checkboxGrenade.checked = localStorage.getItem('assumeOneGrenade') === 'true';
 
         // Синхронізація скролу
@@ -282,12 +395,28 @@
 
         // Оновлення номерів рядків
         function updateLineNumbers() {
-            const linesCount = inputTextArea.value.split('\n').length || 1;
+            const lines = inputTextArea.value.split('\n');
+            const linesCount = lines.length || 1;
             let html = '';
             for (let i = 1; i <= linesCount; i++) {
                 html += `<div>${i}</div>`;
             }
             lineNumbersDiv.innerHTML = html;
+            editorLinesBadge.textContent = `${linesCount} рядк${getLineEnding(linesCount)}`;
+        }
+
+        function getLineEnding(n) {
+            if (n % 10 === 1 && n % 100 !== 11) return 'ок';
+            if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'ки';
+            return 'ів';
+        }
+
+        // Швидкі пресети
+        function insertSamplePreset(key) {
+            if (samplePresets[key]) {
+                inputTextArea.value = samplePresets[key];
+                parseData();
+            }
         }
 
         // Головна функція парсингу
@@ -310,10 +439,9 @@
             const assumeOne = checkboxGrenade.checked;
 
             ammoConfigs.forEach(conf => {
-                totals[conf.id] = { name: conf.name, count: 0 };
+                totals[conf.id] = { name: conf.name, icon: conf.icon, count: 0 };
             });
 
-            // Роздільники: додано =, ., ;, / та hex-варіант слешу
             const sep = '[\\s\\-–—:=./;\\\\x5c]*';
             const unit = '(?:[\\s\\-]*[\\-\\\\/\\s]*шт\\.?|щт\\.?|штук[и]?|гранат[аи]?|грн)?';
             const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ_])';
@@ -333,8 +461,6 @@
                         const qty = parseInt(p1, 10);
                         let targetId = conf.id;
 
-                        // Якщо написано просто 12.7 / 12/7 без вказання довжини гільзи:
-                        // кількість <= 25 - це рушниця (12 калібр 12х70), понад 25 - це кулемет Браунінг (12.7х99 мм)
                         if (targetId === '12.7') {
                             targetId = qty <= 25 ? '12x70' : '12.7x99';
                         }
@@ -393,23 +519,35 @@
         function renderUI(results, unparsed, parsedCount, totalCount) {
             btnCopy.disabled = results.length === 0;
             btnDownload.disabled = results.length === 0;
-            if (results.length === 0) {
-                btnCopy.classList.add('opacity-30', 'cursor-not-allowed');
-                btnDownload.classList.add('opacity-30', 'cursor-not-allowed');
+
+            const totalAmmoSum = results.reduce((acc, curr) => acc + curr.count, 0);
+            statTotalAmmo.textContent = totalAmmoSum.toLocaleString('uk-UA');
+            statTotalTypes.textContent = results.length;
+            statLinesRatio.textContent = `${parsedCount} / ${totalCount}`;
+
+            if (parsedCount === totalCount && totalCount > 0) {
+                statLinesRatio.className = "text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-0.5";
+            } else if (totalCount === 0) {
+                statLinesRatio.className = "text-xl sm:text-2xl font-bold font-mono text-slate-500 mt-0.5";
             } else {
-                btnCopy.classList.remove('opacity-30', 'cursor-not-allowed');
-                btnDownload.classList.remove('opacity-30', 'cursor-not-allowed');
+                statLinesRatio.className = "text-xl sm:text-2xl font-bold font-mono text-amber-400 mt-0.5";
             }
+
+            resultsCountBadge.textContent = `${results.length} позиці${results.length === 1 ? 'я' : [2,3,4].includes(results.length) ? 'ї' : 'й'}`;
 
             if (results.length > 0) {
                 let html = '';
                 results.forEach(item => {
-                    const formattedCount = item.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                    const formattedCount = item.count.toLocaleString('uk-UA');
                     html += `
-                        <tr class="hover:bg-slate-800/40 transition-colors">
-                            <td class="px-4 py-3 text-sm font-medium text-slate-300">${item.name}</td>
-                            <td class="px-4 py-3 text-sm font-bold text-slate-100 text-right">
-                                ${formattedCount} <span class="text-slate-500 font-normal text-xs ml-1">шт</span>
+                        <tr class="hover:bg-slate-800/40 transition-colors group">
+                            <td class="px-4 py-3 text-slate-200 flex items-center gap-2">
+                                <span class="text-base select-none">${item.icon || '📦'}</span>
+                                <span class="font-semibold text-slate-200 group-hover:text-white transition-colors">${item.name}</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="font-bold text-white text-sm bg-slate-950 px-2 py-1 rounded-md border border-slate-800 shadow-inner">${formattedCount}</span>
+                                <span class="text-slate-500 font-normal text-xs ml-1">шт.</span>
                             </td>
                         </tr>
                     `;
@@ -422,22 +560,14 @@
                 noResults.classList.remove('hidden');
             }
 
-            if (totalCount > 0) {
-                statsContainer.classList.remove('hidden');
-                statsNumbers.textContent = `${parsedCount} / ${totalCount}`;
-                statsNumbers.className = `font-mono font-medium ${parsedCount === totalCount ? 'text-green-400' : 'text-yellow-500'}`;
-            } else {
-                statsContainer.classList.add('hidden');
-            }
-
             if (unparsed.length > 0) {
                 let errHtml = '';
                 unparsed.forEach(u => {
                     const displayOriginal = u.isEmpty ? '<span class="italic opacity-50">(пустий рядок)</span>' : u.original;
                     errHtml += `
-                        <li class="whitespace-nowrap overflow-x-auto pb-1">
-                            <span class="text-orange-500/70 select-none mr-2">Ряд. ${u.lineNum}:</span> 
-                            ${displayOriginal}
+                        <li class="whitespace-nowrap overflow-x-auto pb-1 flex items-center gap-2">
+                            <span class="text-amber-400 font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-900/60 select-none">Ряд. ${u.lineNum}</span> 
+                            <span class="text-slate-300">${displayOriginal}</span>
                         </li>
                     `;
                 });
@@ -448,11 +578,30 @@
             }
         }
 
+        // Модальне вікно Changelog
+        function openChangelogModal() {
+            changelogModal.classList.remove('hidden');
+            changelogModal.classList.add('flex');
+        }
+
+        function closeChangelogModal() {
+            changelogModal.classList.add('hidden');
+            changelogModal.classList.remove('flex');
+        }
+
+        changelogModal.addEventListener('click', (e) => {
+            if (e.target === changelogModal) closeChangelogModal();
+        });
+
         // Слухачі подій
         inputTextArea.addEventListener('input', parseData);
         checkboxGrenade.addEventListener('change', parseData);
 
-        document.getElementById('btn-clear').addEventListener('click', () => {
+        btnInsertSample.addEventListener('click', () => {
+            insertSamplePreset('all');
+        });
+
+        btnClear.addEventListener('click', () => {
             if (confirm("Дійсно очистити весь текст?")) {
                 inputTextArea.value = '';
                 parseData();
@@ -463,18 +612,16 @@
             if (currentResults.length === 0) return;
             let textToCopy = "Витрата БК:\n";
             currentResults.forEach(r => {
-                const formattedCount = r.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                const formattedCount = r.count.toLocaleString('uk-UA');
                 textToCopy += `${r.name}: ${formattedCount} шт.\n`;
             });
 
             navigator.clipboard.writeText(textToCopy).then(() => {
                 copyText.textContent = "Скопійовано!";
-                btnCopy.classList.add('bg-green-900/30', 'border-green-500/30', 'text-green-400');
-                btnCopy.classList.remove('bg-slate-800', 'border-slate-700', 'text-blue-400');
+                btnCopy.classList.add('bg-emerald-700', 'shadow-emerald-900/60');
                 setTimeout(() => {
-                    copyText.textContent = "Копіювати";
-                    btnCopy.classList.remove('bg-green-900/30', 'border-green-500/30', 'text-green-400');
-                    btnCopy.classList.add('bg-slate-800', 'border-slate-700', 'text-blue-400');
+                    copyText.textContent = "Скопіювати звіт";
+                    btnCopy.classList.remove('bg-emerald-700', 'shadow-emerald-900/60');
                 }, 2000);
             }).catch(() => {
                 const textArea = document.createElement("textarea");
@@ -484,7 +631,7 @@
                 try {
                     document.execCommand('copy');
                     copyText.textContent = "Скопійовано!";
-                    setTimeout(() => copyText.textContent = "Копіювати", 2000);
+                    setTimeout(() => copyText.textContent = "Скопіювати звіт", 2000);
                 } catch (err) { }
                 document.body.removeChild(textArea);
             });
@@ -494,17 +641,16 @@
             if (currentResults.length === 0) return;
             let textToSave = "ЗВІТ ПО ВИТРАТІ БК:\n" + "=".repeat(30) + "\n\n";
             currentResults.forEach(r => {
-                const formattedCount = r.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                const formattedCount = r.count.toLocaleString('uk-UA');
                 textToSave += `${r.name}: ${formattedCount} шт.\n`;
             });
-            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично";
+            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично (Калькулятор БК v1.1.0)";
 
-            // \uFEFF гарантує, що Windows правильно прочитає кирилицю
             const blob = new Blob(["\uFEFF" + textToSave], { type: "text/plain;charset=utf-8" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = "Витрата_БК_Звіт.txt";
+            link.download = `Витрата_БК_${new Date().toISOString().substring(0,10)}.txt`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
