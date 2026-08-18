@@ -3940,16 +3940,30 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
+                                    {/* 18.08.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.0 (Tactical Dark UI)</span>
-                                            <span className="text-[11px] font-mono text-slate-500">17.08.2026</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.0 (Tactical Dark UI & Оптимізація)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">18.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
-                                            <li><strong className="text-white">Повний Tactical Dark редизайн:</strong> Уніфіковано інтерфейс з усіма програмами комплексу (палітра Slate-950, Inter, JetBrains Mono).</li>
-                                            <li><strong className="text-white">Ергономічні картки втрат:</strong> Оновлено структуру карток бійців у реєстрі (звання у бейджі, золотий позивний, чітке зонування).</li>
-                                            <li><strong className="text-white">Оновлена дошка Triage:</strong> 4 зони сортування (Червона, Жовта, Зелена, Чорна) з неоновими кольоровими градієнтами та оновленими картками евакуації.</li>
-                                            <li><strong className="text-white">Контрастна анатомічна мапа (SVG):</strong> Чіткий контраст між здоровими зонами тіла та ураженнями з підсвічуванням обраного регіону.</li>
+                                            <li><strong className="text-white">Горизонтальний Top Filter Toolbar (1 рядок):</strong> Замість громіздких панелей — компактний тактичний тулбар: швидкий пошук `[✕]`, пресети дат (`За добу`, `3 дні`, `7 днів`), календар-поповер `[ 📅 Період ▾ ]` та поповер `[ ⚙️ Інше ▾ ]` з активними фільтрами.</li>
+                                            <li><strong className="text-white">Перемикач карток & швидке редагування:</strong> Тумблер `[ 🗂️ 2 колонки ]` / `[ 📑 1 колонка ]`, клікабельні плашки для відкриття в 1 клік та фіксована кнопка `[ ✏️ ]` на кожному рядку.</li>
+                                            <li><strong className="text-white">Повний Tactical Dark редизайн усіх модалок:</strong> Модернізовано форму додавання/редагування запису (3 зоновані колонки, неонова підсвітка анатомічної мапи, тактичний силует для 200/ЗБВ), вікно «База / Бекап» (AES-256) та «Довідники».</li>
+                                            <li><strong className="text-white">Аналітика та виправлення евакуації:</strong> Оновлено тулбар аналітики та усунуто помилку розрахунку середнього часу евакуації.</li>
+                                            <li><strong className="text-white">Закриття по Escape та кліку на фон:</strong> Реалізовано закриття всіх модальних вікон і випадаючих поповерів по `Esc` та Backdrop click.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 17.08.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">v3.0-rc1 (Базовий редизайн)</span>
+                                            <span className="text-[11px] font-mono text-slate-500">17.08.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-400 list-disc list-inside">
+                                            <li><strong className="text-slate-200">Палітра Slate-950:</strong> Уніфікація інтерфейсу з програмами комплексу (Inter, JetBrains Mono).</li>
+                                            <li><strong className="text-slate-200">Оновлена дошка Triage:</strong> 4 зони сортування (Червона, Жовта, Зелена, Чорна) з неоновими кольоровими градієнтами.</li>
                                         </ul>
                                     </div>
                                 </div>
