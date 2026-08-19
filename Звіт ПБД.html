@@ -755,7 +755,7 @@
                 <span class="badge-tactical">PBD_REPORT</span>
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
-                    ⚡ v1.3.0
+                    ⚡ v1.3.1
                 </button>
             </h1>
         </div>
@@ -848,7 +848,7 @@
             <!-- 1.2 Знищені цілі -->
             <div class="panel" id="panel-1-2">
                 <div class="section-header" onclick="togglePanel('panel-1-2')">
-                    <h2>1.2. Звіт по знищених цілях (О/С та ФПВ)</h2>
+                    <h2>1.2. Звіт по знищених цілях (О/С та FPV)</h2>
                     <div class="header-controls">
                         <button class="btn-action" onclick="event.stopPropagation(); confirmAll('1-2')">✔️ Підтвердити
                             всі</button>
@@ -857,7 +857,7 @@
                 </div>
                 <div class="panel-body">
                     <p style="color: #aaa; font-size: 0.9em; margin-top: 0; margin-bottom: 20px;">
-                        Сюди потрапляють ТІЛЬКИ знищені ФПВ (оптоволокно) та підтверджені втрати О/С противника
+                        Сюди потрапляють ТІЛЬКИ знищені FPV (оптоволокно) та підтверджені втрати О/С противника
                         (200/300).
                     </p>
                     <div id="report-1-content"></div>
@@ -881,7 +881,7 @@
                             <label>Ціль:</label>
                             <select id="m1-target-type" style="width: 180px;" onchange="checkCustomTargetR1(this)">
                                 <option value="os">О/С (особовий склад)</option>
-                                <option value="fpv">ФПВ (оптоволокно)</option>
+                                <option value="fpv">FPV (оптоволокно)</option>
                                 <option value="custom">Інше (вручну)</option>
                             </select>
 
@@ -1461,7 +1461,7 @@
         function standardizeTarget(t) {
             let low = t ? t.toString().toLowerCase() : "";
             if (['фпв', 'fpv', 'ждун', 'бпла', 'дрон', 'mavic', 'мавік', 'zala', 'supercam', 'орлан', 'крило'].some(kw => low.includes(kw))) {
-                return { inf: "ФПВ (оптоволокно)", orig: "ФПВ (оптоволокно)", type: "fpv" };
+                return { inf: "FPV (оптоволокно)", orig: "FPV (оптоволокно)", type: "fpv" };
             } else if (isInfantryTarget(t)) {
                 return { inf: "о/с противника", orig: "В/СЛ ЗС рф", type: "os" };
             } else {
@@ -1855,7 +1855,7 @@
                 </div>
             `;
             });
-            document.getElementById('report-1-content').innerHTML = html || '<p>Немає записів ФПВ або втрат О/С.</p>';
+            document.getElementById('report-1-content').innerHTML = html || '<p>Немає записів FPV або втрат О/С.</p>';
         }
 
         window.checkCustomTargetR1 = function (sel) {
@@ -1907,8 +1907,8 @@
                 tInf = "о/с противника";
                 tOrig = "В/СЛ ЗС рф";
             } else if (targetType === 'fpv') {
-                tInf = "ФПВ (оптоволокно)";
-                tOrig = "ФПВ (оптоволокно)";
+                tInf = "FPV (оптоволокно)";
+                tOrig = "FPV (оптоволокно)";
             } else {
                 tInf = document.getElementById('m1-target').value;
                 tOrig = document.getElementById('m1-t-orig').value;
@@ -2972,12 +2972,12 @@
             {
                 version: "1.3.0",
                 date: "18.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🛡️ Tactical Dark редизайн та типографіка",
                         items: [
-                            "<b>Єдиний стандарт комплексу</b>: Інтерфейс переведено на фірмову палітру <code>Slate-950/900/800</code>, додано бейдж <code>PBD_REPORT</code> та клікабельний бейдж <code>⚡ v1.3.0</code>.",
+                            "<b>Єдиний стандарт комплексу</b>: Інтерфейс переведено на фірмову палітру <code>Slate-950/900/800</code>, додано бейдж <code>PBD_REPORT</code> та клікабельний бейдж <code>⚡ v1.3.1</code>.",
                             "<b>Типографіка</b>: Впроваджено шрифти Inter для UI та JetBrains Mono для кодів і номерів.",
                             "<b>Оновлена шапка та бічне меню</b>: Ергономічне темне скло та покращені кольори для легкого читання під час бойової роботи."
                         ]

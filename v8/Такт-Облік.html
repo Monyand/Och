@@ -41,8 +41,7 @@
                         },
                         colors: {
                             // Тактичні відтінки (Stone для фону, Olive/Coyote для акцентів)
-                            gray: tailwind.colors.stone,
-                            slate: tailwind.colors.stone,
+                            gray: tailwind.colors.slate,
                             olive: {
                                 400: '#84965c',
                                 500: '#5c693a',
@@ -186,7 +185,7 @@
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <h1 class="text-sm font-extrabold text-white leading-tight font-sans tracking-tight">ТАКТ-ОБЛІК</h1>
                             <button onclick="openChangelogModal()" class="text-[10px] text-amber-400 font-mono font-bold border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-1.5 py-0.5 rounded-full transition-all cursor-pointer whitespace-nowrap inline-flex items-center shrink-0" title="Натисніть для перегляду історії оновлень">
-                                ⚡ v1.3.0
+                                ⚡ v1.3.1
                             </button>
                         </div>
                         <div class="mt-0.5">
@@ -474,7 +473,7 @@
                 <h3 class="font-extrabold text-base text-white flex items-center space-x-2">
                     <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
                     <span>📋 Історія оновлень (ТАКТ-ОБЛІК)</span>
-                    <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold px-2 py-0.5 rounded-full ml-1">v1.3.0</span>
+                    <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold px-2 py-0.5 rounded-full ml-1">v1.3.1</span>
                 </h3>
                 <button onclick="closeModal('modal-changelog')" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -785,7 +784,7 @@
                     items: [
                         "<b>Темна тема за замовчуванням</b>: Впроваджено фірмову палітру <code>Slate-950/900/800</code> та коректно налаштовано перемикання тем зі збереженням у <code>localStorage</code>.",
                         "<b>Типографіка</b>: Шрифти Inter для інтерфейсу та JetBrains Mono для кодів, таймерів, статусів і версій.",
-                        "<b>Тактичний бейдж та модал оновлень</b>: Додано бейдж <code>TAKT_ACCOUNT</code>, клікабельний <code>⚡ v1.3.0</code> та інтерактивне вікно перегляду історії оновлень."
+                        "<b>Тактичний бейдж та модал оновлень</b>: Додано бейдж <code>TAKT_ACCOUNT</code>, клікабельний <code>⚡ v1.3.1</code> та інтерактивне вікно перегляду історії оновлень."
                     ]
                 }
             ]
@@ -1720,6 +1719,17 @@
         openModal('modal-equipment-view'); scheduleIcons();
     }
 
+        function formatTaskShortLabel(task) {
+        if (!task) return '';
+        const t = task.trim();
+        const lower = t.toLowerCase();
+        if (lower.includes('вогнева підтримка') || lower.includes('вогнева підтр')) return 'ВОГН. ПІДТР.';
+        if (lower.includes('облаштування')) return 'ОБЛАШТУВ.';
+        if (lower.includes('гранатомет')) return 'ГРАНАТОМЕТ';
+        if (lower.includes('кулемет')) return 'КУЛЕМЕТ';
+        return t;
+    }
+
     function getTaskChipColor(task) {
         const t = (task || '').toLowerCase().trim();
         if (!t) return 'bg-slate-800 text-slate-300 border-slate-700';
@@ -1778,40 +1788,51 @@
         if (s.deploymentStartTime && isCom) {
             const d = Math.floor((Date.now() - new Date(s.deploymentStartTime)) / 86400000);
             if (d > 0) {
-                let col = 'bg-emerald-950/60 text-emerald-300 border-emerald-800/70';
-                if (d > 30) col = 'bg-rose-950/70 text-rose-300 border-rose-800/80 font-black animate-pulse';
-                else if (d > 20) col = 'bg-amber-950/70 text-amber-300 border-amber-800/80';
-                else if (d > 10) col = 'bg-yellow-950/60 text-yellow-300 border-yellow-800/70';
+                let col = 'bg-emerald-950/70 text-emerald-300 border-emerald-800/80';
+                if (d > 30) col = 'bg-rose-950/80 text-rose-300 border-rose-800/90 font-black animate-pulse shadow-sm';
+                else if (d > 20) col = 'bg-amber-950/80 text-amber-300 border-amber-800/80';
+                else if (d > 10) col = 'bg-yellow-950/70 text-yellow-300 border-yellow-800/70';
                 
-                tB = `<span class="text-xs font-mono font-black px-2 py-0.5 rounded-md border flex items-center shadow-sm ${col}" title="Днів в полях: ${d}"><i data-lucide="clock" class="w-3 h-3 mr-1"></i>${d}д</span>`;
+                tB = `<span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg border flex items-center shadow-sm shrink-0 ${col}" title="Днів на позиції: ${d}"><i data-lucide="clock" class="w-3 h-3 mr-1"></i>${d}д</span>`;
             }
         }
-        const tH = (s.currentTask && s.currentTask !== 'піхота') ? `<span class="uppercase font-mono font-bold ${getTaskChipColor(s.currentTask)} px-1.5 py-0.5 rounded text-[10.5px] whitespace-nowrap truncate max-w-[110px] shadow-sm" title="${esc(s.currentTask)}">${esc(s.currentTask)}</span>` : '';
-        const rotDir = activeRotMap.get(s.id);
-        const inRot = rotDir ? `<span class="inline-flex relative h-2.5 w-2.5 ml-1 mt-0.5 shrink-0" title="В ротації"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${rotDir==='in'?'bg-amber-400':'bg-blue-400'} opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 ${rotDir==='in'?'bg-amber-500':'bg-blue-500'}"></span></span>` : '';
-        const noteIcon = s.note ? `<button type="button" onclick="event.stopPropagation(); viewNote('${s.id}')" class="ml-1 text-blue-400 hover:text-blue-300 shrink-0 bg-blue-950/40 p-0.5 rounded-full border border-blue-800/40 transition-colors" title="Переглянути примітку"><i data-lucide="info" class="w-3 h-3"></i></button>` : '';
-
-        const hasCallsign = !!s.callsign?.trim();
-        const mainTitle = hasCallsign ? esc(s.callsign.trim()) : (esc(s.fullName) || 'Невідомо');
-        const titleClass = hasCallsign 
-            ? (pos.commanderId === s.id ? 'font-mono font-extrabold text-[14px] text-amber-300' : 'font-mono font-extrabold text-[14px] text-emerald-400') 
-            : (pos.commanderId === s.id ? 'font-bold text-[13.5px] text-amber-300' : 'font-bold text-[13.5px] text-slate-100');
-
-        const subName = hasCallsign && s.fullName ? `<span class="text-slate-300 font-medium truncate">${esc(s.fullName)}</span>` : '';
-        const subUnit = s.unit ? `<span class="text-slate-500 font-normal truncate">${hasCallsign && s.fullName ? '· ' : ''}${esc(s.unit)}</span>` : '';
         
-        return `<li draggable="true" ondragstart="handleDragStart(event, '${s.id}')" class="group/row flex justify-between items-center py-2 px-2.5 hover:bg-slate-900/90 rounded-xl border border-transparent hover:border-slate-800 text-xs leading-tight gap-2 cursor-context-menu transition-all hover:translate-x-1" oncontextmenu="openSoldierContextMenu(event, '${s.id}')">
+        const taskShort = (s.currentTask && s.currentTask !== 'піхота') ? formatTaskShortLabel(s.currentTask) : '';
+        const tH = taskShort ? `<span class="uppercase font-mono font-bold ${getTaskChipColor(s.currentTask)} px-1.5 py-0.5 rounded-md text-[10px] whitespace-nowrap shadow-sm border" title="${esc(s.currentTask)}">${esc(taskShort)}</span>` : '';
+        const rotDir = activeRotMap.get(s.id);
+        const inRot = rotDir ? `<span class="inline-flex relative h-2.5 w-2.5 ml-1 shrink-0" title="В ротації"><span class="animate-ping absolute inline-flex h-full w-full rounded-full ${rotDir==='in'?'bg-amber-400':'bg-blue-400'} opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 ${rotDir==='in'?'bg-amber-500':'bg-blue-500'}"></span></span>` : '';
+        const noteIcon = s.note ? `<button type="button" onclick="event.stopPropagation(); viewNote('${s.id}')" class="text-blue-400 hover:text-blue-300 shrink-0 bg-blue-950/50 p-0.5 rounded-md border border-blue-800/50 transition-colors cursor-pointer" title="Примітка: ${esc(s.note)}"><i data-lucide="info" class="w-3 h-3"></i></button>` : '';
+
+        const isPosCom = pos.commanderId === s.id;
+        const hasCallsign = !!s.callsign?.trim();
+        const displayCallsign = hasCallsign ? esc(s.callsign.trim()) : '';
+        const displayFullName = esc(s.fullName) || 'Невідомий';
+        
+        const mainTitle = hasCallsign ? displayCallsign : displayFullName;
+        const titleClass = hasCallsign
+            ? (isPosCom ? 'font-mono font-extrabold text-[14px] text-amber-300' : 'font-mono font-extrabold text-[14px] text-emerald-400')
+            : (isPosCom ? 'font-sans font-bold text-[13.5px] text-amber-300' : 'font-sans font-bold text-[13.5px] text-slate-100');
+
+        const subText = hasCallsign && s.fullName ? `<span class="text-slate-300 font-medium">${displayFullName}</span>` : '';
+        const unitText = s.unit ? `<span class="text-slate-400">${hasCallsign && s.fullName ? ' · ' : ''}${esc(s.unit)}</span>` : '';
+        
+        return `<li draggable="true" ondragstart="handleDragStart(event, '${s.id}')" class="group/row flex justify-between items-center py-2 px-2.5 hover:bg-slate-900/90 rounded-xl border border-transparent hover:border-slate-800 text-xs leading-tight gap-2 cursor-context-menu transition-all" oncontextmenu="openSoldierContextMenu(event, '${s.id}')">
             <div class="flex items-start flex-1 min-w-0 pr-1 gap-1.5">
-                <button onclick="toggleCommander('${pos.id}','${s.id}')" class="p-1 shrink-0 mt-0.5 hover:scale-110 transition-transform" title="Старший позиції"><i data-lucide="star" class="w-3.5 h-3.5 ${pos.commanderId === s.id ? 'text-amber-400 fill-amber-400' : 'text-slate-600 hover:text-amber-300'}"></i></button>
+                <button onclick="toggleCommander('${pos.id}','${s.id}')" class="p-1 shrink-0 mt-0.5 hover:scale-110 transition-transform cursor-pointer" title="${isPosCom ? 'Старший позиції' : 'Призначити старшим'}"><i data-lucide="star" class="w-3.5 h-3.5 ${isPosCom ? 'text-amber-400 fill-amber-400 drop-shadow-sm' : 'text-slate-600 hover:text-amber-300'}"></i></button>
                 <div class="flex-1 min-w-0">
-                    <p class="${titleClass} truncate flex items-center gap-1.5 leading-snug">${mainTitle} ${inRot} ${noteIcon}</p>
-                    <div class="flex items-center gap-1.5 text-[11.5px] mt-0.5 flex-wrap">${subName}${subUnit}${tH}</div>
+                    <div class="flex items-center gap-1.5 flex-wrap leading-snug">
+                        <span class="${titleClass} truncate">${mainTitle}</span>
+                        ${inRot}
+                        ${noteIcon}
+                        ${tH}
+                    </div>
+                    ${(subText || unitText) ? `<div class="flex items-center text-[11.5px] text-slate-400 mt-0.5 truncate font-sans">${subText}${unitText}</div>` : ''}
                 </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
                 ${tB}
-                ${s.status !== 'ok' ? `<span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-rose-950/60 text-rose-300 border border-rose-800/60 shrink-0">${esc(s.status)}</span>` : ''}
-                <button onclick="openMoveModal('${s.id}')" class="text-slate-500 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 p-1.5 rounded-lg shrink-0 transition-all opacity-40 group-hover/row:opacity-100" title="Перемістити бійця"><i data-lucide="arrow-right-left" class="w-3.5 h-3.5"></i></button>
+                ${s.status !== 'ok' ? `<span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-rose-950/80 text-rose-300 border border-rose-800/80 shrink-0">${esc(s.status)}</span>` : ''}
+                <button onclick="openMoveModal('${s.id}')" class="text-slate-500 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 p-1.5 rounded-lg shrink-0 transition-all opacity-40 group-hover/row:opacity-100 cursor-pointer" title="Перемістити бійця"><i data-lucide="arrow-right-left" class="w-3.5 h-3.5"></i></button>
             </div>
         </li>`;
     }
@@ -1905,13 +1926,9 @@
                 const hasRot = sol.some(s => activeRotMap.has(s.id));
                 const rotBadge = hasRot ? `<span class="absolute -top-1 -right-1 flex h-3 w-3" title="Є активна ротація!"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500 border border-slate-900"></span></span>` : '';
 
-                const cardClasses = isCom 
-                    ? 'bg-slate-950/90 border-slate-800/90 shadow-sm ring-1 ring-rose-500/10 hover:border-slate-700' 
-                    : 'bg-slate-950/90 border-slate-800 shadow-sm hover:border-slate-700';
+                const cardClasses = 'bg-slate-950/95 border border-slate-800/90 hover:border-slate-700 shadow-lg transition-all rounded-2xl';
                 
-                const headerClasses = isCom 
-                    ? 'bg-gradient-to-r from-rose-950/20 via-slate-900/60 to-slate-900/40 border-b border-rose-900/30' 
-                    : 'bg-slate-900/60 border-b border-slate-800/80';
+                const headerClasses = isCom ? 'bg-slate-900/95 border-b border-slate-800/90' : 'bg-slate-900/80 border-b border-slate-800/80';
 
                 return `<div ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${pos.id}')" onclick="if(window.isMovingSoldierId) handleTargetModeDrop('${pos.id}')" class="rounded-2xl border flex flex-col relative tactical-card group transition-all duration-200 ${cardClasses}">
                     ${rotBadge}
