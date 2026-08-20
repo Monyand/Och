@@ -60,7 +60,7 @@
                     <div class="flex items-center gap-2.5">
                         <h1 class="text-2xl font-bold text-white tracking-tight">Аналізатор безперервної ротації</h1>
                         <button onclick="openChangelogModal()" class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.1.0
+                            ⚡ v1.1.1
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">
@@ -313,10 +313,22 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.1.0 -->
+                <!-- v1.1.1 -->
                 <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.1.0 (Поточна)</span>
+                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.1.1 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">20.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Цілочисельна арифметика дат:</strong> Замінено повільне створення об'єктів new Date() на швидкий розрахунок різниці днів за допомогою getEpochDay.</li>
+                        <li><strong class="text-white">Військова нормалізація:</strong> Інтегровано normalizeMilitaryText для стійкості до нерозривних пробілів та змішаної розкладки.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.1.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.1.0</span>
                         <span class="text-[11px] font-mono text-slate-500">16.08.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -349,6 +361,45 @@
     </div>
 
     <script>
+        function normalizeMilitaryText(text, options = { toLower: true, replaceHomoglyphs: true }) {
+            if (text === undefined || text === null) return "";
+            let str = String(text);
+
+            // 1. Очищення нерозривних та прихованих пробілів
+            str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ');
+
+            // 2. Стандартизація апострофів та лапок
+            str = str.replace(/[`’ʼ‘']/g, "'").replace(/[«»“”„"]/g, '"');
+
+            // 3. Стандартизація дефісів та тире
+            str = str.replace(/[—–−‒]/g, '-');
+
+            // 4. Заміна латинських літер-близнюків на українські (омогліфи)
+            if (options && options.replaceHomoglyphs) {
+                const homoglyphMap = {
+                    'a': 'а', 'A': 'А',
+                    'b': 'б', 'B': 'В',
+                    'c': 'с', 'C': 'С',
+                    'e': 'е', 'E': 'Е',
+                    'h': 'н', 'H': 'Н',
+                    'i': 'і', 'I': 'І',
+                    'k': 'к', 'K': 'К',
+                    'm': 'м', 'M': 'М',
+                    'o': 'о', 'O': 'О',
+                    'p': 'р', 'P': 'Р',
+                    't': 'т', 'T': 'Т',
+                    'x': 'х', 'X': 'Х',
+                    'y': 'у', 'Y': 'У'
+                };
+                str = str.replace(/[a-zA-Z]/g, match => homoglyphMap[match] || match);
+            }
+
+            // 5. Очищення зайвих пробілів
+            str = str.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+            return (options && options.toLower) ? str.toLowerCase() : str;
+        }
+
         // Глобальний стан
         let database = new Map();
         let successDatesCount = new Set();
@@ -622,7 +673,11 @@
                                         const position = colMap.position !== -1 ? String(rows[i][colMap.position] || '').trim() : 'Не вказано';
                                         const status = (colMap.status !== -1 ? String(rows[i][colMap.status] || '').trim() : '') || 'Не вказано';
 
-                                        const normalizedKey = rawName.toLowerCase().replace(/['’‘`ʼ]/g, "'");
+                                        const normalizedKey = normalizeMilitaryText(rawName, { toLower: true, replaceHomoglyphs: true })
+                                            .replace(/['"«»`’‘ʼ]/g, '')
+                                            .replace(/\./g, ' ')
+                                            .replace(/\s+/g, ' ')
+                                            .trim();
 
                                         const displayFullName = rawName.split(' ').map(word => {
                                             if (word.includes('.')) return word.toUpperCase();
@@ -672,6 +727,13 @@
                 return null;
             }
 
+            function getEpochDay(dateStr) {
+                if (!dateStr) return 0;
+                const parts = dateStr.split('-');
+                if (parts.length < 3) return 0;
+                return Math.floor(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])) / 86400000);
+            }
+
             function buildDetailedPeriods(recordsMap, ignoredKeywords = []) {
                 if (recordsMap.size === 0) return { periods: [], currentStreak: 0, uniqueStatuses: [] };
 
@@ -695,7 +757,7 @@
                     if (!currentPeriod) {
                         currentPeriod = { start: dateStr, end: dateStr, status: statusStr, rank: rankStr, position: posStr, days: 1, isIgnored: isIgnored };
                     } else {
-                        const diffDays = Math.round((new Date(dateStr) - new Date(currentPeriod.end)) / 86400000);
+                        const diffDays = getEpochDay(dateStr) - getEpochDay(currentPeriod.end);
 
                         if (diffDays === 1 && currentPeriod.status === statusStr && currentPeriod.isIgnored === isIgnored && currentPeriod.rank === rankStr && currentPeriod.position === posStr) {
                             currentPeriod.end = dateStr;
@@ -712,7 +774,7 @@
                 let isGloballyInactive = false;
 
                 if (globalMaxDateStr) {
-                    const gapToGlobalMax = Math.round((new Date(globalMaxDateStr) - new Date(latestPersonDate)) / 86400000);
+                    const gapToGlobalMax = getEpochDay(globalMaxDateStr) - getEpochDay(latestPersonDate);
                     if (gapToGlobalMax > 1) {
                         isGloballyInactive = true;
                     }
@@ -724,7 +786,7 @@
                         if (p.isIgnored) break;
                         if (i < periods.length - 1) {
                             const nextP = periods[i + 1];
-                            const gap = Math.round((new Date(nextP.start) - new Date(p.end)) / 86400000);
+                            const gap = getEpochDay(nextP.start) - getEpochDay(p.end);
                             if (gap > 1) break;
                         }
                         currentStreak += p.days;

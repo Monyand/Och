@@ -61,7 +61,7 @@
                     <div class="flex items-center gap-2.5">
                         <h1 class="text-2xl font-bold text-white tracking-tight">Генератор звітів з таблиць БЧС</h1>
                         <button onclick="openChangelogModal()" class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.1.0
+                            ⚡ v1.1.1
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Матричний парсер статусів особового складу та формування окремих Word-документів (.zip)</p>
@@ -254,10 +254,22 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.1.0 -->
+                <!-- v1.1.1 -->
                 <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.1.0 (Поточна)</span>
+                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.1.1 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">20.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Миттєве зіставлення колонок:</strong> Створено однопрохідний хеш-індекс колонок за 1 прохід O(M) замість багаторазового перебору шапки.</li>
+                        <li><strong class="text-white">Військова нормалізація:</strong> Інтегровано normalizeMilitaryText для стійкості до нерозривних пробілів та змішаної розкладки.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.1.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.1.0</span>
                         <span class="text-[11px] font-mono text-slate-500">16.08.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -417,9 +429,47 @@
             return index - 1;
         }
 
+        function normalizeMilitaryText(text, options = { toLower: true, replaceHomoglyphs: true }) {
+            if (text === undefined || text === null) return "";
+            let str = String(text);
+
+            // 1. Очищення нерозривних та прихованих пробілів
+            str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ');
+
+            // 2. Стандартизація апострофів та лапок
+            str = str.replace(/[`’ʼ‘']/g, "'").replace(/[«»“”„"]/g, '"');
+
+            // 3. Стандартизація дефісів та тире
+            str = str.replace(/[—–−‒]/g, '-');
+
+            // 4. Заміна латинських літер-близнюків на українські (омогліфи)
+            if (options && options.replaceHomoglyphs) {
+                const homoglyphMap = {
+                    'a': 'а', 'A': 'А',
+                    'b': 'б', 'B': 'В',
+                    'c': 'с', 'C': 'С',
+                    'e': 'е', 'E': 'Е',
+                    'h': 'н', 'H': 'Н',
+                    'i': 'і', 'I': 'І',
+                    'k': 'к', 'K': 'К',
+                    'm': 'м', 'M': 'М',
+                    'o': 'о', 'O': 'О',
+                    'p': 'р', 'P': 'Р',
+                    't': 'т', 'T': 'Т',
+                    'x': 'х', 'X': 'Х',
+                    'y': 'у', 'Y': 'У'
+                };
+                str = str.replace(/[a-zA-Z]/g, match => homoglyphMap[match] || match);
+            }
+
+            // 5. Очищення зайвих пробілів
+            str = str.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+            return (options && options.toLower) ? str.toLowerCase() : str;
+        }
+
         function cleanString(str) {
-            if (str === undefined || str === null) return "";
-            return String(str).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+            return normalizeMilitaryText(str, { toLower: true, replaceHomoglyphs: true });
         }
 
         function createDocxCell(text, isHeader = false) {
@@ -499,14 +549,20 @@
 
                     const headerRow = json[headerRowIdx];
 
+                    // Швидкий індекс колонок за 1 прохід
+                    const headerMap = new Map();
+                    for (let c = 0; c < headerRow.length; c++) {
+                        const cleanH = cleanString(headerRow[c]);
+                        if (cleanH && !headerMap.has(cleanH)) {
+                            headerMap.set(cleanH, c);
+                        }
+                    }
+
                     const statusColumnMap = {};
                     selectedStatuses.forEach(targetStatus => {
                         const cleanTarget = cleanString(targetStatus);
-                        for (let c = 0; c < headerRow.length; c++) {
-                            if (cleanString(headerRow[c]) === cleanTarget) {
-                                statusColumnMap[targetStatus] = c;
-                                break;
-                            }
+                        if (headerMap.has(cleanTarget)) {
+                            statusColumnMap[targetStatus] = headerMap.get(cleanTarget);
                         }
                     });
 

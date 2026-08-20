@@ -65,7 +65,7 @@
                             AMMO_PARSER
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.1.1
+                            ⚡ v1.1.2
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -247,11 +247,21 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.1 (Постріли OGS-7MA)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.2 (Дебаунсинг & Оптимізація)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">20.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Буферизація вводу (Debounce 100мс):</strong> Усунено затримки та підвисання при швидкому друку та масовій вставці великих текстових зведень.</li>
+                        <li><strong class="text-white">Військова нормалізація:</strong> Інтегровано normalizeMilitaryText для стійкості до омогліфів та нерозривних пробілів.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.1.1 (Постріли OGS-7MA)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">18.08.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Розширене розпізнавання РПГ:</strong> Додано безпомилковий парсинг для болгарських осколкових пострілів `OGS-7MA`, `OGS-7`, `ОГС-7МА`, `OG-7MA`, а також модифікацій `PG-7VM`, `PG-7VS`.</li>
+                        <li><strong class="text-slate-200">Розширене розпізнавання РПГ:</strong> Додано безпомилковий парсинг для болгарських осколкових пострілів `OGS-7MA`, `OGS-7`, `ОГС-7МА`, `OG-7MA`, а також модифікацій `PG-7VM`, `PG-7VS`.</li>
                     </ul>
                 </div>
                 <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
@@ -425,6 +435,15 @@ GHO - 2
             }
         }
 
+        function normalizeMilitaryText(text, options = { toLower: true }) {
+            if (text === undefined || text === null) return "";
+            let str = String(text);
+            str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ');
+            str = str.replace(/[`’ʼ‘']/g, "'").replace(/[«»“”„"]/g, '"');
+            str = str.replace(/[—–−‒]/g, '-');
+            return (options && options.toLower) ? str.toLowerCase() : str;
+        }
+
         // Головна функція парсингу
         function parseData() {
             const text = inputTextArea.value;
@@ -458,7 +477,7 @@ GHO - 2
                     return;
                 }
                 validLinesCount++;
-                let workingLine = line.toLowerCase();
+                let workingLine = normalizeMilitaryText(line, { toLower: true });
                 let matchedInLine = false;
 
                 // КРОК 1: Основний парсинг
@@ -600,7 +619,15 @@ GHO - 2
         });
 
         // Слухачі подій
-        inputTextArea.addEventListener('input', parseData);
+        let _parseTimer = null;
+        function debouncedParseData(delay = 100) {
+            clearTimeout(_parseTimer);
+            _parseTimer = setTimeout(() => {
+                parseData();
+            }, delay);
+        }
+
+        inputTextArea.addEventListener('input', () => debouncedParseData(100));
         checkboxGrenade.addEventListener('change', parseData);
 
         btnInsertSample.addEventListener('click', () => {

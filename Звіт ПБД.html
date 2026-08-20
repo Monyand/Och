@@ -755,7 +755,7 @@
                 <span class="badge-tactical">PBD_REPORT</span>
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
-                    ⚡ v1.3.1
+                    ⚡ v1.3.2
                 </button>
             </h1>
         </div>
@@ -1355,14 +1355,77 @@
             document.getElementById(panelId).classList.toggle('collapsed');
         }
 
+        function normalizeMilitaryText(text, options = { toLower: true, replaceHomoglyphs: true }) {
+            if (text === undefined || text === null) return "";
+            let str = String(text);
+
+            // 1. Очищення нерозривних та прихованих пробілів
+            str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ');
+
+            // 2. Стандартизація апострофів та лапок
+            str = str.replace(/[`’ʼ‘']/g, "'").replace(/[«»“”„"]/g, '"');
+
+            // 3. Стандартизація дефісів та тире
+            str = str.replace(/[—–−‒]/g, '-');
+
+            // 4. Заміна латинських літер-близнюків на українські (омогліфи)
+            if (options && options.replaceHomoglyphs) {
+                const homoglyphMap = {
+                    'a': 'а', 'A': 'А',
+                    'b': 'б', 'B': 'В',
+                    'c': 'с', 'C': 'С',
+                    'e': 'е', 'E': 'Е',
+                    'h': 'н', 'H': 'Н',
+                    'i': 'і', 'I': 'І',
+                    'k': 'к', 'K': 'К',
+                    'm': 'м', 'M': 'М',
+                    'o': 'о', 'O': 'О',
+                    'p': 'р', 'P': 'Р',
+                    't': 'т', 'T': 'Т',
+                    'x': 'х', 'X': 'Х',
+                    'y': 'у', 'Y': 'У'
+                };
+                str = str.replace(/[a-zA-Z]/g, match => homoglyphMap[match] || match);
+            }
+
+            // 5. Очищення зайвих пробілів
+            str = str.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+            return (options && options.toLower) ? str.toLowerCase() : str;
+        }
+
+        function cleanReportText(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+                .replace(/[ \t]+/g, ' ')
+                .replace(/\s*,\s*/g, ', ')
+                .replace(/\s*;\s*/g, '; ')
+                .replace(/\s*:\s*/g, ': ')
+                .replace(/(\d{1,2})\s*:\s*(\d{2})(?:\s*:\s*(\d{2}))?/g, (m, h, min, sec) => sec !== undefined ? `${h}:${min}:${sec}` : `${h}:${min}`)
+                .replace(/\(\s+/g, '(')
+                .replace(/\s+\)/g, ')')
+                .replace(/\s+,/g, ',')
+                .replace(/\s+\./g, '.')
+                .replace(/\s+;/g, ';')
+                .replace(/\s+:/g, ':')
+                .replace(/,\s*\./g, '.')
+                .replace(/\s+$/gm, '')
+                .trim();
+        }
+
         const numWords = { 1: "ОДИН", 2: "ДВА", 3: "ТРИ", 4: "ЧОТИРИ", 5: "П'ЯТЬ", 6: "ШІСТЬ", 7: "СІМ", 8: "ВІСІМ", 9: "ДЕВ'ЯТЬ", 10: "ДЕСЯТЬ", 11: "ОДИННАДЦЯТЬ", 12: "ДВАНАДЦЯТЬ", 13: "ТРИНАДЦЯТЬ", 14: "ЧОТИРНАДЦЯТЬ", 15: "П'ЯТНАДЦЯТЬ" };
         function getWordForNumber(num) { let parsed = parseInt(num); return isNaN(parsed) ? num : (numWords[parsed] || parsed); }
 
-        function superClean(str) { return str ? str.toString().toLowerCase().replace(/[^а-яa-zіїєґ0-9]/g, '') : ""; }
+        function superClean(str) { 
+            if (!str) return "";
+            return normalizeMilitaryText(str, { toLower: true, replaceHomoglyphs: true })
+                .replace(/[^а-яa-zіїєґ0-9]/g, ''); 
+        }
 
         function getCol(row, possibleNames) {
             for (let key in row) {
-                let cleanKey = key.replace(/^\uFEFF/, '').trim().toLowerCase();
+                let cleanKey = normalizeMilitaryText(key, { toLower: true, replaceHomoglyphs: true }).replace(/^\uFEFF/, '').trim();
                 if (possibleNames.includes(cleanKey)) {
                     let val = row[key];
                     return val !== undefined && val !== null ? val.toString().trim() : '';
@@ -2458,7 +2521,8 @@
             const container = btn.closest('.panel, .panel-body') || document;
             const textElem = container.querySelector('.crew-stats-textarea, #crew-stats-text') || document.getElementById('crew-stats-text');
             if (!textElem || !textElem.value.trim()) return alert("Статистика порожня.");
-            navigator.clipboard.writeText(textElem.value.trim()).then(() => {
+            const cleanedStats = textElem.value.split('\n').map(l => cleanReportText(l)).filter(Boolean).join('\n');
+            navigator.clipboard.writeText(cleanedStats).then(() => {
                 const ob = btn.style.backgroundColor, ot = btn.innerText;
                 btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
                 setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
@@ -2595,10 +2659,26 @@
                     let posFormattedClean = posFormatted.replace(/ОВгП/g, '').replace(/ОВГП/g, '').replace(/\s+/g, ' ').trim();
 
                     // Формат для ОВгП: позиція зброя підрозділ калібр (БК)
-                    text = `${timeFormatted} ${posFormattedClean} ${finalWeaponName} ${unitName} ${caliber} (${used}), ціль: ${target} (${coords}), результат: ${result}${casText}`;
+                    const ovgpHeader = [
+                        timeFormatted,
+                        posFormattedClean,
+                        finalWeaponName,
+                        unitName,
+                        caliber,
+                        used ? `(${used})` : ''
+                    ].filter(Boolean).join(' ');
+
+                    text = cleanReportText(`${ovgpHeader}, ціль: ${target} (${coords}), результат: ${result}${casText}`);
                 } else {
                     // Формат для піхотної зброї: координати між ціллю та результатом
-                    text = `${timeFormatted} ${posFormatted} ${unitName}, ${weaponName}, ціль: ${target} (${coords}), результат: ${result}${casText}, витрата Б/К: ${used}`;
+                    const infHeader = [
+                        timeFormatted,
+                        posFormatted,
+                        unitName ? `${unitName},` : '',
+                        weaponName
+                    ].filter(Boolean).join(' ');
+
+                    text = cleanReportText(`${infHeader}, ціль: ${target} (${coords}), результат: ${result}${casText}, витрата Б/К: ${used}`);
                 }
 
                 const recordDiv = `<div class="final-record"><textarea class="record-text" rows="2">${text}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${isOvgp ? 'report-4-ovgp' : 'report-4-gen'}');">✖</button></div>`;
@@ -2636,9 +2716,10 @@
         window.hideItem = function (id) { document.getElementById(id).style.display = 'none'; }
 
         window.addRecordToFinal = function (containerId, text, crew = '') {
+            const cleanText = cleanReportText(text);
             const d = document.createElement('div'); d.className = 'final-record';
             if (crew) d.setAttribute('data-crew', crew);
-            d.innerHTML = `<textarea class="record-text" rows="2" oninput="updateCount('${containerId}')">${text}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${containerId}');">✖</button>`;
+            d.innerHTML = `<textarea class="record-text" rows="2" oninput="updateCount('${containerId}')">${cleanText}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${containerId}');">✖</button>`;
             document.getElementById(containerId).appendChild(d);
             updateCount(containerId);
         }
@@ -2727,38 +2808,40 @@
         }
 
         window.copyReportList = async function (id, btn) {
-            let plainText = '';
+            const container = document.getElementById(id);
+            if (!container) return;
+            const records = container.querySelectorAll('.record-text');
+            const lines = [];
 
-            document.getElementById(id).querySelectorAll('.record-text').forEach((ta) => {
-                let line = ta.value.trim();
-                if (!line) return;
-                plainText += line + '\n';
+            records.forEach((ta) => {
+                let line = cleanReportText(ta.value);
+                if (line) lines.push(line);
             });
 
-            if (!plainText.trim()) return alert("Список порожній.");
+            if (lines.length === 0) return alert("Список порожній.");
+            const plainText = lines.join('\n');
 
-            const copyListener = function(e) {
-                e.clipboardData.setData('text/plain', plainText.trim());
-                e.preventDefault();
-            };
-
-            document.addEventListener('copy', copyListener);
-            
-            let success = false;
             try {
-                success = document.execCommand('copy');
-            } catch (err) {
-                console.error(err);
-            }
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(plainText);
+                } else {
+                    const copyListener = function(e) {
+                        e.clipboardData.setData('text/plain', plainText);
+                        e.preventDefault();
+                    };
+                    document.addEventListener('copy', copyListener);
+                    document.execCommand('copy');
+                    document.removeEventListener('copy', copyListener);
+                }
 
-            document.removeEventListener('copy', copyListener);
-
-            if (success) {
                 const ob = btn.style.backgroundColor, ot = btn.innerText;
                 btn.innerText = "Скопійовано!"; btn.style.backgroundColor = "#4caf50";
                 setTimeout(() => { btn.innerText = ot; btn.style.backgroundColor = ob; }, 2000);
+            } catch (err) {
+                console.error(err);
+                alert("Не вдалося скопіювати текст: " + err);
             }
-        }
+        };
 
         document.addEventListener("DOMContentLoaded", () => {
             const uNameInput = document.getElementById('unit-name');
