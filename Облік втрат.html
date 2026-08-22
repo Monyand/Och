@@ -79,6 +79,42 @@
             background-color: #0b1120;
             color: #f1f5f9;
         }
+
+        @media print {
+            body { 
+                background-color: #ffffff !important; 
+                color: #0f172a !important; 
+                font-family: 'Inter', sans-serif !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            header, nav, .no-print, button, input[type="checkbox"], select, .filter-bar { 
+                display: none !important; 
+            }
+            main { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                gap: 12px !important;
+            }
+            .bg-slate-900, .bg-slate-950, .bg-tactical-950, .bg-tactical-900 { 
+                background-color: #ffffff !important; 
+                color: #0f172a !important; 
+                border-color: #e2e8f0 !important; 
+            }
+            .text-white, .text-slate-200, .text-slate-300, .text-slate-400 { 
+                color: #0f172a !important; 
+            }
+            .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-md, .shadow-sm { 
+                box-shadow: none !important; 
+            }
+            .break-inside-avoid, .card { 
+                break-inside: avoid !important; 
+                page-break-inside: avoid !important; 
+            }
+            canvas { 
+                max-width: 100% !important; 
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-200 selection:bg-amber-500/30">
@@ -99,7 +135,7 @@
         ];
 
         const LOSS_TYPES = [
-            "Поранення (300)", "Бойове травмування (300)", "Небойове травмування (300)", 
+            "Поранення (300)", "Небойове травмування (300)", 
             "Загибель (200)", "Небойова смерть (200)", "Зниклий безвісти (ЗБВ)", "СЗЧ", "Дезертирство"
         ];
         
@@ -676,8 +712,8 @@
             const renderEvacBadge = (widthClass = "w-48 xl:w-[200px]") => {
                 if (isAwol(episode.lossType)) {
                     return (
-                        <div className={`${widthClass} text-center text-[10px] font-bold font-mono px-2.5 py-1 rounded-xl bg-slate-950/90 border border-slate-800 text-slate-300 shadow-inner flex items-center justify-center gap-1.5`}>
-                            <Icon name="user-x" className="w-3 h-3 text-fuchsia-400 shrink-0" />
+                        <div className={`${widthClass} text-center text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-950/90 border border-slate-800 text-slate-300 shadow-inner flex items-center justify-center gap-1.5`}>
+                            <Icon name="user-x" className="w-3.5 h-3.5 text-fuchsia-400 shrink-0" />
                             <span className="text-fuchsia-300 truncate">{episode.awolStatus || 'СЗЧ'}</span>
                         </div>
                     );
@@ -685,20 +721,20 @@
 
                 if (isEvac || episode.awolStatus === "Повернувся") {
                     return (
-                        <div className={`${widthClass} text-center text-[10px] font-bold font-mono px-2.5 py-1 rounded-xl bg-slate-950/90 border border-slate-800 text-slate-300 shadow-inner flex items-center justify-center gap-1.5`}>
-                            <Icon name="check-circle" className="w-3 h-3 text-emerald-400 shrink-0" />
+                        <div className={`${widthClass} text-center text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-950/90 border border-slate-800 text-slate-300 shadow-inner flex items-center justify-center gap-1.5`}>
+                            <Icon name="check-circle" className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                             <span className="text-slate-300">Евакуйований</span>
-                            {evacFormattedDate && <span className="text-emerald-400 font-bold">({evacFormattedDate})</span>}
+                            {evacFormattedDate && <span className="text-emerald-400 font-mono font-bold text-[11px]">({evacFormattedDate})</span>}
                         </div>
                     );
                 }
 
                 // Не евакуйований: темний бейдж з червоним таймером
                 return (
-                    <div className={`${widthClass} text-center text-[10px] font-bold font-mono px-2.5 py-1 rounded-xl bg-slate-950/90 border border-slate-800 text-slate-300 shadow-inner flex items-center justify-center gap-1.5`}>
-                        <Icon name="ambulance" className="w-3 h-3 text-red-400 shrink-0" />
+                    <div className={`${widthClass} text-center text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-950/90 border border-slate-800 text-slate-300 shadow-inner flex items-center justify-center gap-1.5`}>
+                        <Icon name="ambulance" className="w-3.5 h-3.5 text-red-400 shrink-0" />
                         <span className="text-slate-300">Не евакуйований</span>
-                        {isWaitValid && <span className="text-red-400 font-bold">({waitStr})</span>}
+                        {isWaitValid && <span className="text-red-400 font-mono font-bold text-[11px]">({waitStr})</span>}
                     </div>
                 );
             };
@@ -739,24 +775,24 @@
 
                             <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-slate-400 text-[10px] font-mono font-bold bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0 uppercase">
+                                    <span className="text-slate-300 text-[10px] font-semibold bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide">
                                         {cleanRank}
                                     </span>
                                     <span className="text-white group-hover:text-amber-300 font-bold text-sm tracking-tight truncate transition-colors" title={sName}>
                                         {sName}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono flex-wrap">
+                                <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap">
                                     {sCallsign && (
-                                        <span className="text-amber-400 text-[11px] font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm shrink-0">
+                                        <span className="text-amber-400 text-xs font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm shrink-0">
                                            «{sCallsign}»
                                         </span>
                                     )}
-                                    <span className="text-slate-300 font-semibold flex items-center gap-1 bg-slate-950/60 border border-slate-800/80 px-1.5 py-0.5 rounded text-[10px] truncate max-w-[150px]" title={displayUnit}>
+                                    <span className="text-slate-300 font-medium flex items-center gap-1 bg-slate-950/60 border border-slate-800/80 px-1.5 py-0.5 rounded text-[11px] truncate max-w-[150px]" title={displayUnit}>
                                         <Icon name="shield" className="w-3 h-3 text-slate-500 shrink-0" />
                                         <span className="truncate">{displayUnit || 'Не вказано'}</span>
                                     </span>
-                                    <span className="text-slate-400 flex items-center gap-1 text-[10px]" title="Дата та час події">
+                                    <span className="text-slate-400 font-mono flex items-center gap-1 text-[10px]" title="Дата та час події">
                                         <Icon name="calendar" className="w-3 h-3 text-slate-500 shrink-0" />
                                         <span>{dateDisplay}</span>
                                     </span>
@@ -766,59 +802,86 @@
 
                         {/* 2. Середня колонка: Обставини/Локації (вгорі) та Травми/Теги (внизу) */}
                         <div className="flex-1 min-w-0 px-1 lg:border-l lg:border-slate-800/80 lg:pl-3 space-y-1.5">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-xl text-xs shadow-inner">
-                                    <Icon name="target" className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                                    <span className="text-slate-400 text-[10px] font-mono uppercase">Причина:</span>
-                                    <span className="font-semibold text-white truncate max-w-[200px]" title={episode.cause}>{episode.cause}</span>
-                                </div>
-
-                                <div className="flex items-center gap-1.5 bg-amber-950/20 border border-amber-900/40 px-2 py-1 rounded-xl text-xs font-mono shadow-inner">
-                                    <Icon name="map-pin" className="w-3 h-3 text-amber-400 shrink-0" />
-                                    <span className="text-amber-400/80 text-[10px] uppercase font-bold">Факт:</span>
-                                    <span className="text-amber-200 font-semibold truncate max-w-[160px]" title={episode.actualLoc}>{episode.actualLoc || "-"}</span>
-                                </div>
-
-                                {episode.docLoc && (
-                                    <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-xl text-xs font-mono shadow-inner">
-                                        <Icon name="file-text" className="w-3 h-3 text-slate-400 shrink-0" />
-                                        <span className="text-slate-400 text-[10px] uppercase">Док:</span>
-                                        <span className="text-slate-300 truncate max-w-[160px]" title={episode.docLoc}>{episode.docLoc}</span>
+                            {/* Рядок 1: Суворе 3-колонкове вирівнювання (Причина | Факт | Док) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-[minmax(180px,250px)_minmax(140px,200px)_1fr] items-center gap-2">
+                                <div className="min-w-0 flex items-center">
+                                    <div className="w-fit max-w-full flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2.5 py-1 rounded-xl text-xs shadow-inner min-w-0">
+                                        <Icon name="target" className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                                        <span className="text-slate-400 text-[10px] uppercase font-semibold tracking-wider shrink-0">Причина:</span>
+                                        <span className="font-medium text-white truncate" title={episode.cause}>{episode.cause}</span>
                                     </div>
-                                )}
+                                </div>
+
+                                <div className="min-w-0 flex items-center">
+                                    <div className="w-fit max-w-full flex items-center gap-1.5 bg-amber-950/20 border border-amber-900/40 px-2.5 py-1 rounded-xl text-xs shadow-inner min-w-0">
+                                        <Icon name="map-pin" className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                        <span className="text-amber-400/80 text-[10px] uppercase font-semibold tracking-wider shrink-0">Факт:</span>
+                                        <span className="text-amber-200 font-medium truncate" title={episode.actualLoc}>{episode.actualLoc || "-"}</span>
+                                    </div>
+                                </div>
+
+                                <div className="min-w-0 flex items-center">
+                                    {episode.docLoc ? (
+                                        <div className="w-fit max-w-full flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2.5 py-1 rounded-xl text-xs shadow-inner min-w-0">
+                                            <Icon name="file-text" className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                            <span className="text-slate-400 text-[10px] uppercase font-semibold tracking-wider shrink-0">Док:</span>
+                                            <span className="text-slate-300 font-medium truncate" title={episode.docLoc}>{episode.docLoc}</span>
+                                        </div>
+                                    ) : null}
+                                </div>
                             </div>
 
+                            {/* Рядок 2: Травми (Колонка 1) | Під час УПД (Колонка 2) | Рапорт / Зброя (Колонка 3) */}
                             {(injStr || episode.inUdp || episode.hasReport || episode.weaponStatus) && (
-                                <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                                    {injStr && (
-                                        <div className="w-fit inline-flex items-center gap-1.5 bg-red-950/30 border border-red-900/50 px-2.5 py-0.5 rounded-lg text-[11px] text-red-300 shadow-inner">
-                                            <Icon name="activity" className="w-3 h-3 text-red-400 shrink-0" />
-                                            <span className="font-bold text-red-400 text-[10px] uppercase tracking-wider shrink-0">Травми:</span>
-                                            <span className="text-red-200/90 truncate font-mono text-[10px]" title={injStr}>{injStr}</span>
-                                        </div>
-                                    )}
-                                    {episode.inUdp && <span className="text-[9px] bg-red-950/70 text-red-300 border border-red-800/70 px-2 py-0.5 rounded-md font-mono font-bold tracking-wider flex items-center gap-1" title="Отримано під час УПД"><Icon name="zap" className="w-2.5 h-2.5 text-red-400" /> Під час УПД</span>}
-                                    {episode.hasReport && <span className="text-[9px] bg-blue-950/70 text-blue-300 border border-blue-800/70 px-2 py-0.5 rounded-md font-mono font-bold tracking-wider flex items-center gap-1" title="Складено офіційний рапорт"><Icon name="file-check-2" className="w-2.5 h-2.5 text-blue-400" /> Рапорт</span>}
-                                    {episode.weaponStatus && (
-                                        <span 
-                                            className={`text-[9px] border px-2 py-0.5 rounded-md font-mono font-semibold flex items-center gap-1 ${
-                                                episode.weaponStatus === "СЗЧ/Дезертирство зі зброєю" ? "bg-red-950/70 text-red-300 border-red-800/70" : 
-                                                episode.weaponStatus === "знаходиться у підрозділі" ? "bg-blue-950/70 text-blue-300 border-blue-800/70" :
-                                                "bg-amber-950/70 text-amber-300 border-amber-800/70"
-                                            }`}
-                                            title={`Статус зброї: ${episode.weaponStatus}`}
-                                        >
-                                            <Icon name="crosshair" className="w-2.5 h-2.5" /> 
-                                            <span>Зброя: {formatWeaponStatusUI(episode.weaponStatus)}</span>
-                                        </span>
-                                    )}
+                                <div className="grid grid-cols-1 sm:grid-cols-[minmax(180px,250px)_minmax(140px,200px)_1fr] items-center gap-2 pt-0.5 min-w-0">
+                                    {/* Колонка 1: Травми */}
+                                    <div className="min-w-0 flex items-center">
+                                        {injStr ? (
+                                            <div className="w-fit max-w-full flex items-center gap-1.5 bg-red-950/30 border border-red-900/50 px-2.5 py-0.5 rounded-lg text-xs text-red-300 shadow-inner min-w-0">
+                                                <Icon name="activity" className="w-3 h-3 text-red-400 shrink-0" />
+                                                <span className="font-bold text-red-400 text-[10px] uppercase tracking-wider shrink-0">Травми:</span>
+                                                <span className="text-red-200 font-medium text-[11px] truncate" title={injStr}>{injStr}</span>
+                                            </div>
+                                        ) : null}
+                                    </div>
+
+                                    {/* Колонка 2: Під час УПД */}
+                                    <div className="min-w-0 flex items-center">
+                                        {episode.inUdp ? (
+                                            <span className="w-fit text-[10px] bg-red-950/70 text-red-300 border border-red-800/70 px-2 py-0.5 rounded-md font-semibold tracking-wide flex items-center gap-1 shrink-0" title="Отримано під час УПД">
+                                                <Icon name="zap" className="w-2.5 h-2.5 text-red-400" /> Під час УПД
+                                            </span>
+                                        ) : null}
+                                    </div>
+
+                                    {/* Колонка 3: Рапорт та Зброя */}
+                                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                        {episode.hasReport && (
+                                            <span className="text-[10px] bg-blue-950/70 text-blue-300 border border-blue-800/70 px-2 py-0.5 rounded-md font-semibold tracking-wide flex items-center gap-1 shrink-0" title="Складено офіційний рапорт">
+                                                <Icon name="file-check-2" className="w-2.5 h-2.5 text-blue-400" /> Рапорт
+                                            </span>
+                                        )}
+                                        {episode.weaponStatus && (
+                                            <span 
+                                                className={`text-[10px] border px-2 py-0.5 rounded-md font-semibold flex items-center gap-1 shrink-0 ${
+                                                    episode.weaponStatus === "СЗЧ/Дезертирство зі зброєю" ? "bg-red-950/70 text-red-300 border-red-800/70" : 
+                                                    episode.weaponStatus === "знаходиться у підрозділі" ? "bg-blue-950/70 text-blue-300 border-blue-800/70" :
+                                                    "bg-amber-950/70 text-amber-300 border-amber-800/70"
+                                                }`}
+                                                title={`Статус зброї: ${episode.weaponStatus}`}
+                                            >
+                                                <Icon name="crosshair" className="w-2.5 h-2.5" /> 
+                                                <span className="truncate">Зброя: {formatWeaponStatusUI(episode.weaponStatus)}</span>
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
 
                         {/* 3. Права колонка: Варіант А (Кольоровий статус втрати + темне скло евакуації з акцентним таймером) */}
                         <div className="flex flex-col items-end justify-center gap-1.5 shrink-0 lg:border-l lg:border-slate-800/80 lg:pl-3.5">
-                            <span className={`w-48 xl:w-[200px] text-center text-[10px] uppercase font-mono font-bold tracking-wider px-2.5 py-1 rounded-xl border shadow-sm ${badgeClass}`}>
+                            <span className={`w-48 xl:w-[200px] text-center text-xs uppercase font-bold tracking-wide px-2.5 py-1 rounded-xl border shadow-sm ${badgeClass}`}>
                                 {isAny300(episode.lossType) ? `${episode.lossType.split(' ')[0]} (${episode.severity})` : episode.lossType}
                             </span>
                             {renderEvacBadge("w-48 xl:w-[200px]")}
@@ -864,24 +927,24 @@
 
                             <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-slate-400 text-[10px] font-mono font-bold bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0 uppercase">
+                                    <span className="text-slate-300 text-[10px] font-semibold bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded shadow-sm shrink-0 uppercase tracking-wide">
                                         {cleanRank}
                                     </span>
                                     <span className="text-white group-hover:text-amber-300 font-bold text-sm tracking-tight truncate transition-colors" title={sName}>
                                         {sName}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono flex-wrap">
+                                <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap">
                                     {sCallsign && (
-                                        <span className="text-amber-400 text-[11px] font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm shrink-0">
+                                        <span className="text-amber-400 text-xs font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm shrink-0">
                                             «{sCallsign}»
                                         </span>
                                     )}
-                                    <span className="text-slate-300 font-semibold flex items-center gap-1 bg-slate-950/60 border border-slate-800/80 px-1.5 py-0.5 rounded text-[10px] truncate max-w-[150px]" title={displayUnit}>
+                                    <span className="text-slate-300 font-medium flex items-center gap-1 bg-slate-950/60 border border-slate-800/80 px-1.5 py-0.5 rounded text-[11px] truncate max-w-[150px]" title={displayUnit}>
                                         <Icon name="shield" className="w-3 h-3 text-slate-500 shrink-0" />
                                         <span className="truncate">{displayUnit || 'Не вказано'}</span>
                                     </span>
-                                    <span className="text-slate-400 flex items-center gap-1 text-[10px]">
+                                    <span className="text-slate-400 font-mono flex items-center gap-1 text-[10px]">
                                         <Icon name="calendar" className="w-3 h-3 text-slate-500 shrink-0" />
                                         <span>{dateDisplay}</span>
                                     </span>
@@ -891,64 +954,83 @@
 
                         {/* Статуси вгорі */}
                         <div className="flex flex-col items-end gap-1.5 shrink-0">
-                            <span className={`w-44 text-center text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded-xl border shadow-sm ${badgeClass}`}>
+                            <span className={`w-44 text-center text-xs uppercase font-bold tracking-wide px-2 py-0.5 rounded-xl border shadow-sm ${badgeClass}`}>
                                 {isAny300(episode.lossType) ? `${episode.lossType.split(' ')[0]} (${episode.severity})` : episode.lossType}
                             </span>
                             {renderEvacBadge("w-44")}
                         </div>
                     </div>
 
-                    {/* Середня частина: Модульні плашки причини та локацій + Травми */}
+                    {/* Середня частина: Матрична 3-колонкова сітка */}
                     <div className="pl-2 space-y-1.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-xl text-xs shadow-inner">
+                        {/* Рядок 1: Причина | Факт | Док */}
+                        <div className="grid grid-cols-1 sm:grid-cols-[minmax(160px,210px)_minmax(130px,160px)_minmax(130px,1fr)] items-center gap-2">
+                            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2.5 py-1 rounded-xl text-xs shadow-inner min-w-0">
                                 <Icon name="target" className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                                <span className="text-slate-400 text-[10px] font-mono uppercase">Причина:</span>
-                                <span className="font-semibold text-white truncate max-w-[200px]" title={episode.cause}>{episode.cause}</span>
+                                <span className="text-slate-400 text-[10px] uppercase font-semibold tracking-wider shrink-0">Причина:</span>
+                                <span className="font-medium text-white truncate" title={episode.cause}>{episode.cause}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 bg-amber-950/20 border border-amber-900/40 px-2 py-1 rounded-xl text-xs font-mono shadow-inner">
-                                <Icon name="map-pin" className="w-3 h-3 text-amber-400 shrink-0" />
-                                <span className="text-amber-400/80 text-[10px] uppercase font-bold">Факт:</span>
-                                <span className="text-amber-200 font-semibold truncate max-w-[150px]" title={episode.actualLoc}>{episode.actualLoc || "-"}</span>
+                            <div className="flex items-center gap-1.5 bg-amber-950/20 border border-amber-900/40 px-2.5 py-1 rounded-xl text-xs shadow-inner min-w-0">
+                                <Icon name="map-pin" className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                <span className="text-amber-400/80 text-[10px] uppercase font-semibold tracking-wider shrink-0">Факт:</span>
+                                <span className="text-amber-200 font-medium truncate" title={episode.actualLoc}>{episode.actualLoc || "-"}</span>
                             </div>
-                            {episode.docLoc && (
-                                <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2 py-1 rounded-xl text-xs font-mono shadow-inner">
-                                    <Icon name="file-text" className="w-3 h-3 text-slate-400 shrink-0" />
-                                    <span className="text-slate-400 text-[10px] uppercase">Док:</span>
-                                    <span className="text-slate-300 truncate max-w-[150px]" title={episode.docLoc}>{episode.docLoc}</span>
+                            {episode.docLoc ? (
+                                <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2.5 py-1 rounded-xl text-xs shadow-inner min-w-0">
+                                    <Icon name="file-text" className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span className="text-slate-400 text-[10px] uppercase font-semibold tracking-wider shrink-0">Док:</span>
+                                    <span className="text-slate-300 font-medium truncate" title={episode.docLoc}>{episode.docLoc}</span>
                                 </div>
-                            )}
+                            ) : <div />}
                         </div>
 
-                        {injStr && (
-                            <div className="w-fit inline-flex items-center gap-1.5 bg-red-950/30 border border-red-900/50 px-2.5 py-0.5 rounded-lg text-[11px] text-red-300 shadow-inner">
-                                <Icon name="activity" className="w-3 h-3 text-red-400 shrink-0" />
-                                <span className="font-bold text-red-400 text-[10px] uppercase tracking-wider shrink-0">Травми:</span>
-                                <span className="text-red-200/90 truncate font-mono text-[10px]" title={injStr}>{injStr}</span>
+                        {/* Рядок 2: Травми (Колонка 1) | Під час УПД (Колонка 2) | Рапорт / Зброя (Колонка 3) */}
+                        {(injStr || episode.inUdp || episode.hasReport || episode.weaponStatus) && (
+                            <div className="grid grid-cols-1 sm:grid-cols-[minmax(160px,210px)_minmax(130px,160px)_minmax(130px,1fr)] items-center gap-2 pt-0.5 min-w-0">
+                                {/* Колонка 1: Травми */}
+                                <div className="min-w-0">
+                                    {injStr ? (
+                                        <div className="flex items-center gap-1.5 bg-red-950/30 border border-red-900/50 px-2.5 py-0.5 rounded-lg text-xs text-red-300 shadow-inner min-w-0">
+                                            <Icon name="activity" className="w-3 h-3 text-red-400 shrink-0" />
+                                            <span className="font-bold text-red-400 text-[10px] uppercase tracking-wider shrink-0">Травми:</span>
+                                            <span className="text-red-200 font-medium text-[11px] truncate" title={injStr}>{injStr}</span>
+                                        </div>
+                                    ) : null}
+                                </div>
+
+                                {/* Колонка 2: Під час УПД */}
+                                <div className="min-w-0">
+                                    {episode.inUdp ? (
+                                        <span className="w-fit text-[10px] bg-red-950/70 text-red-300 border border-red-800/70 px-2 py-0.5 rounded-md font-semibold tracking-wide flex items-center gap-1 shrink-0" title="Отримано під час УПД">
+                                            <Icon name="zap" className="w-2.5 h-2.5 text-red-400" /> Під час УПД
+                                        </span>
+                                    ) : null}
+                                </div>
+
+                                {/* Колонка 3: Рапорт та Зброя */}
+                                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                    {episode.hasReport && (
+                                        <span className="text-[10px] bg-blue-950/70 text-blue-300 border border-blue-800/70 px-2 py-0.5 rounded-md font-semibold tracking-wide flex items-center gap-1 shrink-0" title="Складено офіційний рапорт">
+                                            <Icon name="file-check-2" className="w-2.5 h-2.5 text-blue-400" /> Рапорт
+                                        </span>
+                                    )}
+                                    {episode.weaponStatus && (
+                                        <span 
+                                            className={`text-[10px] border px-2 py-0.5 rounded-md font-semibold flex items-center gap-1 shrink-0 ${
+                                                episode.weaponStatus === "СЗЧ/Дезертирство зі зброєю" ? "bg-red-950/70 text-red-300 border-red-800/70" : 
+                                                episode.weaponStatus === "знаходиться у підрозділі" ? "bg-blue-950/70 text-blue-300 border-blue-800/70" :
+                                                "bg-amber-950/70 text-amber-300 border-amber-800/70"
+                                            }`}
+                                            title={`Статус зброї: ${episode.weaponStatus}`}
+                                        >
+                                            <Icon name="crosshair" className="w-2.5 h-2.5" /> 
+                                            <span className="truncate">Зброя: {formatWeaponStatusUI(episode.weaponStatus)}</span>
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
-
-                    {/* Нижня частина: Теги (якщо є) */}
-                    {(episode.inUdp || episode.hasReport || episode.weaponStatus) && (
-                        <div className="pl-2 flex flex-wrap gap-1.5 pt-0.5 border-t border-slate-800/60">
-                            {episode.inUdp && <span className="text-[9px] bg-red-950/70 text-red-300 border border-red-800/70 px-2 py-0.5 rounded-md font-mono font-bold tracking-wider flex items-center gap-1"><Icon name="zap" className="w-2.5 h-2.5 text-red-400" /> Під час УПД</span>}
-                            {episode.hasReport && <span className="text-[9px] bg-blue-950/70 text-blue-300 border border-blue-800/70 px-2 py-0.5 rounded-md font-mono font-bold tracking-wider flex items-center gap-1"><Icon name="file-check-2" className="w-2.5 h-2.5 text-blue-400" /> Рапорт</span>}
-                            {episode.weaponStatus && (
-                                <span 
-                                    className={`text-[9px] border px-2 py-0.5 rounded-md font-mono font-semibold flex items-center gap-1 ${
-                                        episode.weaponStatus === "СЗЧ/Дезертирство зі зброєю" ? "bg-red-950/70 text-red-300 border-red-800/70" : 
-                                        episode.weaponStatus === "знаходиться у підрозділі" ? "bg-blue-950/70 text-blue-300 border-blue-800/70" :
-                                        "bg-amber-950/70 text-amber-300 border-amber-800/70"
-                                    }`}
-                                    title={`Статус зброї: ${episode.weaponStatus}`}
-                                >
-                                    <Icon name="crosshair" className="w-2.5 h-2.5" /> 
-                                    <span>Зброя: {formatWeaponStatusUI(episode.weaponStatus)}</span>
-                                </span>
-                            )}
-                        </div>
-                    )}
                 </div>
             );
         });
@@ -1026,15 +1108,15 @@
                     <div className="pl-2 flex justify-between items-start gap-2">
                         <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-slate-400 text-[9px] font-mono font-bold bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded uppercase">
+                                <span className="text-slate-300 text-[10px] font-semibold bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded tracking-wide uppercase">
                                     {cleanRank}
                                 </span>
                                 {sCallsign && (
-                                    <span className="text-amber-400 text-[11px] font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm">
+                                    <span className="text-amber-400 text-xs font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm">
                                         «{sCallsign}»
                                     </span>
                                 )}
-                                <span className="text-slate-300 font-semibold text-xs truncate max-w-[120px]" title={displayUnit}>
+                                <span className="text-slate-300 font-medium text-xs truncate max-w-[120px]" title={displayUnit}>
                                     {displayUnit || 'Не вказано'}
                                 </span>
                             </div>
@@ -1044,7 +1126,7 @@
                         </div>
 
                         {/* Таймер очікування */}
-                        <div className={`text-[10px] font-bold font-mono px-2 py-1 rounded-xl border shadow-inner flex items-center gap-1 shrink-0 ${timerBadgeColor}`}>
+                        <div className={`text-[11px] font-bold font-mono px-2 py-1 rounded-xl border shadow-inner flex items-center gap-1 shrink-0 ${timerBadgeColor}`}>
                             <Icon name="clock" className="w-3 h-3 text-amber-400 shrink-0" />
                             <span>{waitStr}</span>
                         </div>
@@ -1053,30 +1135,30 @@
                     {/* Модульні плашки: Локація, Травми, Док */}
                     <div className="pl-2 space-y-1.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                            <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-800 px-2 py-0.5 rounded-lg text-[10px] font-mono text-slate-300 shadow-inner">
-                                <Icon name="map-pin" className="w-3 h-3 text-amber-400 shrink-0" />
-                                <span className="text-slate-400 font-bold uppercase text-[9px]">Факт:</span>
-                                <span className="text-amber-200 truncate max-w-[130px]" title={ep.actualLoc}>{ep.actualLoc || "-"}</span>
+                            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2 py-0.5 rounded-lg text-xs text-slate-300 shadow-inner">
+                                <Icon name="map-pin" className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                <span className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">Факт:</span>
+                                <span className="text-amber-200 font-medium truncate max-w-[130px]" title={ep.actualLoc}>{ep.actualLoc || "-"}</span>
                             </div>
                             {ep.docLoc && (
-                                <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-800 px-2 py-0.5 rounded-lg text-[10px] font-mono text-slate-300 shadow-inner">
-                                    <Icon name="file-text" className="w-3 h-3 text-slate-400 shrink-0" />
-                                    <span className="text-slate-400 uppercase text-[9px]">Док:</span>
-                                    <span className="text-slate-300 truncate max-w-[100px]" title={ep.docLoc}>{ep.docLoc}</span>
+                                <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2 py-0.5 rounded-lg text-xs text-slate-300 shadow-inner">
+                                    <Icon name="file-text" className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">Док:</span>
+                                    <span className="text-slate-300 font-medium truncate max-w-[100px]" title={ep.docLoc}>{ep.docLoc}</span>
                                 </div>
                             )}
                         </div>
 
                         {isAny300(ep.lossType) ? (
                             injStr && (
-                                <div className="w-fit inline-flex items-center gap-1 bg-red-950/30 border border-red-900/50 px-2 py-0.5 rounded-lg text-[10px] text-red-300 shadow-inner">
+                                <div className="w-fit inline-flex items-center gap-1.5 bg-red-950/30 border border-red-900/50 px-2 py-0.5 rounded-lg text-xs text-red-300 shadow-inner">
                                     <Icon name="activity" className="w-3 h-3 text-red-400 shrink-0" />
-                                    <span className="font-bold text-red-400 text-[9px] uppercase tracking-wider shrink-0">Травми:</span>
-                                    <span className="text-red-200/90 truncate font-mono text-[10px] max-w-[190px]" title={injStr}>{injStr}</span>
+                                    <span className="font-bold text-red-400 text-[10px] uppercase tracking-wider shrink-0">Травми:</span>
+                                    <span className="text-red-200 font-medium text-[11px] truncate max-w-[190px]" title={injStr}>{injStr}</span>
                                 </div>
                             )
                         ) : (
-                            <div className="w-fit inline-flex items-center gap-1 bg-zinc-950/80 border border-zinc-800 px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold text-zinc-300 uppercase shadow-inner">
+                            <div className="w-fit inline-flex items-center gap-1.5 bg-zinc-950/80 border border-zinc-800 px-2 py-0.5 rounded-lg text-xs font-bold text-zinc-300 uppercase tracking-wide shadow-inner">
                                 <Icon name="shield-alert" className="w-3 h-3 text-zinc-400 shrink-0" />
                                 <span>{ep.lossType}</span>
                             </div>
@@ -1084,7 +1166,7 @@
 
                         {ep.inUdp && (
                             <div className="pt-0.5">
-                                <span className="text-[9px] bg-red-950/70 text-red-300 border border-red-800/70 px-2 py-0.5 rounded-md font-mono font-bold tracking-wider inline-flex items-center gap-1">
+                                <span className="text-[10px] bg-red-950/70 text-red-300 border border-red-800/70 px-2 py-0.5 rounded-md font-semibold tracking-wide inline-flex items-center gap-1">
                                     <Icon name="zap" className="w-2.5 h-2.5 text-red-400" /> Під час УПД
                                 </span>
                             </div>
@@ -1187,8 +1269,20 @@
                             };
                         }
 
+                        let needsEpisodeMigration = false;
+                        const cleanedEpisodes = (savedEpisodes || []).map(ep => {
+                            if (ep.lossType === "Бойове травмування (300)") {
+                                needsEpisodeMigration = true;
+                                return { ...ep, lossType: "Поранення (300)" };
+                            }
+                            return ep;
+                        });
+                        if (needsEpisodeMigration) {
+                            localforage.setItem('med_episodes_v3', cleanedEpisodes).catch(() => {});
+                        }
+
                         setSoldiers(savedSoldiers || []);
-                        setEpisodes(savedEpisodes || []);
+                        setEpisodes(cleanedEpisodes);
                         setLogs(savedLogs?.slice(0, 200) || []);
                         setSettings(savedSettings);
                         setIsLoading(false);
@@ -1209,6 +1303,7 @@
             const [filterCauses, setFilterCauses] = useState(() => settings.causes);
             const [isListCopied, setIsListCopied] = useState(false);
             const [searchTerm, setSearchTerm] = useState("");
+            const [displayLimit, setDisplayLimit] = useState(50);
             const [filterUdp, setFilterUdp] = useState("all");
             const [listDateFrom, setListDateFrom] = useState("");
             const [listDateTo, setListDateTo] = useState("");
@@ -1262,6 +1357,7 @@
             const [anDateFrom, setAnDateFrom] = useState("");
             const [anDateTo, setAnDateTo] = useState("");
             const [anUdp, setAnUdp] = useState("all");
+            const [anSector, setAnSector] = useState("all");
             const [groupAnalytics, setGroupAnalytics] = useState(false);
             
             const [logTimeFrom, setLogTimeFrom] = useState("");
@@ -1539,7 +1635,7 @@
                 let periodEvacuated300 = 0, periodEvacuated200 = 0;
                 let periodWaiting300 = 0, periodWaiting200 = 0;
                 
-                let globalWaiting300 = 0, globalWaiting200 = 0;
+                let globalWaiting300 = 0, globalWaiting200 = 0, globalWaitingMia = 0;
                 let globalWaitingCritHeavy = 0;
                 let sumEvacTimeDays = 0, countEvacTime = 0;
 
@@ -1553,9 +1649,14 @@
                     let okUdp = anUdp === "all" ? true : (anUdp === "yes" ? ep.inUdp : !ep.inUdp);
                     if (!okUdp) return;
 
-                    const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : ep.lossType;
+                    if (anSector !== "all") {
+                        if (ep.actualLoc !== anSector && ep.docLoc !== anSector) return;
+                    }
+
+                    const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : (ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType);
                     const is300 = isAny300(effType);
-                    const is200 = isAny200(effType) || effType === 'Зниклий безвісти (ЗБВ)';
+                    const is200 = isAny200(effType);
+                    const isMia = effType === 'Зниклий безвісти (ЗБВ)';
 
                     const epTime = parseSafeDate(ep.date);
                     const isWoundInPeriod = (!anDateFrom || epTime >= parseSafeDate(anDateFrom)) && (!anDateTo || epTime <= parseSafeDate(anDateTo));
@@ -1579,6 +1680,8 @@
                             }
                         } else if (is200) {
                             globalWaiting200++;
+                        } else if (isMia) {
+                            globalWaitingMia++;
                         }
                     }
 
@@ -1629,10 +1732,26 @@
                     evacBefore300, evacBefore200,
                     totalPeriod300, periodEvacuated300, periodWaiting300,
                     totalPeriod200, periodEvacuated200, periodWaiting200,
-                    globalWaiting300, globalWaiting200, globalWaitingCritHeavy,
+                    globalWaiting300, globalWaiting200, globalWaitingMia, globalWaitingCritHeavy,
                     avgEvacTimeDays, evacSuccessRate
                 };
-            }, [episodes, anDateFrom, anDateTo, anUdp, anShowLatest, groupAnalytics]);
+            }, [episodes, anDateFrom, anDateTo, anUdp, anSector, anShowLatest, groupAnalytics]);
+
+            const availableAnSectors = useMemo(() => {
+                const map = new Map();
+                episodes.forEach(ep => {
+                    if (ep.actualLoc && ep.actualLoc.trim()) {
+                        map.set(ep.actualLoc, (map.get(ep.actualLoc) || 0) + 1);
+                    }
+                    if (ep.docLoc && ep.docLoc.trim() && ep.docLoc !== ep.actualLoc) {
+                        map.set(ep.docLoc, (map.get(ep.docLoc) || 0) + 1);
+                    }
+                });
+                (settings.sectors || []).forEach(s => {
+                    if (s && !map.has(s)) map.set(s, 0);
+                });
+                return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+            }, [episodes, settings.sectors]);
 
             const anFilteredEpisodes = useMemo(() => {
                 let filtered = episodes.filter(ep => {
@@ -1649,6 +1768,9 @@
                         if (anUdp === "yes" && !ep.inUdp) return false;
                         if (anUdp === "no" && ep.inUdp) return false;
                     }
+                    if (anSector !== "all") {
+                        if (ep.actualLoc !== anSector && ep.docLoc !== anSector) return false;
+                    }
                     return true;
                 });
                 if (anShowLatest) {
@@ -1657,7 +1779,7 @@
                     filtered = Array.from(map.values()).sort((a, b) => parseSafeDate(b.date) - parseSafeDate(a.date));
                 }
                 return filtered;
-            }, [episodes, anDateFrom, anDateTo, anUdp, anShowLatest]);
+            }, [episodes, anDateFrom, anDateTo, anUdp, anSector, anShowLatest]);
 
             const chartData = useMemo(() => {
                 const anFiltered = anFilteredEpisodes;
@@ -2073,6 +2195,470 @@
                 }
             };
 
+            const handleOpenPrintableReport = () => {
+                try {
+                    const win = window.open('', '_blank');
+                    if (!win) {
+                        return triggerNotification("Будь ласка, дозвольте відкриття спливаючих вікон у браузері", "error");
+                    }
+
+                const periodStr = (anDateFrom || anDateTo) 
+                    ? `${anDateFrom || '...'} — ${anDateTo || '...'}` 
+                    : 'За весь період ведення бойових дій';
+                const sectorStr = anSector === 'all' ? 'Усі сектори / позиції' : anSector;
+                const nowStr = new Date().toLocaleString('uk-UA');
+
+                let count200 = 0, count300 = 0, countMIA = 0, countAWOL = 0;
+                let evac300 = 0, notEvac300 = 0, notEvacCritHeavy300 = 0;
+                let evac200 = 0, notEvac200 = 0;
+                const causeMap = {};
+                const unitMap = {};
+                const sevMap = { 'Легкий': 0, 'Середній': 0, 'Важкий': 0, 'Критичний': 0, 'Невідомо': 0 };
+
+                anFilteredEpisodes.forEach(ep => {
+                    const isDead = isAny200(ep.lossType);
+                    const isWounded = isAny300(ep.lossType);
+                    const isMia = ep.lossType === 'Зниклий безвісти (ЗБВ)';
+                    const isAw = isAwol(ep.lossType);
+                    const isEvac = ep.evacStatus === 'Евакуйований';
+
+                    if (isDead) {
+                        count200++;
+                        if (isEvac) evac200++;
+                        else notEvac200++;
+                    } else if (isWounded) {
+                        count300++;
+                        const s = ep.severity || 'Невідомо';
+                        sevMap[s] = (sevMap[s] || 0) + 1;
+                        if (isEvac) {
+                            evac300++;
+                        } else {
+                            notEvac300++;
+                            if (ep.severity === 'Критичний' || ep.severity === 'Важкий') {
+                                notEvacCritHeavy300++;
+                            }
+                        }
+                    } else if (isMia) {
+                        countMIA++;
+                    } else if (isAw) {
+                        countAWOL++;
+                    }
+
+                    if (ep.cause) {
+                        causeMap[ep.cause] = (causeMap[ep.cause] || 0) + 1;
+                    }
+                    const soldier = soldiers.find(s => s.id === ep.soldierId);
+                    const unit = soldier?.unit || ep.unit || 'Не вказано';
+                    unitMap[unit] = (unitMap[unit] || 0) + 1;
+                });
+
+                const sortedCauses = Object.entries(causeMap).sort((a, b) => b[1] - a[1]);
+                const sortedUnits = Object.entries(unitMap).sort((a, b) => b[1] - a[1]);
+
+                const rowsHtml = anFilteredEpisodes.map((ep, idx) => {
+                    const s = soldiers.find(x => x.id === ep.soldierId) || {};
+                    const injuriesText = Object.entries(ep.injuries || {})
+                        .filter(([_, types]) => Object.values(types).some(Boolean))
+                        .map(([reg, types]) => {
+                            const regName = { 
+                                head: 'Голова', 
+                                neck: 'Шия',
+                                chest: 'Груди', 
+                                abdomen: 'Живіт/Пах', 
+                                arm_l: 'Л.рука', 
+                                arm_r: 'П.рука', 
+                                leg_l: 'Л.нога', 
+                                leg_r: 'П.нога' 
+                            }[reg] || (BODY_REGIONS.find(r => r.id === reg)?.name || reg);
+                            const activeTypes = Object.entries(types).filter(([_, v]) => v).map(([t]) => {
+                                return { amputation: 'Ампутація', rupture: 'Відрив', shrapnel: 'Уламкове', bullet: 'Кульове', fracture: 'Перелом', burn: 'Опік', akbt: 'АКБТ', contusion: 'Контузія' }[t] || t;
+                            }).join(', ');
+                            return `${regName}: ${activeTypes}`;
+                        }).join('; ') || '—';
+
+                    const isNotEvacuated = ep.evacStatus === 'Не евакуйований';
+                    const isEvac = ep.evacStatus === 'Евакуйований' || ep.awolStatus === 'Повернувся';
+                    const statusText = isAwol(ep.lossType) ? (ep.awolStatus || 'В розшуку') : (ep.evacStatus || 'Не евакуйований');
+
+                    let severityBadge = ep.severity ? `<b>${ep.severity}</b>` : '—';
+                    if (ep.severity === 'Критичний') {
+                        severityBadge = '<span style="color:#7e22ce; font-weight:800; background:#f3e8ff; padding:1px 5px; border-radius:4px; border:1px solid #d8b4fe;">Критичний</span>';
+                    } else if (ep.severity === 'Важкий') {
+                        severityBadge = '<span style="color:#b91c1c; font-weight:800; background:#fee2e2; padding:1px 5px; border-radius:4px; border:1px solid #fca5a5;">Важкий</span>';
+                    } else if (ep.severity === 'Середній') {
+                        severityBadge = '<span style="color:#b45309; font-weight:700; background:#fef3c7; padding:1px 5px; border-radius:4px; border:1px solid #fde68a;">Середній</span>';
+                    } else if (ep.severity === 'Легкий') {
+                        severityBadge = '<span style="color:#15803d; font-weight:600; background:#dcfce7; padding:1px 5px; border-radius:4px; border:1px solid #bbf7d0;">Легкий</span>';
+                    }
+
+                    let statusBadge = statusText;
+                    if (isNotEvacuated) {
+                        statusBadge = '<span style="background:#fee2e2; color:#991b1b; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #f87171; display:inline-block; font-size:7.5pt;">🚨 Не евакуйований</span>';
+                    } else if (isEvac) {
+                        statusBadge = '<span style="background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #86efac; display:inline-block; font-size:7.5pt;">✓ Евакуйований</span>';
+                    } else if (isAwol(ep.lossType)) {
+                        statusBadge = `<span style="background:#fae8ff; color:#86198f; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #e879f9; display:inline-block; font-size:7.5pt;">${ep.awolStatus || 'СЗЧ'}</span>`;
+                    }
+
+                    const rowBg = isNotEvacuated ? 'style="background-color: #fff1f2;"' : '';
+
+                    return `
+                        <tr ${rowBg}>
+                            <td style="text-align:center; font-family:'JetBrains Mono',monospace; font-size:8pt;">${idx + 1}</td>
+                            <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; white-space:nowrap;">${ep.date.replace('T', ' ')}</td>
+                            <td style="font-size:8pt;">${s.rank || '—'}</td>
+                            <td style="font-weight:bold; font-size:8.5pt;">${s.name || '—'}</td>
+                            <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; color:#b45309;">${s.callsign ? `«${s.callsign}»` : '—'}</td>
+                            <td style="font-size:8pt;">${s.unit || ep.unit || '—'}</td>
+                            <td style="font-weight:600; font-size:8pt;">${ep.lossType}</td>
+                            <td style="font-size:8pt;">${severityBadge}</td>
+                            <td style="font-size:7.5pt; color:#475569;">${injuriesText}</td>
+                            <td style="font-size:8pt;">${ep.cause || '—'}</td>
+                            <td style="font-size:8pt;">${ep.actualLoc || '—'}</td>
+                            <td style="font-size:8pt;">${statusBadge}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                const html = `<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Бойове донесення про втрати (${periodStr})</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #0f172a;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+            font-size: 8.5pt;
+            line-height: 1.35;
+        }
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .action-btn {
+            background: #2563eb;
+            color: #ffffff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 9.5pt;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+        .action-btn:hover { background: #1d4ed8; }
+        .action-btn.secondary { background: #334155; }
+        .action-btn.secondary:hover { background: #475569; }
+        
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 36px 44px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.06);
+            border-radius: 8px;
+        }
+        .header-title {
+            text-align: center;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+        }
+        .header-title h1 {
+            font-size: 15pt;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin: 0 0 6px 0;
+            color: #0f172a;
+        }
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9pt;
+            color: #334155;
+            font-weight: 600;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .summary-card {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px 12px;
+            background: #f8fafc;
+        }
+        .summary-card .label {
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 3px;
+        }
+        .summary-card .value {
+            font-size: 18pt;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+        }
+        .summary-card .sub {
+            font-size: 7.5pt;
+            color: #64748b;
+            margin-top: 3px;
+        }
+
+        .section-title {
+            font-size: 9.5pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #0f172a;
+            border-left: 4px solid #0f172a;
+            padding-left: 8px;
+            margin: 16px 0 8px 0;
+        }
+
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+            margin-bottom: 16px;
+        }
+        table.data-table th, table.data-table td {
+            border: 1px solid #cbd5e1;
+            padding: 5px 7px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        table.data-table th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+        }
+        table.data-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        
+        .footer-sign {
+            margin-top: 32px;
+            padding-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9pt;
+            font-weight: 600;
+        }
+
+        @media print {
+            body { background: #ffffff !important; padding: 0 !important; }
+            .page-container { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
+            .action-bar { display: none !important; }
+            .summary-card { border: 1px solid #94a3b8 !important; }
+            table.data-table th, table.data-table td { border: 1px solid #94a3b8 !important; }
+            tr { page-break-inside: avoid; break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="action-bar">
+        <div style="font-weight: 700; font-size: 10.5pt; display: flex; align-items: center; gap: 8px;">
+            <span>📄 Штабне бойове донесення про втрати</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="action-btn" onclick="window.print()">🖨️ Друк / Зберегти як PDF</button>
+            <button class="action-btn secondary" onclick="window.close()">✕ Закрити</button>
+        </div>
+    </div>
+
+    <div class="page-container">
+        <div class="header-title">
+            <h1>БОЙОВЕ ДОНЕСЕННЯ / ЗВЕДЕННЯ ПРО ВТРАТИ</h1>
+            <div class="meta-info">
+                <div>Період: <b>${periodStr}</b></div>
+                <div>Сектор / Позиція: <b>${sectorStr}</b></div>
+                <div>Сформовано: <b>${nowStr}</b></div>
+            </div>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="label">Загиблі (200)</div>
+                <div class="value" style="color: #334155;">${count200}</div>
+                <div class="sub">Безповоротні втрати</div>
+            </div>
+            <div class="summary-card" style="border-left: 3px solid #dc2626;">
+                <div class="label" style="color: #dc2626;">Поранені (300)</div>
+                <div class="value" style="color: #dc2626;">${count300}</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; font-size:7.5pt; margin-top:4px; padding-top:3px; border-top:1px solid #e2e8f0;">
+                    <div style="color:#7e22ce; font-weight:700;">Критичні: ${sevMap['Критичний'] || 0}</div>
+                    <div style="color:#b91c1c; font-weight:700;">Важкі: ${sevMap['Важкий'] || 0}</div>
+                    <div style="color:#b45309; font-weight:600;">Середні: ${sevMap['Середній'] || 0}</div>
+                    <div style="color:#15803d; font-weight:600;">Легкі: ${sevMap['Легкий'] || 0}</div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Зниклі безвісти (ЗБВ)</div>
+                <div class="value" style="color: #2563eb;">${countMIA}</div>
+                <div class="sub">Місцезнаходження невідоме</div>
+            </div>
+            <div class="summary-card" style="border-left: 3px solid #16a34a;">
+                <div class="label" style="color: #16a34a;">Евакуйовано (за період)</div>
+                <div class="value" style="color: #16a34a;">${evacStats.actualEvacTotal}</div>
+                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:8pt; color:#334155; margin-top:4px; padding-top:3px; border-top:1px solid #e2e8f0;">
+                    <span>300-х: <b>${evacStats.actualEvac300}</b></span>
+                    <span>200-х: <b>${evacStats.actualEvac200}</b></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окремий виділений блок: ЧЕРГА НА ЕВАКУАЦІЮ (НЕ ЕВАКУЙОВАНО) -->
+        <div style="background:#fff1f2; border: 1.5px solid #f87171; border-radius:8px; padding:10px 16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <div style="font-size:8.5pt; font-weight:800; text-transform:uppercase; color:#991b1b; display:flex; align-items:center; gap:6px; margin-bottom:5px;">
+                    <span>🚨 ПОТРЕБУЮТЬ ЕВАКУАЦІЇ / ЧЕРГА НА ПОЗИЦІЯХ:</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <span style="font-size:7.5pt; font-weight:700; color:#7f1d1d; text-transform:uppercase;">Втрати періоду в очікуванні:</span>
+                    <span style="background:#ffffff; border:1px solid #fca5a5; color:#dc2626; font-weight:800; font-size:8pt; padding:1px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">
+                        <span>300-х:</span> <b style="font-size:9.5pt;">${evacStats.periodWaiting300}</b>
+                    </span>
+                    <span style="background:#ffffff; border:1px solid #cbd5e1; color:#334155; font-weight:800; font-size:8pt; padding:1px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">
+                        <span>200-х:</span> <b style="font-size:9.5pt;">${evacStats.periodWaiting200}</b>
+                    </span>
+                </div>
+            </div>
+            <div style="display:flex; gap:14px; align-items:center;">
+                <div style="background:#ffffff; border:1px solid #fca5a5; border-radius:6px; padding:5px 12px; text-align:center; min-width: 140px;">
+                    <div style="font-size:7.5pt; font-weight:700; color:#dc2626; text-transform:uppercase;">300-х всього очікують</div>
+                    <div style="font-size:16pt; font-weight:800; color:#dc2626; line-height:1.1;">${evacStats.globalWaiting300}</div>
+                    <div style="font-size:7.5pt; color:#7e22ce; font-weight:700;">${evacStats.globalWaitingCritHeavy} важких/критичних</div>
+                </div>
+                <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:5px 12px; text-align:center; min-width: 140px;">
+                    <div style="font-size:7.5pt; font-weight:700; color:#475569; text-transform:uppercase;">200-х всього очікують</div>
+                    <div style="font-size:16pt; font-weight:800; color:#334155; line-height:1.1;">${evacStats.globalWaiting200}</div>
+                    <div style="font-size:7.5pt; color:#64748b;">${groupAnalytics ? 'тіл та ЗБВ' : 'тіл на позиціях'}</div>
+                </div>
+                ${!groupAnalytics && countMIA > 0 ? `
+                <div style="background:#ffffff; border:1px solid #93c5fd; border-radius:6px; padding:5px 12px; text-align:center; min-width: 130px;">
+                    <div style="font-size:7.5pt; font-weight:700; color:#2563eb; text-transform:uppercase;">Зниклі безвісти</div>
+                    <div style="font-size:16pt; font-weight:800; color:#1d4ed8; line-height:1.1;">${countMIA}</div>
+                    <div style="font-size:7.5pt; color:#64748b;">не встановлено</div>
+                </div>` : ''}
+            </div>
+        </div>
+
+        <div class="two-cols">
+            <div>
+                <div class="section-title">Причини та зброя ураження</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Причина / Зброя</th>
+                            <th style="text-align:right; width: 70px;">Кількість</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedCauses.length > 0 ? sortedCauses.map(([c, cnt]) => `
+                            <tr>
+                                <td>${c}</td>
+                                <td style="text-align:right; font-weight:bold; font-family:'JetBrains Mono', monospace;">${cnt}</td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Дані відсутні</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <div class="section-title">Розподіл за підрозділами</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Підрозділ</th>
+                            <th style="text-align:right; width: 70px;">Кількість</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedUnits.length > 0 ? sortedUnits.map(([u, cnt]) => `
+                            <tr>
+                                <td>${u}</td>
+                                <td style="text-align:right; font-weight:bold; font-family:'JetBrains Mono', monospace;">${cnt}</td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Дані відсутні</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-title">Поіменний реєстр втрат за період (${anFilteredEpisodes.length} записів)</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 25px; text-align:center;">№</th>
+                    <th style="width: 95px;">Дата/Час</th>
+                    <th style="width: 65px;">Звання</th>
+                    <th>ПІБ</th>
+                    <th style="width: 75px;">Позивний</th>
+                    <th style="width: 75px;">Підрозділ</th>
+                    <th style="width: 85px;">Тип</th>
+                    <th style="width: 60px;">Важкість</th>
+                    <th>Травми</th>
+                    <th>Причина</th>
+                    <th>Локація</th>
+                    <th style="width: 80px;">Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml || '<tr><td colspan="12" style="text-align:center; padding: 20px; color:#94a3b8;">За вибраний період та сектор записів немає</td></tr>'}
+            </tbody>
+        </table>
+
+        <div class="footer-sign">
+            <div>Начальник медичної служби: __________________</div>
+            <div>Начальник штабу: __________________</div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+                    win.document.open();
+                    win.document.write(html);
+                    win.document.close();
+                } catch (err) {
+                    console.error("handleOpenPrintableReport error:", err);
+                    triggerNotification("Помилка формування доповіді: " + err.message, "error");
+                }
+            };
+
             const handleExportAnalyticsText = () => {
                 let fromDateStr = anDateFrom ? anDateFrom.substring(0, 10) : ""; 
                 let toDateStr = anDateTo ? anDateTo.substring(0, 10) : "";
@@ -2142,14 +2728,20 @@
                 const actualEvacDeadEps = [];
                 const globalNotEvacWoundedEps = [];
                 const globalNotEvacDeadEps = [];
+                const globalNotEvacMiaEps = [];
 
                 allEps.forEach(ep => {
                     const epDateStr = ep.date.substring(0, 10);
                     if (toDateStr && epDateStr > toDateStr) return; // Ignore future episodes relative to this report period
 
-                    const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : ep.lossType;
+                    if (anSector !== "all") {
+                        if (ep.actualLoc !== anSector && ep.docLoc !== anSector) return;
+                    }
+
+                    const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : (ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType);
                     const isWounded = isAny300(effType);
-                    const isDead = isAny200(effType) || effType === 'Зниклий безвісти (ЗБВ)';
+                    const isDead = isAny200(effType);
+                    const isMia = effType === 'Зниклий безвісти (ЗБВ)';
 
                     let okUdp = anUdp === "all" ? true : (anUdp === "yes" ? ep.inUdp : !ep.inUdp);
                     if (okUdp) {
@@ -2176,6 +2768,7 @@
                         if (historicalEvacStatus === 'Не евакуйований') {
                             if (isWounded) globalNotEvacWoundedEps.push(ep);
                             if (isDead) globalNotEvacDeadEps.push(ep);
+                            if (isMia) globalNotEvacMiaEps.push(ep);
                         }
                     }
                 });
@@ -2202,7 +2795,11 @@
                     report += `\n`;
                 }
                 
-                report += `\nЗниклі безвісти – ${miaEps.length}${getCallsigns(miaEps)}\n\n`;
+                if (!groupAnalytics) {
+                    report += `\nЗниклі безвісти – ${miaEps.length}${getCallsigns(miaEps)}\n\n`;
+                } else {
+                    report += `\n`;
+                }
                 
                 report += `Поранено – ${woundedEps.length}${getCallsigns(woundedEps)}`;
                 if (woundedEps.length > 0) {
@@ -2229,6 +2826,9 @@
                 const activeCritCount = globalNotEvacWoundedEps.filter(e => e.severity === 'Критичний' || e.severity === 'Важкий').length;
                 report += `    • Поранених – ${actualEvacWoundedEps.length} в/сл, залишається неевакуйованих поранених – ${globalNotEvacWoundedEps.length} в/сл. (з них ${activeCritCount} в/сл. потребують першочергової евакуації)\n`;
                 report += `    • Тіла – ${actualEvacDeadEps.length}${getCallsigns(actualEvacDeadEps)}, залишається неевакуйованих тіл – ${globalNotEvacDeadEps.length}${getCallsigns(globalNotEvacDeadEps)}.\n`;
+                if (!groupAnalytics && globalNotEvacMiaEps.length > 0) {
+                    report += `    • Зниклі безвісти (місцезнаходження не встановлено) – ${globalNotEvacMiaEps.length}${getCallsigns(globalNotEvacMiaEps)}.\n`;
+                }
 
                 navigator.clipboard.writeText(report).then(() => {
                     triggerNotification("Текстовий звіт скопійовано в буфер обміну!", "success");
@@ -2377,9 +2977,36 @@
                 setAnDateTo(""); 
                 setAnDatePreset("all");
                 setAnUdp("all"); 
+                setAnSector("all");
                 setAnShowLatest(true); 
                 setGroupAnalytics(false);
             };
+
+            // Глобальний хоткей Ctrl+F / Cmd+F для миттєвого фокусу на вбудованому пошуку
+            useEffect(() => {
+                const handleGlobalKeyDown = (e) => {
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F' || e.code === 'KeyF' || e.keyCode === 70)) {
+                        // Не перехоплювати, якщо користувач вже друкує в текстовому полі модального вікна
+                        const activeEl = document.activeElement;
+                        const isInsideModal = activeEl && activeEl.closest('.modal, [role="dialog"], form');
+                        if (isInsideModal) return;
+
+                        e.preventDefault();
+                        if (activeTab !== "list" && activeTab !== "triage") {
+                            setActiveTab("list");
+                        }
+                        setTimeout(() => {
+                            const searchInput = document.getElementById('global-search-input');
+                            if (searchInput) {
+                                searchInput.focus();
+                                searchInput.select();
+                            }
+                        }, 50);
+                    }
+                };
+                window.addEventListener('keydown', handleGlobalKeyDown);
+                return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+            }, [activeTab]);
 
             const filteredList = useMemo(() => {
                 const normSearch = normalizeMilitaryText(searchTerm, { toLower: true, replaceHomoglyphs: true });
@@ -2411,6 +3038,16 @@
                     return matchSearch && matchLoss && matchSeverity && matchEvac && matchCause && matchUdp && matchWeapon && matchReport && matchInjury;
                 }).sort((a, b) => parseSafeDate(b.date) - parseSafeDate(a.date));
             }, [activeDataSource, soldiersMap, searchTerm, filterLossTypes, filterSeverities, filterEvacStatuses, filterCauses, filterUdp, filterWeapon, filterReport, filterInjuries]);
+
+            // Видима порція списку карток (для максимальної швидкодії)
+            const visibleList = useMemo(() => {
+                return filteredList.slice(0, displayLimit);
+            }, [filteredList, displayLimit]);
+
+            // При зміні будь-яких фільтрів або пошукового запиту автоматично повертаємо ліміт до 50
+            useEffect(() => {
+                setDisplayLimit(50);
+            }, [searchTerm, filterLossTypes, filterSeverities, filterEvacStatuses, filterCauses, filterUdp, filterWeapon, filterReport, filterInjuries, listDateFrom, listDateTo, datePreset, showOnlyLatest]);
 
             const filteredLogs = useMemo(() => {
                 return logs.filter(log => {
@@ -2496,10 +3133,7 @@
 
             const clearSelectedSoldier = () => {
                 setSelectedSoldierId("");
-                setNewSoldierName("");
-                setNewSoldierCallsign("");
-                setNewSoldierRank("");
-                setNewSoldierUnit("");
+                setSearchMatches([]);
             };
 
             const toggleInjuryType = (regionId, type) => {
@@ -2538,11 +3172,6 @@
                 if (!finalSoldierId) {
                     if (!newSoldierName.trim() || !newSoldierCallsign.trim() || !newSoldierUnit) {
                         return triggerNotification("ПІБ, Позивний та Підрозділ є обов'язковими (Звання - за бажанням)", "error");
-                    }
-                    
-                    const duplicateCallsign = soldiers.find(s => s.callsign.trim().toLowerCase() === newSoldierCallsign.trim().toLowerCase() && newSoldierCallsign.trim().length > 0);
-                    if (duplicateCallsign) {
-                        return triggerNotification("Увага! Такий позивний вже існує в базі, але ПІБ відрізняється. Перевірте дані.", "error");
                     }
 
                     const newSoldierId = 'sol_' + Date.now();
@@ -2712,7 +3341,14 @@
                         const parsed = JSON.parse(decrypted);
                         if (parsed.soldiers && parsed.episodes) {
                             saveHistory();
-                            setSoldiers(parsed.soldiers); setEpisodes(parsed.episodes);
+                            const cleanedImportEpisodes = (parsed.episodes || []).map(ep => {
+                                if (ep.lossType === "Бойове травмування (300)") {
+                                    return { ...ep, lossType: "Поранення (300)" };
+                                }
+                                return ep;
+                            });
+                            setSoldiers(parsed.soldiers);
+                            setEpisodes(cleanedImportEpisodes);
                             if (parsed.logs) setLogs(parsed.logs.slice(0, 200));
                             if (parsed.settings) setSettings(parsed.settings);
                             addLog("Імпорт", "Базу успішно відновлено з файлу");
@@ -3129,20 +3765,22 @@
             }, [globalLatestEpisodes, soldiersMap, filterLossTypes, searchTerm, listDateFrom, listDateTo]);
 
             const triageCounts = useMemo(() => {
-                let crit = 0, heavy = 0, med = 0, light = 0, other = 0;
+                let crit = 0, heavy = 0, med = 0, light = 0, dead = 0, mia = 0;
                 triageEpisodes.forEach(ep => {
-                    if (isAny200(ep.lossType) || ep.lossType === 'Зниклий безвісти (ЗБВ)') {
-                        other++;
+                    if (isAny200(ep.lossType)) {
+                        dead++;
+                    } else if (ep.lossType === 'Зниклий безвісти (ЗБВ)') {
+                        mia++;
                     } else if (isAny300(ep.lossType)) {
                         if (ep.severity === 'Критичний') crit++;
                         else if (ep.severity === 'Важкий') heavy++;
                         else if (ep.severity === 'Середній') med++;
                         else light++;
                     } else {
-                        other++;
+                        dead++;
                     }
                 });
-                return { crit, heavy, med, light, other };
+                return { crit, heavy, med, light, dead, mia, other: dead };
             }, [triageEpisodes]);
 
             const quickEvacuate = (episode) => {
@@ -3204,7 +3842,7 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.1.1
+                                    ⚡ v3.2.0
                                 </button>
                             </div>
                         </div>
@@ -3245,9 +3883,14 @@
                                             {triageCounts.crit + triageCounts.heavy + triageCounts.med + triageCounts.light} 300
                                         </span>
                                     )}
-                                    {triageCounts.other > 0 && (
+                                    {triageCounts.dead > 0 && (
                                         <span className="bg-zinc-900 text-zinc-300 border border-zinc-700/80 px-1.5 py-0.2 rounded font-bold shadow-sm">
-                                            {triageCounts.other} 200
+                                            {triageCounts.dead} 200
+                                        </span>
+                                    )}
+                                    {triageCounts.mia > 0 && (
+                                        <span className="bg-blue-950/90 text-blue-300 border border-blue-800/80 px-1.5 py-0.2 rounded font-bold shadow-sm">
+                                            {triageCounts.mia} ЗБВ
                                         </span>
                                     )}
                                     {triageEpisodes.length === 0 && <span className="text-slate-500 text-[10px]">0</span>}
@@ -3285,6 +3928,14 @@
                         <div className="flex items-center gap-2 flex-wrap">
                             {activeTab === "analytics" && (
                                 <>
+                                    <button 
+                                        onClick={handleOpenPrintableReport} 
+                                        className="px-3 py-2 bg-purple-950/80 hover:bg-purple-900/90 text-purple-300 font-semibold border border-purple-700/60 rounded-xl transition-all flex items-center gap-1.5 text-xs shadow-sm hover:shadow-purple-950/50 active:scale-95 cursor-pointer" 
+                                        title="Згенерувати офіційне бойове донесення у форматі A4 для друку або збереження в PDF"
+                                    >
+                                        <Icon name="printer" className="w-3.5 h-3.5 text-purple-400" /> 
+                                        <span>Доповідь (A4 / PDF)</span>
+                                    </button>
                                     <button 
                                         onClick={handleExportAnalyticsText} 
                                         className="px-3 py-2 bg-blue-950/80 hover:bg-blue-900/90 text-blue-300 font-semibold border border-blue-700/60 rounded-xl transition-all flex items-center gap-1.5 text-xs shadow-sm hover:shadow-blue-950/50 active:scale-95 cursor-pointer" 
@@ -3352,63 +4003,21 @@
                         </div>
                     )}
 
-                    <main className="flex-1 w-full flex flex-col gap-4">
-                        
-                        {/* ГОРИЗОНТАЛЬНИЙ СТАТИСТИЧНИЙ МІНІ-БАР */}
-                        {(activeTab === "list" || activeTab === "triage" || activeTab === "analytics") && (
-                            <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-md flex items-center justify-between gap-3 flex-wrap">
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 shadow-inner">
-                                        <Icon name="users" className="w-4 h-4 text-slate-400" />
-                                        <span className="text-xs text-slate-400 font-medium">Військових:</span>
-                                        <span className="text-xs font-bold font-mono text-white">{stats.uniqueSoldiersCount}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 shadow-inner">
-                                        <Icon name="activity" className="w-4 h-4 text-amber-400" />
-                                        <span className="text-xs text-slate-400 font-medium">Епізодів:</span>
-                                        <span className="text-xs font-bold font-mono text-amber-400">{stats.totalEpisodes}</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
-                                    <div className="flex items-center gap-1.5 bg-red-950/40 border border-red-900/60 px-2.5 py-1.5 rounded-xl text-red-300">
-                                        <Icon name="ambulance" className="w-3.5 h-3.5 text-red-400" />
-                                        <span className="font-sans text-[11px] text-red-400/80">Черга 300:</span>
-                                        <span className="font-bold">{stats.activeEvacNeed300}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 bg-amber-950/40 border border-amber-900/60 px-2.5 py-1.5 rounded-xl text-amber-300">
-                                        <Icon name="package" className="w-3.5 h-3.5 text-amber-400" />
-                                        <span className="font-sans text-[11px] text-amber-400/80">Черга 200/ЗБВ:</span>
-                                        <span className="font-bold">{stats.activeEvacNeed200_MIA}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-2.5 py-1.5 rounded-xl text-slate-300">
-                                        <span className="font-sans text-[11px] text-slate-400">Всі 200:</span>
-                                        <span className="font-bold text-white">{stats.deadCount}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-2.5 py-1.5 rounded-xl text-blue-300">
-                                        <span className="font-sans text-[11px] text-blue-400">ЗБВ:</span>
-                                        <span className="font-bold">{stats.miaCount}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 px-2.5 py-1.5 rounded-xl text-fuchsia-300">
-                                        <span className="font-sans text-[11px] text-fuchsia-400">СЗЧ:</span>
-                                        <span className="font-bold">{stats.awolCount}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
+                    <main className="flex-1 w-full flex flex-col gap-3">
                         {/* ГОРИЗОНТАЛЬНА ВЕРХНЯ ПАНЕЛЬ ФІЛЬТРІВ (ДЛЯ ЖУРНАЛУ ТА ТРІАЖУ) */}
                         {(activeTab === "list" || activeTab === "triage") && (
                             <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-2.5 shadow-lg flex items-center justify-between gap-2.5 flex-wrap">
                                 
                                 <div className="flex items-center gap-2.5 flex-wrap flex-1">
                                     {/* Пошук */}
-                                    <div className="relative min-w-[170px] max-w-[220px]">
+                                    <div className="relative min-w-[200px] max-w-[260px]">
                                         <input 
+                                            id="global-search-input"
                                             type="text" 
-                                            placeholder="Пошук (ПІБ, позивний)..." 
+                                            placeholder="Пошук (ПІБ, позивний)... [Ctrl+F]" 
                                             value={searchTerm} 
                                             onChange={(e) => setSearchTerm(e.target.value)} 
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 outline-none" 
+                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 outline-none transition-colors" 
                                         />
                                         <Icon name="search" className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
                                         {searchTerm && (
@@ -3723,12 +4332,47 @@
                                     })()}
                                 </div>
 
-                                {/* Перемикач Актуальні & Скинути */}
-                                <div className="flex items-center gap-2">
+                                {/* Права частина: Зведена статистика + Записів + Актуальні & Скинути */}
+                                <div className="flex items-center gap-2 flex-wrap shrink-0">
+                                    {/* Зведена швидка статистика */}
+                                    <div className="hidden xl:flex items-center gap-2 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800 text-xs shadow-inner">
+                                        <span className="text-slate-300 text-xs font-semibold flex items-center gap-1" title="Унікальних військових у базі">
+                                            <Icon name="users" className="w-3.5 h-3.5 text-slate-400" />
+                                            <span className="font-mono text-slate-200 font-bold">{stats.uniqueSoldiersCount}</span>
+                                            <span className="text-slate-500 text-[10px]">в/сл</span>
+                                        </span>
+                                        <span className="text-slate-700 font-mono">|</span>
+                                        <span className="text-slate-300 text-xs flex items-center gap-1 font-mono" title="Загибель (200)">
+                                            <span className="text-slate-400 font-sans text-[10px] font-semibold">200:</span>
+                                            <span className="text-slate-200 font-bold">{stats.deadCount}</span>
+                                        </span>
+                                        <span className="text-slate-700 font-mono">|</span>
+                                        <span className="text-blue-300 text-xs flex items-center gap-1 font-mono" title="Зниклі безвісти (ЗБВ)">
+                                            <span className="text-blue-400 font-sans text-[10px] font-semibold">ЗБВ:</span>
+                                            <span className="text-blue-200 font-bold">{stats.miaCount}</span>
+                                        </span>
+                                        <span className="text-slate-700 font-mono">|</span>
+                                        <span className="text-fuchsia-300 text-xs flex items-center gap-1 font-mono" title="СЗЧ / Дезертирство">
+                                            <span className="text-fuchsia-400 font-sans text-[10px] font-semibold">СЗЧ:</span>
+                                            <span className="text-fuchsia-200 font-bold">{stats.awolCount}</span>
+                                        </span>
+                                    </div>
+
+                                    {activeTab === "list" && (
+                                        <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-inner" title="Кількість відфільтрованих записів">
+                                            <Icon name="list-filter" className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                            <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">Записів:</span>
+                                            <span className="text-amber-400 font-mono font-bold text-xs">
+                                                {filteredList.length > displayLimit ? `${visibleList.length} з ${filteredList.length}` : filteredList.length}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-white bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs select-none" title="Показувати тільки один (останній) актуальний стан бійця">
                                         <input type="checkbox" checked={showOnlyLatest} onChange={(e) => setShowOnlyLatest(e.target.checked)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer"/>
                                         <span className="font-medium text-[11px]">Актуальні</span>
                                     </label>
+
                                     <button 
                                         type="button" 
                                         onClick={resetAllFilters} 
@@ -3745,57 +4389,44 @@
                         {/* ТАБ: ЖУРНАЛ */}
                         {activeTab === "list" && (
                             <div className="w-full space-y-3">
-                                <div className="flex justify-between items-center text-slate-300 text-xs font-bold uppercase bg-slate-900 border border-slate-800/80 px-4 py-2.5 rounded-2xl shadow-sm">
-                                    <span className="flex items-center gap-2">
-                                        <Icon name="users" className="w-4 h-4 text-amber-400" />
-                                        <span>Відображено записів: <span className="text-amber-400 font-mono text-sm px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 shadow-inner ml-1">{filteredList.length}</span></span>
-                                    </span>
-
-                                    {/* ПЕРЕМИКАЧ ВИГЛЯДУ ПЛАШОК: 2 КОЛОНКИ / 1 КОЛОНКА */}
-                                    <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => handleToggleViewMode('grid')} 
-                                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer select-none ${
-                                                viewMode === 'grid' 
-                                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm' 
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                            title="Відображати у 2 колонки"
-                                        >
-                                            <Icon name="layout-grid" className="w-3.5 h-3.5" />
-                                            <span>2 колонки</span>
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => handleToggleViewMode('list')} 
-                                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer select-none ${
-                                                viewMode === 'list' 
-                                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm' 
-                                                    : 'text-slate-400 hover:text-white'
-                                            }`}
-                                            title="Відображати у 1 колонку (список)"
-                                        >
-                                            <Icon name="list" className="w-3.5 h-3.5" />
-                                            <span>1 колонка</span>
-                                        </button>
-                                    </div>
-                                </div>
                                 {filteredList.length === 0 ? (
                                     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-sm shadow-xl">Жодного запису не знайдено за вказаними фільтрами</div>
                                 ) : (
-                                    <div className={viewMode === 'grid' ? "grid grid-cols-1 xl:grid-cols-2 gap-3.5" : "space-y-2.5"}>
-                                        {filteredList.map((episode) => (
-                                            <EpisodeCard 
-                                                key={episode.id} 
-                                                episode={episode} 
-                                                soldier={soldiersMap.get(episode.soldierId)} 
-                                                onEdit={handleStartEdit}
-                                                onNotify={triggerNotification}
-                                                viewMode={viewMode}
-                                            />
-                                        ))}
-                                    </div>
+                                    <>
+                                        <div className="space-y-2.5">
+                                            {visibleList.map((episode) => (
+                                                <EpisodeCard 
+                                                    key={episode.id} 
+                                                    episode={episode} 
+                                                    soldier={soldiersMap.get(episode.soldierId)} 
+                                                    onEdit={handleStartEdit}
+                                                    onNotify={triggerNotification}
+                                                    viewMode="list"
+                                                />
+                                            ))}
+                                        </div>
+
+                                        {/* Панель порційного підвантаження записів */}
+                                        {filteredList.length > displayLimit && (
+                                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3 pb-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDisplayLimit(prev => prev + 50)}
+                                                    className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-500 text-slate-200 hover:text-amber-300 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                                                >
+                                                    <Icon name="chevron-down" className="w-4 h-4 text-amber-400" />
+                                                    <span>Показати ще 50 записів (залишилось {filteredList.length - displayLimit})</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDisplayLimit(filteredList.length)}
+                                                    className="px-4 py-2.5 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium text-xs rounded-xl transition cursor-pointer"
+                                                >
+                                                    <span>Показати всі ({filteredList.length})</span>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}
@@ -4161,6 +4792,32 @@
                                             </select>
                                         </div>
 
+                                        {/* Глибокий фільтр: Сектор / Позиція */}
+                                        <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs">
+                                            <Icon name="map-pin" className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                            <span className="text-slate-400 font-mono text-[10px] uppercase hidden sm:inline">Сектор:</span>
+                                            <select 
+                                                value={anSector} 
+                                                onChange={(e) => setAnSector(e.target.value)} 
+                                                className="bg-transparent text-amber-300 focus:outline-none cursor-pointer text-xs font-bold max-w-[180px] truncate"
+                                            >
+                                                <option value="all">Усі позиції / сектори</option>
+                                                {availableAnSectors.map(([sec, cnt]) => (
+                                                    <option key={sec} value={sec}>{sec} ({cnt})</option>
+                                                ))}
+                                            </select>
+                                            {anSector !== "all" && (
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setAnSector("all")} 
+                                                    className="text-slate-500 hover:text-red-400 transition ml-0.5 cursor-pointer" 
+                                                    title="Скинути фільтр сектора"
+                                                >
+                                                    <Icon name="x" className="w-3 h-3" />
+                                                </button>
+                                            )}
+                                        </div>
+
                                         {/* Тумблери Тільки актуальні та Об'єднати */}
                                         <label className="flex items-center gap-1.5 cursor-pointer bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-slate-300 hover:text-white text-xs select-none" title="Показувати тільки останній стан бійця">
                                             <input type="checkbox" checked={anShowLatest} onChange={(e) => setAnShowLatest(e.target.checked)} className="rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer shrink-0"/>
@@ -4264,7 +4921,12 @@
                                                 </div>
                                                 <div className="text-right border-l border-red-900/30 pl-4">
                                                     <div className="font-bold text-white text-sm whitespace-nowrap mb-0.5">300: <span className="text-red-400 text-lg">{evacStats.globalWaiting300}</span> <span className="text-[9px] text-tactical-500 font-normal">({evacStats.globalWaitingCritHeavy} важкі)</span></div>
-                                                    <div className="font-bold text-white text-sm whitespace-nowrap">200: <span className="text-tactical-300 text-lg">{evacStats.globalWaiting200}</span></div>
+                                                    <div className="font-bold text-white text-sm whitespace-nowrap flex items-center justify-end gap-2">
+                                                        <span>200: <span className="text-tactical-300 text-lg">{evacStats.globalWaiting200}</span></span>
+                                                        {!groupAnalytics && evacStats.globalWaitingMia > 0 && (
+                                                            <span className="text-blue-400 font-semibold text-xs ml-1">/ ЗБВ: <span className="text-blue-300 text-base font-bold">{evacStats.globalWaitingMia}</span></span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -4602,12 +5264,18 @@
                                                     <span>Анкетні дані бійця</span>
                                                 </label>
                                                 {selectedSoldierId && (
-                                                    <span className="text-[9px] text-emerald-400 flex items-center gap-1 bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-800/60 font-mono font-bold whitespace-nowrap shrink-0">
-                                                        <Icon name="check-circle" className="w-2.5 h-2.5" /> Прив'язано
-                                                    </span>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={clearSelectedSoldier} 
+                                                        className="text-[10px] text-emerald-400 hover:text-red-300 flex items-center gap-1 bg-emerald-950/60 hover:bg-red-950/60 px-2 py-0.5 rounded-md border border-emerald-800/60 hover:border-red-800/60 font-mono font-bold whitespace-nowrap shrink-0 transition cursor-pointer"
+                                                        title="Клікніть, щоб відв'язати бійця та створити новий профіль"
+                                                    >
+                                                        <Icon name="check-circle" className="w-3 h-3" />
+                                                        <span>Прив'язано [Відв'язати]</span>
+                                                    </button>
                                                 )}
                                             </div>
-                                            <div className="relative space-y-2.5">
+                                            <div className="space-y-2.5">
                                                 <input 
                                                     type="text" 
                                                     placeholder="ПІБ повністю..." 
@@ -4624,10 +5292,20 @@
                                                 />
                                                 
                                                 {searchMatches.length > 0 && !selectedSoldierId && !isEditOpen && (
-                                                    <div className="absolute z-20 w-full top-10 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto p-1 space-y-1">
-                                                        <div className="text-[9px] text-slate-400 uppercase font-bold p-2 border-b border-slate-800 bg-slate-950/80 font-mono">Знайдені збіги (клікніть для вибору)</div>
+                                                    <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto p-1.5 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+                                                        <div className="flex items-center justify-between p-1.5 border-b border-slate-800 bg-slate-950/80 rounded-lg">
+                                                            <span className="text-[9px] text-slate-400 uppercase font-bold font-mono">Знайдені збіги в базі:</span>
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => setSearchMatches([])} 
+                                                                className="text-[10px] text-amber-400 hover:text-white font-semibold flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 cursor-pointer transition"
+                                                            >
+                                                                <span>Створити як нового</span>
+                                                                <Icon name="x" className="w-2.5 h-2.5" />
+                                                            </button>
+                                                        </div>
                                                         {searchMatches.map(s => (
-                                                            <div key={s.id} onClick={() => selectExistingSoldier(s)} className="p-2.5 rounded-lg border border-transparent hover:border-amber-500/40 bg-slate-950/40 hover:bg-slate-800 cursor-pointer text-xs transition">
+                                                            <div key={s.id} onClick={() => selectExistingSoldier(s)} className="p-2.5 rounded-lg border border-transparent hover:border-amber-500/40 bg-slate-950/50 hover:bg-slate-800 cursor-pointer text-xs transition">
                                                                 <div className="font-bold text-white flex items-center justify-between">
                                                                     <span>{s.name}</span>
                                                                     {s.callsign && <span className="text-amber-400 font-mono">«{s.callsign}»</span>}
@@ -5793,10 +6471,24 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                                                                        {/* 20.08.2026 */}
+                                    {/* 22.08.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.1.1 (Оптимізація пошуку, швидкий доступ & Data Guard)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.2.0 (Офіційне бойове донесення A4/PDF, точна евакуація & фільтри)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">22.08.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Офіційне бойове донесення (A4 / PDF):</strong> Окреме вікно друку та експорту в PDF для штабу: 4 зведені картки (200, 300 з розбивкою за важкістю, ЗБВ, вивезені), акцентний блок черги на евакуацію, причини ураження, підрозділи та поіменний реєстр з українською анатомічною мапою та підписами.</li>
+                                            <li><strong className="text-white">Точна синхронізація евакуації 200, 300 та ЗБВ:</strong> 100% математичне узгодження між шапкою, аналітикою, текстовим звітом та друкованою формою. ЗБВ більше не спотворюють кількість тіл на позиціях.</li>
+                                            <li><strong className="text-white">Повна підтримка перемикача «Об'єднати групи»:</strong> Гнучке відображення ЗБВ окремо або у складі загальних безповоротних втрат.</li>
+                                            <li><strong className="text-white">Глибокий фільтр по секторах:</strong> Можливість повної деталізованої аналітики по конкретній позиції чи рубежу.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 20.08.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">v3.1.1 (Оптимізація пошуку, швидкий доступ & Data Guard)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">20.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
