@@ -2202,132 +2202,133 @@
                         return triggerNotification("Будь ласка, дозвольте відкриття спливаючих вікон у браузері", "error");
                     }
 
-                const periodStr = (anDateFrom || anDateTo) 
-                    ? `${anDateFrom || '...'} — ${anDateTo || '...'}` 
-                    : 'За весь період ведення бойових дій';
-                const sectorStr = anSector === 'all' ? 'Усі сектори / позиції' : anSector;
-                const nowStr = new Date().toLocaleString('uk-UA');
+                    const periodStr = (anDateFrom || anDateTo) 
+                        ? `${anDateFrom || '...'} — ${anDateTo || '...'}` 
+                        : 'За весь період ведення бойових дій';
+                    const sectorStr = anSector === 'all' ? 'Усі сектори / позиції' : anSector;
+                    const nowStr = new Date().toLocaleString('uk-UA');
 
-                let count200 = 0, count300 = 0, countMIA = 0, countAWOL = 0;
-                let evac300 = 0, notEvac300 = 0, notEvacCritHeavy300 = 0;
-                let evac200 = 0, notEvac200 = 0;
-                const causeMap = {};
-                const unitMap = {};
-                const sevMap = { 'Легкий': 0, 'Середній': 0, 'Важкий': 0, 'Критичний': 0, 'Невідомо': 0 };
+                    let count200 = 0, count300 = 0, countMIA = 0, countAWOL = 0;
+                    let evac300 = 0, notEvac300 = 0;
+                    let evac200 = 0, notEvac200 = 0;
+                    const causeMap = {};
+                    const unitMap = {};
+                    const sevMap = { 'Легкий': 0, 'Середній': 0, 'Важкий': 0, 'Критичний': 0, 'Невідомо': 0 };
 
-                anFilteredEpisodes.forEach(ep => {
-                    const isDead = isAny200(ep.lossType);
-                    const isWounded = isAny300(ep.lossType);
-                    const isMia = ep.lossType === 'Зниклий безвісти (ЗБВ)';
-                    const isAw = isAwol(ep.lossType);
-                    const isEvac = ep.evacStatus === 'Евакуйований';
+                    anFilteredEpisodes.forEach(ep => {
+                        const isDead = isAny200(ep.lossType);
+                        const isWounded = isAny300(ep.lossType);
+                        const isMia = ep.lossType === 'Зниклий безвісти (ЗБВ)';
+                        const isAw = isAwol(ep.lossType);
+                        const isEvac = ep.evacStatus === 'Евакуйований';
 
-                    if (isDead) {
-                        count200++;
-                        if (isEvac) evac200++;
-                        else notEvac200++;
-                    } else if (isWounded) {
-                        count300++;
-                        const s = ep.severity || 'Невідомо';
-                        sevMap[s] = (sevMap[s] || 0) + 1;
-                        if (isEvac) {
-                            evac300++;
-                        } else {
-                            notEvac300++;
-                            if (ep.severity === 'Критичний' || ep.severity === 'Важкий') {
-                                notEvacCritHeavy300++;
-                            }
+                        if (isDead) {
+                            count200++;
+                            if (isEvac) evac200++;
+                            else notEvac200++;
+                        } else if (isWounded) {
+                            count300++;
+                            const s = ep.severity || 'Невідомо';
+                            sevMap[s] = (sevMap[s] || 0) + 1;
+                            if (isEvac) evac300++;
+                            else notEvac300++;
+                        } else if (isMia) {
+                            countMIA++;
+                        } else if (isAw) {
+                            countAWOL++;
                         }
-                    } else if (isMia) {
-                        countMIA++;
-                    } else if (isAw) {
-                        countAWOL++;
-                    }
 
-                    if (ep.cause) {
-                        causeMap[ep.cause] = (causeMap[ep.cause] || 0) + 1;
-                    }
-                    const soldier = soldiers.find(s => s.id === ep.soldierId);
-                    const unit = soldier?.unit || ep.unit || 'Не вказано';
-                    unitMap[unit] = (unitMap[unit] || 0) + 1;
-                });
+                        if (ep.cause) {
+                            causeMap[ep.cause] = (causeMap[ep.cause] || 0) + 1;
+                        }
+                        const soldier = soldiers.find(s => s.id === ep.soldierId);
+                        const unit = soldier?.unit || ep.unit || 'Не вказано';
+                        unitMap[unit] = (unitMap[unit] || 0) + 1;
+                    });
 
-                const sortedCauses = Object.entries(causeMap).sort((a, b) => b[1] - a[1]);
-                const sortedUnits = Object.entries(unitMap).sort((a, b) => b[1] - a[1]);
+                    const sortedCauses = Object.entries(causeMap).sort((a, b) => b[1] - a[1]);
+                    const sortedUnits = Object.entries(unitMap).sort((a, b) => b[1] - a[1]);
 
-                const rowsHtml = anFilteredEpisodes.map((ep, idx) => {
-                    const s = soldiers.find(x => x.id === ep.soldierId) || {};
-                    const injuriesText = Object.entries(ep.injuries || {})
-                        .filter(([_, types]) => Object.values(types).some(Boolean))
-                        .map(([reg, types]) => {
-                            const regName = { 
-                                head: 'Голова', 
-                                neck: 'Шия',
-                                chest: 'Груди', 
-                                abdomen: 'Живіт/Пах', 
-                                arm_l: 'Л.рука', 
-                                arm_r: 'П.рука', 
-                                leg_l: 'Л.нога', 
-                                leg_r: 'П.нога' 
-                            }[reg] || (BODY_REGIONS.find(r => r.id === reg)?.name || reg);
-                            const activeTypes = Object.entries(types).filter(([_, v]) => v).map(([t]) => {
-                                return { amputation: 'Ампутація', rupture: 'Відрив', shrapnel: 'Уламкове', bullet: 'Кульове', fracture: 'Перелом', burn: 'Опік', akbt: 'АКБТ', contusion: 'Контузія' }[t] || t;
-                            }).join(', ');
-                            return `${regName}: ${activeTypes}`;
-                        }).join('; ') || '—';
+                    const rowsHtml = anFilteredEpisodes.map((ep, idx) => {
+                        const s = soldiers.find(x => x.id === ep.soldierId) || {};
+                        const injuriesText = Object.entries(ep.injuries || {})
+                            .filter(([_, types]) => Object.values(types).some(Boolean))
+                            .map(([reg, types]) => {
+                                const regName = { 
+                                    head: 'Голова', 
+                                    neck: 'Шия',
+                                    chest: 'Груди', 
+                                    abdomen: 'Живіт/Пах', 
+                                    arm_l: 'Л.рука', 
+                                    arm_r: 'П.рука', 
+                                    leg_l: 'Л.нога', 
+                                    leg_r: 'П.нога' 
+                                }[reg] || (BODY_REGIONS.find(r => r.id === reg)?.name || reg);
+                                const activeTypes = Object.entries(types).filter(([_, v]) => v).map(([t]) => {
+                                    return { amputation: 'Ампутація', rupture: 'Відрив', shrapnel: 'Уламкове', bullet: 'Кульове', fracture: 'Перелом', burn: 'Опік', akbt: 'АКБТ', contusion: 'Контузія' }[t] || t;
+                                }).join(', ');
+                                return `${regName}: ${activeTypes}`;
+                            }).join('; ') || '—';
 
-                    const isNotEvacuated = ep.evacStatus === 'Не евакуйований';
-                    const isEvac = ep.evacStatus === 'Евакуйований' || ep.awolStatus === 'Повернувся';
-                    const statusText = isAwol(ep.lossType) ? (ep.awolStatus || 'В розшуку') : (ep.evacStatus || 'Не евакуйований');
+                        const isDead = isAny200(ep.lossType);
+                        const isWounded = isAny300(ep.lossType);
+                        const isMia = ep.lossType === 'Зниклий безвісти (ЗБВ)';
+                        const isAw = isAwol(ep.lossType);
+                        const isNotEvac = ep.evacStatus === 'Не евакуйований';
+                        const isEv = ep.evacStatus === 'Евакуйований' || ep.awolStatus === 'Повернувся';
+                        const statusText = isAw ? (ep.awolStatus || 'В розшуку') : (ep.evacStatus || 'Не евакуйований');
 
-                    let severityBadge = ep.severity ? `<b>${ep.severity}</b>` : '—';
-                    if (ep.severity === 'Критичний') {
-                        severityBadge = '<span style="color:#7e22ce; font-weight:800; background:#f3e8ff; padding:1px 5px; border-radius:4px; border:1px solid #d8b4fe;">Критичний</span>';
-                    } else if (ep.severity === 'Важкий') {
-                        severityBadge = '<span style="color:#b91c1c; font-weight:800; background:#fee2e2; padding:1px 5px; border-radius:4px; border:1px solid #fca5a5;">Важкий</span>';
-                    } else if (ep.severity === 'Середній') {
-                        severityBadge = '<span style="color:#b45309; font-weight:700; background:#fef3c7; padding:1px 5px; border-radius:4px; border:1px solid #fde68a;">Середній</span>';
-                    } else if (ep.severity === 'Легкий') {
-                        severityBadge = '<span style="color:#15803d; font-weight:600; background:#dcfce7; padding:1px 5px; border-radius:4px; border:1px solid #bbf7d0;">Легкий</span>';
-                    }
+                        let severityBadge = ep.severity ? `<b>${ep.severity}</b>` : '—';
+                        if (ep.severity === 'Критичний') {
+                            severityBadge = '<span style="color:#7e22ce; font-weight:800; background:#f3e8ff; padding:1px 5px; border-radius:4px; border:1px solid #d8b4fe;">Критичний</span>';
+                        } else if (ep.severity === 'Важкий') {
+                            severityBadge = '<span style="color:#b91c1c; font-weight:800; background:#fee2e2; padding:1px 5px; border-radius:4px; border:1px solid #fca5a5;">Важкий</span>';
+                        } else if (ep.severity === 'Середній') {
+                            severityBadge = '<span style="color:#b45309; font-weight:700; background:#fef3c7; padding:1px 5px; border-radius:4px; border:1px solid #fde68a;">Середній</span>';
+                        } else if (ep.severity === 'Легкий') {
+                            severityBadge = '<span style="color:#15803d; font-weight:600; background:#dcfce7; padding:1px 5px; border-radius:4px; border:1px solid #bbf7d0;">Легкий</span>';
+                        }
 
-                    let statusBadge = statusText;
-                    if (isNotEvacuated) {
-                        statusBadge = '<span style="background:#fee2e2; color:#991b1b; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #f87171; display:inline-block; font-size:7.5pt;">🚨 Не евакуйований</span>';
-                    } else if (isEvac) {
-                        statusBadge = '<span style="background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #86efac; display:inline-block; font-size:7.5pt;">✓ Евакуйований</span>';
-                    } else if (isAwol(ep.lossType)) {
-                        statusBadge = `<span style="background:#fae8ff; color:#86198f; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #e879f9; display:inline-block; font-size:7.5pt;">${ep.awolStatus || 'СЗЧ'}</span>`;
-                    }
+                        let statusBadge = statusText;
+                        if (isNotEvac) {
+                            statusBadge = '<span style="background:#fee2e2; color:#991b1b; padding:2px 6px; border-radius:4px; font-weight:800; border:1px solid #f87171; display:inline-block; font-size:7.5pt;">🚨 Не евакуйований</span>';
+                        } else if (isEv) {
+                            statusBadge = '<span style="background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #86efac; display:inline-block; font-size:7.5pt;">✓ Евакуйований</span>';
+                        } else if (isAw) {
+                            statusBadge = `<span style="background:#fae8ff; color:#86198f; padding:2px 6px; border-radius:4px; font-weight:700; border:1px solid #e879f9; display:inline-block; font-size:7.5pt;">${ep.awolStatus || 'СЗЧ'}</span>`;
+                        }
 
-                    const rowBg = isNotEvacuated ? 'style="background-color: #fff1f2;"' : '';
+                        const rowBg = isNotEvac ? 'style="background-color: #fff1f2;"' : '';
+                        const evacVal = isNotEvac ? 'not_evac' : (isEv ? 'evac' : 'other');
+                        const causeClean = (ep.cause || '—').replace(/"/g, '&quot;');
+                        const unitClean = (s.unit || ep.unit || '—').replace(/"/g, '&quot;');
 
-                    return `
-                        <tr ${rowBg}>
-                            <td style="text-align:center; font-family:'JetBrains Mono',monospace; font-size:8pt;">${idx + 1}</td>
-                            <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; white-space:nowrap;">${ep.date.replace('T', ' ')}</td>
-                            <td style="font-size:8pt;">${s.rank || '—'}</td>
-                            <td style="font-weight:bold; font-size:8.5pt;">${s.name || '—'}</td>
-                            <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; color:#b45309;">${s.callsign ? `«${s.callsign}»` : '—'}</td>
-                            <td style="font-size:8pt;">${s.unit || ep.unit || '—'}</td>
-                            <td style="font-weight:600; font-size:8pt;">${ep.lossType}</td>
-                            <td style="font-size:8pt;">${severityBadge}</td>
-                            <td style="font-size:7.5pt; color:#475569;">${injuriesText}</td>
-                            <td style="font-size:8pt;">${ep.cause || '—'}</td>
-                            <td style="font-size:8pt;">${ep.actualLoc || '—'}</td>
-                            <td style="font-size:8pt;">${statusBadge}</td>
-                        </tr>
-                    `;
-                }).join('');
+                        return `
+                            <tr ${rowBg} class="reg-row" data-evac="${evacVal}" data-dead="${isDead ? '1':'0'}" data-wound="${isWounded ? '1':'0'}" data-sev="${ep.severity || ''}" data-mia="${isMia ? '1':'0'}" data-cause="${causeClean}" data-unit="${unitClean}">
+                                <td class="row-num" style="text-align:center; font-family:'JetBrains Mono',monospace; font-size:8pt;">${idx + 1}</td>
+                                <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; white-space:nowrap;">${ep.date.replace('T', ' ')}</td>
+                                <td style="font-size:8pt;">${s.rank || '—'}</td>
+                                <td style="font-weight:bold; font-size:8.5pt;">${s.name || '—'}</td>
+                                <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; color:#b45309;">${s.callsign ? `«${s.callsign}»` : '—'}</td>
+                                <td style="font-size:8pt;">${s.unit || ep.unit || '—'}</td>
+                                <td style="font-weight:600; font-size:8pt;">${ep.lossType}</td>
+                                <td style="font-size:8pt;">${severityBadge}</td>
+                                <td style="font-size:7.5pt; color:#475569;">${injuriesText}</td>
+                                <td style="font-size:8pt;">${ep.cause || '—'}</td>
+                                <td style="font-size:8pt;">${ep.actualLoc || '—'}</td>
+                                <td style="font-size:8pt;">${statusBadge}</td>
+                            </tr>
+                        `;
+                    }).join('');
 
-                const html = `<!DOCTYPE html>
+                    const html = `<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <title>Бойове донесення про втрати (${periodStr})</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
         body {
@@ -2340,75 +2341,119 @@
             line-height: 1.35;
         }
         .action-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             background: #0f172a;
             color: #ffffff;
-            padding: 12px 20px;
-            border-radius: 10px;
+            padding: 12px 18px;
+            border-radius: 12px;
             max-width: 1200px;
-            margin: 0 auto 20px auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            margin: 0 auto 18px auto;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            border: 1px solid #1e293b;
         }
         .action-btn {
-            background: #2563eb;
+            background: #16a34a;
             color: #ffffff;
             border: none;
-            padding: 8px 18px;
-            border-radius: 6px;
+            padding: 7px 16px;
+            border-radius: 7px;
             font-weight: 700;
-            font-size: 9.5pt;
+            font-size: 9pt;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: background 0.15s;
+            transition: all 0.15s;
         }
-        .action-btn:hover { background: #1d4ed8; }
-        .action-btn.secondary { background: #334155; }
+        .action-btn:hover { background: #15803d; }
+        .action-btn.secondary { background: #334155; color: #f1f5f9; }
         .action-btn.secondary:hover { background: #475569; }
+
+        .filter-chip {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 8pt;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .filter-chip:hover { background: #334155; color: #ffffff; }
+        .filter-chip.active {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+        .filter-chip.preset {
+            background: #f59e0b18;
+            border-color: #f59e0b55;
+            color: #fbbf24;
+        }
+        .filter-chip.preset:hover {
+            background: #f59e0b33;
+            color: #fef08a;
+        }
+
+        .check-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 8pt;
+            color: #cbd5e1;
+            cursor: pointer;
+            user-select: none;
+        }
+        .check-toggle input {
+            cursor: pointer;
+            accent-color: #38bdf8;
+        }
         
         .page-container {
             max-width: 1200px;
             margin: 0 auto;
             background: #ffffff;
-            padding: 36px 44px;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.06);
+            padding: 24px 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             border-radius: 8px;
         }
         .header-title {
             text-align: center;
             border-bottom: 2px solid #0f172a;
-            padding-bottom: 12px;
-            margin-bottom: 18px;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
         }
         .header-title h1 {
-            font-size: 15pt;
+            font-size: 13pt;
             font-weight: 800;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin: 0 0 6px 0;
+            margin: 0 0 4px 0;
             color: #0f172a;
+            line-height: 1.25;
         }
         .meta-info {
             display: flex;
             justify-content: space-between;
-            font-size: 9pt;
-            color: #334155;
-            font-weight: 600;
+            font-size: 8pt;
+            color: #475569;
+            font-weight: 500;
         }
         
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 14px;
         }
         .summary-card {
             border: 1px solid #cbd5e1;
             border-radius: 6px;
-            padding: 10px 12px;
+            padding: 8px 10px;
             background: #f8fafc;
         }
         .summary-card .label {
@@ -2416,46 +2461,47 @@
             text-transform: uppercase;
             font-weight: 700;
             color: #64748b;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
         .summary-card .value {
-            font-size: 18pt;
+            font-size: 15pt;
             font-weight: 800;
             color: #0f172a;
-            line-height: 1;
+            line-height: 1.1;
         }
         .summary-card .sub {
             font-size: 7.5pt;
             color: #64748b;
-            margin-top: 3px;
+            margin-top: 2px;
         }
 
         .section-title {
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: #0f172a;
-            border-left: 4px solid #0f172a;
-            padding-left: 8px;
-            margin: 16px 0 8px 0;
+            border-left: 3px solid #0f172a;
+            padding-left: 6px;
+            margin: 12px 0 6px 0;
         }
 
         .two-cols {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 14px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         table.data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8pt;
-            margin-bottom: 16px;
+            font-size: 7.5pt;
+            margin-bottom: 12px;
         }
         table.data-table th, table.data-table td {
             border: 1px solid #cbd5e1;
-            padding: 5px 7px;
+            padding: 4px 6px;
             text-align: left;
             vertical-align: middle;
         }
@@ -2475,184 +2521,396 @@
             padding-top: 14px;
             display: flex;
             justify-content: space-between;
-            font-size: 9pt;
+            font-size: 8.5pt;
             font-weight: 600;
         }
 
         @media print {
-            body { background: #ffffff !important; padding: 0 !important; }
+            body { background: #ffffff !important; padding: 0 !important; font-size: 8pt !important; }
             .page-container { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; }
             .action-bar { display: none !important; }
             .summary-card { border: 1px solid #94a3b8 !important; }
             table.data-table th, table.data-table td { border: 1px solid #94a3b8 !important; }
             tr { page-break-inside: avoid; break-inside: avoid; }
+            @page { size: A4 portrait; margin: 8mm 8mm 8mm 8mm; }
         }
     </style>
 </head>
 <body>
+    <!-- ІНТЕРАКТИВНА ПАНЕЛЬ НАЛАШТУВАННЯ ТА ШВИДКИХ ФІЛЬТРІВ (НЕ ДРУКУЄТЬСЯ) -->
     <div class="action-bar">
-        <div style="font-weight: 700; font-size: 10.5pt; display: flex; align-items: center; gap: 8px;">
-            <span>📄 Штабне бойове донесення про втрати</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span style="font-weight: 800; font-size: 9.5pt; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">🎛️ Конструктор доповіді:</span>
+                
+                <div style="display: flex; gap: 4px;">
+                    <button class="filter-chip active" id="btn-evac-all" onclick="setEvac('all')">Всі статуси</button>
+                    <button class="filter-chip" id="btn-evac-not" onclick="setEvac('not_evac')">🚨 Тільки не евакуйовані</button>
+                    <button class="filter-chip" id="btn-evac-yes" onclick="setEvac('evac')">✓ Тільки евакуйовані</button>
+                </div>
+
+                <div style="display: flex; gap: 4px;">
+                    <button class="filter-chip active" id="btn-type-all" onclick="setType('all')">Всі типи</button>
+                    <button class="filter-chip" id="btn-type-200" onclick="setType('200')">💀 Тільки 200</button>
+                    <button class="filter-chip" id="btn-type-300" onclick="setType('300')">🩸 Тільки 300</button>
+                    <button class="filter-chip" id="btn-type-heavy" onclick="setType('300_heavy')">🟣 Важкі/Крит. 300</button>
+                    <button class="filter-chip" id="btn-type-mia" onclick="setType('mia')">❓ ЗБВ</button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button class="action-btn" onclick="window.print()">🖨️ Друк / PDF</button>
+                <button class="action-btn secondary" onclick="window.close()">✕ Закрити</button>
+            </div>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <button class="action-btn" onclick="window.print()">🖨️ Друк / Зберегти як PDF</button>
-            <button class="action-btn secondary" onclick="window.close()">✕ Закрити</button>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 8pt;">
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span style="color: #94a3b8; font-weight: 700;">Швидкі виписки:</span>
+                <button class="filter-chip preset" id="btn-preset-200" onclick="applyPreset('200_waiting')">⚡ 200 на позиціях</button>
+                <button class="filter-chip preset" id="btn-preset-heavy" onclick="applyPreset('300_heavy_waiting')">⚡ Важкі 300 на позиціях</button>
+                <button class="filter-chip preset" id="btn-preset-all" onclick="applyPreset('all_waiting')">⚡ Вся черга евакуації</button>
+                <button class="filter-chip preset" id="btn-preset-reset" onclick="applyPreset('reset')">↺ Скинути на повний звіт</button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <span style="color: #94a3b8; font-weight: 700;">Блоки:</span>
+                <label class="check-toggle"><input type="checkbox" id="chk-cards" checked onchange="toggleBlock('block-cards', this.checked)"> Зведені картки</label>
+                <label class="check-toggle"><input type="checkbox" id="chk-queue" checked onchange="toggleBlock('block-queue', this.checked)"> Черга евакуації</label>
+                <label class="check-toggle"><input type="checkbox" id="chk-causes" checked onchange="toggleBlock('block-causes', this.checked)"> Причини та підрозділи</label>
+                <label class="check-toggle"><input type="checkbox" id="chk-register" checked onchange="toggleBlock('block-register', this.checked)"> Реєстр втрат</label>
+                <label class="check-toggle"><input type="checkbox" id="chk-signs" checked onchange="toggleBlock('block-signs', this.checked)"> Підписи</label>
+            </div>
         </div>
     </div>
 
-    <div class="page-container">
-        <div class="header-title">
-            <h1>БОЙОВЕ ДОНЕСЕННЯ / ЗВЕДЕННЯ ПРО ВТРАТИ</h1>
-            <div class="meta-info">
-                <div>Період: <b>${periodStr}</b></div>
-                <div>Сектор / Позиція: <b>${sectorStr}</b></div>
-                <div>Сформовано: <b>${nowStr}</b></div>
+        <div class="page-container" id="printable-doc">
+            <div class="header-title" id="block-header">
+                <h1 id="doc-main-title">БОЙОВЕ ДОНЕСЕННЯ / ЗВЕДЕННЯ ПРО ВТРАТИ</h1>
+                <div class="meta-info">
+                    <div>Період: <b id="doc-period">${periodStr}</b></div>
+                    <div>Сектор / Позиція: <b>${sectorStr}</b></div>
+                    <div>Сформовано: <b>${nowStr}</b></div>
+                </div>
             </div>
-        </div>
 
-        <div class="summary-grid">
-            <div class="summary-card">
-                <div class="label">Загиблі (200)</div>
-                <div class="value" style="color: #334155;">${count200}</div>
-                <div class="sub">Безповоротні втрати</div>
-            </div>
-            <div class="summary-card" style="border-left: 3px solid #dc2626;">
-                <div class="label" style="color: #dc2626;">Поранені (300)</div>
-                <div class="value" style="color: #dc2626;">${count300}</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; font-size:7.5pt; margin-top:4px; padding-top:3px; border-top:1px solid #e2e8f0;">
-                    <div style="color:#7e22ce; font-weight:700;">Критичні: ${sevMap['Критичний'] || 0}</div>
-                    <div style="color:#b91c1c; font-weight:700;">Важкі: ${sevMap['Важкий'] || 0}</div>
-                    <div style="color:#b45309; font-weight:600;">Середні: ${sevMap['Середній'] || 0}</div>
-                    <div style="color:#15803d; font-weight:600;">Легкі: ${sevMap['Легкий'] || 0}</div>
+            <!-- 1. Зведені картки -->
+            <div id="block-cards" class="summary-grid">
+                <div class="summary-card">
+                    <div class="label">Загиблі (200)</div>
+                    <div class="value" id="card-val-200" style="color: #334155;">${count200}</div>
+                    <div class="sub">Безповоротні втрати</div>
+                </div>
+                <div class="summary-card" style="border-left: 3px solid #dc2626;">
+                    <div class="label" style="color: #dc2626;">Поранені (300)</div>
+                    <div class="value" id="card-val-300" style="color: #dc2626;">${count300}</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; font-size:7.5pt; margin-top:4px; padding-top:3px; border-top:1px solid #e2e8f0;">
+                        <div style="color:#7e22ce; font-weight:700;">Критичні: <span id="card-crit">${sevMap['Критичний'] || 0}</span></div>
+                        <div style="color:#b91c1c; font-weight:700;">Важкі: <span id="card-heavy">${sevMap['Важкий'] || 0}</span></div>
+                        <div style="color:#b45309; font-weight:600;">Середні: <span id="card-med">${sevMap['Середній'] || 0}</span></div>
+                        <div style="color:#15803d; font-weight:600;">Легкі: <span id="card-light">${sevMap['Легкий'] || 0}</span></div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Зниклі безвісти (ЗБВ)</div>
+                    <div class="value" id="card-val-mia" style="color: #2563eb;">${countMIA}</div>
+                    <div class="sub">Місцезнаходження невідоме</div>
+                </div>
+                <div class="summary-card" style="border-left: 3px solid #16a34a;">
+                    <div class="label" style="color: #16a34a;">Евакуйовано (за період)</div>
+                    <div class="value" style="color: #16a34a;">${evacStats.actualEvacTotal}</div>
+                    <div style="display:flex; justify-content:space-between; font-weight:600; font-size:8pt; color:#334155; margin-top:4px; padding-top:3px; border-top:1px solid #e2e8f0;">
+                        <span>300-х: <b>${evacStats.actualEvac300}</b></span>
+                        <span>200-х: <b>${evacStats.actualEvac200}</b></span>
+                    </div>
                 </div>
             </div>
-            <div class="summary-card">
-                <div class="label">Зниклі безвісти (ЗБВ)</div>
-                <div class="value" style="color: #2563eb;">${countMIA}</div>
-                <div class="sub">Місцезнаходження невідоме</div>
-            </div>
-            <div class="summary-card" style="border-left: 3px solid #16a34a;">
-                <div class="label" style="color: #16a34a;">Евакуйовано (за період)</div>
-                <div class="value" style="color: #16a34a;">${evacStats.actualEvacTotal}</div>
-                <div style="display:flex; justify-content:space-between; font-weight:600; font-size:8pt; color:#334155; margin-top:4px; padding-top:3px; border-top:1px solid #e2e8f0;">
-                    <span>300-х: <b>${evacStats.actualEvac300}</b></span>
-                    <span>200-х: <b>${evacStats.actualEvac200}</b></span>
-                </div>
-            </div>
-        </div>
 
-        <!-- Окремий виділений блок: ЧЕРГА НА ЕВАКУАЦІЮ (НЕ ЕВАКУЙОВАНО) -->
-        <div style="background:#fff1f2; border: 1.5px solid #f87171; border-radius:8px; padding:10px 16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <div>
-                <div style="font-size:8.5pt; font-weight:800; text-transform:uppercase; color:#991b1b; display:flex; align-items:center; gap:6px; margin-bottom:5px;">
-                    <span>🚨 ПОТРЕБУЮТЬ ЕВАКУАЦІЇ / ЧЕРГА НА ПОЗИЦІЯХ:</span>
+            <!-- 2. Окремий виділений блок: ЧЕРГА НА ЕВАКУАЦІЮ (НЕ ЕВАКУЙОВАНО) -->
+            <div id="block-queue" style="background:#fff1f2; border: 1.5px solid #f87171; border-radius:8px; padding:10px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <div style="font-size:8.5pt; font-weight:800; text-transform:uppercase; color:#991b1b; display:flex; align-items:center; gap:6px; margin-bottom:5px;">
+                        <span>🚨 ПОТРЕБУЮТЬ ЕВАКУАЦІЇ / ЧЕРГА НА ПОЗИЦІЯХ:</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <span style="font-size:7.5pt; font-weight:700; color:#7f1d1d; text-transform:uppercase;">Втрати періоду в очікуванні:</span>
+                        <span style="background:#ffffff; border:1px solid #fca5a5; color:#dc2626; font-weight:800; font-size:8pt; padding:1px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">
+                            <span>300-х:</span> <b style="font-size:9.5pt;" id="q-period-300">${notEvac300}</b>
+                        </span>
+                        <span style="background:#ffffff; border:1px solid #cbd5e1; color:#334155; font-weight:800; font-size:8pt; padding:1px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">
+                            <span>200-х:</span> <b style="font-size:9.5pt;" id="q-period-200">${notEvac200}</b>
+                        </span>
+                    </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                    <span style="font-size:7.5pt; font-weight:700; color:#7f1d1d; text-transform:uppercase;">Втрати періоду в очікуванні:</span>
-                    <span style="background:#ffffff; border:1px solid #fca5a5; color:#dc2626; font-weight:800; font-size:8pt; padding:1px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">
-                        <span>300-х:</span> <b style="font-size:9.5pt;">${evacStats.periodWaiting300}</b>
-                    </span>
-                    <span style="background:#ffffff; border:1px solid #cbd5e1; color:#334155; font-weight:800; font-size:8pt; padding:1px 7px; border-radius:5px; display:inline-flex; align-items:center; gap:3px;">
-                        <span>200-х:</span> <b style="font-size:9.5pt;">${evacStats.periodWaiting200}</b>
-                    </span>
+                <div style="display:flex; gap:14px; align-items:center;">
+                    <div style="background:#ffffff; border:1px solid #fca5a5; border-radius:6px; padding:5px 12px; text-align:center; min-width: 140px;">
+                        <div style="font-size:7.5pt; font-weight:700; color:#dc2626; text-transform:uppercase;">300-х всього очікують</div>
+                        <div style="font-size:16pt; font-weight:800; color:#dc2626; line-height:1.1;">${evacStats.globalWaiting300}</div>
+                        <div style="font-size:7.5pt; color:#7e22ce; font-weight:700;">${evacStats.globalWaitingCritHeavy} важких/критичних</div>
+                    </div>
+                    <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:5px 12px; text-align:center; min-width: 140px;">
+                        <div style="font-size:7.5pt; font-weight:700; color:#475569; text-transform:uppercase;">200-х всього очікують</div>
+                        <div style="font-size:16pt; font-weight:800; color:#334155; line-height:1.1;">${evacStats.globalWaiting200}</div>
+                        <div style="font-size:7.5pt; color:#64748b;">${groupAnalytics ? 'тіл та ЗБВ' : 'тіл на позиціях'}</div>
+                    </div>
+                    ${!groupAnalytics && countMIA > 0 ? `
+                    <div style="background:#ffffff; border:1px solid #93c5fd; border-radius:6px; padding:5px 12px; text-align:center; min-width: 130px;">
+                        <div style="font-size:7.5pt; font-weight:700; color:#2563eb; text-transform:uppercase;">Зниклі безвісти</div>
+                        <div style="font-size:16pt; font-weight:800; color:#1d4ed8; line-height:1.1;">${countMIA}</div>
+                        <div style="font-size:7.5pt; color:#64748b;">не встановлено</div>
+                    </div>` : ''}
                 </div>
             </div>
-            <div style="display:flex; gap:14px; align-items:center;">
-                <div style="background:#ffffff; border:1px solid #fca5a5; border-radius:6px; padding:5px 12px; text-align:center; min-width: 140px;">
-                    <div style="font-size:7.5pt; font-weight:700; color:#dc2626; text-transform:uppercase;">300-х всього очікують</div>
-                    <div style="font-size:16pt; font-weight:800; color:#dc2626; line-height:1.1;">${evacStats.globalWaiting300}</div>
-                    <div style="font-size:7.5pt; color:#7e22ce; font-weight:700;">${evacStats.globalWaitingCritHeavy} важких/критичних</div>
-                </div>
-                <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:5px 12px; text-align:center; min-width: 140px;">
-                    <div style="font-size:7.5pt; font-weight:700; color:#475569; text-transform:uppercase;">200-х всього очікують</div>
-                    <div style="font-size:16pt; font-weight:800; color:#334155; line-height:1.1;">${evacStats.globalWaiting200}</div>
-                    <div style="font-size:7.5pt; color:#64748b;">${groupAnalytics ? 'тіл та ЗБВ' : 'тіл на позиціях'}</div>
-                </div>
-                ${!groupAnalytics && countMIA > 0 ? `
-                <div style="background:#ffffff; border:1px solid #93c5fd; border-radius:6px; padding:5px 12px; text-align:center; min-width: 130px;">
-                    <div style="font-size:7.5pt; font-weight:700; color:#2563eb; text-transform:uppercase;">Зниклі безвісти</div>
-                    <div style="font-size:16pt; font-weight:800; color:#1d4ed8; line-height:1.1;">${countMIA}</div>
-                    <div style="font-size:7.5pt; color:#64748b;">не встановлено</div>
-                </div>` : ''}
-            </div>
-        </div>
 
-        <div class="two-cols">
-            <div>
-                <div class="section-title">Причини та зброя ураження</div>
+            <!-- 3. Причини та підрозділи -->
+            <div id="block-causes" class="two-cols">
+                <div>
+                    <div class="section-title">Причини та зброя ураження</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Причина / Зброя</th>
+                                <th style="text-align:right; width: 70px;">Кількість</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-causes">
+                            ${sortedCauses.length > 0 ? sortedCauses.map(([c, cnt]) => `
+                                <tr>
+                                    <td>${c}</td>
+                                    <td style="text-align:right; font-weight:bold; font-family:'JetBrains Mono', monospace;">${cnt}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Дані відсутні</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <div class="section-title">Розподіл за підрозділами</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Підрозділ</th>
+                                <th style="text-align:right; width: 70px;">Кількість</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-units">
+                            ${sortedUnits.length > 0 ? sortedUnits.map(([u, cnt]) => `
+                                <tr>
+                                    <td>${u}</td>
+                                    <td style="text-align:right; font-weight:bold; font-family:'JetBrains Mono', monospace;">${cnt}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Дані відсутні</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. Поіменний реєстр -->
+            <div id="block-register">
+                <div class="section-title" id="register-title">Поіменний реєстр втрат за період (${anFilteredEpisodes.length} записів)</div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Причина / Зброя</th>
-                            <th style="text-align:right; width: 70px;">Кількість</th>
+                            <th style="width: 25px; text-align:center;">№</th>
+                            <th style="width: 95px;">Дата/Час</th>
+                            <th style="width: 65px;">Звання</th>
+                            <th>ПІБ</th>
+                            <th style="width: 75px;">Позивний</th>
+                            <th style="width: 75px;">Підрозділ</th>
+                            <th style="width: 85px;">Тип</th>
+                            <th style="width: 60px;">Важкість</th>
+                            <th>Травми</th>
+                            <th>Причина</th>
+                            <th>Локація</th>
+                            <th style="width: 80px;">Статус</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${sortedCauses.length > 0 ? sortedCauses.map(([c, cnt]) => `
-                            <tr>
-                                <td>${c}</td>
-                                <td style="text-align:right; font-weight:bold; font-family:'JetBrains Mono', monospace;">${cnt}</td>
-                            </tr>
-                        `).join('') : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Дані відсутні</td></tr>'}
+                    <tbody id="tbody-register">
+                        ${rowsHtml || '<tr><td colspan="12" style="text-align:center; padding: 20px; color:#94a3b8;">За вибраний період та сектор записів немає</td></tr>'}
                     </tbody>
                 </table>
             </div>
 
-            <div>
-                <div class="section-title">Розподіл за підрозділами</div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Підрозділ</th>
-                            <th style="text-align:right; width: 70px;">Кількість</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${sortedUnits.length > 0 ? sortedUnits.map(([u, cnt]) => `
-                            <tr>
-                                <td>${u}</td>
-                                <td style="text-align:right; font-weight:bold; font-family:'JetBrains Mono', monospace;">${cnt}</td>
-                            </tr>
-                        `).join('') : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Дані відсутні</td></tr>'}
-                    </tbody>
-                </table>
+            <!-- 5. Підписи -->
+            <div class="footer-sign" id="block-signs">
+                <div>Начальник медичної служби: __________________</div>
+                <div>Начальник штабу: __________________</div>
             </div>
         </div>
-
-        <div class="section-title">Поіменний реєстр втрат за період (${anFilteredEpisodes.length} записів)</div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th style="width: 25px; text-align:center;">№</th>
-                    <th style="width: 95px;">Дата/Час</th>
-                    <th style="width: 65px;">Звання</th>
-                    <th>ПІБ</th>
-                    <th style="width: 75px;">Позивний</th>
-                    <th style="width: 75px;">Підрозділ</th>
-                    <th style="width: 85px;">Тип</th>
-                    <th style="width: 60px;">Важкість</th>
-                    <th>Травми</th>
-                    <th>Причина</th>
-                    <th>Локація</th>
-                    <th style="width: 80px;">Статус</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${rowsHtml || '<tr><td colspan="12" style="text-align:center; padding: 20px; color:#94a3b8;">За вибраний період та сектор записів немає</td></tr>'}
-            </tbody>
-        </table>
-
-        <div class="footer-sign">
-            <div>Начальник медичної служби: __________________</div>
-            <div>Начальник штабу: __________________</div>
-        </div>
-    </div>
-</body>
-</html>`;
+    </body>
+    </html>`;
 
                     win.document.open();
                     win.document.write(html);
                     win.document.close();
+
+                    // Безпосереднє підключення логіки до вікна у браузері
+                    win.curEvac = 'all';
+                    win.curType = 'all';
+
+                    win.setEvac = function(val) {
+                        win.curEvac = val;
+                        var keys = ['all', 'not', 'yes'];
+                        for (var i = 0; i < keys.length; i++) {
+                            var b = win.document.getElementById('btn-evac-' + keys[i]);
+                            if (b) b.classList.remove('active');
+                        }
+                        var map = { 'all': 'btn-evac-all', 'not_evac': 'btn-evac-not', 'evac': 'btn-evac-yes' };
+                        var activeBtn = win.document.getElementById(map[val]);
+                        if (activeBtn) activeBtn.classList.add('active');
+                        win.applyFilters();
+                    };
+
+                    win.setType = function(val) {
+                        win.curType = val;
+                        var keys = ['all', '200', '300', 'heavy', 'mia'];
+                        for (var i = 0; i < keys.length; i++) {
+                            var b = win.document.getElementById('btn-type-' + keys[i]);
+                            if (b) b.classList.remove('active');
+                        }
+                        var map = { 'all': 'btn-type-all', '200': 'btn-type-200', '300': 'btn-type-300', '300_heavy': 'btn-type-heavy', 'mia': 'btn-type-mia' };
+                        var activeBtn = win.document.getElementById(map[val]);
+                        if (activeBtn) activeBtn.classList.add('active');
+                        win.applyFilters();
+                    };
+
+                    win.applyPreset = function(p) {
+                        if (p === '200_waiting') { win.setEvac('not_evac'); win.setType('200'); }
+                        else if (p === '300_heavy_waiting') { win.setEvac('not_evac'); win.setType('300_heavy'); }
+                        else if (p === 'all_waiting') { win.setEvac('not_evac'); win.setType('all'); }
+                        else if (p === 'reset') { win.setEvac('all'); win.setType('all'); }
+                    };
+
+                    win.toggleBlock = function(id, show) {
+                        var el = win.document.getElementById(id);
+                        if (el) el.style.display = show ? '' : 'none';
+                    };
+
+                    win.applyFilters = function() {
+                        var doc = win.document;
+                        var rows = doc.querySelectorAll('.reg-row');
+                        var visibleCount = 0;
+                        var c200 = 0, c300 = 0, cMia = 0;
+                        var notEvac300 = 0, notEvac200 = 0;
+                        var crit = 0, heavy = 0, med = 0, light = 0;
+                        var causeCounts = {};
+                        var unitCounts = {};
+
+                        for (var i = 0; i < rows.length; i++) {
+                            var r = rows[i];
+                            var ev = r.getAttribute('data-evac');
+                            var isDead = r.getAttribute('data-dead') === '1';
+                            var isWound = r.getAttribute('data-wound') === '1';
+                            var isMia = r.getAttribute('data-mia') === '1';
+                            var sev = r.getAttribute('data-sev');
+                            var cause = r.getAttribute('data-cause') || '—';
+                            var unit = r.getAttribute('data-unit') || '—';
+
+                            var matchEvac = (win.curEvac === 'all') || (win.curEvac === 'not_evac' && ev === 'not_evac') || (win.curEvac === 'evac' && ev === 'evac');
+                            var matchType = (win.curType === 'all') || (win.curType === '200' && isDead) || (win.curType === '300' && isWound) || (win.curType === '300_heavy' && isWound && (sev === 'Критичний' || sev === 'Важкий')) || (win.curType === 'mia' && isMia);
+
+                            if (matchEvac && matchType) {
+                                r.style.display = '';
+                                visibleCount++;
+                                var numEl = r.querySelector('.row-num');
+                                if (numEl) numEl.innerText = visibleCount;
+
+                                if (isDead) {
+                                    c200++;
+                                    if (ev === 'not_evac') notEvac200++;
+                                } else if (isWound) {
+                                    c300++;
+                                    if (sev === 'Критичний') crit++;
+                                    else if (sev === 'Важкий') heavy++;
+                                    else if (sev === 'Середній') med++;
+                                    else if (sev === 'Легкий') light++;
+                                    if (ev === 'not_evac') notEvac300++;
+                                } else if (isMia) {
+                                    cMia++;
+                                }
+
+                                if (cause && cause !== '—') causeCounts[cause] = (causeCounts[cause] || 0) + 1;
+                                if (unit && unit !== '—') unitCounts[unit] = (unitCounts[unit] || 0) + 1;
+                            } else {
+                                r.style.display = 'none';
+                            }
+                        }
+
+                        var titleEl = doc.getElementById('doc-main-title');
+                        if (titleEl) {
+                            if (win.curEvac === 'not_evac' && win.curType === '200') {
+                                titleEl.innerText = 'ВІДОМІСТЬ НЕ ЕВАКУЙОВАНИХ ТІЛ ЗАГИБЛИХ (200)';
+                            } else if (win.curEvac === 'not_evac' && win.curType === '300_heavy') {
+                                titleEl.innerText = 'ВІДОМІСТЬ КРИТИЧНИХ ТА ВАЖКИХ ПОРАНЕНИХ (ПЕРШОЧЕРГОВА ЕВАКУАЦІЯ)';
+                            } else if (win.curEvac === 'not_evac' && win.curType === '300') {
+                                titleEl.innerText = 'ВІДОМІСТЬ НЕ ЕВАКУЙОВАНИХ ПОРАНЕНИХ (ЧЕРГА 300)';
+                            } else if (win.curEvac === 'not_evac') {
+                                titleEl.innerText = 'ЗВЕДЕННЯ ЧЕРГИ НА ЕВАКУАЦІЮ (НЕ ЕВАКУЙОВАНІ НА ПОЗИЦІЯХ)';
+                            } else if (win.curType === '200') {
+                                titleEl.innerText = 'ВІДОМІСТЬ БЕЗПОВОРОТНИХ ВТРАТ (200)';
+                            } else if (win.curType === '300') {
+                                titleEl.innerText = 'ВІДОМІСТЬ САНІТАРНИХ ВТРАТ (300)';
+                            } else if (win.curType === 'mia') {
+                                titleEl.innerText = 'ВІДОМІСТЬ ВІЙСЬКОВОСЛУЖБОВЦІВ, ЗНИКЛИХ БЕЗВІСТИ (ЗБВ)';
+                            } else {
+                                titleEl.innerText = 'БОЙОВЕ ДОНЕСЕННЯ / ЗВЕДЕННЯ ПРО ВТРАТИ';
+                            }
+                        }
+
+                        var c200El = doc.getElementById('card-val-200'); if (c200El) c200El.innerText = c200;
+                        var c300El = doc.getElementById('card-val-300'); if (c300El) c300El.innerText = c300;
+                        var cMiaEl = doc.getElementById('card-val-mia'); if (cMiaEl) cMiaEl.innerText = cMia;
+                        var critEl = doc.getElementById('card-crit'); if (critEl) critEl.innerText = crit;
+                        var hvyEl = doc.getElementById('card-heavy'); if (hvyEl) hvyEl.innerText = heavy;
+                        var medEl = doc.getElementById('card-med'); if (medEl) medEl.innerText = med;
+                        var lgtEl = doc.getElementById('card-light'); if (lgtEl) lgtEl.innerText = light;
+                        var q300 = doc.getElementById('q-period-300'); if (q300) q300.innerText = notEvac300;
+                        var q200 = doc.getElementById('q-period-200'); if (q200) q200.innerText = notEvac200;
+                        var regTitle = doc.getElementById('register-title'); if (regTitle) regTitle.innerText = 'Поіменний реєстр (' + visibleCount + ' записів)';
+
+                        var causeEntries = Object.entries(causeCounts).sort(function(a, b) { return b[1] - a[1]; });
+                        var causeHtml = causeEntries.length > 0
+                            ? causeEntries.map(function(pair) { return '<tr><td>' + pair[0] + '</td><td style="text-align:right; font-weight:bold; font-family:\'JetBrains Mono\', monospace;">' + pair[1] + '</td></tr>'; }).join('')
+                            : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Дані відсутні</td></tr>';
+                        var tbCauses = doc.getElementById('tbody-causes'); if (tbCauses) tbCauses.innerHTML = causeHtml;
+
+                        var unitEntries = Object.entries(unitCounts).sort(function(a, b) { return b[1] - a[1]; });
+                        var unitHtml = unitEntries.length > 0
+                            ? unitEntries.map(function(pair) { return '<tr><td>' + pair[0] + '</td><td style="text-align:right; font-weight:bold; font-family:\'JetBrains Mono\', monospace;">' + pair[1] + '</td></tr>'; }).join('')
+                            : '<tr><td colspan="2" style="text-align:center; color:#94a3b8;">Дані відсутні</td></tr>';
+                        var tbUnits = doc.getElementById('tbody-units'); if (tbUnits) tbUnits.innerHTML = unitHtml;
+                    };
+
+                    // Пряме призначення обробників подій до DOM-елементів нового вікна
+                    const bindClick = (id, fn) => {
+                        const el = win.document.getElementById(id);
+                        if (el) el.onclick = fn;
+                    };
+
+                    bindClick('btn-evac-all', () => win.setEvac('all'));
+                    bindClick('btn-evac-not', () => win.setEvac('not_evac'));
+                    bindClick('btn-evac-yes', () => win.setEvac('evac'));
+
+                    bindClick('btn-type-all', () => win.setType('all'));
+                    bindClick('btn-type-200', () => win.setType('200'));
+                    bindClick('btn-type-300', () => win.setType('300'));
+                    bindClick('btn-type-heavy', () => win.setType('300_heavy'));
+                    bindClick('btn-type-mia', () => win.setType('mia'));
+
+                    bindClick('btn-preset-200', () => win.applyPreset('200_waiting'));
+                    bindClick('btn-preset-heavy', () => win.applyPreset('300_heavy_waiting'));
+                    bindClick('btn-preset-all', () => win.applyPreset('all_waiting'));
+                    bindClick('btn-preset-reset', () => win.applyPreset('reset'));
+
+                    const bindChange = (id, blockId) => {
+                        const el = win.document.getElementById(id);
+                        if (el) el.onchange = (e) => win.toggleBlock(blockId, e.target.checked);
+                    };
+                    bindChange('chk-cards', 'block-cards');
+                    bindChange('chk-queue', 'block-queue');
+                    bindChange('chk-causes', 'block-causes');
+                    bindChange('chk-register', 'block-register');
+                    bindChange('chk-signs', 'block-signs');
                 } catch (err) {
                     console.error("handleOpenPrintableReport error:", err);
                     triggerNotification("Помилка формування доповіді: " + err.message, "error");
