@@ -65,7 +65,7 @@
                             AMMO_PARSER
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.1.2
+                            ⚡ v1.1.3
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -222,7 +222,7 @@
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">14.5x114</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">40х46</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Гранати (Ф1, GHO, M67, РГД-5, РГН, РГО, РГТ-27С)</span>
-            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">РПГ / ВОГ / АТ4 / RHEW</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">РПГ / ВОГ / АТ4 / RHEW / RHEAT</span>
         </div>
 
     </div>
@@ -247,12 +247,22 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.2 (Дебаунсинг & Оптимізація)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.3 (RHEAT-7MA2 & Документування коду)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">24.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Постріли RHEAT-7MA / RHEAT-7MA2:</strong> Додано підтримку болгарських кумулятивних пострілів до РПГ-7 з автоматичним розпізнаванням кирилиці, дефісів та неявного підрахунку.</li>
+                        <li><strong class="text-white">Повне коментування кодової бази:</strong> Структуровано та прокоментовано алгоритм парсингу, евристики калібрів, нормалізацію та взаємодію з DOM.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.1.2 (Дебаунсинг & Оптимізація)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">20.08.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Буферизація вводу (Debounce 100мс):</strong> Усунено затримки та підвисання при швидкому друку та масовій вставці великих текстових зведень.</li>
-                        <li><strong class="text-white">Військова нормалізація:</strong> Інтегровано normalizeMilitaryText для стійкості до омогліфів та нерозривних пробілів.</li>
+                        <li><strong class="text-slate-200">Буферизація вводу (Debounce 100мс):</strong> Усунено затримки та підвисання при швидкому друку та масовій вставці великих текстових зведень.</li>
+                        <li><strong class="text-slate-200">Військова нормалізація:</strong> Інтегровано normalizeMilitaryText для стійкості до омогліфів та нерозривних пробілів.</li>
                     </ul>
                 </div>
                 <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
@@ -285,34 +295,48 @@
     </div>
 
     <script>
-        // Ініціалізація іконок
+        /**
+         * =========================================================================
+         * КАЛЬКУЛЯТОР БК (AMMO_PARSER) v1.1.3
+         * Призначення: Швидкий аналіз, нормалізація, розпізнавання та підсумовування
+         * витрати боєприпасів за сирими текстовими донесеннями підрозділів.
+         * =========================================================================
+         */
+
+        // Ініціалізація векторних іконок Lucide
         lucide.createIcons();
 
-        // DOM Елементи
-        const inputTextArea = document.getElementById('input-text');
-        const lineNumbersDiv = document.getElementById('line-numbers');
-        const editorLinesBadge = document.getElementById('editor-lines-badge');
-        const checkboxGrenade = document.getElementById('assume-grenade');
-        const resultsTable = document.getElementById('results-table');
-        const resultsBody = document.getElementById('results-body');
-        const resultsCountBadge = document.getElementById('results-count-badge');
-        const noResults = document.getElementById('no-results');
-        const errorsContainer = document.getElementById('errors-container');
-        const errorsList = document.getElementById('errors-list');
-        const statTotalAmmo = document.getElementById('stat-total-ammo');
-        const statTotalTypes = document.getElementById('stat-total-types');
-        const statLinesRatio = document.getElementById('stat-lines-ratio');
-        const btnCopy = document.getElementById('btn-copy');
-        const btnDownload = document.getElementById('btn-download');
-        const btnClear = document.getElementById('btn-clear');
-        const btnInsertSample = document.getElementById('btn-insert-sample');
-        const copyText = document.getElementById('copy-text');
-        const changelogModal = document.getElementById('changelog-modal');
+        // -------------------------------------------------------------------------
+        // 1. DOM-ЕЛЕМЕНТИ ІНТЕРФЕЙСУ
+        // -------------------------------------------------------------------------
+        const inputTextArea = document.getElementById('input-text');           // Поле вводу сирого тексту
+        const lineNumbersDiv = document.getElementById('line-numbers');         // Блок нумерації рядків
+        const editorLinesBadge = document.getElementById('editor-lines-badge'); // Бейдж лічильника рядків
+        const checkboxGrenade = document.getElementById('assume-grenade');       // Опція «Рахувати згадку як 1 шт»
+        const resultsTable = document.getElementById('results-table');           // Таблиця підсумків
+        const resultsBody = document.getElementById('results-body');             // Тіло таблиці підсумків
+        const resultsCountBadge = document.getElementById('results-count-badge');// Бейдж кількості позицій
+        const noResults = document.getElementById('no-results');                 // Заглушка «Дані відсутні»
+        const errorsContainer = document.getElementById('errors-container');     // Контейнер нерозпізнаних рядків
+        const errorsList = document.getElementById('errors-list');               // Список рядків з помилками
+        const statTotalAmmo = document.getElementById('stat-total-ammo');       // Статистика: Загальна сума БК
+        const statTotalTypes = document.getElementById('stat-total-types');     // Статистика: Кількість типів
+        const statLinesRatio = document.getElementById('stat-lines-ratio');     // Статистика: Співвідношення розпізнаних рядків
+        const btnCopy = document.getElementById('btn-copy');                     // Кнопка копіювання звіту
+        const btnDownload = document.getElementById('btn-download');             // Кнопка експорту .txt
+        const btnClear = document.getElementById('btn-clear');                   // Кнопка очищення
+        const btnInsertSample = document.getElementById('btn-insert-sample');   // Кнопка завантаження зразка
+        const copyText = document.getElementById('copy-text');                   // Текст кнопки копіювання
+        const changelogModal = document.getElementById('changelog-modal');       // Модальне вікно історії змін
 
-        // Стан
-        let currentResults = [];
+        // -------------------------------------------------------------------------
+        // 2. СТАН ДОДАТКА
+        // -------------------------------------------------------------------------
+        let currentResults = []; // Масив розпізнаних позицій з ненульовою кількістю
 
-        // Дефолтні пресети текстів
+        // -------------------------------------------------------------------------
+        // 3. ЗРАЗКИ СИРИХ ДОНЕСЕНЬ (ПРЕСЕТИ)
+        // -------------------------------------------------------------------------
         const samplePresets = {
             all: `10 12*70
 120 шт-5.45х39
@@ -326,6 +350,7 @@
 150 шт 12.7х108
 2 гранати Ф1
 2 гранати 40х46
+2шт-RHEAT-7MA2;
 150 шт
 90`,
             small_arms: `120 шт 5.45х39
@@ -346,35 +371,43 @@ GHO - 2
 50 шт 14.5х114
 2 постріли ПГ-7В
 1 ОГ-7В
+2 шт RHEAT-7MA2
 4 шт ВОГ-25
 2 шт 40х46
 1 шт Bullspike AT
 РПВ-16 1 шт`
         };
 
-        // Конфігурація типів БК
+        // -------------------------------------------------------------------------
+        // 4. ДОВІДНИК ТИПІВ БОЄПРИПАСІВ ТА РЕГУЛЯРНІ ВИРАЗИ
+        // idPattern підтримує омогліфи (кирилиця/латиниця), дефіси, пробіли та ведучі нулі
+        // -------------------------------------------------------------------------
         const ammoConfigs = [
-            // 5.45
+            // Стрілецька зброя: 5.45 мм
             { id: '5.45', name: '5.45х39 мм', icon: '🎯', category: 'small', idPattern: '5[.,/]45(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39)?' },
-            // 7.62
+            
+            // Стрілецька зброя: 7.62 мм (з розбивкою за гільзою)
             { id: '7.62x54', name: '7.62х54 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*54' },
             { id: '7.62x51', name: '7.62х51 мм (NATO)', icon: '🎯', category: 'small', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:51|52)' },
             { id: '7.62x39', name: '7.62х39 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,]62|762)[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39' },
             { id: '7.62', name: '7.62 мм (неуточнений)', icon: '🎯', category: 'small', idPattern: '7[.,]62' },
-            // 5.56
+            
+            // Стрілецька зброя: 5.56 мм (NATO)
             { id: '5.56', name: '5.56х45 мм (NATO)', icon: '🎯', category: 'small', idPattern: '5[.,]56(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?(?:[\\s\\-_]*uar(?:\\-?15)?)?' },
 
-            // Гладкоствол 12х70
+            // Гладкоствольна зброя: 12 калібр
             { id: '12x70', name: '12 калібр (12х70)', icon: '🎯', category: 'small', idPattern: '12[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*70|12[\\s\\-/]+7(?![0-9])|12[\\s\\-]*кал(?:ібр)?' },
 
-            // Кулемети 12.7 та 14.5
+            // Великокаліберні кулемети: 12.7 та 14.5 мм
             { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99' },
             { id: '12.7x108', name: '12.7х108 мм (ДШК/Утьос)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*108' },
             { id: '12.7', name: '12.7 мм (неуточнений)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7' },
             { id: '14.5', name: '14.5х114 мм (КПВТ)', icon: '⚡', category: 'heavy_mg', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?' },
 
+            // Гранатомети, постріли РПГ та СПГ
             { id: 'PG7V', name: 'Постріл ПГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?7[\\s\\-_]*[vвmмsсlлrрtт]*' },
             { id: 'OG7V', name: 'Постріл ОГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]g[si]?|[oо]г[сі]?)[\\s\\-_]*0?7[\\s\\-_]*[vвmмaаwksct]*' },
+            { id: 'RHEAT7MA', name: 'Постріл RHEAT-7MA2', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:r[\\-_]?heat|р[\\-_]?хеат|р[\\-_]?хіт)[\\s\\-_]*0?7(?:[\\s\\-_]*(?:ma|ма)[\\s\\-_]*2?)?' },
             { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', icon: '🚀', category: 'rpg', idPattern: 'rhew[\\s\\-_]*0?9[\\s\\-_]*ma' },
             { id: 'PG9V', name: 'Постріл ПГ-9В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?9[\\s\\-_]*[vв]?' },
             { id: 'BULLSPIKE', name: 'Bullspike AT', icon: '🚀', category: 'rpg', idPattern: 'bull?spike(?:[\\s\\-]*at)?' },
@@ -386,8 +419,11 @@ GHO - 2
             { id: 'RPG26', name: 'РПГ-26 (Аглень)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*26' },
             { id: 'RPG76', name: 'РПГ-76 (Комар)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*76' },
             
-            // 40х46 та ВОГ
+            // Гранатометні постріли 40х46 та ВОГ
             { id: '40x46', name: '40х46 мм', icon: '💣', category: 'grenade', idPattern: '(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?[\\s\\-]*)?40[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*46(?:[\\s\\-]*\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?)?' },
+            { id: 'VOG', name: 'ВОГ (17/25)', icon: '💣', category: 'grenade', idPattern: '(?:вог|vog)[а-яіїєґa-z]*[- ]?(?:17|25)?' },
+
+            // Ручні осколкові та термобаричні гранати
             { id: 'GHO', name: 'GHO', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:gho|goh|гхо|гох)[\\s\\-_]*1?\\.?' },
             { id: 'F1', name: 'Граната Ф-1', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:mle[\\s\\-]*)?(?:ф|f)[- ]?1[aа]?' },
             { id: 'M67', name: 'Граната М67', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:m[- ]?67|м[- ]?67)' },
@@ -395,21 +431,24 @@ GHO - 2
             { id: 'RGO', name: 'Граната РГО', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgo|рго|rg0|рг0)[а-яіїєґ]*' },
             { id: 'RGD5', name: 'Граната РГД-5', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:ргд|rgd)[\\s\\-]*5?' },
             { id: 'RG42', name: 'Граната РГ-42', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rg|рг|pg|пг|рg|pг)[\\s\\-_]*42' },
-            { id: 'RGT27S', name: 'Граната РГТ-27С', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' },
-            { id: 'VOG', name: 'ВОГ (17/25)', icon: '💣', category: 'grenade', idPattern: '(?:вог|vog)[а-яіїєґa-z]*[- ]?(?:17|25)?' }
+            { id: 'RGT27S', name: 'Граната РГТ-27С', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' }
         ];
 
-        // Завантаження з LocalStorage
+        // -------------------------------------------------------------------------
+        // 5. ІНІЦІАЛІЗАЦІЯ ДАНИХ З LOCALSTORAGE
+        // -------------------------------------------------------------------------
         const savedData = localStorage.getItem('ammoData');
         inputTextArea.value = savedData !== null ? savedData : samplePresets.all;
         checkboxGrenade.checked = localStorage.getItem('assumeOneGrenade') === 'true';
 
-        // Синхронізація скролу
+        // Синхронізація скролінгу лінійки рядків та текстового поля
         inputTextArea.addEventListener('scroll', () => {
             lineNumbersDiv.scrollTop = inputTextArea.scrollTop;
         });
 
-        // Оновлення номерів рядків
+        /**
+         * Оновлює вертикальну лінійку нумерації рядків та бейдж кількості
+         */
         function updateLineNumbers() {
             const lines = inputTextArea.value.split('\n');
             const linesCount = lines.length || 1;
@@ -421,13 +460,20 @@ GHO - 2
             editorLinesBadge.textContent = `${linesCount} рядк${getLineEnding(linesCount)}`;
         }
 
+        /**
+         * Повертає коректне закінчення для слова «рядок» в українській мові
+         * @param {number} n - Кількість рядків
+         */
         function getLineEnding(n) {
             if (n % 10 === 1 && n % 100 !== 11) return 'ок';
             if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'ки';
             return 'ів';
         }
 
-        // Швидкі пресети
+        /**
+         * Вставляє швидкий пресет тексту донесень
+         * @param {string} key - Ключ пресету з об'єкта samplePresets
+         */
         function insertSamplePreset(key) {
             if (samplePresets[key]) {
                 inputTextArea.value = samplePresets[key];
@@ -435,6 +481,15 @@ GHO - 2
             }
         }
 
+        /**
+         * Нормалізує військовий сирий текст:
+         * - Замінює нерозривні та спец-пробіли на звичайні
+         * - Уніфікує всі види лапок та апострофів
+         * - Приводить різні типи тире/дефісів до стандартного дефіса
+         * - Опціонально переводить у нижній регістр
+         * @param {string} text - Вхідний текст
+         * @param {object} options - Опції нормалізації
+         */
         function normalizeMilitaryText(text, options = { toLower: true }) {
             if (text === undefined || text === null) return "";
             let str = String(text);
@@ -444,13 +499,16 @@ GHO - 2
             return (options && options.toLower) ? str.toLowerCase() : str;
         }
 
-        // Головна функція парсингу
+        // -------------------------------------------------------------------------
+        // 6. ГОЛОВНИЙ АЛГОРИТМ ПАРСИНГУ ТА РОЗПІЗНАВАННЯ БК
+        // -------------------------------------------------------------------------
         function parseData() {
             const text = inputTextArea.value;
             localStorage.setItem('ammoData', text);
             localStorage.setItem('assumeOneGrenade', checkboxGrenade.checked);
             updateLineNumbers();
 
+            // Якщо поле вводу пусте — очищуємо інтерфейс
             if (!text.trim()) {
                 renderUI([], [], 0, 0);
                 return;
@@ -463,14 +521,17 @@ GHO - 2
             let successfullyParsedCount = 0;
             const assumeOne = checkboxGrenade.checked;
 
+            // Ініціалізація лічильників для кожного типу БК
             ammoConfigs.forEach(conf => {
                 totals[conf.id] = { name: conf.name, icon: conf.icon, count: 0 };
             });
 
+            // Загальні шаблони роздільників та одиниць виміру
             const sep = '[\\s\\-–—:=./;\\\\x5c]*';
             const unit = '(?:[\\s\\-]*[\\-\\\\/\\s]*шт\\.?|щт\\.?|штук[и]?|гранат[аи]?|грн)?';
-            const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ_])';
+            const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ_])'; // Запобігає захопленню цифр всередині слів
 
+            // Порядкова обробка кожного рядка тексту
             lines.forEach((line, index) => {
                 if (!line.trim()) {
                     unparsed.push({ lineNum: index + 1, original: line, isEmpty: true });
@@ -480,31 +541,45 @@ GHO - 2
                 let workingLine = normalizeMilitaryText(line, { toLower: true });
                 let matchedInLine = false;
 
-                // КРОК 1: Основний парсинг
+                // -----------------------------------------------------------------
+                // КРОК 1: Двосторонній основний парсинг
+                // 1) Кількість -> Тип БК (наприклад: 120 шт 5.45, 2шт-RHEAT-7MA2;)
+                // 2) Тип БК -> Кількість (наприклад: 5.45х39 - 120 шт, GHO 2)
+                // -----------------------------------------------------------------
                 ammoConfigs.forEach(conf => {
                     const processMatch = (match, p1) => {
                         const qty = parseInt(p1, 10);
                         let targetId = conf.id;
 
+                        // Евристика 12-го калібру: <= 25 шт зараховуємо як 12х70 (дробовик), > 25 шт як 12.7х99 (кулемет)
                         if (targetId === '12.7') {
                             targetId = qty <= 25 ? '12x70' : '12.7x99';
                         }
 
                         totals[targetId].count += qty;
                         matchedInLine = true;
-                        return ' ';
+                        return ' '; // Замінюємо розпізнане на пробіл
                     };
 
+                    // Пошук у форматі: [Число] [Роздільник] [Тип БК]
                     const numFirstRegex = new RegExp(`${numPrefix}(\\d+)\\s*${unit}${sep}(?:${conf.idPattern})`, 'gi');
                     workingLine = workingLine.replace(numFirstRegex, processMatch);
 
+                    // Пошук у форматі: [Тип БК] [Роздільник] [Число]
                     const ammoFirstRegex = new RegExp(`(?:${conf.idPattern})${sep}${numPrefix}(\\d+)\\s*${unit}`, 'gi');
                     workingLine = workingLine.replace(ammoFirstRegex, processMatch);
                 });
 
-                // КРОК 2: Гранати/постріли без кількості (якщо галочка)
+                // -----------------------------------------------------------------
+                // КРОК 2: Гранати/постріли без явної кількості (за активного чекбокса)
+                // Наприклад, боєць написав просто: "Ф1", "RHEAT-7MA2", "ВОГ" -> рахується як 1 шт
+                // -----------------------------------------------------------------
                 if (assumeOne) {
-                    const implicitConfigs = ['GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'RGT27S', 'VOG', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'BULLSPIKE', 'RPV16', 'VPR20', 'AT4'];
+                    const implicitConfigs = [
+                        'GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'RGT27S', 
+                        'VOG', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'RHEAT7MA', 'BULLSPIKE', 
+                        'RPV16', 'VPR20', 'AT4'
+                    ];
                     implicitConfigs.forEach(id => {
                         const conf = ammoConfigs.find(c => c.id === id);
                         if (!conf) return;
@@ -517,7 +592,11 @@ GHO - 2
                     });
                 }
 
-                // КРОК 3: Правило магазинів АК (30, 60, 90, 120 і т.д.) -> йдуть в 5.45
+                // -----------------------------------------------------------------
+                // КРОК 3: Евристика автоматних магазинів АК
+                // Якщо залишилось кругле число, кратне ємності магазину (30, 60, 90...) без калібру
+                // автоматично зараховуємо його до 5.45х39 мм
+                // -----------------------------------------------------------------
                 const akMagsRegex = new RegExp(`${numPrefix}(30|60|90|120|150|180|210|240|270|300)\\b\\s*${unit}`, 'gi');
                 workingLine = workingLine.replace(akMagsRegex, (match, p1) => {
                     totals['5.45'].count += parseInt(p1, 10);
@@ -529,27 +608,37 @@ GHO - 2
                     successfullyParsedCount++;
                 }
 
-                // КРОК 4: Записуємо в помилки якщо нічого не знайдено АБО лишились цифри поза дужками
-                let checkLine = workingLine.replace(/\([^)]*\)/g, ' ');
+                // -----------------------------------------------------------------
+                // КРОК 4: Валідація залишків рядка
+                // Записуємо рядок у блок нерозпізнаних, якщо в ньому нічого не знайдено
+                // АБО якщо після вирізання розпізнаного залишилися невикористані цифри
+                // -----------------------------------------------------------------
+                let checkLine = workingLine.replace(/\([^)]*\)/g, ' '); // Ігноруємо коментарі в дужках
                 if (!matchedInLine || /\b\d+\b/.test(checkLine)) {
                     unparsed.push({ lineNum: index + 1, original: line, isEmpty: false });
                 }
             });
 
+            // Відфільтровуємо лише позиції, де кількість більша за 0
             currentResults = Object.values(totals).filter(item => item.count > 0);
             renderUI(currentResults, unparsed, successfullyParsedCount, validLinesCount);
         }
 
-        // Відображення результатів
+        // -------------------------------------------------------------------------
+        // 7. ВІДОБРАЖЕННЯ РЕЗУЛЬТАТІВ ТА СТАТИСТИКИ В UI
+        // -------------------------------------------------------------------------
         function renderUI(results, unparsed, parsedCount, totalCount) {
+            // Активація / деактивація кнопок експорту
             btnCopy.disabled = results.length === 0;
             btnDownload.disabled = results.length === 0;
 
+            // Підрахунок загальної кількості боєприпасів
             const totalAmmoSum = results.reduce((acc, curr) => acc + curr.count, 0);
             statTotalAmmo.textContent = totalAmmoSum.toLocaleString('uk-UA');
             statTotalTypes.textContent = results.length;
             statLinesRatio.textContent = `${parsedCount} / ${totalCount}`;
 
+            // Колірне маркування якості розпізнавання
             if (parsedCount === totalCount && totalCount > 0) {
                 statLinesRatio.className = "text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-0.5";
             } else if (totalCount === 0) {
@@ -560,6 +649,7 @@ GHO - 2
 
             resultsCountBadge.textContent = `${results.length} позиці${results.length === 1 ? 'я' : [2,3,4].includes(results.length) ? 'ї' : 'й'}`;
 
+            // Генерація HTML таблиці підсумків
             if (results.length > 0) {
                 let html = '';
                 results.forEach(item => {
@@ -585,6 +675,7 @@ GHO - 2
                 noResults.classList.remove('hidden');
             }
 
+            // Генерація списку рядків з помилками / нерозпізнаними даними
             if (unparsed.length > 0) {
                 let errHtml = '';
                 unparsed.forEach(u => {
@@ -603,7 +694,9 @@ GHO - 2
             }
         }
 
-        // Модальне вікно Changelog
+        // -------------------------------------------------------------------------
+        // 8. УПРАВЛІННЯ МОДАЛЬНИМ ВІКНОМ CHANGELOG
+        // -------------------------------------------------------------------------
         function openChangelogModal() {
             changelogModal.classList.remove('hidden');
             changelogModal.classList.add('flex');
@@ -618,8 +711,14 @@ GHO - 2
             if (e.target === changelogModal) closeChangelogModal();
         });
 
-        // Слухачі подій
+        // -------------------------------------------------------------------------
+        // 9. СЛУХАЧІ ПОДІЙ ТА ДЕБАУНСИНГ
+        // -------------------------------------------------------------------------
         let _parseTimer = null;
+        /**
+         * Забезпечує плавний ввід великих текстів без фризів інтерфейсу
+         * @param {number} delay - Затримка перед виконанням парсингу в мілісекундах
+         */
         function debouncedParseData(delay = 100) {
             clearTimeout(_parseTimer);
             _parseTimer = setTimeout(() => {
@@ -641,6 +740,7 @@ GHO - 2
             }
         });
 
+        // Копіювання згенерованого підсумку в буфер обміну
         btnCopy.addEventListener('click', () => {
             if (currentResults.length === 0) return;
             let textToCopy = "Витрата БК:\n";
@@ -657,6 +757,7 @@ GHO - 2
                     btnCopy.classList.remove('bg-emerald-700', 'shadow-emerald-900/60');
                 }, 2000);
             }).catch(() => {
+                // Fallback для середовищ без підтримки navigator.clipboard
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
                 document.body.appendChild(textArea);
@@ -670,6 +771,7 @@ GHO - 2
             });
         });
 
+        // Завантаження звіту у форматі .txt файлу
         btnDownload.addEventListener('click', () => {
             if (currentResults.length === 0) return;
             let textToSave = "ЗВІТ ПО ВИТРАТІ БК:\n" + "=".repeat(30) + "\n\n";
@@ -677,7 +779,7 @@ GHO - 2
                 const formattedCount = r.count.toLocaleString('uk-UA');
                 textToSave += `${r.name}: ${formattedCount} шт.\n`;
             });
-            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично (Калькулятор БК v1.1.0)";
+            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично (Калькулятор БК v1.1.3)";
 
             const blob = new Blob(["\uFEFF" + textToSave], { type: "text/plain;charset=utf-8" });
             const url = URL.createObjectURL(blob);
@@ -690,7 +792,7 @@ GHO - 2
             URL.revokeObjectURL(url);
         });
 
-        // Перший запуск
+        // Первинний запуск парсингу при завантаженні сторінки
         parseData();
     </script>
 </body>
