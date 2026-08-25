@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оперативний Журнал Дій (ЖБД) | Тактичний Комплекс</title>
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- External Libraries (Tailwind CSS, Lucide Icons, SheetJS) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+                    },
+                    colors: {
+                        darkbg: '#020617',
+                        darkcard: '#090e1a',
+                        darkpanel: '#0f172a',
+                        darkinput: '#111b2e',
+                        darkborder: '#1e293b'
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #020617;
+            --panel-bg: #0f172a;
+            --text-main: #f8fafc;
+            --accent: #10b981;
+            --border: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 0%, #0d1b38 0%, #020617 80%);
+            min-height: 100vh;
+            color: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 95, 70, 0.3));
+            border-color: #10b981;
+            color: #34d399;
+            box-shadow: 0 4px 14px -2px rgba(16, 185, 129, 0.25);
+        }
+
+        .table-container {
+            max-height: calc(100vh - 280px);
+        }
+
+        .badge-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
+</head>
+
+<body class="text-slate-200 antialiased min-h-screen flex flex-col justify-between selection:bg-emerald-500/30">
+
+    <!-- Top Navigation Bar -->
+    <header
+        class="w-full bg-[#090e1a]/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 sm:px-6 py-3 shadow-lg">
+        <div class="max-w-[1700px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 shrink-0">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <h1 class="text-lg sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                            Оперативний Журнал Дій
+                        </h1>
+                        <span
+                            class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] font-mono font-bold px-2 py-0.5 rounded-md">
+                            ЖБД_TACTICAL
+                        </span>
+                        <button type="button" onclick="openChangelogModal()"
+                            class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-mono px-2 py-0.5 rounded-md transition-all flex items-center gap-1 cursor-pointer"
+                            title="Історія змін">
+                            ⚡ v1.0.0
+                        </button>
+                    </div>
+                    <p class="text-slate-400 text-xs mt-0.5">
+                        Облік завдань, штурмових дій, втрат о/с та ОВТ, статусу позицій і бойових розпоряджень
+                    </p>
+                </div>
+            </div>
+
+            <!-- Top Actions & Controls -->
+            <div class="flex items-center gap-2 flex-wrap justify-end">
+                
+                <!-- Quick Date Filter -->
+                <div class="flex items-center bg-[#111b2e] border border-slate-700 rounded-xl px-2.5 py-1.5 gap-2 text-xs">
+                    <i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i>
+                    <input type="date" id="global-date-filter" onchange="applyGlobalDateFilter()"
+                        class="bg-transparent text-slate-200 focus:outline-none font-mono text-xs cursor-pointer">
+                    <button onclick="clearDateFilter()" title="Скинути фільтр дати" class="text-slate-500 hover:text-slate-300">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+
+                <!-- Action Buttons -->
+                <button onclick="openImportModal()"
+                    class="bg-blue-600/90 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm shadow-blue-600/20 cursor-pointer">
+                    <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+                    <span>Імпорт (.xlsx)</span>
+                </button>
+
+                <button onclick="exportAllToExcel()"
+                    class="bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 cursor-pointer">
+                    <i data-lucide="file-down" class="w-3.5 h-3.5"></i>
+                    <span>Експорт (.xlsx)</span>
+                </button>
+
+                <button onclick="openDailyReportModal()"
+                    class="bg-indigo-600/90 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm shadow-indigo-600/20 cursor-pointer"
+                    title="Сформувати добове бойове донесення">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                    <span>Добове БД</span>
+                </button>
+
+                <!-- Snapshots / Backup Dropdown Menu -->
+                <button onclick="openBackupModal()"
+                    class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-medium px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Резервні копії, шифрування та точки відновлення">
+                    <i data-lucide="database" class="w-3.5 h-3.5 text-teal-400"></i>
+                    <span>Бекап & БД</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation Buttons -->
+        <nav class="max-w-[1700px] mx-auto mt-3 flex items-center gap-1.5 overflow-x-auto pb-1 border-t border-slate-800/80 pt-2.5">
+            <button onclick="switchTab('tasks')" id="tab-btn-tasks"
+                class="tab-btn active px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                <i data-lucide="truck" class="w-4 h-4 text-blue-400"></i>
+                <span>1. ЗАВДАННЯ</span>
+                <span id="badge-count-tasks" class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+            </button>
+
+            <button onclick="switchTab('assaults')" id="tab-btn-assaults"
+                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                <i data-lucide="swords" class="w-4 h-4 text-rose-400"></i>
+                <span>2. ШТУРМОВІ ДІЇ</span>
+                <span id="badge-count-assaults" class="bg-rose-500/20 text-rose-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+            </button>
+
+            <button onclick="switchTab('enemy')" id="tab-btn-enemy"
+                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                <i data-lucide="skull" class="w-4 h-4 text-red-400"></i>
+                <span>3. ВТРАТИ ПРОТИВНИКА</span>
+                <span id="badge-count-enemy" class="bg-red-500/20 text-red-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+            </button>
+
+            <button onclick="switchTab('ovt')" id="tab-btn-ovt"
+                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>
+                <span>4. ВТРАТИ ОВТ</span>
+                <span id="badge-count-ovt" class="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+            </button>
+
+            <button onclick="switchTab('positions')" id="tab-btn-positions"
+                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
+                <span>5. СТАТУС ПОЗИЦІЙ</span>
+                <span id="badge-count-positions" class="bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+            </button>
+
+            <button onclick="switchTab('orders')" id="tab-btn-orders"
+                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                <i data-lucide="clipboard-check" class="w-4 h-4 text-purple-400"></i>
+                <span>6. ВИКОНАННЯ БР</span>
+                <span id="badge-count-orders" class="bg-purple-500/20 text-purple-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="max-w-[1700px] w-full mx-auto p-4 sm:p-6 flex-1 flex flex-col gap-4">
+
+        <!-- 1. TAB: ЗАВДАННЯ -->
+        <section id="panel-tasks" class="tab-panel flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-semibold text-slate-400">Фільтри:</span>
+                    <select id="filter-tasks-status" onchange="renderTasksTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        <option value="all">Всі статуси</option>
+                        <option value="Виконано">🟢 Виконано</option>
+                        <option value="Виконується">🟡 Виконується</option>
+                        <option value="Заплановано">🔵 Заплановано</option>
+                        <option value="Не виконано">🔴 Не виконано</option>
+                    </select>
+
+                    <label class="flex items-center gap-1.5 text-xs text-slate-300 bg-[#111b2e] border border-slate-700 px-3 py-1.5 rounded-xl cursor-pointer">
+                        <input type="checkbox" id="filter-tasks-unreported" onchange="renderTasksTable()" class="rounded bg-slate-800 border-slate-700 text-emerald-500">
+                        <span>Тільки не подані в ПБД</span>
+                    </label>
+
+                    <div class="relative w-48 sm:w-64">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                        <input type="text" id="search-tasks" oninput="renderTasksTable()" placeholder="Пошук у завданнях..."
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openAddTaskModal()"
+                        class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Додати завдання</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-[#090e1a] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="overflow-x-auto table-container">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
+                            <tr>
+                                <th class="p-3 w-12 text-center">#</th>
+                                <th class="p-3 w-28">Дата</th>
+                                <th class="p-3 min-w-[320px]">Зміст завдання</th>
+                                <th class="p-3 w-36 text-center">Подано в ПБД</th>
+                                <th class="p-3 w-36 text-center">Статус</th>
+                                <th class="p-3 min-w-[200px]">Коментар</th>
+                                <th class="p-3 w-24 text-right">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. TAB: ШТУРМОВІ ДІЇ -->
+        <section id="panel-assaults" class="tab-panel hidden flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-semibold text-slate-400">Фільтри:</span>
+                    <select id="filter-assaults-real" onchange="renderAssaultsTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        <option value="all">Всі події</option>
+                        <option value="Так">🟢 Тільки реальні події</option>
+                        <option value="Ні">🔴 Тільки хибні / непідтверджені</option>
+                    </select>
+
+                    <div class="relative w-48 sm:w-64">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                        <input type="text" id="search-assaults" oninput="renderAssaultsTable()" placeholder="Пошук за позицією / о/с..."
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-rose-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openAddAssaultModal()"
+                        class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Додати штурмову дію</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-[#090e1a] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="overflow-x-auto table-container">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
+                            <tr>
+                                <th class="p-3 w-12 text-center">#</th>
+                                <th class="p-3 w-36">Час початку</th>
+                                <th class="p-3 w-36">Час завершення</th>
+                                <th class="p-3 w-28 text-center">Реальна</th>
+                                <th class="p-3 w-36">Звітне місце</th>
+                                <th class="p-3 min-w-[240px]">Фактичне місце / контакт</th>
+                                <th class="p-3 min-w-[180px]">Сили ворога</th>
+                                <th class="p-3 min-w-[240px]">Результат, втрати, БК</th>
+                                <th class="p-3 w-24 text-right">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assaults-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. TAB: ВТРАТИ ПРОТИВНИКА -->
+        <section id="panel-enemy" class="tab-panel hidden flex flex-col gap-3">
+            <!-- Counters Banner -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-[#090e1a] border border-red-500/30 p-3 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-semibold">Знищено (200)</p>
+                        <p id="stat-enemy-200" class="text-xl font-extrabold text-red-400 font-mono">0</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-red-500/10 text-red-400"><i data-lucide="skull" class="w-5 h-5"></i></span>
+                </div>
+                <div class="bg-[#090e1a] border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-semibold">Поранено (300)</p>
+                        <p id="stat-enemy-300" class="text-xl font-extrabold text-amber-400 font-mono">0</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400"><i data-lucide="activity" class="w-5 h-5"></i></span>
+                </div>
+                <div class="bg-[#090e1a] border border-emerald-500/30 p-3 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-semibold">Полонені</p>
+                        <p id="stat-enemy-pow" class="text-xl font-extrabold text-emerald-400 font-mono">0</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400"><i data-lucide="user-check" class="w-5 h-5"></i></span>
+                </div>
+                <div class="bg-[#090e1a] border border-blue-500/30 p-3 rounded-2xl flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-semibold">Узгоджено з S2</p>
+                        <p id="stat-enemy-s2" class="text-xl font-extrabold text-blue-400 font-mono">0</p>
+                    </div>
+                    <span class="p-2 rounded-xl bg-blue-500/10 text-blue-400"><i data-lucide="check-check" class="w-5 h-5"></i></span>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <select id="filter-enemy-status" onchange="renderEnemyTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        <option value="all">Всі категорії</option>
+                        <option value="200">🔴 200 (Знищено)</option>
+                        <option value="300">🟡 300 (Поранено)</option>
+                        <option value="Полонений">🟢 Полонені</option>
+                    </select>
+
+                    <select id="filter-enemy-s2" onchange="renderEnemyTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        <option value="all">Статус S2 (Всі)</option>
+                        <option value="Так">✅ Узгоджено S2</option>
+                        <option value="Ні">❌ Не узгоджено</option>
+                    </select>
+
+                    <div class="relative w-48 sm:w-64">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                        <input type="text" id="search-enemy" oninput="renderEnemyTable()" placeholder="Пошук за позивним / групою..."
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-red-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openAddEnemyModal()"
+                        class="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Додати втрату ворога</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-[#090e1a] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="overflow-x-auto table-container">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
+                            <tr>
+                                <th class="p-3 w-12 text-center">#</th>
+                                <th class="p-3 w-28">Дата</th>
+                                <th class="p-3 w-20">Час</th>
+                                <th class="p-3 w-20 text-center">К-ть</th>
+                                <th class="p-3 w-28 text-center">Статус</th>
+                                <th class="p-3 w-24">Підрозділ</th>
+                                <th class="p-3 w-28">Засіб</th>
+                                <th class="p-3 w-24 text-center">S2?</th>
+                                <th class="p-3 w-24 text-center">ПБД?</th>
+                                <th class="p-3 min-w-[160px]">Позивний / Ідентифікатор</th>
+                                <th class="p-3 min-w-[220px]">Де/ким знищений</th>
+                                <th class="p-3 w-24 text-right">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody id="enemy-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. TAB: ВТРАТИ ОВТ -->
+        <section id="panel-ovt" class="tab-panel hidden flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <select id="filter-ovt-cat" onchange="renderOvtTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        <option value="all">Всі категорії ОВТ</option>
+                        <option value="Зброя">🔴 Зброя</option>
+                        <option value="БпЛА">🔵 БпЛА</option>
+                        <option value="Транспорт">🟢 Транспорт</option>
+                    </select>
+
+                    <select id="filter-ovt-status" onchange="renderOvtTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        <option value="all">Всі статуси</option>
+                        <option value="ВТРАЧЕНО">🟠 ВТРАЧЕНО</option>
+                        <option value="ЗНИЩЕНО">🔴 ЗНИЩЕНО</option>
+                        <option value="ПОШКОДЖЕНО">🟡 ПОШКОДЖЕНО</option>
+                    </select>
+
+                    <div class="relative w-48 sm:w-64">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                        <input type="text" id="search-ovt" oninput="renderOvtTable()" placeholder="Пошук за серійником, VIN, позицією..."
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openAddOvtModal()"
+                        class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Додати запис ОВТ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-[#090e1a] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="overflow-x-auto table-container">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
+                            <tr>
+                                <th class="p-3 w-12 text-center">#</th>
+                                <th class="p-3 w-28">Дата</th>
+                                <th class="p-3 w-20">Час</th>
+                                <th class="p-3 w-32">Позиція</th>
+                                <th class="p-3 w-24">Категорія</th>
+                                <th class="p-3 w-28 font-mono">Модель</th>
+                                <th class="p-3 w-28 text-center">Статус</th>
+                                <th class="p-3 min-w-[180px] font-mono">Серійний № / VIN</th>
+                                <th class="p-3 w-28 font-mono">Номер авто</th>
+                                <th class="p-3 w-32 font-mono">Позатермінове №</th>
+                                <th class="p-3 min-w-[180px]">Причина / Коментар</th>
+                                <th class="p-3 w-36 text-right">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ovt-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. TAB: СТАТУС ПОЗИЦІЙ -->
+        <section id="panel-positions" class="tab-panel hidden flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <select id="filter-pos-status" onchange="renderPositionsTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        <option value="all">Всі дії / статуси</option>
+                        <option value="виставлена">🟢 Виставлена</option>
+                        <option value="облаштовується">⚪ Облаштовується</option>
+                        <option value="переміщена">🟡 Переміщена</option>
+                        <option value="знята">🔵 Знята</option>
+                        <option value="знищена">🔴 Знищена</option>
+                        <option value="Тимчасово не БГ">⚠️ Тимчасово не БГ</option>
+                        <option value="перейменована">🔄 Перейменована</option>
+                    </select>
+
+                    <div class="relative w-48 sm:w-64">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                        <input type="text" id="search-positions" oninput="renderPositionsTable()" placeholder="Пошук за назвою позиції..."
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openAddPositionModal()"
+                        class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Додати подію позиції</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-[#090e1a] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="overflow-x-auto table-container">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
+                            <tr>
+                                <th class="p-3 w-12 text-center">#</th>
+                                <th class="p-3 w-28">Дата</th>
+                                <th class="p-3 w-44 font-semibold text-emerald-400">Назва позиції</th>
+                                <th class="p-3 w-36 text-center">Статус / Дія</th>
+                                <th class="p-3 w-40 font-mono">Донесення № / Підстава</th>
+                                <th class="p-3 min-w-[240px]">Деталі, ротації та о/с</th>
+                                <th class="p-3 w-24 text-right">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positions-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. TAB: ВИКОНАННЯ БР -->
+        <section id="panel-orders" class="tab-panel hidden flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <select id="filter-orders-stage" onchange="renderOrdersTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        <option value="all">Всі етапи виконання</option>
+                        <option value="Виконується">🔵 Виконується</option>
+                        <option value="Не розпочато">🟡 Не розпочато</option>
+                        <option value="Виконано">🟢 Виконано</option>
+                        <option value="Протерміновано">🔴 Протерміновано</option>
+                    </select>
+
+                    <div class="relative w-48 sm:w-64">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+                        <input type="text" id="search-orders" oninput="renderOrdersTable()" placeholder="Пошук за № БР або текстом..."
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-purple-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="openAddOrderModal()"
+                        class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Додати розпорядження</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-[#090e1a] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="overflow-x-auto table-container">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
+                            <tr>
+                                <th class="p-3 w-12 text-center">#</th>
+                                <th class="p-3 w-28">Дата отрим.</th>
+                                <th class="p-3 w-32 font-mono text-purple-300">№ БР / Хто дав</th>
+                                <th class="p-3 min-w-[360px]">Зміст завдання</th>
+                                <th class="p-3 w-36 font-mono text-amber-300">Дедлайн</th>
+                                <th class="p-3 w-36 text-center">Етап</th>
+                                <th class="p-3 w-28 text-center">Доведено?</th>
+                                <th class="p-3 w-32 font-mono">№ Донесення</th>
+                                <th class="p-3 w-24 text-right">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-3 border-t border-slate-800/80 text-slate-500 text-xs font-mono bg-[#090e1a]/60">
+        Оперативний Журнал Дій (ЖБД) • Тактичний Штабний Комплекс • 2026
+    </footer>
+
+    <!-- ==================== MODALS & DIALOGS ==================== -->
+
+    <!-- 1. Modal: Import Excel -->
+    <div id="modal-import" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#090e1a] border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="file-up" class="w-5 h-5 text-blue-400"></i>
+                    Імпорт таблиці (.xlsx / Google Sheets)
+                </h3>
+                <button onclick="closeModal('modal-import')" class="text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Виберіть файл Excel (.xlsx), експортований із Google Таблиць. Програма автоматично розпізнає всі аркуші (Завдання, Штурмові дії, Втрати противника, Втрати ОВТ, Статус позицій, Виконання БР) та об'єднає їх із вашою локальною базою даних.
+            </p>
+            <div class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl p-8 text-center cursor-pointer transition-colors bg-[#111b2e]/50"
+                onclick="document.getElementById('excel-file-input').click()">
+                <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 text-blue-400"></i>
+                <p class="text-sm font-semibold text-white">Натисніть для вибору .xlsx файлу</p>
+                <p class="text-[11px] text-slate-500 mt-1">Підтримуються всі стандартні структури колонок</p>
+                <input type="file" id="excel-file-input" accept=".xlsx, .xls" class="hidden" onchange="handleExcelImport(event)">
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-400 border-t border-slate-800 pt-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="import-mode" value="merge" checked class="text-blue-500">
+                    <span>Доповнити наявні дані</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="import-mode" value="replace" class="text-rose-500">
+                    <span class="text-rose-400">Перезаписати базу повністю</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Modal: Urgent Report Generator (Позатермінове донесення ОВТ) -->
+    <div id="modal-urgent-report" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#090e1a] border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="file-badge" class="w-5 h-5 text-amber-400"></i>
+                    Генератор Позатермінового Бойового Донесення
+                </h3>
+                <button onclick="closeModal('modal-urgent-report')" class="text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">
+                Офіційний текст доповіді сформовано автоматично на основі даних про втрату/пошкодження ОВТ:
+            </p>
+            <textarea id="urgent-report-text" rows="8"
+                class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-3 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-amber-500"></textarea>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <span id="urgent-copy-toast" class="text-xs text-emerald-400 hidden font-medium flex items-center gap-1">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i> Скопійовано в буфер обміну!
+                </span>
+                <div class="flex items-center gap-2 ml-auto">
+                    <button onclick="closeModal('modal-urgent-report')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl cursor-pointer">Закрити</button>
+                    <button onclick="copyUrgentReport()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-amber-600/20 cursor-pointer">
+                        <i data-lucide="copy" class="w-4 h-4"></i> Скопіювати донесення
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Modal: Daily Report (Добове БД) -->
+    <div id="modal-daily-report" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#090e1a] border border-slate-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-hidden">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-5 h-5 text-indigo-400"></i>
+                    Зведене Добове Бойове Донесення (БД)
+                </h3>
+                <button onclick="closeModal('modal-daily-report')" class="text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="flex items-center gap-3">
+                <label class="text-xs text-slate-400 font-semibold">Дата зведення:</label>
+                <input type="date" id="daily-report-date" onchange="generateDailyReportText()"
+                    class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-3 py-1.5 text-slate-200 font-mono focus:outline-none">
+            </div>
+            <textarea id="daily-report-text" rows="12"
+                class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-3 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-indigo-500 overflow-y-auto"></textarea>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <span id="daily-copy-toast" class="text-xs text-emerald-400 hidden font-medium flex items-center gap-1">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i> Скопійовано!
+                </span>
+                <div class="flex items-center gap-2 ml-auto">
+                    <button onclick="closeModal('modal-daily-report')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl cursor-pointer">Закрити</button>
+                    <button onclick="copyDailyReport()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer">
+                        <i data-lucide="copy" class="w-4 h-4"></i> Скопіювати текст БД
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Modal: Backup & Snapshots (Машина часу та AES-256) -->
+    <div id="modal-backup" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#090e1a] border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="database" class="w-5 h-5 text-teal-400"></i>
+                    Керування Базою Даних (IndexedDB & AES-256)
+                </h3>
+                <button onclick="closeModal('modal-backup')" class="text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Encryption Actions -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-[#111b2e] border border-slate-800 p-4 rounded-xl flex flex-col gap-2">
+                    <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i data-lucide="lock" class="w-4 h-4 text-emerald-400"></i> Зашифрований бекап (.enc)
+                    </h4>
+                    <p class="text-[11px] text-slate-400">Зберегти всю базу у захищений контейнер AES-256 для флешки.</p>
+                    <button onclick="exportEncryptedBackup()" class="mt-auto w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-lg transition-all cursor-pointer">
+                        💾 Завантажити .enc
+                    </button>
+                </div>
+                <div class="bg-[#111b2e] border border-slate-800 p-4 rounded-xl flex flex-col gap-2">
+                    <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i data-lucide="unlock" class="w-4 h-4 text-blue-400"></i> Відновити з бекапу (.enc)
+                    </h4>
+                    <p class="text-[11px] text-slate-400">Розгорнути збережену базу з файлу бекапу.</p>
+                    <input type="file" id="enc-backup-input" accept=".enc" class="hidden" onchange="importEncryptedBackup(event)">
+                    <button onclick="document.getElementById('enc-backup-input').click()" class="mt-auto w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-lg transition-all cursor-pointer">
+                        📂 Відкрити .enc
+                    </button>
+                </div>
+            </div>
+
+            <!-- Rolling Snapshots / Time Machine -->
+            <div class="border-t border-slate-800 pt-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                        <i data-lucide="history" class="w-4 h-4 text-teal-400"></i> Авто-знімки стану (Rolling Snapshots)
+                    </h4>
+                    <button onclick="createManualSnapshot()" class="text-[11px] text-teal-400 hover:underline cursor-pointer">+ Створити точку зараз</button>
+                </div>
+                <div id="snapshots-list" class="max-h-40 overflow-y-auto space-y-1.5 pr-1 text-xs">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="border-t border-slate-800/80 pt-3 flex items-center justify-between">
+                <button onclick="confirmClearDatabase()" class="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 cursor-pointer">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Очистити локальну базу
+                </button>
+                <button onclick="closeModal('modal-backup')" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl cursor-pointer">Закрити</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Modal: Autonomous Changelog -->
+    <div id="modal-changelog" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#090e1a] border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-emerald-400"></i>
+                    Історія версій та оновлень
+                </h3>
+                <button onclick="closeModal('modal-changelog')" class="text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-3 text-xs leading-relaxed max-h-80 overflow-y-auto pr-1">
+                <div class="bg-[#111b2e] p-3.5 rounded-xl border border-emerald-500/30">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-emerald-400 text-sm">⚡ Реліз v1.0.0 (Повнофункціональний реліз)</span>
+                        <span class="font-mono text-[11px] text-slate-400">25.08.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300">
+                        <li><b>6 оперативно-штабних розділів</b>: Завдання, Штурмові дії, Втрати ворога, Втрати ОВТ, Статус позицій, Виконання БР.</li>
+                        <li><b>IndexedDB сховище</b>: Надійна локальна база даних у браузері без ризику втрати даних при скиданні кешу.</li>
+                        <li><b>Шифрування AES-256</b>: Захищений експорт/імпорт бази для перенесення на флешці.</li>
+                        <li><b>Генератор позатермінових донесень</b>: Формування офіційних рапортів у 1 клік.</li>
+                        <li><b>Добове Бойове Донесення (БД)</b>: Зведення всіх дій підрозділу за добу.</li>
+                    </ul>
+                </div>
+            </div>
+            <button onclick="closeModal('modal-changelog')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold py-2 rounded-xl cursor-pointer">
+                Зрозуміло
+            </button>
+        </div>
+    </div>
+
+    <!-- 6. Modal: Add/Edit Record Generic -->
+    <div id="modal-edit-record" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#090e1a] border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 id="edit-modal-title" class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-emerald-400"></i>
+                    Редагування запису
+                </h3>
+                <button onclick="closeModal('modal-edit-record')" class="text-slate-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="record-form" onsubmit="saveRecordFromModal(event)" class="space-y-3">
+                <div id="form-fields-container" class="space-y-3 text-xs">
+                    <!-- Populated dynamically based on active tab -->
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+                    <button type="button" onclick="closeModal('modal-edit-record')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl cursor-pointer">Скасувати</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 cursor-pointer">
+                        Зберегти запис
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // -------------------------------------------------------------------------
+        // ОПЕРАТИВНИЙ ЖУРНАЛ ДІЙ: КОНФІГУРАЦІЯ, СТАН ТА ІНІЦІАЛІЗАЦІЯ
+        // -------------------------------------------------------------------------
+
+        const DB_NAME = "OperationalLogDB_v1";
+        const DB_VERSION = 1;
+        let db = null;
+
+        // Поточний стан додатку в оперативній пам'яті
+        let appState = {
+            activeTab: 'tasks',
+            tasks: [],
+            assaults: [],
+            enemy: [],
+            ovt: [],
+            positions: [],
+            orders: [],
+            snapshots: [],
+            currentEditId: null,
+            currentEditStore: null,
+            globalDateFilter: null
+        };
+
+        /**
+         * Ініціалізація бази даних IndexedDB
+         */
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    const dbInstance = event.target.result;
+                    const stores = ['tasks', 'assaults', 'enemy', 'ovt', 'positions', 'orders', 'snapshots'];
+                    stores.forEach(s => {
+                        if (!dbInstance.objectStoreNames.contains(s)) {
+                            dbInstance.createObjectStore(s, { keyPath: 'id', autoIncrement: true });
+                        }
+                    });
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error("IndexedDB Error:", event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        /**
+         * Завантажує всі дані з IndexedDB в стан appState
+         */
+        async function loadAllDataFromDB() {
+            if (!db) await initIndexedDB();
+            const stores = ['tasks', 'assaults', 'enemy', 'ovt', 'positions', 'orders', 'snapshots'];
+            for (const storeName of stores) {
+                appState[storeName] = await getAllRecordsFromStore(storeName);
+            }
+            updateAllCounters();
+            renderActiveTab();
+        }
+
+        function getAllRecordsFromStore(storeName) {
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        function saveRecordToStore(storeName, record) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const req = record.id ? store.put(record) : store.add(record);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        function deleteRecordFromStore(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const req = store.delete(Number(id));
+                req.onsuccess = () => resolve(true);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        function clearStoreInDB(storeName) {
+            return new Promise((resolve) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                store.clear();
+                tx.oncomplete = () => resolve(true);
+            });
+        }
+
+        // -------------------------------------------------------------------------
+        // НАВІГАЦІЯ ТА ВКЛАДКИ
+        // -------------------------------------------------------------------------
+
+        function switchTab(tabId) {
+            appState.activeTab = tabId;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            const activePanel = document.getElementById(`panel-${tabId}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            if (activePanel) activePanel.classList.remove('hidden');
+
+            renderActiveTab();
+            lucide.createIcons();
+        }
+
+        function renderActiveTab() {
+            switch (appState.activeTab) {
+                case 'tasks': renderTasksTable(); break;
+                case 'assaults': renderAssaultsTable(); break;
+                case 'enemy': renderEnemyTable(); break;
+                case 'ovt': renderOvtTable(); break;
+                case 'positions': renderPositionsTable(); break;
+                case 'orders': renderOrdersTable(); break;
+            }
+            updateAllCounters();
+            lucide.createIcons();
+        }
+
+        function updateAllCounters() {
+            document.getElementById('badge-count-tasks').innerText = appState.tasks.length;
+            document.getElementById('badge-count-assaults').innerText = appState.assaults.length;
+            document.getElementById('badge-count-enemy').innerText = appState.enemy.length;
+            document.getElementById('badge-count-ovt').innerText = appState.ovt.length;
+            document.getElementById('badge-count-positions').innerText = appState.positions.length;
+            document.getElementById('badge-count-orders').innerText = appState.orders.length;
+
+            // Enemy Losses Counter Bar
+            let c200 = 0, c300 = 0, cPow = 0, cS2 = 0;
+            appState.enemy.forEach(e => {
+                const qty = parseInt(e.qty) || 1;
+                const status = (e.status || '').toLowerCase();
+                if (status.includes('200')) c200 += qty;
+                else if (status.includes('300')) c300 += qty;
+                else if (status.includes('полон')) cPow += qty;
+
+                if ((e.s2 || '').toLowerCase().includes('так')) cS2 += qty;
+            });
+            document.getElementById('stat-enemy-200').innerText = c200;
+            document.getElementById('stat-enemy-300').innerText = c300;
+            document.getElementById('stat-enemy-pow').innerText = cPow;
+            document.getElementById('stat-enemy-s2').innerText = cS2;
+        }
+
+        // -------------------------------------------------------------------------
+        // РЕНДЕРИНГ ТАБЛИЦЬ
+        // -------------------------------------------------------------------------
+
+        // 1. Вкладка: ЗАВДАННЯ
+        function renderTasksTable() {
+            const tbody = document.getElementById('tasks-table-body');
+            const statusFilter = document.getElementById('filter-tasks-status').value;
+            const unreportedFilter = document.getElementById('filter-tasks-unreported').checked;
+            const search = (document.getElementById('search-tasks').value || '').toLowerCase();
+
+            let filtered = appState.tasks.filter(item => {
+                if (appState.globalDateFilter && !matchesDate(item.date, appState.globalDateFilter)) return false;
+                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+                if (unreportedFilter && item.reportedInPbd) return false;
+                if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 italic">Записів завдань не знайдено</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.date || '-')}</td>
+                    <td class="p-3 font-medium text-white">${escapeHtml(item.task || '-')}</td>
+                    <td class="p-3 text-center">
+                        <input type="checkbox" ${item.reportedInPbd ? 'checked' : ''} onchange="togglePbdReported('tasks', ${item.id}, this.checked)"
+                            class="rounded bg-slate-800 border-slate-700 text-emerald-500 cursor-pointer">
+                    </td>
+                    <td class="p-3 text-center">${getStatusBadge(item.status)}</td>
+                    <td class="p-3 text-slate-400 italic">${escapeHtml(item.comment || '-')}</td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button onclick="openEditRecordModal('tasks', ${item.id})" class="p-1 text-slate-400 hover:text-emerald-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('tasks', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 2. Вкладка: ШТУРМОВІ ДІЇ
+        function renderAssaultsTable() {
+            const tbody = document.getElementById('assaults-table-body');
+            const realFilter = document.getElementById('filter-assaults-real').value;
+            const search = (document.getElementById('search-assaults').value || '').toLowerCase();
+
+            let filtered = appState.assaults.filter(item => {
+                if (appState.globalDateFilter && !matchesDate(item.startTime, appState.globalDateFilter)) return false;
+                if (realFilter !== 'all' && item.isReal !== realFilter) return false;
+                if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500 italic">Записів штурмових дій не знайдено</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+                    <td class="p-3 font-mono text-slate-300">${escapeHtml(item.startTime || '-')}</td>
+                    <td class="p-3 font-mono text-slate-400">${escapeHtml(item.endTime || '-')}</td>
+                    <td class="p-3 text-center">
+                        <span class="badge-tag ${item.isReal === 'Так' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'}">
+                            ${escapeHtml(item.isReal || 'Ні')}
+                        </span>
+                    </td>
+                    <td class="p-3 font-semibold text-rose-300">${escapeHtml(item.reportLocation || '-')}</td>
+                    <td class="p-3 text-slate-300">${escapeHtml(item.factLocation || '-')}</td>
+                    <td class="p-3 text-slate-400">${escapeHtml(item.enemyForces || '-')}</td>
+                    <td class="p-3 font-medium text-amber-300">${escapeHtml(item.result || '-')}</td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button onclick="openEditRecordModal('assaults', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('assaults', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 3. Вкладка: ВТРАТИ ПРОТИВНИКА
+        function renderEnemyTable() {
+            const tbody = document.getElementById('enemy-table-body');
+            const statusFilter = document.getElementById('filter-enemy-status').value;
+            const s2Filter = document.getElementById('filter-enemy-s2').value;
+            const search = (document.getElementById('search-enemy').value || '').toLowerCase();
+
+            let filtered = appState.enemy.filter(item => {
+                if (appState.globalDateFilter && !matchesDate(item.date, appState.globalDateFilter)) return false;
+                if (statusFilter !== 'all' && !item.status.toLowerCase().includes(statusFilter.toLowerCase())) return false;
+                if (s2Filter !== 'all' && item.s2 !== s2Filter) return false;
+                if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-slate-500 italic">Записів втрат противника не знайдено</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.date || '-')}</td>
+                    <td class="p-3 font-mono text-slate-400">${escapeHtml(item.time || '-')}</td>
+                    <td class="p-3 text-center font-bold font-mono text-white">${escapeHtml(item.qty || '1')}</td>
+                    <td class="p-3 text-center">${getEnemyStatusBadge(item.status)}</td>
+                    <td class="p-3 text-emerald-400 font-semibold">${escapeHtml(item.unit || '-')}</td>
+                    <td class="p-3 text-slate-300">${escapeHtml(item.weapon || '-')}</td>
+                    <td class="p-3 text-center"><span class="badge-tag ${item.s2 === 'Так' ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700 text-slate-400'}">${escapeHtml(item.s2 || 'Ні')}</span></td>
+                    <td class="p-3 text-center"><span class="badge-tag ${item.pbd === 'Так' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${escapeHtml(item.pbd || 'Ні')}</span></td>
+                    <td class="p-3 font-mono font-medium text-amber-300">${escapeHtml(item.callsign || '-')}</td>
+                    <td class="p-3 text-slate-300">${escapeHtml(item.locationInfo || '-')}</td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button onclick="openEditRecordModal('enemy', ${item.id})" class="p-1 text-slate-400 hover:text-red-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('enemy', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 4. Вкладка: ВТРАТИ ОВТ
+        function renderOvtTable() {
+            const tbody = document.getElementById('ovt-table-body');
+            const catFilter = document.getElementById('filter-ovt-cat').value;
+            const statusFilter = document.getElementById('filter-ovt-status').value;
+            const search = (document.getElementById('search-ovt').value || '').toLowerCase();
+
+            let filtered = appState.ovt.filter(item => {
+                if (appState.globalDateFilter && !matchesDate(item.date, appState.globalDateFilter)) return false;
+                if (catFilter !== 'all' && item.category !== catFilter) return false;
+                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+                if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-slate-500 italic">Записів втрат ОВТ не знайдено</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.date || '-')}</td>
+                    <td class="p-3 font-mono text-slate-400">${escapeHtml(item.time || '-')}</td>
+                    <td class="p-3 font-semibold text-teal-400">${escapeHtml(item.position || '-')}</td>
+                    <td class="p-3">${getOvtCategoryBadge(item.category)}</td>
+                    <td class="p-3 font-mono font-bold text-white">${escapeHtml(item.nomenclature || '-')}</td>
+                    <td class="p-3 text-center">${getOvtStatusBadge(item.status)}</td>
+                    <td class="p-3 font-mono text-amber-300 font-semibold">${escapeHtml(item.serialNumber || '-')}</td>
+                    <td class="p-3 font-mono text-slate-300">${escapeHtml(item.plateNumber || '-')}</td>
+                    <td class="p-3 font-mono text-indigo-300 font-medium">${escapeHtml(item.urgentDocNo || '-')}</td>
+                    <td class="p-3 text-slate-400 italic">${escapeHtml(item.comment || '-')}</td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button onclick="generateUrgentReportForOvt(${item.id})" class="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-semibold cursor-pointer mr-1" title="Сформувати позатермінове донесення">
+                            ⚡ Позатерм.
+                        </button>
+                        <button onclick="openEditRecordModal('ovt', ${item.id})" class="p-1 text-slate-400 hover:text-amber-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('ovt', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 5. Вкладка: СТАТУС ПОЗИЦІЙ
+        function renderPositionsTable() {
+            const tbody = document.getElementById('positions-table-body');
+            const statusFilter = document.getElementById('filter-pos-status').value;
+            const search = (document.getElementById('search-positions').value || '').toLowerCase();
+
+            let filtered = appState.positions.filter(item => {
+                if (appState.globalDateFilter && !matchesDate(item.date, appState.globalDateFilter)) return false;
+                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+                if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 italic">Записів стану позицій не знайдено</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.date || '-')}</td>
+                    <td class="p-3 font-bold text-emerald-400 text-sm font-mono">${escapeHtml(item.name || '-')}</td>
+                    <td class="p-3 text-center">${getPositionStatusBadge(item.status)}</td>
+                    <td class="p-3 font-mono text-slate-300">${escapeHtml(item.docNumber || '-')}</td>
+                    <td class="p-3 text-slate-400">${escapeHtml(item.details || '-')}</td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button onclick="openEditRecordModal('positions', ${item.id})" class="p-1 text-slate-400 hover:text-emerald-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('positions', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // 6. Вкладка: ВИКОНАННЯ БР
+        function renderOrdersTable() {
+            const tbody = document.getElementById('orders-table-body');
+            const stageFilter = document.getElementById('filter-orders-stage').value;
+            const search = (document.getElementById('search-orders').value || '').toLowerCase();
+
+            let filtered = appState.orders.filter(item => {
+                if (appState.globalDateFilter && !matchesDate(item.receiveDate, appState.globalDateFilter)) return false;
+                if (stageFilter !== 'all' && item.stage !== stageFilter) return false;
+                if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500 italic">Записів бойових розпоряджень не знайдено</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.receiveDate || '-')}</td>
+                    <td class="p-3 font-mono font-bold text-purple-300">${escapeHtml(item.orderNumber || '-')}</td>
+                    <td class="p-3 text-white leading-relaxed font-normal">${escapeHtml(item.taskContent || '-')}</td>
+                    <td class="p-3 font-mono text-amber-400 font-semibold">${escapeHtml(item.deadline || '-')}</td>
+                    <td class="p-3 text-center">${getOrderStageBadge(item.stage)}</td>
+                    <td class="p-3 text-center">
+                        <input type="checkbox" ${item.isReported ? 'checked' : ''} onchange="toggleOrderReported(${item.id}, this.checked)"
+                            class="rounded bg-slate-800 border-slate-700 text-purple-500 cursor-pointer">
+                    </td>
+                    <td class="p-3 font-mono text-slate-300 font-medium">${escapeHtml(item.urgentDocNo || '-')}</td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button onclick="openEditRecordModal('orders', ${item.id})" class="p-1 text-slate-400 hover:text-purple-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('orders', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // -------------------------------------------------------------------------
+        // БЕЙДЖІ СТАТУСІВ ТА СТИЛІЗАЦІЯ
+        // -------------------------------------------------------------------------
+
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'Виконано': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Виконано</span>`;
+                case 'Виконується': return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/30">Виконується</span>`;
+                case 'Заплановано': return `<span class="badge-tag bg-blue-500/20 text-blue-300 border border-blue-500/30">Заплановано</span>`;
+                case 'Не виконано': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30">Не виконано</span>`;
+                default: return `<span class="badge-tag bg-slate-800 text-slate-400">${escapeHtml(status || '-')}</span>`;
+            }
+        }
+
+        function getEnemyStatusBadge(status) {
+            const s = (status || '').toLowerCase();
+            if (s.includes('200')) return `<span class="badge-tag bg-red-500/20 text-red-300 border border-red-500/40">200</span>`;
+            if (s.includes('300')) return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/40">300</span>`;
+            if (s.includes('полон')) return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Полонений</span>`;
+            return `<span class="badge-tag bg-slate-800 text-slate-300">${escapeHtml(status || '-')}</span>`;
+        }
+
+        function getOvtCategoryBadge(cat) {
+            switch (cat) {
+                case 'Зброя': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30">🔫 Зброя</span>`;
+                case 'БпЛА': return `<span class="badge-tag bg-blue-500/20 text-blue-300 border border-blue-500/30">🦅 БпЛА</span>`;
+                case 'Транспорт': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">🚗 Транспорт</span>`;
+                default: return `<span class="badge-tag bg-slate-800 text-slate-300">${escapeHtml(cat || '-')}</span>`;
+            }
+        }
+
+        function getOvtStatusBadge(status) {
+            switch (status) {
+                case 'ВТРАЧЕНО': return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">ВТРАЧЕНО</span>`;
+                case 'ЗНИЩЕНО': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">ЗНИЩЕНО</span>`;
+                case 'ПОШКОДЖЕНО': return `<span class="badge-tag bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-bold">ПОШКОДЖЕНО</span>`;
+                default: return `<span class="badge-tag bg-slate-800 text-slate-300">${escapeHtml(status || '-')}</span>`;
+            }
+        }
+
+        function getPositionStatusBadge(status) {
+            switch (status) {
+                case 'виставлена': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">🟢 Виставлена</span>`;
+                case 'облаштовується': return `<span class="badge-tag bg-slate-700/50 text-slate-300 border border-slate-600/40">⚪ Облаштовується</span>`;
+                case 'переміщена': return `<span class="badge-tag bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">🟡 Переміщена</span>`;
+                case 'знята': return `<span class="badge-tag bg-blue-500/20 text-blue-300 border border-blue-500/30">🔵 Знята</span>`;
+                case 'знищена': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30">🔴 Знищена</span>`;
+                case 'Тимчасово не БГ': return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/30">⚠️ Тимчасово не БГ</span>`;
+                case 'перейменована': return `<span class="badge-tag bg-purple-500/20 text-purple-300 border border-purple-500/30">🔄 Перейменована</span>`;
+                default: return `<span class="badge-tag bg-slate-800 text-slate-300">${escapeHtml(status || '-')}</span>`;
+            }
+        }
+
+        function getOrderStageBadge(stage) {
+            switch (stage) {
+                case 'Виконано': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Виконано</span>`;
+                case 'Виконується': return `<span class="badge-tag bg-blue-500/20 text-blue-300 border border-blue-500/30">Виконується</span>`;
+                case 'Не розпочато': return `<span class="badge-tag bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">Не розпочато</span>`;
+                case 'Протерміновано': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30">Протерміновано</span>`;
+                default: return `<span class="badge-tag bg-slate-800 text-slate-300">${escapeHtml(stage || '-')}</span>`;
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // ЕКСПОРТ ТА ІМПОРТ EXCEL (.XLSX)
+        // -------------------------------------------------------------------------
+
+        async function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const mode = document.querySelector('input[name="import-mode"]:checked').value;
+            const reader = new FileReader();
+
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    if (mode === 'replace') {
+                        const stores = ['tasks', 'assaults', 'enemy', 'ovt', 'positions', 'orders'];
+                        for (const s of stores) await clearStoreInDB(s);
+                    }
+
+                    // 1. ЗАВДАННЯ
+                    const sheetTasks = findSheet(workbook, ['завдання', 'tasks']);
+                    if (sheetTasks) {
+                        const rows = XLSX.utils.sheet_to_json(sheetTasks, { header: 1 });
+                        for (let i = 1; i < rows.length; i++) {
+                            const r = rows[i];
+                            if (!r || r.length === 0 || !r[0]) continue;
+                            await saveRecordToStore('tasks', {
+                                date: parseDateValue(r[0]),
+                                task: String(r[1] || '').trim(),
+                                reportedInPbd: isChecked(r[2]),
+                                status: String(r[3] || 'Заплановано').trim(),
+                                comment: String(r[4] || '').trim()
+                            });
+                        }
+                    }
+
+                    // 2. ШТУРМОВІ ДІЇ
+                    const sheetAssaults = findSheet(workbook, ['штурмові', 'штурм', 'assaults']);
+                    if (sheetAssaults) {
+                        const rows = XLSX.utils.sheet_to_json(sheetAssaults, { header: 1 });
+                        for (let i = 1; i < rows.length; i++) {
+                            const r = rows[i];
+                            if (!r || r.length === 0 || !r[0]) continue;
+                            await saveRecordToStore('assaults', {
+                                startTime: parseDateValue(r[0]),
+                                endTime: parseDateValue(r[1]),
+                                isReal: String(r[2] || 'Так').trim(),
+                                reportLocation: String(r[3] || '').trim(),
+                                factLocation: String(r[4] || '').trim(),
+                                enemyForces: String(r[5] || '').trim(),
+                                personnel: String(r[6] || '').trim(),
+                                result: String(r[7] || '').trim()
+                            });
+                        }
+                    }
+
+                    // 3. ВТРАТИ ПРОТИВНИКА
+                    const sheetEnemy = findSheet(workbook, ['втрати противника', 'enemy']);
+                    if (sheetEnemy) {
+                        const rows = XLSX.utils.sheet_to_json(sheetEnemy, { header: 1 });
+                        for (let i = 1; i < rows.length; i++) {
+                            const r = rows[i];
+                            if (!r || r.length === 0 || !r[0]) continue;
+                            await saveRecordToStore('enemy', {
+                                date: parseDateValue(r[0]),
+                                time: String(r[1] || '').trim(),
+                                type: String(r[2] || 'Піхота').trim(),
+                                qty: Number(r[3]) || 1,
+                                status: String(r[4] || '200').trim(),
+                                unit: String(r[5] || '').trim(),
+                                weapon: String(r[6] || '').trim(),
+                                s2: String(r[7] || 'Ні').trim(),
+                                pbd: String(r[8] || 'Ні').trim(),
+                                isReal: String(r[9] || 'Так').trim(),
+                                callsign: String(r[10] || '').trim(),
+                                locationInfo: String(r[11] || '').trim(),
+                                comment: String(r[12] || '').trim()
+                            });
+                        }
+                    }
+
+                    // 4. ВТРАТИ ОВТ
+                    const sheetOvt = findSheet(workbook, ['втрати овт', 'овт', 'ovt']);
+                    if (sheetOvt) {
+                        const rows = XLSX.utils.sheet_to_json(sheetOvt, { header: 1 });
+                        for (let i = 1; i < rows.length; i++) {
+                            const r = rows[i];
+                            if (!r || r.length === 0 || !r[0]) continue;
+                            await saveRecordToStore('ovt', {
+                                date: parseDateValue(r[0]),
+                                time: String(r[1] || '').trim(),
+                                position: String(r[2] || '').trim(),
+                                category: String(r[3] || 'Зброя').trim(),
+                                nomenclature: String(r[4] || '').trim(),
+                                status: String(r[5] || 'ВТРАЧЕНО').trim(),
+                                serialNumber: String(r[6] || '').trim(),
+                                plateNumber: String(r[7] || '').trim(),
+                                isEvent: isChecked(r[8]),
+                                urgentDocNo: String(r[9] || '').trim(),
+                                comment: String(r[10] || '').trim()
+                            });
+                        }
+                    }
+
+                    // 5. СТАТУС ПОЗИЦІЙ
+                    const sheetPos = findSheet(workbook, ['статус позицій', 'позиції', 'positions']);
+                    if (sheetPos) {
+                        const rows = XLSX.utils.sheet_to_json(sheetPos, { header: 1 });
+                        for (let i = 1; i < rows.length; i++) {
+                            const r = rows[i];
+                            if (!r || r.length === 0 || !r[0]) continue;
+                            await saveRecordToStore('positions', {
+                                date: parseDateValue(r[0]),
+                                name: String(r[1] || '').trim(),
+                                status: String(r[2] || 'виставлена').trim(),
+                                docNumber: String(r[3] || '').trim(),
+                                details: String(r[4] || '').trim()
+                            });
+                        }
+                    }
+
+                    // 6. ВИКОНАННЯ БР
+                    const sheetOrders = findSheet(workbook, ['виконання бр', 'бр', 'orders']);
+                    if (sheetOrders) {
+                        const rows = XLSX.utils.sheet_to_json(sheetOrders, { header: 1 });
+                        for (let i = 1; i < rows.length; i++) {
+                            const r = rows[i];
+                            if (!r || r.length === 0 || !r[0]) continue;
+                            await saveRecordToStore('orders', {
+                                receiveDate: parseDateValue(r[0]),
+                                orderNumber: String(r[1] || '').trim(),
+                                taskContent: String(r[2] || '').trim(),
+                                deadline: String(r[3] || '').trim(),
+                                stage: String(r[4] || 'Виконується').trim(),
+                                comment: String(r[5] || '').trim(),
+                                isReported: isChecked(r[6]),
+                                urgentDocNo: String(r[7] || '').trim()
+                            });
+                        }
+                    }
+
+                    await createManualSnapshot("Авто-знімок після імпорту Excel");
+                    await loadAllDataFromDB();
+                    closeModal('modal-import');
+                    alert("Таблицю успішно імпортовано та збережено в базу даних!");
+                } catch (err) {
+                    console.error("Import error:", err);
+                    alert("Помилка обробки файлу Excel: " + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function findSheet(wb, aliases) {
+            for (const name of wb.SheetNames) {
+                const clean = name.toLowerCase().trim();
+                if (aliases.some(a => clean.includes(a))) {
+                    return wb.Sheets[name];
+                }
+            }
+            return null;
+        }
+
+        function isChecked(val) {
+            if (val === true || val === 1 || String(val).toLowerCase() === 'true' || String(val).toLowerCase() === 'так') return true;
+            return false;
+        }
+
+        function parseDateValue(val) {
+            if (!val) return '';
+            if (typeof val === 'number') {
+                const date = new Date((val - 25569) * 86400 * 1000);
+                return formatDateUK(date);
+            }
+            return String(val).trim();
+        }
+
+        function formatDateUK(d) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+
+        function exportAllToExcel() {
+            const wb = XLSX.utils.book_new();
+
+            // 1. ЗАВДАННЯ
+            const dataTasks = [
+                ['ДАТА', 'ЗАВДАННЯ', 'ПОДАНО В ПБД', 'СТАТУС', 'КОМЕНТАР'],
+                ...appState.tasks.map(t => [t.date, t.task, t.reportedInPbd ? 'Так' : 'Ні', t.status, t.comment])
+            ];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dataTasks), 'ЗАВДАННЯ');
+
+            // 2. ШТУРМОВІ ДІЇ
+            const dataAssaults = [
+                ['ЧАС ПОЧАТКУ', 'ЧАС ЗАВЕРШЕННЯ', 'Реальна подія', 'ЗВІТНЕ МІСЦЕ ПОДІЇ', 'ФАКТИЧНЕ МІСЦЕ ПОДІЇ', 'СИЛИ ПРОТИВНИКА', 'ЗАЛУЧЕНИЙ О/С', 'РЕЗУЛЬТАТ, ВТРАТИ, БК'],
+                ...appState.assaults.map(a => [a.startTime, a.endTime, a.isReal, a.reportLocation, a.factLocation, a.enemyForces, a.personnel, a.result])
+            ];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dataAssaults), 'ШТУРМОВІ ДІЇ');
+
+            // 3. ВТРАТИ ПРОТИВНИКА
+            const dataEnemy = [
+                ['Дата', 'Час', 'Тип', 'Кількість', 'Статус', 'Чиє ураження', 'Засіб ураження', 'Узгоджено з S2?', 'Подано в ПБД', 'Подія реальна?', 'Позивний/підрозділ', 'Інформаційно (де/ким знищений)', 'Примітки'],
+                ...appState.enemy.map(e => [e.date, e.time, e.type, e.qty, e.status, e.unit, e.weapon, e.s2, e.pbd, e.isReal, e.callsign, e.locationInfo, e.comment])
+            ];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dataEnemy), 'ВТРАТИ ПРОТИВНИКА');
+
+            // 4. ВТРАТИ ОВТ
+            const dataOvt = [
+                ['ДАТА', 'ЧАС', 'ПОЗИЦІЯ', 'КАТЕГОРІЯ', 'НОМЕНКЛАТУРА', 'СТАТУС', 'СЕРІЙНИЙ НОМЕР / VIN', 'НОМЕР МАШИНИ', 'ПОДІЯ З*', 'ПОЗАТЕРМІНОВЕ №', 'КОМЕНТАР'],
+                ...appState.ovt.map(o => [o.date, o.time, o.position, o.category, o.nomenclature, o.status, o.serialNumber, o.plateNumber, o.isEvent ? 'Так' : 'Ні', o.urgentDocNo, o.comment])
+            ];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dataOvt), 'ВТРАТИ ОВТ');
+
+            // 5. СТАТУС ПОЗИЦІЙ
+            const dataPos = [
+                ['Дата', 'Назва позиції', 'Статус / Дія', 'Донесення № / Підстава', 'Деталі, ротації та о/с'],
+                ...appState.positions.map(p => [p.date, p.name, p.status, p.docNumber, p.details])
+            ];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dataPos), 'СТАТУС ПОЗИЦІЙ');
+
+            // 6. ВИКОНАННЯ БР
+            const dataOrders = [
+                ['Дата отримання', '№ БР / Хто дав', 'Завдання', 'Виконати до', 'На якому етапі', 'Примітки', 'Доведено / Надіслано', '№ позатермінового'],
+                ...appState.orders.map(ord => [ord.receiveDate, ord.orderNumber, ord.taskContent, ord.deadline, ord.stage, ord.comment, ord.isReported ? 'Так' : 'Ні', ord.urgentDocNo])
+            ];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dataOrders), 'ВИКОНАННЯ БР');
+
+            const today = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `Оперативний_Журнал_Дій_${today}.xlsx`);
+        }
+
+        // -------------------------------------------------------------------------
+        // ГЕНЕРАТОР ПОЗАТЕРМІНОВИХ ДОНЕСЕНЬ ТА ДОБОВОГО БД
+        // -------------------------------------------------------------------------
+
+        function generateUrgentReportForOvt(ovtId) {
+            const item = appState.ovt.find(o => o.id === ovtId);
+            if (!item) return;
+
+            const dateStr = item.date || formatDateUK(new Date());
+            const timeStr = item.time ? ` о ${item.time}` : '';
+            const posStr = item.position ? ` в районі позиції ${item.position}` : '';
+            const snStr = item.serialNumber ? ` (заводський номер / VIN: ${item.serialNumber})` : '';
+            const plateStr = item.plateNumber ? ` державний номерний знак ${item.plateNumber}` : '';
+            const reasonStr = item.comment ? ` Причина: ${item.comment}.` : '';
+
+            let actionText = "втрати";
+            if (item.status === 'ЗНИЩЕНО') actionText = "знищення";
+            else if (item.status === 'ПОШКОДЖЕНО') actionText = "пошкодження";
+
+            const text = `ПОЗАТЕРМІНОВЕ БОЙОВЕ ДОНЕСЕННЯ\n` +
+                `щодо обставин ${actionText} одиниці ОВТ\n\n` +
+                `Доповідаю, що ${dateStr}${timeStr}${posStr} внаслідок бойових дій противника було зафіксовано ${actionText} наступної одиниці озброєння / військової техніки:\n` +
+                `• Категорія: ${item.category}\n` +
+                `• Номенклатура / тип: ${item.nomenclature}${plateStr}${snStr}\n` +
+                `• Статус: ${item.status}\n` +
+                `${reasonStr}\n\n` +
+                `Прошу зазначену одиницю ${item.category.toLowerCase()} вважати ${item.status.toLowerCase()}.\n` +
+                `У разі евакуації / виявлення майна буде додатково подано уточнене позатермінове бойове донесення у встановленому порядку.`;
+
+            document.getElementById('urgent-report-text').value = text;
+            openModal('modal-urgent-report');
+        }
+
+        function copyUrgentReport() {
+            const txt = document.getElementById('urgent-report-text');
+            txt.select();
+            navigator.clipboard.writeText(txt.value);
+            const toast = document.getElementById('urgent-copy-toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function openDailyReportModal() {
+            const today = new Date().toISOString().slice(0, 10);
+            document.getElementById('daily-report-date').value = today;
+            generateDailyReportText();
+            openModal('modal-daily-report');
+        }
+
+        function generateDailyReportText() {
+            const selDate = document.getElementById('daily-report-date').value;
+            const targetDateStr = selDate ? formatDateUK(new Date(selDate)) : '';
+
+            // Filter records for selected date
+            const dayTasks = appState.tasks.filter(t => matchesDate(t.date, targetDateStr));
+            const dayAssaults = appState.assaults.filter(a => matchesDate(a.startTime, targetDateStr));
+            const dayEnemy = appState.enemy.filter(e => matchesDate(e.date, targetDateStr));
+            const dayOvt = appState.ovt.filter(o => matchesDate(o.date, targetDateStr));
+            const dayPos = appState.positions.filter(p => matchesDate(p.date, targetDateStr));
+
+            let text = `БОЙОВЕ ДОНЕСЕННЯ (ЗВЕДЕННЯ ЗА ДОБУ) за ${targetDateStr || 'всі дні'}\n`;
+            text += `============================================================\n\n`;
+
+            text += `1. ШТУРМОВІ ДІЇ ТА ОБСТАНОВКА НА РУБЕЖАХ:\n`;
+            if (dayAssaults.length === 0) text += `   Штурмових дій противника за звітний період не зафіксовано.\n`;
+            else {
+                dayAssaults.forEach((a, i) => {
+                    text += `   ${i + 1}) ${a.startTime || ''} - ${a.endTime || ''}: ${a.reportLocation || ''} (${a.factLocation || ''}). Сили ворога: ${a.enemyForces || ''}. Результат: ${a.result || ''}\n`;
+                });
+            }
+            text += `\n`;
+
+            text += `2. ВТРАТИ ПРОТИВНИКА:\n`;
+            if (dayEnemy.length === 0) text += `   Втрат противника зафіксовано не було / уточнюються.\n`;
+            else {
+                dayEnemy.forEach((e, i) => {
+                    text += `   ${i + 1}) ${e.qty || 1} в/сл (${e.status}), підрозділ: ${e.unit || ''}, засіб: ${e.weapon || ''}. ${e.callsign ? 'Позивний: ' + e.callsign : ''} (${e.locationInfo || ''})\n`;
+                });
+            }
+            text += `\n`;
+
+            text += `3. ВТРАТИ ОВТ ПІДРОЗДІЛІВ:\n`;
+            if (dayOvt.length === 0) text += `   Втрат ОВТ за звітну добу немає.\n`;
+            else {
+                dayOvt.forEach((o, i) => {
+                    text += `   ${i + 1}) ${o.category}: ${o.nomenclature} (${o.status}). Серійний № / VIN: ${o.serialNumber || '-'} на поз. ${o.position || '-'}. Причина: ${o.comment || '-'}\n`;
+                });
+            }
+            text += `\n`;
+
+            text += `4. ЗМІНИ У СТАНІ ПОЗИЦІЙ ТА ФОРТИФІКАЦІЇ:\n`;
+            if (dayPos.length === 0) text += `   Положення позицій без змін.\n`;
+            else {
+                dayPos.forEach((p, i) => {
+                    text += `   ${i + 1}) Позиція "${p.name}" - ${p.status} (${p.details || p.docNumber || ''})\n`;
+                });
+            }
+            text += `\n`;
+
+            text += `5. ВИКОНАННЯ ЛОГІСТИЧНИХ ТА СПЕЦІАЛЬНИХ ЗАВДАНЬ:\n`;
+            if (dayTasks.length === 0) text += `   Завдання виконувались за планом.\n`;
+            else {
+                dayTasks.forEach((t, i) => {
+                    text += `   ${i + 1}) [${t.status}] ${t.task} (${t.comment || ''})\n`;
+                });
+            }
+
+            document.getElementById('daily-report-text').value = text;
+        }
+
+        function copyDailyReport() {
+            const txt = document.getElementById('daily-report-text');
+            txt.select();
+            navigator.clipboard.writeText(txt.value);
+            const toast = document.getElementById('daily-copy-toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // -------------------------------------------------------------------------
+        // ШИФРУВАННЯ ТА БЕКАПИ (AES-GCM-256)
+        // -------------------------------------------------------------------------
+
+        async function exportEncryptedBackup() {
+            const password = prompt("Введіть пароль для шифрування резервної копії (AES-256):");
+            if (!password) return;
+
+            try {
+                const backupPayload = {
+                    version: "1.0.0",
+                    timestamp: new Date().toISOString(),
+                    data: {
+                        tasks: appState.tasks,
+                        assaults: appState.assaults,
+                        enemy: appState.enemy,
+                        ovt: appState.ovt,
+                        positions: appState.positions,
+                        orders: appState.orders
+                    }
+                };
+
+                const jsonStr = JSON.stringify(backupPayload);
+                const encData = await encryptStringAES(jsonStr, password);
+
+                const blob = new Blob([encData], { type: 'application/octet-stream' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                const dateTag = new Date().toISOString().slice(0, 10);
+                a.download = `ЖБД_Бекап_${dateTag}.enc`;
+                a.click();
+            } catch (e) {
+                alert("Помилка шифрування: " + e.message);
+            }
+        }
+
+        async function importEncryptedBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const password = prompt("Введіть пароль для розшифрування файлу .enc:");
+            if (!password) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const encData = e.target.result;
+                    const decryptedStr = await decryptStringAES(encData, password);
+                    const parsed = JSON.parse(decryptedStr);
+
+                    if (!parsed.data) throw new Error("Невірний формат бекапу");
+
+                    const stores = ['tasks', 'assaults', 'enemy', 'ovt', 'positions', 'orders'];
+                    for (const s of stores) {
+                        await clearStoreInDB(s);
+                        if (Array.isArray(parsed.data[s])) {
+                            for (const rec of parsed.data[s]) {
+                                delete rec.id;
+                                await saveRecordToStore(s, rec);
+                            }
+                        }
+                    }
+
+                    await createManualSnapshot("Відновлено з .enc бекапу");
+                    await loadAllDataFromDB();
+                    closeModal('modal-backup');
+                    alert("Базу даних успішно відновлено із зашифрованого файлу!");
+                } catch (err) {
+                    console.error("Decrypt error:", err);
+                    alert("Помилка розшифрування! Перевірте правильність пароля.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function encryptStringAES(plainText, password) {
+            const enc = new TextEncoder();
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+
+            const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+            const key = await crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt"]
+            );
+
+            const encryptedBuffer = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                enc.encode(plainText)
+            );
+
+            const combined = new Uint8Array(salt.length + iv.length + encryptedBuffer.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.length);
+            combined.set(new Uint8Array(encryptedBuffer), salt.length + iv.length);
+
+            return btoa(String.fromCharCode.apply(null, combined));
+        }
+
+        async function decryptStringAES(cipherBase64, password) {
+            const enc = new TextEncoder();
+            const binaryStr = atob(cipherBase64);
+            const bytes = new Uint8Array(binaryStr.length);
+            for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+            const salt = bytes.slice(0, 16);
+            const iv = bytes.slice(16, 28);
+            const data = bytes.slice(28);
+
+            const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+            const key = await crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["decrypt"]
+            );
+
+            const decryptedBuffer = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                data
+            );
+
+            return new TextDecoder().decode(decryptedBuffer);
+        }
+
+        // -------------------------------------------------------------------------
+        // АВТО-ЗНІМКИ СТАНУ (ROLLING SNAPSHOTS / МАШИНА ЧАСУ)
+        // -------------------------------------------------------------------------
+
+        async function createManualSnapshot(label = "Ручна точка відновлення") {
+            const snapshot = {
+                timestamp: new Date().toISOString(),
+                label: label,
+                data: {
+                    tasks: appState.tasks,
+                    assaults: appState.assaults,
+                    enemy: appState.enemy,
+                    ovt: appState.ovt,
+                    positions: appState.positions,
+                    orders: appState.orders
+                }
+            };
+            await saveRecordToStore('snapshots', snapshot);
+            appState.snapshots = await getAllRecordsFromStore('snapshots');
+            renderSnapshotsList();
+        }
+
+        function renderSnapshotsList() {
+            const listEl = document.getElementById('snapshots-list');
+            if (appState.snapshots.length === 0) {
+                listEl.innerHTML = `<p class="text-slate-500 italic">Знімків стану ще немає</p>`;
+                return;
+            }
+
+            const sorted = appState.snapshots.slice().reverse();
+            listEl.innerHTML = sorted.slice(0, 8).map(s => {
+                const dateObj = new Date(s.timestamp);
+                const timeFormatted = `${formatDateUK(dateObj)} ${dateObj.toLocaleTimeString('uk-UA')}`;
+                return `
+                    <div class="flex items-center justify-between p-2 bg-[#090e1a] rounded-lg border border-slate-800 hover:border-teal-500/40">
+                        <div>
+                            <p class="font-medium text-slate-200">${escapeHtml(s.label || 'Знімок')}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">${timeFormatted}</p>
+                        </div>
+                        <button onclick="restoreFromSnapshot(${s.id})" class="px-2 py-1 bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 rounded text-[11px] font-semibold cursor-pointer">
+                            ↺ Відновити
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function restoreFromSnapshot(snapId) {
+            const snap = appState.snapshots.find(s => s.id === snapId);
+            if (!snap || !confirm(`Відновити стан бази даних від ${snap.label}? Поточні незбережені зміни буде замінено.`)) return;
+
+            const stores = ['tasks', 'assaults', 'enemy', 'ovt', 'positions', 'orders'];
+            for (const s of stores) {
+                await clearStoreInDB(s);
+                if (Array.isArray(snap.data[s])) {
+                    for (const rec of snap.data[s]) {
+                        delete rec.id;
+                        await saveRecordToStore(s, rec);
+                    }
+                }
+            }
+            await loadAllDataFromDB();
+            closeModal('modal-backup');
+            alert("Базу успішно відновлено!");
+        }
+
+        async function confirmClearDatabase() {
+            const code = prompt("УВАГА! Це видалить усі записи. Введіть слово ПІДТВЕРДЖУЮ для очищення:");
+            if (code === "ПІДТВЕРДЖУЮ") {
+                await createManualSnapshot("Аварійний знімок перед очищенням");
+                const stores = ['tasks', 'assaults', 'enemy', 'ovt', 'positions', 'orders'];
+                for (const s of stores) await clearStoreInDB(s);
+                await loadAllDataFromDB();
+                closeModal('modal-backup');
+                alert("Базу даних очищено. Створено аварійний знімок у машині часу.");
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // ДИНАМІЧНЕ РЕДАГУВАННЯ ТА ДОДАВАННЯ ЗАПИСІВ
+        // -------------------------------------------------------------------------
+
+        function openAddTaskModal() { openRecordModalFor('tasks', null); }
+        function openAddAssaultModal() { openRecordModalFor('assaults', null); }
+        function openAddEnemyModal() { openRecordModalFor('enemy', null); }
+        function openAddOvtModal() { openRecordModalFor('ovt', null); }
+        function openAddPositionModal() { openRecordModalFor('positions', null); }
+        function openAddOrderModal() { openRecordModalFor('orders', null); }
+
+        function openEditRecordModal(storeName, id) {
+            const item = appState[storeName].find(x => x.id === id);
+            openRecordModalFor(storeName, item);
+        }
+
+        function openRecordModalFor(storeName, item) {
+            appState.currentEditStore = storeName;
+            appState.currentEditId = item ? item.id : null;
+            const container = document.getElementById('form-fields-container');
+            const modalTitle = document.getElementById('edit-modal-title');
+            modalTitle.innerText = item ? "Редагування запису" : "Додавання нового запису";
+
+            let html = '';
+            const today = formatDateUK(new Date());
+
+            if (storeName === 'tasks') {
+                html = `
+                    <div><label class="font-semibold text-slate-400">Дата:</label><input type="text" name="date" value="${item ? item.date : today}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    <div><label class="font-semibold text-slate-400">Зміст завдання:</label><textarea name="task" rows="3" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">${item ? item.task || '' : ''}</textarea></div>
+                    <div><label class="font-semibold text-slate-400">Статус:</label>
+                        <select name="status" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                            <option value="Виконано" ${item && item.status === 'Виконано' ? 'selected' : ''}>🟢 Виконано</option>
+                            <option value="Виконується" ${item && item.status === 'Виконується' ? 'selected' : ''}>🟡 Виконується</option>
+                            <option value="Заплановано" ${item && item.status === 'Заплановано' ? 'selected' : ''}>🔵 Заплановано</option>
+                            <option value="Не виконано" ${item && item.status === 'Не виконано' ? 'selected' : ''}>🔴 Не виконано</option>
+                        </select>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Коментар:</label><input type="text" name="comment" value="${item ? item.comment || '' : ''}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                    <label class="flex items-center gap-2 cursor-pointer pt-1"><input type="checkbox" name="reportedInPbd" ${item && item.reportedInPbd ? 'checked' : ''} class="rounded bg-slate-800 text-emerald-500"><span>Подано в ПБД</span></label>
+                `;
+            } else if (storeName === 'assaults') {
+                html = `
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Час початку:</label><input type="text" name="startTime" value="${item ? item.startTime : today + ' 08:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Час завершення:</label><input type="text" name="endTime" value="${item ? item.endTime : today + ' 10:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Реальна подія:</label>
+                        <select name="isReal" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                            <option value="Так" ${item && item.isReal === 'Так' ? 'selected' : ''}>🟢 Так (Реальний штурм)</option>
+                            <option value="Ні" ${item && item.isReal === 'Ні' ? 'selected' : ''}>🔴 Ні (Хибна)</option>
+                        </select>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Звітне місце події:</label><input type="text" name="reportLocation" value="${item ? item.reportLocation || '' : ''}" placeholder="наприклад, БП Монтана" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                    <div><label class="font-semibold text-slate-400">Фактичне місце / контакт:</label><input type="text" name="factLocation" value="${item ? item.factLocation || '' : ''}" placeholder="ШД/вогневий контакт Вадос/Степ" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                    <div><label class="font-semibold text-slate-400">Сили ворога:</label><input type="text" name="enemyForces" value="${item ? item.enemyForces || '' : 'до 2 в/с без техніки'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                    <div><label class="font-semibold text-slate-400">Результат, втрати, БК:</label><input type="text" name="result" value="${item ? item.result || '' : 'Втрати противника: 2- 200'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                `;
+            } else if (storeName === 'enemy') {
+                html = `
+                    <div class="grid grid-cols-3 gap-2">
+                        <div><label class="font-semibold text-slate-400">Дата:</label><input type="text" name="date" value="${item ? item.date : today}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Час:</label><input type="text" name="time" value="${item ? item.time : '12:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">К-ть:</label><input type="number" name="qty" value="${item ? item.qty : 1}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Статус:</label>
+                            <select name="status" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                                <option value="200" ${item && item.status === '200' ? 'selected' : ''}>🔴 200 (Знищено)</option>
+                                <option value="300" ${item && item.status === '300' ? 'selected' : ''}>🟡 300 (Поранено)</option>
+                                <option value="Полонений" ${item && item.status === 'Полонений' ? 'selected' : ''}>🟢 Полонений</option>
+                            </select>
+                        </div>
+                        <div><label class="font-semibold text-slate-400">Чиє ураження / Підрозділ:</label><input type="text" name="unit" value="${item ? item.unit || '' : '2 мб'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Засіб ураження:</label><input type="text" name="weapon" value="${item ? item.weapon || '' : 'Піхота'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                        <div><label class="font-semibold text-slate-400">Узгоджено з S2?:</label>
+                            <select name="s2" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                                <option value="Так" ${item && item.s2 === 'Так' ? 'selected' : ''}>🟢 Так</option>
+                                <option value="Ні" ${item && item.s2 === 'Ні' ? 'selected' : ''}>🔴 Ні</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Позивний / Ідентифікатор ворога:</label><input type="text" name="callsign" value="${item ? item.callsign || '' : ''}" placeholder="наприклад, Беркут" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                    <div><label class="font-semibold text-slate-400">Де / ким знищений (Обставини):</label><input type="text" name="locationInfo" value="${item ? item.locationInfo || '' : ''}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                `;
+            } else if (storeName === 'ovt') {
+                html = `
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Дата:</label><input type="text" name="date" value="${item ? item.date : today}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Час:</label><input type="text" name="time" value="${item ? item.time : '12:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Категорія:</label>
+                            <select name="category" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                                <option value="Зброя" ${item && item.category === 'Зброя' ? 'selected' : ''}>🔴 Зброя</option>
+                                <option value="БпЛА" ${item && item.category === 'БпЛА' ? 'selected' : ''}>🔵 БпЛА</option>
+                                <option value="Транспорт" ${item && item.category === 'Транспорт' ? 'selected' : ''}>🟢 Транспорт</option>
+                            </select>
+                        </div>
+                        <div><label class="font-semibold text-slate-400">Позиція:</label><input type="text" name="position" value="${item ? item.position || '' : ''}" placeholder="наприклад, БРО Новоселівка" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Номенклатура / Модель:</label><input type="text" name="nomenclature" value="${item ? item.nomenclature || '' : 'АК-74'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Статус:</label>
+                            <select name="status" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                                <option value="ВТРАЧЕНО" ${item && item.status === 'ВТРАЧЕНО' ? 'selected' : ''}>🟠 ВТРАЧЕНО</option>
+                                <option value="ЗНИЩЕНО" ${item && item.status === 'ЗНИЩЕНО' ? 'selected' : ''}>🔴 ЗНИЩЕНО</option>
+                                <option value="ПОШКОДЖЕНО" ${item && item.status === 'ПОШКОДЖЕНО' ? 'selected' : ''}>🟡 ПОШКОДЖЕНО</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Серійний номер / VIN / ПІБ:</label><input type="text" name="serialNumber" value="${item ? item.serialNumber || '' : ''}" placeholder="5948657 або VIN" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Номер авто:</label><input type="text" name="plateNumber" value="${item ? item.plateNumber || '' : ''}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">№ Позатермінового:</label><input type="text" name="urgentDocNo" value="${item ? item.urgentDocNo || '' : ''}" placeholder="276/2727" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Коментар / Причина:</label><input type="text" name="comment" value="${item ? item.comment || '' : 'ворожий РЕБ'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                `;
+            } else if (storeName === 'positions') {
+                html = `
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Дата зміни:</label><input type="text" name="date" value="${item ? item.date : today}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Назва позиції:</label><input type="text" name="name" value="${item ? item.name || '' : ''}" placeholder="ВП Валєт" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono font-bold"></div>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Статус / Дія:</label>
+                        <select name="status" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                            <option value="виставлена" ${item && item.status === 'виставлена' ? 'selected' : ''}>🟢 Виставлена</option>
+                            <option value="облаштовується" ${item && item.status === 'облаштовується' ? 'selected' : ''}>⚪ Облаштовується</option>
+                            <option value="переміщена" ${item && item.status === 'переміщена' ? 'selected' : ''}>🟡 Переміщена</option>
+                            <option value="знята" ${item && item.status === 'знята' ? 'selected' : ''}>🔵 Знята</option>
+                            <option value="знищена" ${item && item.status === 'знищена' ? 'selected' : ''}>🔴 Знищена</option>
+                            <option value="Тимчасово не БГ" ${item && item.status === 'Тимчасово не БГ' ? 'selected' : ''}>⚠️ Тимчасово не БГ</option>
+                            <option value="перейменована" ${item && item.status === 'перейменована' ? 'selected' : ''}>🔄 Перейменована</option>
+                        </select>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Донесення № / Підстава:</label><input type="text" name="docNumber" value="${item ? item.docNumber || '' : 'неофіційно'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    <div><label class="font-semibold text-slate-400">Деталі, ротації та о/с:</label><textarea name="details" rows="2" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">${item ? item.details || '' : ''}</textarea></div>
+                `;
+            } else if (storeName === 'orders') {
+                html = `
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Дата отримання:</label><input type="text" name="receiveDate" value="${item ? item.receiveDate : today}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">№ БР / Хто дав:</label><input type="text" name="orderNumber" value="${item ? item.orderNumber || '' : '1729/дск'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Зміст завдання:</label><textarea name="taskContent" rows="4" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white leading-relaxed">${item ? item.taskContent || '' : ''}</textarea></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="font-semibold text-slate-400">Дедлайн (Виконати до):</label><input type="text" name="deadline" value="${item ? item.deadline || '' : ''}" placeholder="24.08.2026 00:00" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Етап виконання:</label>
+                            <select name="stage" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                                <option value="Виконується" ${item && item.stage === 'Виконується' ? 'selected' : ''}>🔵 Виконується</option>
+                                <option value="Не розпочато" ${item && item.stage === 'Не розпочато' ? 'selected' : ''}>🟡 Не розпочато</option>
+                                <option value="Виконано" ${item && item.stage === 'Виконано' ? 'selected' : ''}>🟢 Виконано</option>
+                                <option value="Протерміновано" ${item && item.stage === 'Протерміновано' ? 'selected' : ''}>🔴 Протерміновано</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">№ Позатермінового донесення:</label><input type="text" name="urgentDocNo" value="${item ? item.urgentDocNo || '' : ''}" placeholder="№276/2651" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                    <label class="flex items-center gap-2 cursor-pointer pt-1"><input type="checkbox" name="isReported" ${item && item.isReported ? 'checked' : ''} class="rounded bg-slate-800 text-purple-500"><span>Доведено / Результат надіслано</span></label>
+                `;
+            }
+
+            container.innerHTML = html;
+            openModal('modal-edit-record');
+        }
+
+        async function saveRecordFromModal(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const record = {};
+
+            for (const [key, value] of formData.entries()) {
+                record[key] = value;
+            }
+
+            if (appState.currentEditStore === 'tasks') record.reportedInPbd = form.reportedInPbd ? form.reportedInPbd.checked : false;
+            if (appState.currentEditStore === 'orders') record.isReported = form.isReported ? form.isReported.checked : false;
+            if (appState.currentEditId) record.id = appState.currentEditId;
+
+            await saveRecordToStore(appState.currentEditStore, record);
+            await loadAllDataFromDB();
+            closeModal('modal-edit-record');
+        }
+
+        async function deleteRecordPrompt(storeName, id) {
+            if (confirm("Ви дійсно бажаєте видалити цей запис?")) {
+                await deleteRecordFromStore(storeName, id);
+                await loadAllDataFromDB();
+            }
+        }
+
+        async function togglePbdReported(storeName, id, checked) {
+            const item = appState[storeName].find(x => x.id === id);
+            if (item) {
+                item.reportedInPbd = checked;
+                await saveRecordToStore(storeName, item);
+                updateAllCounters();
+            }
+        }
+
+        async function toggleOrderReported(id, checked) {
+            const item = appState.orders.find(x => x.id === id);
+            if (item) {
+                item.isReported = checked;
+                await saveRecordToStore('orders', item);
+                updateAllCounters();
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // ФІЛЬТРАЦІЯ ЗА ДАТОЮ ТА ДОПОМІЖНІ ФУНКЦІЇ
+        // -------------------------------------------------------------------------
+
+        function applyGlobalDateFilter() {
+            const val = document.getElementById('global-date-filter').value;
+            if (!val) {
+                appState.globalDateFilter = null;
+            } else {
+                const parts = val.split('-');
+                appState.globalDateFilter = `${parts[2]}.${parts[1]}.${parts[0]}`;
+            }
+            renderActiveTab();
+        }
+
+        function clearDateFilter() {
+            document.getElementById('global-date-filter').value = '';
+            appState.globalDateFilter = null;
+            renderActiveTab();
+        }
+
+        function matchesDate(dateStr, targetDate) {
+            if (!dateStr || !targetDate) return true;
+            return String(dateStr).includes(targetDate);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function openImportModal() { openModal('modal-import'); }
+        function openBackupModal() {
+            renderSnapshotsList();
+            openModal('modal-backup');
+        }
+        function openChangelogModal() { openModal('modal-changelog'); }
+
+        // Автоматичний фоновий знімок кожні 10 хвилин
+        setInterval(() => {
+            if (appState.tasks.length > 0 || appState.assaults.length > 0 || appState.enemy.length > 0 || appState.ovt.length > 0) {
+                createManualSnapshot("Автоматичний фоновий знімок");
+            }
+        }, 10 * 60 * 1000);
+
+        // Старт програми при завантаженні DOM
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await loadAllDataFromDB();
+            } catch (e) {
+                console.error("Init Error:", e);
+            }
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>
