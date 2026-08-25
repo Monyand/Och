@@ -826,8 +826,8 @@
             <div class="file-group" style="margin-bottom: 15px;">
                 <label>⚔️ Словник зброї ОВгП за позиціями <span style="font-size: 11px; color: #64748b; font-weight: normal; margin-left: 5px;">(Формат: Назва позиції = Зброя)</span></label>
                 <textarea id="weapon-dict" rows="6"
-                    placeholder="Гниль = УПІК 82 (82мм)&#10;Квадрат= КБА-222 (120мм)&#10;Баран = МП-120 (120мм)" style="width: 100%; box-sizing: border-box;"></textarea>
-                <small style="color:#64748b; display: flex; align-items: center; gap: 5px; margin-top: 5px;"><i>💡 Використовується для заміни загального "міномет" на конкретну систему озброєння. Зберігається автоматично.</i></small>
+                    placeholder="ВИРІЙ = КБА-222 (120мм)&#10;ВИРІЙ = МВ81/024 (81 мм)&#10;КРИНИЦЯ = УПІК 82 (82мм)" style="width: 100%; box-sizing: border-box;"></textarea>
+                <small style="color:#64748b; display: flex; align-items: center; gap: 5px; margin-top: 5px;"><i>💡 Дозволяє вказувати конкретні системи озброєння. Якщо на позиції кілька калібрів (наприклад, 120мм і 81мм) — вкажіть кожен окремим рядком, програма співставить їх автоматично!</i></small>
             </div>
 
             <div class="settings-btn-row">
@@ -1576,6 +1576,41 @@
             });
         }
 
+        // -------------------------------------------------------------------------
+        // СЛОВНИК ЗБРОЇ ОВгП: ДОПОМІЖНІ ФУНКЦІЇ ТА МУЛЬТИ-КАЛІБЕРНИЙ ПАРСИНГ
+        // -------------------------------------------------------------------------
+
+        /**
+         * Витягує числовий калібр зі стрічки назви зброї (наприклад: "120мм", "81 мм", "82-мм" -> "120", "81", "82")
+         * @param {string} str - Рядок з назвою або описом зброї
+         * @returns {string} Калібр або порожній рядок
+         */
+        function extractWeaponCaliber(str) {
+            if (!str) return "";
+            const m = str.toString().match(/(\d+(?:[.,]\d+)?)\s*(?:мм|mm)?/i);
+            return m ? m[1].replace(',', '.') : "";
+        }
+
+        /**
+         * Визначає базову категорію озброєння за ключовими словами
+         * @param {string} str - Рядок з назвою або описом зброї
+         * @returns {string} Категорія: 'міномет', 'агс', 'спг', 'вкк' або порожній рядок
+         */
+        function extractWeaponType(str) {
+            if (!str) return "";
+            let s = str.toString().toLowerCase();
+            if (s.includes('міномет') || s.includes('мін') || s.includes('кба') || s.includes('2б11') || s.includes('упік') || s.includes('м60') || s.includes('мв81') || s.includes('мп-120') || s.includes('2б14') || s.includes('2б9') || s.includes('васильок')) return "міномет";
+            if (s.includes('агс') || s.includes('мк-19') || s.includes('мк19') || s.includes('mk19') || s.includes('гранатомет')) return "агс";
+            if (s.includes('спг') || s.includes('спис')) return "спг";
+            if (s.includes('вкк') || s.includes('кулемет') || s.includes('дшк') || s.includes('браунінг') || s.includes('нсв') || s.includes('корді') || s.includes('утёс') || s.includes('утєс') || s.includes('browning')) return "вкк";
+            return "";
+        }
+
+        /**
+         * Будує карту відповідностей позицій та зброї з текстового поля налаштувань.
+         * Підтримує мульти-калібр: кілька засобів для однієї позиції не перезаписують один одного,
+         * а зберігаються у масив для подальшого розумного зіставлення з Excel.
+         */
         function buildWeaponMap() {
             weaponMap = {};
             const dictText = document.getElementById('weapon-dict').value;
@@ -1583,10 +1618,37 @@
             lines.forEach(line => {
                 if (line.includes('=')) {
                     let parts = line.split('=');
-                    let key = superClean(parts[0]);
+                    let rawLeft = parts[0].trim();
                     let val = parts[1].trim();
+                    let key = superClean(rawLeft);
                     if (key && val) {
-                        weaponMap[key] = val;
+                        let cal = extractWeaponCaliber(val) || extractWeaponCaliber(rawLeft);
+                        let type = extractWeaponType(val) || extractWeaponType(rawLeft);
+                        let item = { val, caliber: cal, type, rawLeft };
+
+                        // 1. Збереження за точним очищеним ключем (наприклад, "вирій" або "вирій120")
+                        if (!weaponMap[key]) weaponMap[key] = [];
+                        if (!weaponMap[key].some(existing => existing.val === val)) {
+                            weaponMap[key].push(item);
+                        }
+
+                        // 2. Індексація за базовою назвою позиції (якщо ліворуч було вказано суфікс: "БАСТИОН_АГС", "ВИРІЙ 120", "ВИРІЙ-81")
+                        let basePos = superClean(rawLeft.split(/[_\s-]+/)[0]);
+                        if (basePos && basePos !== key) {
+                            if (!weaponMap[basePos]) weaponMap[basePos] = [];
+                            if (!weaponMap[basePos].some(existing => existing.val === val)) {
+                                weaponMap[basePos].push(item);
+                            }
+                        }
+
+                        // 3. Індексація без цифр для зручності пошуку
+                        let keyNoDigits = superClean(rawLeft.replace(/\d+/g, ''));
+                        if (keyNoDigits && keyNoDigits !== key && keyNoDigits !== basePos) {
+                            if (!weaponMap[keyNoDigits]) weaponMap[keyNoDigits] = [];
+                            if (!weaponMap[keyNoDigits].some(existing => existing.val === val)) {
+                                weaponMap[keyNoDigits].push(item);
+                            }
+                        }
                     }
                 }
             });
@@ -1600,39 +1662,47 @@
             return `${defaultPrefix} "${cleanPos}"`;
         }
 
+        /**
+         * Знаходить точну назву системи озброєння для заданої позиції з урахуванням калібру та типу зброї з Excel.
+         * @param {string} posName - Назва позиції з Excel
+         * @param {string} weaponName - Назва зброї або калібр з Excel
+         * @returns {string|null} Відформатована назва зброї зі словника або null
+         */
         function getPositionWeapon(posName, weaponName) {
             if (!posName || posName.trim() === "") return null;
             let keyPos = superClean(posName);
-            let keyWeapon = "";
+            let excelCaliber = extractWeaponCaliber(weaponName);
+            let excelType = extractWeaponType(weaponName);
 
-            let wLow = weaponName ? weaponName.toLowerCase() : "";
-            if (wLow.includes('міномет') || wLow.includes('мін')) keyWeapon = "міномет";
-            else if (wLow.includes('агс')) keyWeapon = "агс";
-            else if (wLow.includes('спг')) keyWeapon = "спг";
-            else if (wLow.includes('вкк') || wLow.includes('великокаліберн') || wLow.includes('кулемет')) keyWeapon = "вкк";
-
-            // 1. Спочатку шукаємо точний комбінований ключ, наприклад "валет_міномет" або "валетміномет"
-            if (keyWeapon) {
-                let combinedKey = superClean(`${keyPos}${keyWeapon}`);
-                if (weaponMap[combinedKey]) return weaponMap[combinedKey];
+            // 1. Перевірка прямого або комбінованого ключа позиції
+            let items = weaponMap[keyPos];
+            if ((!items || items.length === 0) && excelCaliber) {
+                items = weaponMap[superClean(`${posName}${excelCaliber}`)];
+            }
+            if ((!items || items.length === 0) && excelType) {
+                items = weaponMap[superClean(`${posName}${excelType}`)];
             }
 
-            // 2. Якщо комбінованого немає, беремо загальний ключ "валет" (з перевіркою типу)
-            if (weaponMap[keyPos]) {
-                let mappedWeapon = weaponMap[keyPos].toLowerCase();
-                // Запобігаємо перехресному перезапису різних типів озброєння
-                if (keyWeapon === "міномет" && (mappedWeapon.includes('міномет') || mappedWeapon.includes('мін'))) return weaponMap[keyPos];
-                if (keyWeapon === "агс" && mappedWeapon.includes('агс')) return weaponMap[keyPos];
-                if (keyWeapon === "спг" && mappedWeapon.includes('спг')) return weaponMap[keyPos];
-                if (keyWeapon === "вкк" && (mappedWeapon.includes('вкк') || mappedWeapon.includes('кулемет'))) return weaponMap[keyPos];
+            if (!items || items.length === 0) return null;
 
-                // Якщо у словнику загальна назва типу "КБА-48М" без явного вказання типу, а в Excel міномет:
-                if (!mappedWeapon.includes('міномет') && !mappedWeapon.includes('мін') && !mappedWeapon.includes('агс') && !mappedWeapon.includes('спг') && !mappedWeapon.includes('вкк') && !mappedWeapon.includes('кулемет')) {
-                    return weaponMap[keyPos];
+            // 2. Якщо на позиції кілька засобів, зіставляємо за калібром з Excel (120мм, 81мм, 82мм тощо)
+            if (excelCaliber) {
+                let matchByCal = items.find(it => it.caliber === excelCaliber);
+                if (matchByCal) return matchByCal.val;
+            }
+
+            // 3. Зіставлення за типом озброєння (міномет, агс, спг, вкк)
+            if (excelType) {
+                let matchByType = items.filter(it => it.type === excelType);
+                if (matchByType.length === 1) return matchByType[0].val;
+                if (matchByType.length > 1 && excelCaliber) {
+                    let matchTypeAndCal = matchByType.find(it => it.caliber === excelCaliber);
+                    if (matchTypeAndCal) return matchTypeAndCal.val;
                 }
             }
 
-            return null;
+            // 4. Повернення першого знайденого запису для позиції
+            return items[0].val;
         }
 
         function parseExcelFile(file) {
@@ -2610,8 +2680,7 @@
                 let finalWeaponName = weaponName;
                 if (isOvgp) {
                     const posWeapon = getPositionWeapon(posRaw, weaponName);
-                    // If Excel has generic weapon like "міномет" and position has specific weapon, use position weapon
-                    if (posWeapon && (weaponName.toLowerCase().includes('міномет') || weaponName.toLowerCase().includes('агс') || weaponName.toLowerCase().includes('спг'))) {
+                    if (posWeapon) {
                         finalWeaponName = posWeapon;
                     }
                 }
@@ -3052,6 +3121,21 @@
         }
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
+            {
+                version: "1.3.2",
+                date: "25.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "⚔️ Розумний словник зброї ОВгП (Мульти-калібр на одній позиції)",
+                        items: [
+                            "<b>Кілька засобів на одній позиції</b>: Тепер можна вказувати кілька різних систем озброєння для однієї і тієї ж позиції (наприклад: <code>ВИРІЙ = КБА-222 (120мм)</code> та <code>ВИРІЙ = МВ81/024 (81 мм)</code>). Записи більше не перезаписують один одного!",
+                            "<b>Автоматичне співставлення за калібром</b>: Програма автоматично аналізує калібр або тип зброї з Excel-файлу події та підставляє відповідну систему озброєння з довідника.",
+                            "<b>Гнучкі формати запису</b>: Підтримуються записи як з однаковим ім'ям позиції, так і з явним суфіксом калібру (<code>ПОЗИЦІЯ_120</code>, <code>ПОЗИЦІЯ 81мм</code> тощо)."
+                        ]
+                    }
+                ]
+            },
             {
                 version: "1.3.0",
                 date: "18.08.2026",
