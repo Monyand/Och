@@ -1581,14 +1581,29 @@
         // -------------------------------------------------------------------------
 
         /**
-         * Витягує числовий калібр зі стрічки назви зброї (наприклад: "120мм", "81 мм", "82-мм" -> "120", "81", "82")
+         * Витягує точний числовий калібр зі стрічки назви або моделі зброї (наприклад: "120мм", "2Б11-120 (120мм)", "МВ81/024", "УПІК 82" -> "120", "81", "82")
          * @param {string} str - Рядок з назвою або описом зброї
          * @returns {string} Калібр або порожній рядок
          */
         function extractWeaponCaliber(str) {
             if (!str) return "";
-            const m = str.toString().match(/(\d+(?:[.,]\d+)?)\s*(?:мм|mm)?/i);
-            return m ? m[1].replace(',', '.') : "";
+            const s = str.toString().trim();
+
+            // 1. Пошук явного позначення з "мм" / "mm" (наприклад: "120мм", "120-мм", "81 мм", "(82мм)")
+            const mmMatch = s.match(/(?:^|[^\d.,])(\d+(?:[.,]\d+)?)\s*[-_]?(?:мм|mm)\b/i);
+            if (mmMatch) return mmMatch[1].replace(',', '.');
+
+            // 2. Пошук стандартних калібрів окремими числами (120, 82, 81, 60, 73, 40, 30, 23, 14.5, 12.7)
+            const stdMatch = s.match(/\b(120|82|81|60|73|40|30|23|14[.,]5|12[.,]7)\b/i);
+            if (stdMatch) return stdMatch[1].replace(',', '.');
+
+            // 3. Армійські індекси озброєння (МВ81, М60, 2Б11-120, КБА-48М 82 тощо)
+            const indexMatch = s.match(/(?:мв|mv)\s*(81)|(?:м|m)\s*(60)|-(120|82|60)\b/i);
+            if (indexMatch) {
+                return (indexMatch[1] || indexMatch[2] || indexMatch[3]).replace(',', '.');
+            }
+
+            return "";
         }
 
         /**
@@ -2693,10 +2708,9 @@
 
                 let text = "";
                 if (isOvgp) {
-                    // Extract caliber from weapon name (e.g., "міномет 81мм" -> "81мм")
-                    let caliber = "";
-                    const caliberMatch = finalWeaponName.match(/(\d+)\s*мм/i);
-                    if (caliberMatch) caliber = caliberMatch[1] + "мм";
+                    // Extract caliber from weapon name using robust extractor
+                    let calNum = extractWeaponCaliber(finalWeaponName);
+                    let caliber = calNum ? calNum + "мм" : "";
 
                     const ammoNum = parseInt(used) || 0;
 
