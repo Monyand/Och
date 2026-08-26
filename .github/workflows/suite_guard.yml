@@ -1,0 +1,36 @@
+name: 🛡️ Suite QA & Integrity Guard
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 6 * * 1' # Щопонеділка о 06:00 UTC
+  workflow_dispatch: # Дозволяє запускати вручну кнопкою на GitHub
+
+jobs:
+  audit:
+    name: 🔍 Аудит 12 програм комплексу
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Клонування репозиторію
+        uses: actions/checkout@v4
+
+      - name: 🐍 Налаштування Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🚀 Запуск Suite QA Agent
+        run: |
+          python suite_agent.py --check
+
+      - name: 📊 Збереження звіту аудиту як артефакту
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-dashboard-report
+          path: audit_dashboard.html
+          retention-days: 14

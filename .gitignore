@@ -1,3 +1,6 @@
-# Ignore Python scripts directory and python files
+# Ignore Python temporary scripts and backup archives
 python_scripts/
+_backups/
+__pycache__/
 *.py
+!suite_agent.py

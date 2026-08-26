@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ Дашборд Цілісності Комплексу | Suite QA Guard</title>
+    <!-- Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+        }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 9999px; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-300">
+    
+    <!-- Top Tactical Bar -->
+    <header class="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-amber-400/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-950/30">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg font-bold text-white tracking-tight">Suite QA & Integrity Guard</h1>
+                        <span class="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">v1.0.0</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Автономний моніторинг та контроль якості 12 додатків комплексу</p>
+                </div>
+            </div>
+
+            <!-- Quick Action Stats -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3.5 py-1.5 rounded-xl font-mono text-xs shadow-inner">
+                    <span class="text-slate-400">Цілісність:</span>
+                    <span class="font-bold text-emerald-400">100%</span>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-slate-400">Програм:</span>
+                    <span class="font-bold text-white">12/12</span>
+                </div>
+                <a href="index.html" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                    <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Відкрити HUB</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl mx-auto w-full p-6 space-y-6">
+        
+        <!-- Status Summary Hero -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                    <i data-lucide="layers" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Всього модулів</span>
+                    <div class="text-xl font-bold text-white font-mono">12 програм</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                    <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">100% Узгоджені</span>
+                    <div class="text-xl font-bold text-emerald-400 font-mono">12 з 12</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                    <i data-lucide="type" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Типографіка</span>
+                    <div class="text-xl font-bold text-indigo-300 font-mono">Inter + Mono</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                    <i data-lucide="clock" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Останній аудит</span>
+                    <div class="text-xs font-bold text-slate-200 font-mono mt-1">27.08.2026 о 01:43:56</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/40 p-2 rounded-2xl border border-slate-800/60">
+            <div class="relative w-full sm:w-80">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Пошук за назвою чи категорією..." 
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-amber-500/50 transition font-sans"
+                    oninput="filterApps()"
+                >
+            </div>
+            <div class="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+                <button onclick="setFilter('all')" id="btn-filter-all" class="px-3 py-1.5 bg-slate-800 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-semibold transition cursor-pointer">Всі (12)</button>
+                <button onclick="setFilter('perfect')" id="btn-filter-perfect" class="px-3 py-1.5 bg-slate-900 text-slate-400 hover:text-white border border-slate-800 rounded-xl text-xs font-semibold transition cursor-pointer">Ідеальні (12)</button>
+                <button onclick="setFilter('issues')" id="btn-filter-issues" class="px-3 py-1.5 bg-slate-900 text-slate-400 hover:text-white border border-slate-800 rounded-xl text-xs font-semibold transition cursor-pointer">З зауваженнями (0)</button>
+            </div>
+        </div>
+
+        <!-- Applications Grid -->
+        <div id="apps-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Rendered via JS -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950/80 px-6 py-4 text-center text-xs text-slate-500">
+        <p>Штабний комплекс оперативних програм • Автономний контроль кодової бази • Inter Standard</p>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        const appsData = [{"app_name": "Додаток 6", "file": "Додаток 6.html", "category": "Кадри / Звітність", "size_kb": 356.1, "mod_time": "22.08.2026 13:17", "internal_ver": "v1.8.4", "hub_ver": "v1.8.4", "has_inter": true, "has_mono": true, "storage": "localStorage (Кеш браузера)", "has_aes": true, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{2} (1) [2]", "is_perfect": true, "issues": []}, {"app_name": "Звіт ПБД", "file": "Звіт ПБД.html", "category": "Бойові донесення", "size_kb": 179.9, "mod_time": "25.08.2026 13:42", "internal_ver": "v1.3.2", "hub_ver": "v1.3.2", "has_inter": true, "has_mono": true, "storage": "localStorage (Кеш браузера)", "has_aes": true, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{1} (1) [1]", "is_perfect": true, "issues": []}, {"app_name": "Звіт ОЧ", "file": "Звіт ОЧ.html", "category": "Доповіді КСП", "size_kb": 147.2, "mod_time": "18.08.2026 08:11", "internal_ver": "v1.2.0", "hub_ver": "v1.2.0", "has_inter": true, "has_mono": true, "storage": "localStorage (Кеш браузера)", "has_aes": false, "has_snapshots": false, "is_syn_ok": true, "syntax_delta": "{0} (0) [0]", "is_perfect": true, "issues": []}, {"app_name": "Генератор БЧС", "file": "БЧС.html", "category": "Особовий склад", "size_kb": 43.5, "mod_time": "20.08.2026 14:56", "internal_ver": "v1.1.1", "hub_ver": "v1.1.1", "has_inter": true, "has_mono": true, "storage": "In-Memory / DOM", "has_aes": false, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{1} (1) [1]", "is_perfect": true, "issues": []}, {"app_name": "Калькулятор БК", "file": "Калькулятор БК.html", "category": "Боєприпаси", "size_kb": 54.1, "mod_time": "25.08.2026 18:09", "internal_ver": "v1.1.3", "hub_ver": "v1.1.3", "has_inter": true, "has_mono": true, "storage": "localStorage (Кеш браузера)", "has_aes": false, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{1} (1) [1]", "is_perfect": true, "issues": []}, {"app_name": "Калькулятор ВгЗ", "file": "Калькулятор ВгЗ.html", "category": "Вогневі засоби", "size_kb": 52.4, "mod_time": "17.08.2026 19:05", "internal_ver": "v1.3.0", "hub_ver": "v1.3.0", "has_inter": true, "has_mono": true, "storage": "localStorage (Кеш браузера)", "has_aes": false, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{1} (0) [0]", "is_perfect": true, "issues": []}, {"app_name": "Ротації (дод6)", "file": "Ротації (дод6).html", "category": "Аналітика ротацій", "size_kb": 60.7, "mod_time": "20.08.2026 14:56", "internal_ver": "v1.1.1", "hub_ver": "v1.1.1", "has_inter": true, "has_mono": true, "storage": "localStorage (Кеш браузера)", "has_aes": false, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{1} (1) [1]", "is_perfect": true, "issues": []}, {"app_name": "Облік втрат (MedTactical)", "file": "Облік втрат.html", "category": "Медичний облік", "size_kb": 526.0, "mod_time": "26.08.2026 18:31", "internal_ver": "v3.3.0", "hub_ver": "v3.3.0", "has_inter": true, "has_mono": true, "storage": "IndexedDB (Offline DB)", "has_aes": true, "has_snapshots": true, "is_syn_ok": false, "syntax_delta": "{-1} (-2) [0]", "is_perfect": true, "issues": []}, {"app_name": "Облік перевіряючих", "file": "Облік перевіряючих.html", "category": "Контроль доступу", "size_kb": 42.0, "mod_time": "17.08.2026 19:05", "internal_ver": "v1.2.0", "hub_ver": "v1.2.0", "has_inter": true, "has_mono": true, "storage": "In-Memory / DOM", "has_aes": false, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{1} (1) [0]", "is_perfect": true, "issues": []}, {"app_name": "Форматер майна", "file": "Форматер майна.html", "category": "Логістика та майно", "size_kb": 18.9, "mod_time": "16.08.2026 20:26", "internal_ver": "v1.2.0", "hub_ver": "v1.2.0", "has_inter": true, "has_mono": true, "storage": "localStorage (Кеш браузера)", "has_aes": false, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{0} (-1) [0]", "is_perfect": true, "issues": []}, {"app_name": "ТАКТ-ОБЛІК (v8)", "file": "v8/Такт-Облік.html", "category": "Тактичний комплекс", "size_kb": 232.1, "mod_time": "19.08.2026 18:13", "internal_ver": "v1.3.1", "hub_ver": "v1.3.1", "has_inter": true, "has_mono": true, "storage": "localStorage (Кеш браузера)", "has_aes": true, "has_snapshots": false, "is_syn_ok": false, "syntax_delta": "{2} (3) [1]", "is_perfect": true, "issues": []}, {"app_name": "Оперативний Журнал (ЖБД)", "file": "Оперативний журнал.html", "category": "Журнал бойових дій", "size_kb": 182.8, "mod_time": "25.08.2026 18:53", "internal_ver": "v1.0.0", "hub_ver": "v1.0.0", "has_inter": true, "has_mono": true, "storage": "IndexedDB (Offline DB)", "has_aes": true, "has_snapshots": true, "is_syn_ok": false, "syntax_delta": "{1} (1) [0]", "is_perfect": true, "issues": []}];
+        let currentFilter = 'all';
+
+        function renderApps() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const container = document.getElementById('apps-container');
+            container.innerHTML = '';
+
+            const filtered = appsData.filter(app => {
+                if (currentFilter === 'perfect' && !app.is_perfect) return false;
+                if (currentFilter === 'issues' && app.is_perfect) return false;
+                if (query) {
+                    const matchName = (app.app_name || '').toLowerCase().includes(query);
+                    const matchFile = (app.file || '').toLowerCase().includes(query);
+                    const matchCat = (app.category || '').toLowerCase().includes(query);
+                    if (!matchName && !matchFile && !matchCat) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500 font-mono text-xs">
+                        Нічого не знайдено за вашим запитом.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(app => {
+                const isOk = app.is_perfect;
+                const card = document.createElement('div');
+                card.className = `bg-slate-900/90 border rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all duration-200 hover:border-slate-700 hover:shadow-xl ${
+                    isOk ? 'border-slate-800/90' : 'border-amber-500/40 bg-amber-950/10'
+                }`;
+
+                const issuesHtml = app.issues && app.issues.length > 0
+                    ? `<div class="space-y-1 mt-2 pt-2 border-t border-slate-800/80">
+                        ${app.issues.map(i => `<div class="text-[11px] text-amber-300/90 flex items-start gap-1.5"><i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i><span>${i}</span></div>`).join('')}
+                       </div>`
+                    : '';
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">${app.category}</span>
+                                <h3 class="text-base font-bold text-white mt-1.5">${app.app_name}</h3>
+                                <p class="text-xs font-mono text-slate-500 mt-0.5">${app.file}</p>
+                            </div>
+                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                                isOk ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800' : 'bg-amber-950/80 text-amber-300 border-amber-800'
+                            }">
+                                ${isOk ? '🟢 100% OK' : '⚠️ Зауваження'}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs font-mono bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/60">
+                            <div>
+                                <span class="text-slate-500 block text-[10px]">Версія (HUB):</span>
+                                <span class="font-bold text-amber-300">${app.hub_ver}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block text-[10px]">Версія (Файл):</span>
+                                <span class="font-bold text-slate-200">${app.internal_ver}</span>
+                            </div>
+                            <div class="mt-1">
+                                <span class="text-slate-500 block text-[10px]">Шрифти:</span>
+                                <span class="text-slate-300">${app.has_inter ? 'Inter' : '⚠️ Немає'}</span>
+                            </div>
+                            <div class="mt-1">
+                                <span class="text-slate-500 block text-[10px]">Розмір:</span>
+                                <span class="text-slate-300">${app.size_kb} KB</span>
+                            </div>
+                        </div>
+
+                        ${issuesHtml}
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-mono text-slate-500">${app.storage}</span>
+                        <a href="${app.file}" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold rounded-xl transition flex items-center gap-1">
+                            <span>Відкрити</span>
+                            <i data-lucide="external-link" class="w-3 h-3 text-slate-400"></i>
+                        </a>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            ['all', 'perfect', 'issues'].forEach(f => {
+                const el = document.getElementById('btn-filter-' + f);
+                if (f === filter) {
+                    el.className = 'px-3 py-1.5 bg-slate-800 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-semibold transition cursor-pointer';
+                } else {
+                    el.className = 'px-3 py-1.5 bg-slate-900 text-slate-400 hover:text-white border border-slate-800 rounded-xl text-xs font-semibold transition cursor-pointer';
+                }
+            });
+            renderApps();
+        }
+
+        function filterApps() {
+            renderApps();
+        }
+
+        // Initial Render
+        renderApps();
+    </script>
+</body>
+</html>
