@@ -397,18 +397,27 @@
 
         const parseSafeDate = (dStr) => {
             if (!dStr) return 0;
+            if (dStr instanceof Date) return dStr.getTime();
             if (typeof dStr === 'number') return dStr;
-            const s = String(dStr).trim();
+            let s = String(dStr).trim();
             if (!s) return 0;
+
+            // Розумне авто-виправлення одруківок року (наприклад, 62026-08-25 або 22026-08-25 -> 2026-08-25)
+            s = s.replace(/^[0-9]*(20\d{2}[-\.\/]\d{2}[-\.\/]\d{2})/, '$1');
+
             if (/^\d{2}\.\d{2}\.\d{4}/.test(s)) {
                 const parts = s.split(/[\sT]+/);
                 const [d, m, y] = parts[0].split('.').map(Number);
-                const timePart = parts[1] || "00:00";
-                const [h, min] = timePart.split(':').map(Number);
-                return new Date(y, m - 1, d, h || 0, min || 0).getTime();
+                const timePart = parts[1] || "00:00:00";
+                const [h, min, sec] = timePart.split(':').map(Number);
+                return new Date(y, m - 1, d, h || 0, min || 0, sec || 0).getTime();
             }
-            if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(s)) {
-                return new Date(s.replace(' ', 'T')).getTime();
+            if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+                const parts = s.split(/[\sT]+/);
+                const [y, m, d] = parts[0].split('-').map(Number);
+                const timePart = parts[1] || "00:00:00";
+                const [h, min, sec] = timePart.split(':').map(Number);
+                return new Date(y, m - 1, d, h || 0, min || 0, sec || 0).getTime();
             }
             const t = new Date(s).getTime();
             return isNaN(t) ? 0 : t;
@@ -631,7 +640,7 @@
             return `${numPrefix}${sName}${sCallsign} (${cleanRank}, ${unitStr})\n   • ${charStr}${injPart}${udpPart}${reportPart} | ${evacStr}\n   • Подія: ${dateStr}${causeStr} | Факт: ${factStr}${docStr}`;
         };
 
-        const EpisodeCard = React.memo(({ episode, soldier, onEdit, onNotify, viewMode = 'grid' }) => {
+        const EpisodeCard = React.memo(({ episode, soldier, soldierEpisodes = [], onEdit, onNotify, viewMode = 'grid' }) => {
             const [isCopied, setIsCopied] = React.useState(false);
             const badgeClass = getBadgeColors(episode.lossType, episode.severity);
             const isEvac = episode.evacStatus === "Евакуйований";
@@ -796,6 +805,15 @@
                                         <Icon name="calendar" className="w-3 h-3 text-slate-500 shrink-0" />
                                         <span>{dateDisplay}</span>
                                     </span>
+                                    {soldierEpisodes && soldierEpisodes.length > 1 && (
+                                        <span 
+                                            className="text-[10px] font-mono font-bold bg-amber-950/70 border border-amber-500/40 text-amber-300 px-2 py-0.5 rounded-lg flex items-center gap-1 shrink-0 shadow-sm" 
+                                            title={`Ланцюжок статусів бійця (${soldierEpisodes.length} епізоди): ${soldierEpisodes.map(e => e.lossType.split(' ')[0]).join(' ➔ ')}`}
+                                        >
+                                            <Icon name="history" className="w-3 h-3 text-amber-400 shrink-0" />
+                                            <span>{soldierEpisodes.map(e => e.lossType.split(' ')[0]).join(' ➔ ')}</span>
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -948,6 +966,15 @@
                                         <Icon name="calendar" className="w-3 h-3 text-slate-500 shrink-0" />
                                         <span>{dateDisplay}</span>
                                     </span>
+                                    {soldierEpisodes && soldierEpisodes.length > 1 && (
+                                        <span 
+                                            className="text-[10px] font-mono font-bold bg-amber-950/70 border border-amber-500/40 text-amber-300 px-2 py-0.5 rounded-lg flex items-center gap-1 shrink-0 shadow-sm" 
+                                            title={`Ланцюжок статусів бійця (${soldierEpisodes.length} епізоди): ${soldierEpisodes.map(e => e.lossType.split(' ')[0]).join(' ➔ ')}`}
+                                        >
+                                            <Icon name="history" className="w-3 h-3 text-amber-400 shrink-0" />
+                                            <span>{soldierEpisodes.map(e => e.lossType.split(' ')[0]).join(' ➔ ')}</span>
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1035,7 +1062,7 @@
             );
         });
 
-        const TriageCard = React.memo(({ ep, soldier, onQuickEvac, onEdit, onAlertMIA, onNotify }) => {
+        const TriageCard = React.memo(({ ep, soldier, soldierEpisodes = [], onQuickEvac, onEdit, onAlertMIA, onNotify }) => {
             const [isCopied, setIsCopied] = React.useState(false);
             const waitStr = calculateWaitTimeUI(ep.date);
             const injStr = getInjStrUI(ep.injuries);
@@ -1119,6 +1146,15 @@
                                 <span className="text-slate-300 font-medium text-xs truncate max-w-[120px]" title={displayUnit}>
                                     {displayUnit || 'Не вказано'}
                                 </span>
+                                {soldierEpisodes && soldierEpisodes.length > 1 && (
+                                    <span 
+                                        className="text-[9px] font-mono font-bold bg-amber-950/70 border border-amber-500/40 text-amber-300 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0 shadow-sm" 
+                                        title={`Ланцюжок статусів бійця (${soldierEpisodes.length} епізоди): ${soldierEpisodes.map(e => e.lossType.split(' ')[0]).join(' ➔ ')}`}
+                                    >
+                                        <Icon name="history" className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                                        <span>{soldierEpisodes.map(e => e.lossType.split(' ')[0]).join(' ➔ ')}</span>
+                                    </span>
+                                )}
                             </div>
                             <div className="text-sm font-bold text-white group-hover:text-amber-300 tracking-tight leading-tight truncate transition-colors" title={sName}>
                                 {sName}
@@ -1562,8 +1598,14 @@
                 return episodes.filter(ep => {
                     if (!listDateFrom && !listDateTo) return true;
                     const epTime = parseSafeDate(ep.date);
-                    if (listDateFrom && epTime < parseSafeDate(listDateFrom)) return false;
-                    if (listDateTo && epTime > parseSafeDate(listDateTo)) return false;
+                    if (listDateFrom) {
+                        const fromMs = parseSafeDate(listDateFrom.includes(':') ? listDateFrom : `${listDateFrom} 00:00:00`);
+                        if (epTime < fromMs) return false;
+                    }
+                    if (listDateTo) {
+                        const toMs = parseSafeDate(listDateTo.includes(':') ? listDateTo : `${listDateTo} 23:59:59`);
+                        if (epTime > toMs) return false;
+                    }
                     return true;
                 });
             }, [episodes, listDateFrom, listDateTo]);
@@ -1601,6 +1643,16 @@
                 return Array.from(map.values()).sort((a, b) => parseSafeDate(b.date) - parseSafeDate(a.date));
             }, [episodes]);
 
+            const episodesBySoldier = useMemo(() => {
+                const map = new Map();
+                episodes.forEach(ep => {
+                    if (!map.has(ep.soldierId)) map.set(ep.soldierId, []);
+                    map.get(ep.soldierId).push(ep);
+                });
+                map.forEach(list => list.sort((a, b) => parseSafeDate(a.date) - parseSafeDate(b.date)));
+                return map;
+            }, [episodes]);
+
             const stats = useMemo(() => {
                 const totalEpisodes = timeFilteredEpisodes.length;
                 const uniqueSoldiersCount = latestEpisodesData.length;
@@ -1617,16 +1669,9 @@
             }, [timeFilteredEpisodes, latestEpisodesData, globalLatestEpisodes]);
 
             const evacStats = useMemo(() => {
-                let fromDateStr = anDateFrom ? anDateFrom.substring(0, 10) : ""; 
-                let toDateStr = anDateTo ? anDateTo.substring(0, 10) : "";       
+                const fromMs = anDateFrom ? parseSafeDate(anDateFrom.includes(':') ? anDateFrom : `${anDateFrom} 00:00:00`) : 0;
+                const toMs = anDateTo ? parseSafeDate(anDateTo.includes(':') ? anDateTo : `${anDateTo} 23:59:59`) : 0;
                 
-                let allEpisodes = episodes;
-                if (anShowLatest) {
-                    const map = new Map();
-                    [...episodes].sort((a, b) => parseSafeDate(a.date) - parseSafeDate(b.date)).forEach(ep => map.set(ep.soldierId, ep));
-                    allEpisodes = Array.from(map.values());
-                }
-
                 let actualEvacTotal = 0, actualEvac300 = 0, actualEvac200 = 0;
                 let evacPeriod300 = 0, evacPeriod200 = 0;
                 let evacBefore300 = 0, evacBefore200 = 0;
@@ -1635,14 +1680,10 @@
                 let periodEvacuated300 = 0, periodEvacuated200 = 0;
                 let periodWaiting300 = 0, periodWaiting200 = 0;
                 
-                let globalWaiting300 = 0, globalWaiting200 = 0, globalWaitingMia = 0;
-                let globalWaitingCritHeavy = 0;
                 let sumEvacTimeDays = 0, countEvacTime = 0;
 
-                allEpisodes.forEach(ep => {
-                    const epDateStr = ep.date.substring(0, 10);
-                    if (toDateStr && epDateStr > toDateStr) return; // Ignore future episodes
-
+                // 1. Облік фактичних евакуацій за період (по всіх епізодах)
+                episodes.forEach(ep => {
                     const isLoss = isAny300(ep.lossType) || isAny200(ep.lossType) || ep.lossType === 'Зниклий безвісти (ЗБВ)';
                     if (!isLoss) return; 
 
@@ -1656,49 +1697,15 @@
                     const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : (ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType);
                     const is300 = isAny300(effType);
                     const is200 = isAny200(effType);
-                    const isMia = effType === 'Зниклий безвісти (ЗБВ)';
 
                     const epTime = parseSafeDate(ep.date);
-                    const isWoundInPeriod = (!anDateFrom || epTime >= parseSafeDate(anDateFrom)) && (!anDateTo || epTime <= parseSafeDate(anDateTo));
+                    const isWoundInPeriod = (!fromMs || epTime >= fromMs) && (!toMs || epTime <= toMs);
                     
-                    let isHistoricallyEvacuated = ep.evacStatus === 'Евакуйований';
-                    let epEvacTimeStr = ep.evacTime ? ep.evacTime.substring(0, 10) : "";
-                    if (toDateStr && epEvacTimeStr && epEvacTimeStr > toDateStr) {
-                        isHistoricallyEvacuated = false;
-                    }
+                    const isEvac = (ep.evacStatus === 'Евакуйований' || ep.awolStatus === 'Повернувся');
+                    const epEvacMs = parseSafeDate(ep.evacTime || ep.evacDate || ep.date);
 
-                    let historicalEvacStatus = ep.evacStatus;
-                    if (historicalEvacStatus === 'Евакуйований' && toDateStr && epEvacTimeStr && epEvacTimeStr > toDateStr) {
-                        historicalEvacStatus = 'Не евакуйований';
-                    }
-
-                    if (historicalEvacStatus === 'Не евакуйований') {
-                        if (is300) {
-                            globalWaiting300++;
-                            if (ep.severity === 'Критичний' || ep.severity === 'Важкий') {
-                                globalWaitingCritHeavy++;
-                            }
-                        } else if (is200) {
-                            globalWaiting200++;
-                        } else if (isMia) {
-                            globalWaitingMia++;
-                        }
-                    }
-
-                    if (isWoundInPeriod) {
-                        if (is300) {
-                            totalPeriod300++;
-                            if (historicalEvacStatus === 'Евакуйований') periodEvacuated300++;
-                            else if (historicalEvacStatus === 'Не евакуйований') periodWaiting300++;
-                        } else if (is200) {
-                            totalPeriod200++;
-                            if (historicalEvacStatus === 'Евакуйований') periodEvacuated200++;
-                            else if (historicalEvacStatus === 'Не евакуйований') periodWaiting200++;
-                        }
-                    }
-
-                    if (isHistoricallyEvacuated && epEvacTimeStr) {
-                        const isEvacInPeriod = (!fromDateStr || epEvacTimeStr >= fromDateStr) && (!toDateStr || epEvacTimeStr <= toDateStr);
+                    if (isEvac && epEvacMs > 0) {
+                        const isEvacInPeriod = (!fromMs || epEvacMs >= fromMs) && (!toMs || epEvacMs <= toMs);
                         if (isEvacInPeriod) {
                             actualEvacTotal++;
                             if (is300) actualEvac300++;
@@ -1707,21 +1714,63 @@
                             if (isWoundInPeriod) {
                                 if (is300) evacPeriod300++;
                                 if (is200) evacPeriod200++;
-                            } else if (fromDateStr && epTime < parseSafeDate(anDateFrom)) {
+                            } else if (fromMs > 0 && epTime < fromMs) {
                                 if (is300) evacBefore300++;
                                 if (is200) evacBefore200++;
                             }
 
-                            if (ep.date) {
-                                const msDiff = parseSafeDate(epEvacTimeStr) - epTime;
-                                if (msDiff >= 0) {
-                                    sumEvacTimeDays += msDiff / (1000 * 60 * 60 * 24);
-                                    countEvacTime++;
-                                }
+                            if (epTime > 0 && epEvacMs >= epTime) {
+                                const msDiff = epEvacMs - epTime;
+                                sumEvacTimeDays += msDiff / (1000 * 60 * 60 * 24);
+                                countEvacTime++;
                             }
                         }
                     }
+
+                    if (isWoundInPeriod) {
+                        if (is300) {
+                            totalPeriod300++;
+                            if (isEvac) periodEvacuated300++;
+                            else periodWaiting300++;
+                        } else if (is200) {
+                            totalPeriod200++;
+                            if (isEvac) periodEvacuated200++;
+                            else periodWaiting200++;
+                        }
+                    }
                 });
+
+                // 2. Актуальна черга неевакуйованих (синхронізована з верхнім табло)
+                const globalWaiting300 = globalLatestEpisodes.filter(e => {
+                    if (e.evacStatus !== "Не евакуйований" || !isAny300(e.lossType)) return false;
+                    if (anUdp !== "all" && ((anUdp === "yes" && !e.inUdp) || (anUdp === "no" && e.inUdp))) return false;
+                    if (anSector !== "all" && e.actualLoc !== anSector && e.docLoc !== anSector) return false;
+                    return true;
+                }).length;
+
+                const globalWaitingCritHeavy = globalLatestEpisodes.filter(e => {
+                    if (e.evacStatus !== "Не евакуйований" || !isAny300(e.lossType)) return false;
+                    if (e.severity !== 'Критичний' && e.severity !== 'Важкий') return false;
+                    if (anUdp !== "all" && ((anUdp === "yes" && !e.inUdp) || (anUdp === "no" && e.inUdp))) return false;
+                    if (anSector !== "all" && e.actualLoc !== anSector && e.docLoc !== anSector) return false;
+                    return true;
+                }).length;
+
+                const globalWaiting200 = globalLatestEpisodes.filter(e => {
+                    const effType = groupAnalytics ? (e.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : e.lossType) : e.lossType;
+                    if (e.evacStatus !== "Не евакуйований" || !isAny200(effType)) return false;
+                    if (anUdp !== "all" && ((anUdp === "yes" && !e.inUdp) || (anUdp === "no" && e.inUdp))) return false;
+                    if (anSector !== "all" && e.actualLoc !== anSector && e.docLoc !== anSector) return false;
+                    return true;
+                }).length;
+
+                const globalWaitingMia = globalLatestEpisodes.filter(e => {
+                    if (groupAnalytics) return false;
+                    if (e.evacStatus !== "Не евакуйований" || e.lossType !== 'Зниклий безвісти (ЗБВ)') return false;
+                    if (anUdp !== "all" && ((anUdp === "yes" && !e.inUdp) || (anUdp === "no" && e.inUdp))) return false;
+                    if (anSector !== "all" && e.actualLoc !== anSector && e.docLoc !== anSector) return false;
+                    return true;
+                }).length;
 
                 let avgEvacTimeDays = countEvacTime > 0 ? (sumEvacTimeDays / countEvacTime).toFixed(1) : 0;
                 let evacSuccessRate = totalPeriod300 + totalPeriod200 > 0 ? Math.round(((periodEvacuated300 + periodEvacuated200) / (totalPeriod300 + totalPeriod200)) * 100) : 0;
@@ -1735,7 +1784,7 @@
                     globalWaiting300, globalWaiting200, globalWaitingMia, globalWaitingCritHeavy,
                     avgEvacTimeDays, evacSuccessRate
                 };
-            }, [episodes, anDateFrom, anDateTo, anUdp, anSector, anShowLatest, groupAnalytics]);
+            }, [episodes, globalLatestEpisodes, anDateFrom, anDateTo, anUdp, anSector, anShowLatest, groupAnalytics]);
 
             const availableAnSectors = useMemo(() => {
                 const map = new Map();
@@ -2133,28 +2182,32 @@
                     }
                 });
 
-                // 2. Check & normalize date formats
+                // 2. Check & normalize date formats and stray typos (e.g. 62026-08-25)
                 fixedEpisodes.forEach(ep => {
                     if (ep.date) {
-                        const d = new Date(ep.date.replace(' ', 'T'));
-                        const year = d.getFullYear();
-                        if (isNaN(d.getTime()) || year < 2000 || year > 2100) {
+                        const rawDateStr = String(ep.date);
+                        if (/^[0-9]*(20\d{2}[-\.\/]\d{2}[-\.\/]\d{2})/.test(rawDateStr) && !/^\d{4}-\d{2}-\d{2}/.test(rawDateStr)) {
+                            const cleaned = rawDateStr.replace(/^[0-9]*(20\d{2}[-\.\/]\d{2}[-\.\/]\d{2})/, '$1');
                             datesFixedCount++;
-                            const sInfo = ep.soldierName || 'Без імені';
                             issues.push({
                                 id: ep.id,
                                 episode: ep,
-                                text: `Епізод #${(ep.id || '').slice(0, 6)} (${sInfo}): некоректна дата "${ep.date}"`
+                                text: `Епізод #${(ep.id || '').slice(0, 6)}: одруківка в даті події "${ep.date}" -> виправлено на "${cleaned}"`
                             });
-                            if (autoRepair) {
-                                let cleanDate = ep.date;
-                                if (String(ep.date).startsWith('200')) {
-                                    cleanDate = String(ep.date).replace(/^200(\d{2})/, '20$1');
-                                } else if (isNaN(d.getTime())) {
-                                    cleanDate = new Date().toISOString().slice(0, 16);
-                                }
-                                ep.date = cleanDate;
-                            }
+                            if (autoRepair) ep.date = cleaned;
+                        }
+                    }
+                    if (ep.evacTime) {
+                        const rawEvacStr = String(ep.evacTime);
+                        if (/^[0-9]*(20\d{2}[-\.\/]\d{2}[-\.\/]\d{2})/.test(rawEvacStr) && !/^\d{4}-\d{2}-\d{2}/.test(rawEvacStr)) {
+                            const cleaned = rawEvacStr.replace(/^[0-9]*(20\d{2}[-\.\/]\d{2}[-\.\/]\d{2})/, '$1');
+                            datesFixedCount++;
+                            issues.push({
+                                id: ep.id,
+                                episode: ep,
+                                text: `Епізод #${(ep.id || '').slice(0, 6)}: одруківка в даті евакуації "${ep.evacTime}" -> виправлено на "${cleaned}"`
+                            });
+                            if (autoRepair) ep.evacTime = cleaned;
                         }
                     }
                 });
@@ -2918,8 +2971,8 @@
             };
 
             const handleExportAnalyticsText = () => {
-                let fromDateStr = anDateFrom ? anDateFrom.substring(0, 10) : ""; 
-                let toDateStr = anDateTo ? anDateTo.substring(0, 10) : "";
+                const fromMs = anDateFrom ? parseSafeDate(anDateFrom.includes(':') ? anDateFrom : `${anDateFrom} 00:00:00`) : 0;
+                const toMs = anDateTo ? parseSafeDate(anDateTo.includes(':') ? anDateTo : `${anDateTo} 23:59:59`) : 0;
 
                 const deadEps = [];
                 const miaEps = [];
@@ -2962,11 +3015,11 @@
                             });
                         }
                         
-                        let evDateStr = ep.evacTime ? ep.evacTime.substring(0, 10) : "";
+                        const epEvacMs = parseSafeDate(ep.evacTime || ep.evacDate || '');
                         let evacuatedInPeriod = false;
-                        if (ep.evacStatus === 'Евакуйований' && evDateStr) {
-                            let okFrom = !fromDateStr || evDateStr >= fromDateStr;
-                            let okTo = !toDateStr || evDateStr <= toDateStr;
+                        if (ep.evacStatus === 'Евакуйований' && epEvacMs > 0) {
+                            let okFrom = !fromMs || epEvacMs >= fromMs;
+                            let okTo = !toMs || epEvacMs <= toMs;
                             if (okFrom && okTo) evacuatedInPeriod = true;
                         }
                         
@@ -2989,8 +3042,8 @@
                 const globalNotEvacMiaEps = [];
 
                 allEps.forEach(ep => {
-                    const epDateStr = ep.date.substring(0, 10);
-                    if (toDateStr && epDateStr > toDateStr) return; // Ignore future episodes relative to this report period
+                    const epTime = parseSafeDate(ep.date);
+                    if (toMs > 0 && epTime > toMs) return; // Ignore future episodes relative to this report period
 
                     if (anSector !== "all") {
                         if (ep.actualLoc !== anSector && ep.docLoc !== anSector) return;
@@ -3003,15 +3056,15 @@
 
                     let okUdp = anUdp === "all" ? true : (anUdp === "yes" ? ep.inUdp : !ep.inUdp);
                     if (okUdp) {
-                        let isHistoricallyEvacuated = ep.evacStatus === 'Евакуйований';
-                        let epEvacTimeStr = ep.evacTime ? ep.evacTime.substring(0, 10) : "";
-                        if (toDateStr && epEvacTimeStr && epEvacTimeStr > toDateStr) {
+                        const epEvacMs = parseSafeDate(ep.evacTime || ep.evacDate || '');
+                        let isHistoricallyEvacuated = (ep.evacStatus === 'Евакуйований');
+                        if (toMs > 0 && epEvacMs > 0 && epEvacMs > toMs) {
                             isHistoricallyEvacuated = false;
                         }
 
-                        if (isHistoricallyEvacuated && epEvacTimeStr) {
-                            let okFrom = !fromDateStr || epEvacTimeStr >= fromDateStr;
-                            let okTo = !toDateStr || epEvacTimeStr <= toDateStr;
+                        if (isHistoricallyEvacuated && epEvacMs > 0) {
+                            let okFrom = !fromMs || epEvacMs >= fromMs;
+                            let okTo = !toMs || epEvacMs <= toMs;
                             if (okFrom && okTo) {
                                 if (isWounded) actualEvacWoundedEps.push(ep);
                                 if (isDead) actualEvacDeadEps.push(ep);
@@ -3019,7 +3072,7 @@
                         }
 
                         let historicalEvacStatus = ep.evacStatus;
-                        if (historicalEvacStatus === 'Евакуйований' && toDateStr && epEvacTimeStr && epEvacTimeStr > toDateStr) {
+                        if (historicalEvacStatus === 'Евакуйований' && toMs > 0 && epEvacMs > 0 && epEvacMs > toMs) {
                             historicalEvacStatus = 'Не евакуйований';
                         }
 
@@ -4011,10 +4064,12 @@
                 }
 
                 if (listDateFrom || listDateTo) {
+                    const fromMs = listDateFrom ? parseSafeDate(listDateFrom.includes(':') ? listDateFrom : `${listDateFrom} 00:00:00`) : 0;
+                    const toMs = listDateTo ? parseSafeDate(listDateTo.includes(':') ? listDateTo : `${listDateTo} 23:59:59`) : 0;
                     list = list.filter(ep => {
                         const epTime = parseSafeDate(ep.date);
-                        if (listDateFrom && epTime < parseSafeDate(listDateFrom)) return false;
-                        if (listDateTo && epTime > parseSafeDate(listDateTo)) return false;
+                        if (fromMs > 0 && epTime < fromMs) return false;
+                        if (toMs > 0 && epTime > toMs) return false;
                         return true;
                     });
                 }
@@ -4060,6 +4115,7 @@
                     key={ep.id} 
                     ep={ep} 
                     soldier={soldiersMap.get(ep.soldierId)} 
+                    soldierEpisodes={episodesBySoldier.get(ep.soldierId) || []}
                     onQuickEvac={quickEvacuate} 
                     onEdit={handleStartEdit} 
                     onAlertMIA={handleAlertMIA} 
@@ -4100,7 +4156,7 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.2.0
+                                    ⚡ v3.3.0
                                 </button>
                             </div>
                         </div>
@@ -4657,6 +4713,7 @@
                                                     key={episode.id} 
                                                     episode={episode} 
                                                     soldier={soldiersMap.get(episode.soldierId)} 
+                                                    soldierEpisodes={episodesBySoldier.get(episode.soldierId) || []}
                                                     onEdit={handleStartEdit}
                                                     onNotify={triggerNotification}
                                                     viewMode="list"
@@ -5586,11 +5643,44 @@
                                             </div>
                                         </div>
 
+                                        {/* Попередження про конфлікт статусів при додаванні нового запису */}
+                                        {(() => {
+                                            const activeUnevac = soldierHistory.find(e => e.evacStatus === 'Не евакуйований');
+                                            if (!activeUnevac || isEditOpen) return null;
+                                            return (
+                                                <div className="bg-amber-950/40 border border-amber-500/50 rounded-2xl p-3.5 space-y-2 text-xs animate-in fade-in duration-150 shadow-lg shadow-amber-950/20">
+                                                    <div className="flex items-center gap-2 text-amber-300 font-bold">
+                                                        <Icon name="alert-triangle" className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+                                                        <span>У бійця вже є відкритий запис у черзі!</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                                                        Попередній статус: <strong className="text-amber-300 font-mono">{activeUnevac.lossType}</strong> від <span className="font-mono text-slate-200">{formatEpisodeDateUI(activeUnevac.date)}</span> (<span className="text-red-400 font-bold">{activeUnevac.evacStatus}</span>).
+                                                    </p>
+                                                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-amber-500/20 flex-wrap">
+                                                        <span className="text-[10px] text-slate-400 italic">
+                                                            Створення нового запису оновить актуальний статус бійця в черзі, зберігши історію.
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleStartEdit(activeUnevac)}
+                                                            className="text-[10px] text-amber-300 hover:text-white bg-amber-900/60 hover:bg-amber-800 border border-amber-700/60 px-2.5 py-1 rounded-lg font-bold transition shrink-0 cursor-pointer flex items-center gap-1"
+                                                        >
+                                                            <span>Редагувати старий запис</span>
+                                                            <Icon name="arrow-right" className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+
                                         {soldierHistory.length > 0 && (
                                             <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-2.5">
-                                                <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider flex items-center gap-1.5">
-                                                    <Icon name="history" className="w-3.5 h-3.5 text-amber-400" />
-                                                    <span>Історія епізодів бійця</span>
+                                                <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider flex items-center justify-between gap-1.5">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Icon name="history" className="w-3.5 h-3.5 text-amber-400" />
+                                                        <span>Історія епізодів бійця ({soldierHistory.length})</span>
+                                                    </span>
+                                                    <span className="text-[9px] text-slate-500 font-normal">Клікніть для редагування</span>
                                                 </label>
                                                 <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                                                     {soldierHistory.map(h => (
@@ -6639,6 +6729,7 @@
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => {
+                                                                            setIsBackupOpen(false);
                                                                             setIsSettingsOpen(false);
                                                                             handleStartEdit(ep);
                                                                         }}
@@ -6729,10 +6820,25 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                                    {/* 22.08.2026 */}
+                                    {/* 26.08.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.2.0 (Офіційне бойове донесення A4/PDF, точна евакуація & фільтри)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.3.0 (Авто-відновлення дат, ланцюжки статусів та захист цілісності)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">26.08.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Розумне авто-виправлення одруківок дат:</strong> Автоматичне очищення випадкових цифр перед роком (наприклад, 62026-08-25 ➔ 2026-08-25), що гарантує безпомилковий підрахунок періодів.</li>
+                                            <li><strong className="text-white">Синхронізація фактичної евакуації:</strong> Точний підрахунок вивезених бійців за період з надійним фолбеком на дату події.</li>
+                                            <li><strong className="text-white">Захист від колізій статусів:</strong> Інтерактивне попередження при створенні нового запису на бійця з відкритою чергою та кнопка швидкого переходу до редагування.</li>
+                                            <li><strong className="text-white">Бейдж ланцюжка статусів бійця:</strong> Відображення компактного бейджа історії (наприклад, [🔄 ЗБВ ➔ 200]) на картках у Журналі та Евакуації.</li>
+                                            <li><strong className="text-white">Оновлення Data Integrity Guard:</strong> Виключення хибних сповіщень по валідних історичних епізодах та автоматичне лікування одруківок дат.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 22.08.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">v3.2.0 (Офіційне бойове донесення A4/PDF, точна евакуація & фільтри)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">22.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">

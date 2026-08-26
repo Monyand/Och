@@ -74,11 +74,47 @@
             background: #334155;
         }
 
-        .tab-btn.active {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 95, 70, 0.3));
+        .tab-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tab-btn:hover {
+            transform: translateY(-1px);
+        }
+        #tab-btn-tasks.active {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(13, 148, 136, 0.1));
+            border-color: #14b8a6;
+            color: #2dd4bf;
+            box-shadow: 0 4px 20px -2px rgba(20, 184, 166, 0.35);
+        }
+        #tab-btn-assaults.active {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(225, 29, 72, 0.1));
+            border-color: #f43f5e;
+            color: #fb7185;
+            box-shadow: 0 4px 20px -2px rgba(244, 63, 94, 0.35);
+        }
+        #tab-btn-enemy.active {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.1));
+            border-color: #ef4444;
+            color: #f87171;
+            box-shadow: 0 4px 20px -2px rgba(239, 68, 68, 0.35);
+        }
+        #tab-btn-ovt.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1));
+            border-color: #f59e0b;
+            color: #fbbf24;
+            box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.35);
+        }
+        #tab-btn-positions.active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
             border-color: #10b981;
             color: #34d399;
-            box-shadow: 0 4px 14px -2px rgba(16, 185, 129, 0.25);
+            box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.35);
+        }
+        #tab-btn-orders.active {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(147, 51, 234, 0.1));
+            border-color: #a855f7;
+            color: #c084fc;
+            box-shadow: 0 4px 20px -2px rgba(168, 85, 247, 0.35);
         }
 
         .table-container {
@@ -176,47 +212,47 @@
         </div>
 
         <!-- Tab Navigation Buttons -->
-        <nav class="max-w-[1700px] mx-auto mt-3 flex items-center gap-1.5 overflow-x-auto pb-1 border-t border-slate-800/80 pt-2.5">
+        <nav class="max-w-[1700px] mx-auto mt-3 flex items-center gap-2 overflow-x-auto pb-1.5 border-t border-slate-800/80 pt-3">
             <button onclick="switchTab('tasks')" id="tab-btn-tasks"
-                class="tab-btn active px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
-                <i data-lucide="truck" class="w-4 h-4 text-blue-400"></i>
+                class="tab-btn active px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-teal-500/50 bg-[#090e1a] transition-all flex items-center gap-2.5 whitespace-nowrap cursor-pointer shadow-sm">
+                <i data-lucide="truck" class="w-4 h-4 text-teal-400"></i>
                 <span>1. ЗАВДАННЯ</span>
-                <span id="badge-count-tasks" class="bg-blue-500/20 text-blue-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+                <span id="badge-count-tasks" class="bg-teal-500/20 text-teal-300 text-[11px] font-bold px-2 py-0.5 rounded-full font-mono">0</span>
             </button>
 
             <button onclick="switchTab('assaults')" id="tab-btn-assaults"
-                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-rose-500/50 bg-[#090e1a] transition-all flex items-center gap-2.5 whitespace-nowrap cursor-pointer shadow-sm">
                 <i data-lucide="swords" class="w-4 h-4 text-rose-400"></i>
                 <span>2. ШТУРМОВІ ДІЇ</span>
-                <span id="badge-count-assaults" class="bg-rose-500/20 text-rose-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+                <span id="badge-count-assaults" class="bg-rose-500/20 text-rose-300 text-[11px] font-bold px-2 py-0.5 rounded-full font-mono">0</span>
             </button>
 
             <button onclick="switchTab('enemy')" id="tab-btn-enemy"
-                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-red-500/50 bg-[#090e1a] transition-all flex items-center gap-2.5 whitespace-nowrap cursor-pointer shadow-sm">
                 <i data-lucide="skull" class="w-4 h-4 text-red-400"></i>
                 <span>3. ВТРАТИ ПРОТИВНИКА</span>
-                <span id="badge-count-enemy" class="bg-red-500/20 text-red-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+                <span id="badge-count-enemy" class="bg-red-500/20 text-red-300 text-[11px] font-bold px-2 py-0.5 rounded-full font-mono">0</span>
             </button>
 
             <button onclick="switchTab('ovt')" id="tab-btn-ovt"
-                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-amber-500/50 bg-[#090e1a] transition-all flex items-center gap-2.5 whitespace-nowrap cursor-pointer shadow-sm">
                 <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>
                 <span>4. ВТРАТИ ОВТ</span>
-                <span id="badge-count-ovt" class="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+                <span id="badge-count-ovt" class="bg-amber-500/20 text-amber-300 text-[11px] font-bold px-2 py-0.5 rounded-full font-mono">0</span>
             </button>
 
             <button onclick="switchTab('positions')" id="tab-btn-positions"
-                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-emerald-500/50 bg-[#090e1a] transition-all flex items-center gap-2.5 whitespace-nowrap cursor-pointer shadow-sm">
                 <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
                 <span>5. СТАТУС ПОЗИЦІЙ</span>
-                <span id="badge-count-positions" class="bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+                <span id="badge-count-positions" class="bg-emerald-500/20 text-emerald-300 text-[11px] font-bold px-2 py-0.5 rounded-full font-mono">0</span>
             </button>
 
             <button onclick="switchTab('orders')" id="tab-btn-orders"
-                class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-slate-700 bg-slate-900/60 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer">
+                class="tab-btn px-4 py-2.5 rounded-2xl text-xs font-semibold text-slate-300 border border-slate-800 hover:border-purple-500/50 bg-[#090e1a] transition-all flex items-center gap-2.5 whitespace-nowrap cursor-pointer shadow-sm">
                 <i data-lucide="clipboard-check" class="w-4 h-4 text-purple-400"></i>
                 <span>6. ВИКОНАННЯ БР</span>
-                <span id="badge-count-orders" class="bg-purple-500/20 text-purple-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
+                <span id="badge-count-orders" class="bg-purple-500/20 text-purple-300 text-[11px] font-bold px-2 py-0.5 rounded-full font-mono">0</span>
             </button>
         </nav>
     </header>
@@ -226,11 +262,62 @@
 
         <!-- 1. TAB: ЗАВДАННЯ -->
         <section id="panel-tasks" class="tab-panel flex flex-col gap-3">
+            <!-- HUD Counters Banner -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-[#090e1a] border border-blue-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Всього завдань</p>
+                        <span class="p-1.5 rounded-xl bg-blue-500/10 text-blue-400"><i data-lucide="list-todo" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-tasks-total" class="text-2xl font-black text-blue-400 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">бойових та логістичних</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-emerald-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Виконано успішно</p>
+                        <span class="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400"><i data-lucide="check-circle-2" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-tasks-done" class="text-2xl font-black text-emerald-400 font-mono">0</p>
+                        <div class="flex items-center gap-1.5 mt-1.5 text-[10px] font-mono">
+                            <span id="stat-tasks-done-pct" class="bg-emerald-500/15 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30">0% успіху</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-amber-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">У процесі / Планово</p>
+                        <span class="p-1.5 rounded-xl bg-amber-500/10 text-amber-400"><i data-lucide="clock" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-tasks-pending" class="text-2xl font-black text-amber-400 font-mono">0</p>
+                        <p id="stat-tasks-failed" class="text-[10px] text-slate-400 mt-1.5 font-mono">не виконано: 0</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-purple-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Подано в ПБД</p>
+                        <span class="p-1.5 rounded-xl bg-purple-500/10 text-purple-400"><i data-lucide="file-check" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-tasks-pbd" class="text-2xl font-black text-purple-400 font-mono">0</p>
+                        <div id="stat-tasks-pbd-sub" class="flex items-center gap-1.5 mt-1.5 text-[10px] font-mono">
+                            <span class="bg-purple-500/15 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30">внесено до звіту</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-xs font-semibold text-slate-400">Фільтри:</span>
                     <select id="filter-tasks-status" onchange="renderTasksTable()"
-                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-teal-500">
                         <option value="all">Всі статуси</option>
                         <option value="Виконано">🟢 Виконано</option>
                         <option value="Виконується">🟡 Виконується</option>
@@ -238,21 +325,23 @@
                         <option value="Не виконано">🔴 Не виконано</option>
                     </select>
 
-                    <label class="flex items-center gap-1.5 text-xs text-slate-300 bg-[#111b2e] border border-slate-700 px-3 py-1.5 rounded-xl cursor-pointer">
-                        <input type="checkbox" id="filter-tasks-unreported" onchange="renderTasksTable()" class="rounded bg-slate-800 border-slate-700 text-emerald-500">
+                    <label class="flex items-center gap-1.5 text-xs text-slate-300 bg-[#111b2e] border border-slate-700 px-3 py-1.5 rounded-xl cursor-pointer hover:border-slate-600 transition-colors">
+                        <input type="checkbox" id="filter-tasks-unreported" onchange="renderTasksTable()" class="rounded bg-slate-800 border-slate-700 text-teal-500 cursor-pointer">
                         <span>Тільки не подані в ПБД</span>
                     </label>
 
                     <div class="relative w-48 sm:w-64">
                         <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
                         <input type="text" id="search-tasks" oninput="renderTasksTable()" placeholder="Пошук у завданнях..."
-                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-teal-500">
                     </div>
+
+                    <span class="text-[11px] text-slate-400 font-mono ml-1 hidden sm:inline" id="count-indicator-tasks"></span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <button onclick="openAddTaskModal()"
-                        class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        class="bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-teal-900/30">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>Додати завдання</span>
                     </button>
@@ -265,13 +354,13 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
                             <tr>
-                                <th class="p-3 w-12 text-center">#</th>
-                                <th class="p-3 w-28">Дата</th>
+                                <th class="p-3 w-12 text-center font-mono">#</th>
+                                <th class="p-3 w-28 whitespace-nowrap">Дата</th>
                                 <th class="p-3 min-w-[320px]">Зміст завдання</th>
-                                <th class="p-3 w-36 text-center">Подано в ПБД</th>
-                                <th class="p-3 w-36 text-center">Статус</th>
+                                <th class="p-3 w-32 text-center whitespace-nowrap">Подано в ПБД</th>
+                                <th class="p-3 w-32 text-center whitespace-nowrap">Статус</th>
                                 <th class="p-3 min-w-[200px]">Коментар</th>
-                                <th class="p-3 w-24 text-right">Дії</th>
+                                <th class="p-3 w-24 text-right whitespace-nowrap">Дії</th>
                             </tr>
                         </thead>
                         <tbody id="tasks-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
@@ -284,14 +373,61 @@
 
         <!-- 2. TAB: ШТУРМОВІ ДІЇ -->
         <section id="panel-assaults" class="tab-panel hidden flex flex-col gap-3">
+            <!-- HUD Counters Banner -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-[#090e1a] border border-rose-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Штурмових дій</p>
+                        <span class="p-1.5 rounded-xl bg-rose-500/10 text-rose-400"><i data-lucide="swords" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-assaults-total" class="text-2xl font-black text-rose-400 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">зафіксовано контактів</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-emerald-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Реальні штурми</p>
+                        <span class="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400"><i data-lucide="shield-alert" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-assaults-real" class="text-2xl font-black text-emerald-400 font-mono">0</p>
+                        <p class="text-[10px] text-emerald-400/80 mt-1.5 font-mono">підтверджені бої</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-purple-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Хибні / Події з (*)</p>
+                        <span class="p-1.5 rounded-xl bg-purple-500/10 text-purple-400"><i data-lucide="sparkles" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-assaults-fictive" class="text-2xl font-black text-purple-400 font-mono">0</p>
+                        <p class="text-[10px] text-purple-300/80 mt-1.5 font-mono">не підтверджено фактом</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-amber-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Успішність відбиття</p>
+                        <span class="p-1.5 rounded-xl bg-amber-500/10 text-amber-400"><i data-lucide="award" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-assaults-repelled" class="text-2xl font-black text-amber-400 font-mono">100%</p>
+                        <p class="text-[10px] text-amber-300/80 mt-1.5 font-mono">позиції утримано</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-xs font-semibold text-slate-400">Фільтри:</span>
                     <select id="filter-assaults-real" onchange="renderAssaultsTable()"
-                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-rose-500">
                         <option value="all">Всі події</option>
                         <option value="Так">🟢 Тільки реальні події</option>
-                        <option value="Ні">🔴 Тільки хибні / непідтверджені</option>
+                        <option value="Ні">🟣 Тільки хибні / непідтверджені (*)</option>
                     </select>
 
                     <div class="relative w-48 sm:w-64">
@@ -299,11 +435,13 @@
                         <input type="text" id="search-assaults" oninput="renderAssaultsTable()" placeholder="Пошук за позицією / о/с..."
                             class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-rose-500">
                     </div>
+
+                    <span class="text-[11px] text-slate-400 font-mono ml-1 hidden sm:inline" id="count-indicator-assaults"></span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <button onclick="openAddAssaultModal()"
-                        class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-rose-900/30">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>Додати штурмову дію</span>
                     </button>
@@ -316,15 +454,15 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
                             <tr>
-                                <th class="p-3 w-12 text-center">#</th>
-                                <th class="p-3 w-36">Час початку</th>
-                                <th class="p-3 w-36">Час завершення</th>
-                                <th class="p-3 w-28 text-center">Реальна</th>
-                                <th class="p-3 w-36">Звітне місце</th>
+                                <th class="p-3 w-12 text-center font-mono">#</th>
+                                <th class="p-3 w-32 whitespace-nowrap">Час початку</th>
+                                <th class="p-3 w-32 whitespace-nowrap">Час завершення</th>
+                                <th class="p-3 w-28 text-center whitespace-nowrap">Реальна</th>
+                                <th class="p-3 w-36 whitespace-nowrap">Звітне місце</th>
                                 <th class="p-3 min-w-[240px]">Фактичне місце / контакт</th>
                                 <th class="p-3 min-w-[180px]">Сили ворога</th>
                                 <th class="p-3 min-w-[240px]">Результат, втрати, БК</th>
-                                <th class="p-3 w-24 text-right">Дії</th>
+                                <th class="p-3 w-24 text-right whitespace-nowrap">Дії</th>
                             </tr>
                         </thead>
                         <tbody id="assaults-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
@@ -339,33 +477,54 @@
         <section id="panel-enemy" class="tab-panel hidden flex flex-col gap-3">
             <!-- Counters Banner -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div class="bg-[#090e1a] border border-red-500/30 p-3 rounded-2xl flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] text-slate-400 uppercase font-semibold">Знищено (200)</p>
-                        <p id="stat-enemy-200" class="text-xl font-extrabold text-red-400 font-mono">0</p>
+                <div class="bg-[#090e1a] border border-red-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Знищено (200)</p>
+                        <span class="p-1.5 rounded-xl bg-red-500/10 text-red-400"><i data-lucide="skull" class="w-4 h-4"></i></span>
                     </div>
-                    <span class="p-2 rounded-xl bg-red-500/10 text-red-400"><i data-lucide="skull" class="w-5 h-5"></i></span>
+                    <div class="mt-1">
+                        <p id="stat-enemy-200" class="text-2xl font-black text-red-400 font-mono">0</p>
+                        <div id="stat-enemy-200-sub" class="flex items-center gap-1.5 mt-1.5 text-[10px] font-mono">
+                            <span class="bg-emerald-500/15 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 whitespace-nowrap">реал: 0</span>
+                            <span class="bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/40 font-bold whitespace-nowrap">фікт *: 0</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-[#090e1a] border border-amber-500/30 p-3 rounded-2xl flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] text-slate-400 uppercase font-semibold">Поранено (300)</p>
-                        <p id="stat-enemy-300" class="text-xl font-extrabold text-amber-400 font-mono">0</p>
+
+                <div class="bg-[#090e1a] border border-amber-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Поранено (300)</p>
+                        <span class="p-1.5 rounded-xl bg-amber-500/10 text-amber-400"><i data-lucide="activity" class="w-4 h-4"></i></span>
                     </div>
-                    <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400"><i data-lucide="activity" class="w-5 h-5"></i></span>
+                    <div class="mt-1">
+                        <p id="stat-enemy-300" class="text-2xl font-black text-amber-400 font-mono">0</p>
+                        <div id="stat-enemy-300-sub" class="flex items-center gap-1.5 mt-1.5 text-[10px] font-mono">
+                            <span class="bg-emerald-500/15 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 whitespace-nowrap">реал: 0</span>
+                            <span class="bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/40 font-bold whitespace-nowrap">фікт *: 0</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-[#090e1a] border border-emerald-500/30 p-3 rounded-2xl flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] text-slate-400 uppercase font-semibold">Полонені</p>
-                        <p id="stat-enemy-pow" class="text-xl font-extrabold text-emerald-400 font-mono">0</p>
+
+                <div class="bg-[#090e1a] border border-emerald-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Полонені</p>
+                        <span class="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400"><i data-lucide="user-check" class="w-4 h-4"></i></span>
                     </div>
-                    <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400"><i data-lucide="user-check" class="w-5 h-5"></i></span>
+                    <div class="mt-1">
+                        <p id="stat-enemy-pow" class="text-2xl font-black text-emerald-400 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">обмінний фонд</p>
+                    </div>
                 </div>
-                <div class="bg-[#090e1a] border border-blue-500/30 p-3 rounded-2xl flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] text-slate-400 uppercase font-semibold">Узгоджено з S2</p>
-                        <p id="stat-enemy-s2" class="text-xl font-extrabold text-blue-400 font-mono">0</p>
+
+                <div class="bg-[#090e1a] border border-blue-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Узгоджено з S2</p>
+                        <span class="p-1.5 rounded-xl bg-blue-500/10 text-blue-400"><i data-lucide="check-check" class="w-4 h-4"></i></span>
                     </div>
-                    <span class="p-2 rounded-xl bg-blue-500/10 text-blue-400"><i data-lucide="check-check" class="w-5 h-5"></i></span>
+                    <div class="mt-1">
+                        <p id="stat-enemy-s2" class="text-2xl font-black text-blue-400 font-mono">0</p>
+                        <p id="stat-enemy-s2-percent" class="text-[10px] text-blue-300/80 font-mono mt-1.5">верифіковано</p>
+                    </div>
                 </div>
             </div>
 
@@ -373,7 +532,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
                 <div class="flex items-center gap-2 flex-wrap">
                     <select id="filter-enemy-status" onchange="renderEnemyTable()"
-                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-red-500">
                         <option value="all">Всі категорії</option>
                         <option value="200">🔴 200 (Знищено)</option>
                         <option value="300">🟡 300 (Поранено)</option>
@@ -381,10 +540,17 @@
                     </select>
 
                     <select id="filter-enemy-s2" onchange="renderEnemyTable()"
-                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-red-500">
                         <option value="all">Статус S2 (Всі)</option>
                         <option value="Так">✅ Узгоджено S2</option>
                         <option value="Ні">❌ Не узгоджено</option>
+                    </select>
+
+                    <select id="filter-enemy-real" onchange="renderEnemyTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-red-500">
+                        <option value="all">Всі події</option>
+                        <option value="real">🟢 Тільки реальні</option>
+                        <option value="fictive">🟣 Тільки фіктивні (*)</option>
                     </select>
 
                     <div class="relative w-48 sm:w-64">
@@ -392,11 +558,13 @@
                         <input type="text" id="search-enemy" oninput="renderEnemyTable()" placeholder="Пошук за позивним / групою..."
                             class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-red-500">
                     </div>
+
+                    <span class="text-[11px] text-slate-400 font-mono ml-1 hidden sm:inline" id="count-indicator-enemy"></span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <button onclick="openAddEnemyModal()"
-                        class="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        class="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-red-900/30">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>Додати втрату ворога</span>
                     </button>
@@ -409,18 +577,19 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
                             <tr>
-                                <th class="p-3 w-12 text-center">#</th>
-                                <th class="p-3 w-28">Дата</th>
-                                <th class="p-3 w-20">Час</th>
-                                <th class="p-3 w-20 text-center">К-ть</th>
-                                <th class="p-3 w-28 text-center">Статус</th>
-                                <th class="p-3 w-24">Підрозділ</th>
-                                <th class="p-3 w-28">Засіб</th>
-                                <th class="p-3 w-24 text-center">S2?</th>
-                                <th class="p-3 w-24 text-center">ПБД?</th>
-                                <th class="p-3 min-w-[160px]">Позивний / Ідентифікатор</th>
-                                <th class="p-3 min-w-[220px]">Де/ким знищений</th>
-                                <th class="p-3 w-24 text-right">Дії</th>
+                                <th class="p-3 w-12 text-center font-mono">#</th>
+                                <th class="p-3 w-28 whitespace-nowrap">Дата</th>
+                                <th class="p-3 w-20 whitespace-nowrap">Час</th>
+                                <th class="p-3 w-16 text-center font-mono whitespace-nowrap">К-ть</th>
+                                <th class="p-3 w-24 text-center whitespace-nowrap">Статус</th>
+                                <th class="p-3 w-24 whitespace-nowrap">Підрозділ</th>
+                                <th class="p-3 w-24 whitespace-nowrap">Засіб</th>
+                                <th class="p-3 w-16 text-center whitespace-nowrap">S2?</th>
+                                <th class="p-3 w-16 text-center whitespace-nowrap">ПБД?</th>
+                                <th class="p-3 min-w-[130px] text-center whitespace-nowrap">Подія (*)</th>
+                                <th class="p-3 min-w-[160px] whitespace-nowrap">Позивний / Ідентифікатор</th>
+                                <th class="p-3 min-w-[220px]">Де/ким знишенный</th>
+                                <th class="p-3 w-24 text-right whitespace-nowrap">Дії</th>
                             </tr>
                         </thead>
                         <tbody id="enemy-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
@@ -433,10 +602,58 @@
 
         <!-- 4. TAB: ВТРАТИ ОВТ -->
         <section id="panel-ovt" class="tab-panel hidden flex flex-col gap-3">
+            <!-- HUD Counters Banner -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-[#090e1a] border border-rose-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Зброя</p>
+                        <span class="p-1.5 rounded-xl bg-rose-500/10 text-rose-400"><i data-lucide="crosshair" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-ovt-weapons" class="text-2xl font-black text-rose-400 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">стрілецька та групова</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-blue-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">БпЛА</p>
+                        <span class="p-1.5 rounded-xl bg-blue-500/10 text-blue-400"><i data-lucide="plane" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-ovt-drones" class="text-2xl font-black text-blue-400 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">втрачено / РЕБ</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-emerald-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Транспорт</p>
+                        <span class="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400"><i data-lucide="car" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-ovt-transport" class="text-2xl font-black text-emerald-400 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">авто та спецтехніка</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-amber-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Позатермінові №</p>
+                        <span class="p-1.5 rounded-xl bg-amber-500/10 text-amber-400"><i data-lucide="file-badge" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-ovt-urgent" class="text-2xl font-black text-amber-400 font-mono">0</p>
+                        <p class="text-[10px] text-amber-300/80 mt-1.5 font-mono">офіційно подано</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
                 <div class="flex items-center gap-2 flex-wrap">
                     <select id="filter-ovt-cat" onchange="renderOvtTable()"
-                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
                         <option value="all">Всі категорії ОВТ</option>
                         <option value="Зброя">🔴 Зброя</option>
                         <option value="БпЛА">🔵 БпЛА</option>
@@ -444,11 +661,19 @@
                     </select>
 
                     <select id="filter-ovt-status" onchange="renderOvtTable()"
-                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
                         <option value="all">Всі статуси</option>
                         <option value="ВТРАЧЕНО">🟠 ВТРАЧЕНО</option>
                         <option value="ЗНИЩЕНО">🔴 ЗНИЩЕНО</option>
                         <option value="ПОШКОДЖЕНО">🟡 ПОШКОДЖЕНО</option>
+                        <option value="ЗНАЙДЕНО">🟢 ЗНАЙДЕНО</option>
+                    </select>
+
+                    <select id="filter-ovt-real" onchange="renderOvtTable()"
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-amber-500">
+                        <option value="all">Подія (Всі)</option>
+                        <option value="real">🟢 Реальні втрати</option>
+                        <option value="fictive">🟣 Події з зірочкою (*)</option>
                     </select>
 
                     <div class="relative w-48 sm:w-64">
@@ -456,11 +681,13 @@
                         <input type="text" id="search-ovt" oninput="renderOvtTable()" placeholder="Пошук за серійником, VIN, позицією..."
                             class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
                     </div>
+
+                    <span class="text-[11px] text-slate-400 font-mono ml-1 hidden sm:inline" id="count-indicator-ovt"></span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <button onclick="openAddOvtModal()"
-                        class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-amber-900/30">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>Додати запис ОВТ</span>
                     </button>
@@ -473,18 +700,19 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
                             <tr>
-                                <th class="p-3 w-12 text-center">#</th>
-                                <th class="p-3 w-28">Дата</th>
-                                <th class="p-3 w-20">Час</th>
-                                <th class="p-3 w-32">Позиція</th>
-                                <th class="p-3 w-24">Категорія</th>
-                                <th class="p-3 w-28 font-mono">Модель</th>
-                                <th class="p-3 w-28 text-center">Статус</th>
-                                <th class="p-3 min-w-[180px] font-mono">Серійний № / VIN</th>
-                                <th class="p-3 w-28 font-mono">Номер авто</th>
-                                <th class="p-3 w-32 font-mono">Позатермінове №</th>
-                                <th class="p-3 min-w-[180px]">Причина / Коментар</th>
-                                <th class="p-3 w-36 text-right">Дії</th>
+                                <th class="p-3 w-12 text-center font-mono">#</th>
+                                <th class="p-3 w-28 whitespace-nowrap">Дата</th>
+                                <th class="p-3 w-20 whitespace-nowrap">Час</th>
+                                <th class="p-3 w-32 whitespace-nowrap">Позиція</th>
+                                <th class="p-3 w-24 text-center whitespace-nowrap">Категорія</th>
+                                <th class="p-3 w-28 font-mono whitespace-nowrap">Модель</th>
+                                <th class="p-3 w-28 text-center whitespace-nowrap">Статус</th>
+                                <th class="p-3 min-w-[130px] text-center whitespace-nowrap">Подія (*)</th>
+                                <th class="p-3 min-w-[180px] font-mono whitespace-nowrap">Серійний № / VIN</th>
+                                <th class="p-3 w-28 font-mono whitespace-nowrap">Номер авто</th>
+                                <th class="p-3 min-w-[130px] font-mono whitespace-nowrap">Позатермінове №</th>
+                                <th class="p-3 min-w-[200px]">Причина / Коментар</th>
+                                <th class="p-3 w-36 text-right whitespace-nowrap">Дії</th>
                             </tr>
                         </thead>
                         <tbody id="ovt-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
@@ -497,10 +725,58 @@
 
         <!-- 5. TAB: СТАТУС ПОЗИЦІЙ -->
         <section id="panel-positions" class="tab-panel hidden flex flex-col gap-3">
+            <!-- HUD Counters Banner -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-[#090e1a] border border-emerald-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Виставлені</p>
+                        <span class="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400"><i data-lucide="shield-check" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-pos-active" class="text-2xl font-black text-emerald-400 font-mono">0</p>
+                        <p class="text-[10px] text-emerald-300/80 mt-1.5 font-mono">бойові рубежі та СП</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-slate-600/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Облаштовуються</p>
+                        <span class="p-1.5 rounded-xl bg-slate-500/10 text-slate-300"><i data-lucide="hammer" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-pos-building" class="text-2xl font-black text-slate-300 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">інженерні роботи</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-amber-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Тимчасово не БГ</p>
+                        <span class="p-1.5 rounded-xl bg-amber-500/10 text-amber-400"><i data-lucide="alert-triangle" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-pos-nonbg" class="text-2xl font-black text-amber-400 font-mono">0</p>
+                        <p class="text-[10px] text-amber-300/80 mt-1.5 font-mono">потребують ротації/БК</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-rose-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Зняті / Знищені</p>
+                        <span class="p-1.5 rounded-xl bg-rose-500/10 text-rose-400"><i data-lucide="x-circle" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-pos-closed" class="text-2xl font-black text-rose-400 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">зняті наказом або боєм</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
                 <div class="flex items-center gap-2 flex-wrap">
                     <select id="filter-pos-status" onchange="renderPositionsTable()"
-                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-emerald-500">
                         <option value="all">Всі дії / статуси</option>
                         <option value="виставлена">🟢 Виставлена</option>
                         <option value="облаштовується">⚪ Облаштовується</option>
@@ -516,11 +792,13 @@
                         <input type="text" id="search-positions" oninput="renderPositionsTable()" placeholder="Пошук за назвою позиції..."
                             class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
                     </div>
+
+                    <span class="text-[11px] text-slate-400 font-mono ml-1 hidden sm:inline" id="count-indicator-positions"></span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <button onclick="openAddPositionModal()"
-                        class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-emerald-900/30">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>Додати подію позиції</span>
                     </button>
@@ -533,13 +811,13 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead class="bg-[#0f172a] text-slate-400 font-semibold sticky top-0 z-10 border-b border-slate-800">
                             <tr>
-                                <th class="p-3 w-12 text-center">#</th>
-                                <th class="p-3 w-28">Дата</th>
-                                <th class="p-3 w-44 font-semibold text-emerald-400">Назва позиції</th>
-                                <th class="p-3 w-36 text-center">Статус / Дія</th>
-                                <th class="p-3 w-40 font-mono">Донесення № / Підстава</th>
+                                <th class="p-3 w-12 text-center font-mono">#</th>
+                                <th class="p-3 w-28 whitespace-nowrap">Дата</th>
+                                <th class="p-3 w-44 font-semibold text-emerald-400 whitespace-nowrap">Назва позиції</th>
+                                <th class="p-3 w-36 text-center whitespace-nowrap">Статус / Дія</th>
+                                <th class="p-3 w-40 font-mono whitespace-nowrap">Донесення № / Підстава</th>
                                 <th class="p-3 min-w-[240px]">Деталі, ротації та о/с</th>
-                                <th class="p-3 w-24 text-right">Дії</th>
+                                <th class="p-3 w-24 text-right whitespace-nowrap">Дії</th>
                             </tr>
                         </thead>
                         <tbody id="positions-table-body" class="divide-y divide-slate-800/60 text-slate-300 font-normal">
@@ -552,10 +830,58 @@
 
         <!-- 6. TAB: ВИКОНАННЯ БР -->
         <section id="panel-orders" class="tab-panel hidden flex flex-col gap-3">
+            <!-- HUD Counters Banner -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-[#090e1a] border border-purple-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Всього БР</p>
+                        <span class="p-1.5 rounded-xl bg-purple-500/10 text-purple-400"><i data-lucide="clipboard-list" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-orders-total" class="text-2xl font-black text-purple-400 font-mono">0</p>
+                        <p class="text-[10px] text-slate-400 mt-1.5 font-mono">бойових розпоряджень</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-emerald-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Виконано</p>
+                        <span class="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400"><i data-lucide="check-check" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-orders-done" class="text-2xl font-black text-emerald-400 font-mono">0</p>
+                        <p class="text-[10px] text-emerald-300/80 mt-1.5 font-mono">завдання реалізовано</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-blue-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Виконується</p>
+                        <span class="p-1.5 rounded-xl bg-blue-500/10 text-blue-400"><i data-lucide="loader-2" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-orders-in-progress" class="text-2xl font-black text-blue-400 font-mono">0</p>
+                        <p class="text-[10px] text-blue-300/80 mt-1.5 font-mono">у стадії виконання</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#090e1a] border border-rose-500/30 p-3.5 rounded-2xl flex flex-col justify-between shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Протерміновано / Увага</p>
+                        <span class="p-1.5 rounded-xl bg-rose-500/10 text-rose-400"><i data-lucide="alert-octagon" class="w-4 h-4"></i></span>
+                    </div>
+                    <div class="mt-1">
+                        <p id="stat-orders-overdue" class="text-2xl font-black text-rose-400 font-mono">0</p>
+                        <p class="text-[10px] text-rose-300/80 mt-1.5 font-mono">потребує доповіді</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090e1a] p-3.5 rounded-2xl border border-slate-800">
                 <div class="flex items-center gap-2 flex-wrap">
                     <select id="filter-orders-stage" onchange="renderOrdersTable()"
-                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none">
+                        class="bg-[#111b2e] border border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-purple-500">
                         <option value="all">Всі етапи виконання</option>
                         <option value="Виконується">🔵 Виконується</option>
                         <option value="Не розпочато">🟡 Не розпочато</option>
@@ -568,11 +894,13 @@
                         <input type="text" id="search-orders" oninput="renderOrdersTable()" placeholder="Пошук за № БР або текстом..."
                             class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-8 pr-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-purple-500">
                     </div>
+
+                    <span class="text-[11px] text-slate-400 font-mono ml-1 hidden sm:inline" id="count-indicator-orders"></span>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <button onclick="openAddOrderModal()"
-                        class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer">
+                        class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-purple-900/30">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>Додати розпорядження</span>
                     </button>
@@ -882,7 +1210,7 @@
                 appState[storeName] = await getAllRecordsFromStore(storeName);
             }
             updateAllCounters();
-            renderActiveTab();
+            renderAllTables();
         }
 
         function getAllRecordsFromStore(storeName) {
@@ -924,11 +1252,25 @@
             });
         }
 
-        // -------------------------------------------------------------------------
-        // НАВІГАЦІЯ ТА ВКЛАДКИ
-        // -------------------------------------------------------------------------
+        /**
+         * Рендерить усі таблиці під час першого завантаження або оновлення бази
+         */
+        function renderAllTables() {
+            renderTasksTable();
+            renderAssaultsTable();
+            renderEnemyTable();
+            renderOvtTable();
+            renderPositionsTable();
+            renderOrdersTable();
+            lucide.createIcons();
+        }
 
+        /**
+         * Миттєве апаратне перемикання між вкладками (0мс затримки)
+         * @param {string} tabId - Ідентифікатор вкладки
+         */
         function switchTab(tabId) {
+            if (appState.activeTab === tabId) return;
             appState.activeTab = tabId;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
@@ -937,8 +1279,6 @@
             const activePanel = document.getElementById(`panel-${tabId}`);
             if (activeBtn) activeBtn.classList.add('active');
             if (activePanel) activePanel.classList.remove('hidden');
-
-            renderActiveTab();
             lucide.createIcons();
         }
 
@@ -952,32 +1292,226 @@
                 case 'orders': renderOrdersTable(); break;
             }
             updateAllCounters();
-            lucide.createIcons();
+        }
+
+        /**
+         * Перевіряє, чи є втрата противника фіктивною (з поміткою *)
+         */
+        function isEnemyFictive(item) {
+            if (!item) return false;
+            const realVal = String(item.isReal || '').trim().toLowerCase();
+            if (realVal === 'ні' || realVal === 'фіктивна' || realVal === 'фіктивно' || realVal.includes('*')) return true;
+            if (String(item.comment || '').includes('*') || String(item.locationInfo || '').includes('*') || String(item.status || '').includes('*') || String(item.callsign || '').includes('*')) return true;
+            return false;
+        }
+
+        /**
+         * Перетворює числові дроби Excel (наприклад, 0.409722) або рядки на чистий військовий час (ГГ:ХХ)
+         */
+        function parseTimeValue(val) {
+            if (val === undefined || val === null || val === '') return '-';
+            if (typeof val === 'number') {
+                if (val >= 0 && val <= 1) {
+                    const totalSeconds = Math.round(val * 86400);
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                } else if (val > 1) {
+                    const date = new Date((val - 25569) * 86400 * 1000);
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${hours}:${minutes}`;
+                }
+            }
+            let str = String(val).trim();
+            if (/^0\.\d+$/.test(str)) {
+                const num = parseFloat(str);
+                const totalSeconds = Math.round(num * 86400);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+            return str || '-';
+        }
+
+        /**
+         * Визначає, чи є запис службовим рядком-заголовком з Excel
+         */
+        function isHeaderRow(item) {
+            if (!item) return false;
+            const str = JSON.stringify(item).toLowerCase();
+            if (str.includes('"дата"') && (str.includes('"завдання"') || str.includes('"статус"') || str.includes('"коментар"'))) return true;
+            if (str.includes('"час початку"') || str.includes('"час завершення"')) return true;
+            if (str.includes('"номенклатура"') || str.includes('"серійний номер"')) return true;
+            if (str.includes('"назва позиції"') || str.includes('"стан/дія"')) return true;
+            if (str.includes('"номер бр"') || str.includes('"хто віддав"')) return true;
+            return false;
         }
 
         function updateAllCounters() {
-            document.getElementById('badge-count-tasks').innerText = appState.tasks.length;
-            document.getElementById('badge-count-assaults').innerText = appState.assaults.length;
-            document.getElementById('badge-count-enemy').innerText = appState.enemy.length;
-            document.getElementById('badge-count-ovt').innerText = appState.ovt.length;
-            document.getElementById('badge-count-positions').innerText = appState.positions.length;
-            document.getElementById('badge-count-orders').innerText = appState.orders.length;
+            const cleanTasks = appState.tasks.filter(t => !isHeaderRow(t));
+            const cleanAssaults = appState.assaults.filter(a => !isHeaderRow(a));
+            const cleanEnemy = appState.enemy.filter(e => !isHeaderRow(e));
+            const cleanOvt = appState.ovt.filter(o => !isHeaderRow(o));
+            const cleanPositions = appState.positions.filter(p => !isHeaderRow(p));
+            const cleanOrders = appState.orders.filter(o => !isHeaderRow(o));
 
-            // Enemy Losses Counter Bar
-            let c200 = 0, c300 = 0, cPow = 0, cS2 = 0;
-            appState.enemy.forEach(e => {
+            document.getElementById('badge-count-tasks').innerText = cleanTasks.length;
+            document.getElementById('badge-count-assaults').innerText = cleanAssaults.length;
+            document.getElementById('badge-count-enemy').innerText = cleanEnemy.length;
+            document.getElementById('badge-count-ovt').innerText = cleanOvt.length;
+            document.getElementById('badge-count-positions').innerText = cleanPositions.length;
+            document.getElementById('badge-count-orders').innerText = cleanOrders.length;
+
+            // 1. ЗАВДАННЯ: HUD Статистика
+            const totalTasks = cleanTasks.length;
+            const tasksDone = cleanTasks.filter(t => t.status === 'Виконано').length;
+            const tasksPending = cleanTasks.filter(t => t.status === 'Виконується' || t.status === 'Заплановано').length;
+            const tasksFailed = cleanTasks.filter(t => t.status === 'Не виконано').length;
+            const tasksPbd = cleanTasks.filter(t => t.reportedInPbd).length;
+            const tasksPct = totalTasks > 0 ? Math.round((tasksDone / totalTasks) * 100) : 0;
+
+            const elTasksTotal = document.getElementById('stat-tasks-total');
+            if (elTasksTotal) elTasksTotal.innerText = totalTasks;
+            const elTasksDone = document.getElementById('stat-tasks-done');
+            if (elTasksDone) elTasksDone.innerText = tasksDone;
+            const elTasksPct = document.getElementById('stat-tasks-done-pct');
+            if (elTasksPct) elTasksPct.innerText = `${tasksPct}% успіху`;
+            const elTasksPending = document.getElementById('stat-tasks-pending');
+            if (elTasksPending) elTasksPending.innerText = tasksPending;
+            const elTasksFailed = document.getElementById('stat-tasks-failed');
+            if (elTasksFailed) elTasksFailed.innerText = `не виконано: ${tasksFailed}`;
+            const elTasksPbd = document.getElementById('stat-tasks-pbd');
+            if (elTasksPbd) elTasksPbd.innerText = tasksPbd;
+
+            // 2. ШТУРМОВІ ДІЇ: HUD Статистика
+            const totalAssaults = cleanAssaults.length;
+            const assaultsFictive = cleanAssaults.filter(a => String(a.isReal || '').toLowerCase().includes('ні') || String(a.isReal || '').includes('*') || String(a.comment || '').includes('*')).length;
+            const assaultsReal = totalAssaults - assaultsFictive;
+
+            const elAssaultsTotal = document.getElementById('stat-assaults-total');
+            if (elAssaultsTotal) elAssaultsTotal.innerText = totalAssaults;
+            const elAssaultsReal = document.getElementById('stat-assaults-real');
+            if (elAssaultsReal) elAssaultsReal.innerText = assaultsReal;
+            const elAssaultsFict = document.getElementById('stat-assaults-fictive');
+            if (elAssaultsFict) elAssaultsFict.innerText = assaultsFictive;
+
+            // 3. ВТРАТИ ПРОТИВНИКА: HUD Статистика
+            let c200 = 0, c200Real = 0, c200Fictive = 0;
+            let c300 = 0, c300Real = 0, c300Fictive = 0;
+            let cPow = 0, cS2 = 0;
+
+            cleanEnemy.forEach(e => {
                 const qty = parseInt(e.qty) || 1;
                 const status = (e.status || '').toLowerCase();
-                if (status.includes('200')) c200 += qty;
-                else if (status.includes('300')) c300 += qty;
-                else if (status.includes('полон')) cPow += qty;
+                const isFict = isEnemyFictive(e);
+
+                if (status.includes('200')) {
+                    c200 += qty;
+                    if (isFict) c200Fictive += qty;
+                    else c200Real += qty;
+                } else if (status.includes('300')) {
+                    c300 += qty;
+                    if (isFict) c300Fictive += qty;
+                    else c300Real += qty;
+                } else if (status.includes('полон')) {
+                    cPow += qty;
+                }
 
                 if ((e.s2 || '').toLowerCase().includes('так')) cS2 += qty;
             });
-            document.getElementById('stat-enemy-200').innerText = c200;
-            document.getElementById('stat-enemy-300').innerText = c300;
-            document.getElementById('stat-enemy-pow').innerText = cPow;
-            document.getElementById('stat-enemy-s2').innerText = cS2;
+
+            const elEnemy200 = document.getElementById('stat-enemy-200');
+            if (elEnemy200) elEnemy200.innerText = c200;
+            const sub200 = document.getElementById('stat-enemy-200-sub');
+            if (sub200) {
+                sub200.innerHTML = `
+                    <span class="bg-emerald-500/15 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 whitespace-nowrap">реал: ${c200Real}</span>
+                    <span class="bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/40 font-bold whitespace-nowrap">фікт *: ${c200Fictive}</span>
+                `;
+            }
+
+            const elEnemy300 = document.getElementById('stat-enemy-300');
+            if (elEnemy300) elEnemy300.innerText = c300;
+            const sub300 = document.getElementById('stat-enemy-300-sub');
+            if (sub300) {
+                sub300.innerHTML = `
+                    <span class="bg-emerald-500/15 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 whitespace-nowrap">реал: ${c300Real}</span>
+                    <span class="bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/40 font-bold whitespace-nowrap">фікт *: ${c300Fictive}</span>
+                `;
+            }
+
+            const elEnemyPow = document.getElementById('stat-enemy-pow');
+            if (elEnemyPow) elEnemyPow.innerText = cPow;
+            const elEnemyS2 = document.getElementById('stat-enemy-s2');
+            if (elEnemyS2) elEnemyS2.innerText = cS2;
+            const s2PercentEl = document.getElementById('stat-enemy-s2-percent');
+            if (s2PercentEl) {
+                const totalCasualties = c200 + c300;
+                const pct = totalCasualties > 0 ? Math.round((cS2 / totalCasualties) * 100) : 100;
+                s2PercentEl.innerText = `${pct}% підтверджено`;
+            }
+
+            // 4. ВТРАТИ ОВТ: HUD Статистика
+            let ovtWeapons = 0, ovtDrones = 0, ovtTransport = 0, ovtUrgent = 0;
+            cleanOvt.forEach(o => {
+                const cat = (o.category || '').toLowerCase();
+                if (cat.includes('збро') || cat.includes('стріл')) ovtWeapons++;
+                else if (cat.includes('бпла') || cat.includes('дрон') || cat.includes('мавік') || cat.includes('fpv') || cat.includes('крил')) ovtDrones++;
+                else if (cat.includes('транспорт') || cat.includes('авто') || cat.includes('технік') || cat.includes('броне')) ovtTransport++;
+                else ovtWeapons++;
+
+                if (o.urgentDocNo && o.urgentDocNo !== '-' && String(o.urgentDocNo).trim() !== '') ovtUrgent++;
+            });
+
+            const elOvtWeapons = document.getElementById('stat-ovt-weapons');
+            if (elOvtWeapons) elOvtWeapons.innerText = ovtWeapons;
+            const elOvtDrones = document.getElementById('stat-ovt-drones');
+            if (elOvtDrones) elOvtDrones.innerText = ovtDrones;
+            const elOvtTransport = document.getElementById('stat-ovt-transport');
+            if (elOvtTransport) elOvtTransport.innerText = ovtTransport;
+            const elOvtUrgent = document.getElementById('stat-ovt-urgent');
+            if (elOvtUrgent) elOvtUrgent.innerText = ovtUrgent;
+
+            // 5. СТАТУС ПОЗИЦІЙ: HUD Статистика
+            let posActive = 0, posBuilding = 0, posNonBg = 0, posClosed = 0;
+            cleanPositions.forEach(p => {
+                const status = (p.status || '').toLowerCase();
+                if (status.includes('виставлена')) posActive++;
+                else if (status.includes('облаштов') || status.includes('переміщ') || status.includes('перейменов')) posBuilding++;
+                else if (status.includes('не бг')) posNonBg++;
+                else if (status.includes('знята') || status.includes('знищена')) posClosed++;
+                else posActive++;
+            });
+
+            const elPosActive = document.getElementById('stat-pos-active');
+            if (elPosActive) elPosActive.innerText = posActive;
+            const elPosBuilding = document.getElementById('stat-pos-building');
+            if (elPosBuilding) elPosBuilding.innerText = posBuilding;
+            const elPosNonBg = document.getElementById('stat-pos-nonbg');
+            if (elPosNonBg) elPosNonBg.innerText = posNonBg;
+            const elPosClosed = document.getElementById('stat-pos-closed');
+            if (elPosClosed) elPosClosed.innerText = posClosed;
+
+            // 6. ВИКОНАННЯ БР: HUD Статистика
+            const totalOrders = cleanOrders.length;
+            let ordersDone = 0, ordersInProgress = 0, ordersOverdue = 0;
+            cleanOrders.forEach(o => {
+                const stage = (o.stage || '').toLowerCase();
+                if (stage.includes('виконано')) ordersDone++;
+                else if (stage.includes('виконується')) ordersInProgress++;
+                else if (stage.includes('протерміновано') || stage.includes('не розпочато')) ordersOverdue++;
+                else ordersInProgress++;
+            });
+
+            const elOrdersTotal = document.getElementById('stat-orders-total');
+            if (elOrdersTotal) elOrdersTotal.innerText = totalOrders;
+            const elOrdersDone = document.getElementById('stat-orders-done');
+            if (elOrdersDone) elOrdersDone.innerText = ordersDone;
+            const elOrdersInProg = document.getElementById('stat-orders-in-progress');
+            if (elOrdersInProg) elOrdersInProg.innerText = ordersInProgress;
+            const elOrdersOverdue = document.getElementById('stat-orders-overdue');
+            if (elOrdersOverdue) elOrdersOverdue.innerText = ordersOverdue;
         }
 
         // -------------------------------------------------------------------------
@@ -991,7 +1525,9 @@
             const unreportedFilter = document.getElementById('filter-tasks-unreported').checked;
             const search = (document.getElementById('search-tasks').value || '').toLowerCase();
 
-            let filtered = appState.tasks.filter(item => {
+            const cleanList = appState.tasks.filter(item => !isHeaderRow(item));
+
+            let filtered = cleanList.filter(item => {
                 if (appState.globalDateFilter && !matchesDate(item.date, appState.globalDateFilter)) return false;
                 if (statusFilter !== 'all' && item.status !== statusFilter) return false;
                 if (unreportedFilter && item.reportedInPbd) return false;
@@ -999,25 +1535,30 @@
                 return true;
             });
 
+            const countIndicator = document.getElementById('count-indicator-tasks');
+            if (countIndicator) {
+                countIndicator.innerHTML = `Показано: <b class="text-teal-400">${filtered.length}</b> із <span class="text-slate-400">${cleanList.length}</span>`;
+            }
+
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 italic">Записів завдань не знайдено</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map((item, idx) => `
-                <tr class="hover:bg-slate-800/40 transition-colors">
+                <tr class="${idx % 2 === 0 ? 'bg-[#080d1a]' : 'bg-[#0c1424]'} hover:bg-slate-800/60 transition-colors">
                     <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
-                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.date || '-')}</td>
-                    <td class="p-3 font-medium text-white">${escapeHtml(item.task || '-')}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300 whitespace-nowrap">${escapeHtml(item.date || '-')}</td>
+                    <td class="p-3 font-medium text-white leading-relaxed">${escapeHtml(item.task || '-')}</td>
                     <td class="p-3 text-center">
                         <input type="checkbox" ${item.reportedInPbd ? 'checked' : ''} onchange="togglePbdReported('tasks', ${item.id}, this.checked)"
-                            class="rounded bg-slate-800 border-slate-700 text-emerald-500 cursor-pointer">
+                            class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-teal-500 focus:ring-0 cursor-pointer accent-teal-500">
                     </td>
-                    <td class="p-3 text-center">${getStatusBadge(item.status)}</td>
+                    <td class="p-3 text-center whitespace-nowrap">${getStatusBadge(item.status)}</td>
                     <td class="p-3 text-slate-400 italic">${escapeHtml(item.comment || '-')}</td>
                     <td class="p-3 text-right whitespace-nowrap">
-                        <button onclick="openEditRecordModal('tasks', ${item.id})" class="p-1 text-slate-400 hover:text-emerald-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteRecordPrompt('tasks', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="openEditRecordModal('tasks', ${item.id})" class="p-1.5 text-slate-400 hover:text-teal-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer mr-1" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('tasks', ${item.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -1030,38 +1571,52 @@
             const realFilter = document.getElementById('filter-assaults-real').value;
             const search = (document.getElementById('search-assaults').value || '').toLowerCase();
 
-            let filtered = appState.assaults.filter(item => {
+            const cleanList = appState.assaults.filter(item => !isHeaderRow(item));
+
+            let filtered = cleanList.filter(item => {
                 if (appState.globalDateFilter && !matchesDate(item.startTime, appState.globalDateFilter)) return false;
-                if (realFilter !== 'all' && item.isReal !== realFilter) return false;
+                if (realFilter !== 'all') {
+                    const isFict = String(item.isReal || '').toLowerCase().includes('ні') || String(item.isReal || '').includes('*') || String(item.comment || '').includes('*');
+                    if (realFilter === 'Так' && isFict) return false;
+                    if (realFilter === 'Ні' && !isFict) return false;
+                }
                 if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
                 return true;
             });
+
+            const countIndicator = document.getElementById('count-indicator-assaults');
+            if (countIndicator) {
+                countIndicator.innerHTML = `Показано: <b class="text-rose-400">${filtered.length}</b> із <span class="text-slate-400">${cleanList.length}</span>`;
+            }
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500 italic">Записів штурмових дій не знайдено</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map((item, idx) => `
-                <tr class="hover:bg-slate-800/40 transition-colors">
+            tbody.innerHTML = filtered.map((item, idx) => {
+                const isFict = String(item.isReal || '').toLowerCase().includes('ні') || String(item.isReal || '').includes('*') || String(item.comment || '').includes('*');
+                return `
+                <tr class="${isFict ? 'bg-purple-950/20 border-l-2 border-l-purple-500 hover:bg-purple-950/30' : (idx % 2 === 0 ? 'bg-[#080d1a]' : 'bg-[#0c1424]')} hover:bg-slate-800/60 transition-colors">
                     <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
-                    <td class="p-3 font-mono text-slate-300">${escapeHtml(item.startTime || '-')}</td>
-                    <td class="p-3 font-mono text-slate-400">${escapeHtml(item.endTime || '-')}</td>
-                    <td class="p-3 text-center">
-                        <span class="badge-tag ${item.isReal === 'Так' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'}">
-                            ${escapeHtml(item.isReal || 'Ні')}
-                        </span>
+                    <td class="p-3 font-mono font-semibold text-slate-300 whitespace-nowrap">${escapeHtml(parseTimeValue(item.startTime))}</td>
+                    <td class="p-3 font-mono text-slate-400 whitespace-nowrap">${escapeHtml(parseTimeValue(item.endTime))}</td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        ${isFict
+                            ? `<span class="badge-tag bg-purple-950 text-purple-300 border border-purple-500/60 font-bold font-mono text-[11px] whitespace-nowrap">★ Хибна (*)</span>`
+                            : `<span class="badge-tag bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">🟢 Реальна</span>`
+                        }
                     </td>
-                    <td class="p-3 font-semibold text-rose-300">${escapeHtml(item.reportLocation || '-')}</td>
+                    <td class="p-3 font-semibold text-rose-300 whitespace-nowrap">${escapeHtml(item.reportLocation || '-')}</td>
                     <td class="p-3 text-slate-300">${escapeHtml(item.factLocation || '-')}</td>
                     <td class="p-3 text-slate-400">${escapeHtml(item.enemyForces || '-')}</td>
                     <td class="p-3 font-medium text-amber-300">${escapeHtml(item.result || '-')}</td>
                     <td class="p-3 text-right whitespace-nowrap">
-                        <button onclick="openEditRecordModal('assaults', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteRecordPrompt('assaults', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="openEditRecordModal('assaults', ${item.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer mr-1" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('assaults', ${item.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
             lucide.createIcons();
         }
 
@@ -1070,40 +1625,70 @@
             const tbody = document.getElementById('enemy-table-body');
             const statusFilter = document.getElementById('filter-enemy-status').value;
             const s2Filter = document.getElementById('filter-enemy-s2').value;
+            const realFilter = document.getElementById('filter-enemy-real') ? document.getElementById('filter-enemy-real').value : 'all';
             const search = (document.getElementById('search-enemy').value || '').toLowerCase();
 
-            let filtered = appState.enemy.filter(item => {
+            const cleanList = appState.enemy.filter(item => !isHeaderRow(item));
+
+            let filtered = cleanList.filter(item => {
                 if (appState.globalDateFilter && !matchesDate(item.date, appState.globalDateFilter)) return false;
                 if (statusFilter !== 'all' && !item.status.toLowerCase().includes(statusFilter.toLowerCase())) return false;
                 if (s2Filter !== 'all' && item.s2 !== s2Filter) return false;
+
+                const isFict = isEnemyFictive(item);
+                if (realFilter === 'real' && isFict) return false;
+                if (realFilter === 'fictive' && !isFict) return false;
+
                 if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
                 return true;
             });
 
+            const countIndicator = document.getElementById('count-indicator-enemy');
+            if (countIndicator) {
+                countIndicator.innerHTML = `Показано: <b class="text-red-400">${filtered.length}</b> із <span class="text-slate-400">${cleanList.length}</span>`;
+            }
+
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-slate-500 italic">Записів втрат противника не знайдено</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500 italic">Записів втрат противника не знайдено</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map((item, idx) => `
-                <tr class="hover:bg-slate-800/40 transition-colors">
+            tbody.innerHTML = filtered.map((item, idx) => {
+                const formattedTime = parseTimeValue(item.time);
+                const isFict = isEnemyFictive(item);
+                return `
+                <tr class="${isFict ? 'bg-purple-950/20 border-l-2 border-l-purple-500 hover:bg-purple-950/30' : (idx % 2 === 0 ? 'bg-[#080d1a]' : 'bg-[#0c1424]')} hover:bg-slate-800/60 transition-colors">
                     <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
-                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.date || '-')}</td>
-                    <td class="p-3 font-mono text-slate-400">${escapeHtml(item.time || '-')}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300 whitespace-nowrap">${escapeHtml(item.date || '-')}</td>
+                    <td class="p-3 font-mono text-slate-400 font-medium whitespace-nowrap">${escapeHtml(formattedTime)}</td>
                     <td class="p-3 text-center font-bold font-mono text-white">${escapeHtml(item.qty || '1')}</td>
                     <td class="p-3 text-center">${getEnemyStatusBadge(item.status)}</td>
-                    <td class="p-3 text-emerald-400 font-semibold">${escapeHtml(item.unit || '-')}</td>
-                    <td class="p-3 text-slate-300">${escapeHtml(item.weapon || '-')}</td>
-                    <td class="p-3 text-center"><span class="badge-tag ${item.s2 === 'Так' ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700 text-slate-400'}">${escapeHtml(item.s2 || 'Ні')}</span></td>
-                    <td class="p-3 text-center"><span class="badge-tag ${item.pbd === 'Так' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${escapeHtml(item.pbd || 'Ні')}</span></td>
-                    <td class="p-3 font-mono font-medium text-amber-300">${escapeHtml(item.callsign || '-')}</td>
-                    <td class="p-3 text-slate-300">${escapeHtml(item.locationInfo || '-')}</td>
+                    <td class="p-3 text-emerald-400 font-semibold whitespace-nowrap">${escapeHtml(item.unit || '-')}</td>
+                    <td class="p-3 text-slate-300 whitespace-nowrap">${escapeHtml(item.weapon || '-')}</td>
+                    <td class="p-3 text-center">
+                        <span class="badge-tag ${item.s2 === 'Так' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-slate-800 text-slate-500'} whitespace-nowrap">
+                            ${escapeHtml(item.s2 || 'Ні')}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center">
+                        <span class="badge-tag ${item.pbd === 'Так' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-300/80 border border-rose-500/20'} whitespace-nowrap">
+                            ${escapeHtml(item.pbd || 'Ні')}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        ${isFict 
+                            ? `<span class="badge-tag bg-purple-950 text-purple-300 border border-purple-500/60 font-bold font-mono text-[11px] shadow-sm whitespace-nowrap" title="Фіктивна подія (з поміткою *)">★ Фіктивна (*)</span>`
+                            : `<span class="inline-flex items-center gap-1.5 text-[11px] text-slate-400 font-medium whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Реальна</span>`
+                        }
+                    </td>
+                    <td class="p-3 font-mono font-medium text-amber-300 whitespace-nowrap">${escapeHtml(item.callsign || '-')}</td>
+                    <td class="p-3 text-slate-300 min-w-[200px]">${escapeHtml(item.locationInfo || '-')}</td>
                     <td class="p-3 text-right whitespace-nowrap">
-                        <button onclick="openEditRecordModal('enemy', ${item.id})" class="p-1 text-slate-400 hover:text-red-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteRecordPrompt('enemy', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="openEditRecordModal('enemy', ${item.id})" class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer mr-1" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('enemy', ${item.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
             lucide.createIcons();
         }
 
@@ -1112,43 +1697,65 @@
             const tbody = document.getElementById('ovt-table-body');
             const catFilter = document.getElementById('filter-ovt-cat').value;
             const statusFilter = document.getElementById('filter-ovt-status').value;
+            const realFilter = document.getElementById('filter-ovt-real') ? document.getElementById('filter-ovt-real').value : 'all';
             const search = (document.getElementById('search-ovt').value || '').toLowerCase();
 
-            let filtered = appState.ovt.filter(item => {
+            const cleanList = appState.ovt.filter(item => !isHeaderRow(item));
+
+            let filtered = cleanList.filter(item => {
                 if (appState.globalDateFilter && !matchesDate(item.date, appState.globalDateFilter)) return false;
                 if (catFilter !== 'all' && item.category !== catFilter) return false;
                 if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+
+                const isFict = item.isEvent === true || String(item.isEvent).toLowerCase() === 'так' || String(item.comment || '').includes('*');
+                if (realFilter === 'real' && isFict) return false;
+                if (realFilter === 'fictive' && !isFict) return false;
+
                 if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
                 return true;
             });
 
+            const countIndicator = document.getElementById('count-indicator-ovt');
+            if (countIndicator) {
+                countIndicator.innerHTML = `Показано: <b class="text-amber-400">${filtered.length}</b> із <span class="text-slate-400">${cleanList.length}</span>`;
+            }
+
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-slate-500 italic">Записів втрат ОВТ не знайдено</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-slate-500 italic">Записів втрат ОВТ не знайдено</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map((item, idx) => `
-                <tr class="hover:bg-slate-800/40 transition-colors">
+            tbody.innerHTML = filtered.map((item, idx) => {
+                const formattedTime = parseTimeValue(item.time);
+                const isFict = item.isEvent === true || String(item.isEvent).toLowerCase() === 'так' || String(item.comment || '').includes('*');
+                return `
+                <tr class="${isFict ? 'bg-purple-950/20 border-l-2 border-l-purple-500 hover:bg-purple-950/30' : (idx % 2 === 0 ? 'bg-[#080d1a]' : 'bg-[#0c1424]')} hover:bg-slate-800/60 transition-colors">
                     <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
-                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.date || '-')}</td>
-                    <td class="p-3 font-mono text-slate-400">${escapeHtml(item.time || '-')}</td>
-                    <td class="p-3 font-semibold text-teal-400">${escapeHtml(item.position || '-')}</td>
-                    <td class="p-3">${getOvtCategoryBadge(item.category)}</td>
-                    <td class="p-3 font-mono font-bold text-white">${escapeHtml(item.nomenclature || '-')}</td>
-                    <td class="p-3 text-center">${getOvtStatusBadge(item.status)}</td>
-                    <td class="p-3 font-mono text-amber-300 font-semibold">${escapeHtml(item.serialNumber || '-')}</td>
-                    <td class="p-3 font-mono text-slate-300">${escapeHtml(item.plateNumber || '-')}</td>
-                    <td class="p-3 font-mono text-indigo-300 font-medium">${escapeHtml(item.urgentDocNo || '-')}</td>
-                    <td class="p-3 text-slate-400 italic">${escapeHtml(item.comment || '-')}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300 whitespace-nowrap">${escapeHtml(item.date || '-')}</td>
+                    <td class="p-3 font-mono text-slate-400 font-medium whitespace-nowrap">${escapeHtml(formattedTime)}</td>
+                    <td class="p-3 font-semibold text-teal-400 whitespace-nowrap">${escapeHtml(item.position || '-')}</td>
+                    <td class="p-3 text-center whitespace-nowrap">${getOvtCategoryBadge(item.category)}</td>
+                    <td class="p-3 font-mono font-bold text-white whitespace-nowrap">${escapeHtml(item.nomenclature || '-')}</td>
+                    <td class="p-3 text-center whitespace-nowrap">${getOvtStatusBadge(item.status)}</td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        ${isFict 
+                            ? `<span class="badge-tag bg-purple-950 text-purple-300 border border-purple-500/60 font-bold font-mono text-[11px] shadow-sm whitespace-nowrap" title="Подія з поміткою *">★ Подія (*)</span>` 
+                            : `<span class="inline-flex items-center gap-1.5 text-[11px] text-slate-400 font-medium whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Реальна</span>`
+                        }
+                    </td>
+                    <td class="p-3 font-mono text-amber-300 font-semibold whitespace-nowrap">${escapeHtml(item.serialNumber || '-')}</td>
+                    <td class="p-3 font-mono text-slate-300 whitespace-nowrap">${escapeHtml(item.plateNumber || '-')}</td>
+                    <td class="p-3 font-mono text-indigo-300 font-medium whitespace-nowrap">${escapeHtml(item.urgentDocNo || '-')}</td>
+                    <td class="p-3 text-slate-400 italic min-w-[200px]">${escapeHtml(item.comment || '-')}</td>
                     <td class="p-3 text-right whitespace-nowrap">
-                        <button onclick="generateUrgentReportForOvt(${item.id})" class="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-semibold cursor-pointer mr-1" title="Сформувати позатермінове донесення">
+                        <button onclick="generateUrgentReportForOvt(${item.id})" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-xl text-[11px] font-semibold cursor-pointer mr-1 whitespace-nowrap transition-all" title="Сформувати позатермінове донесення">
                             ⚡ Позатерм.
                         </button>
-                        <button onclick="openEditRecordModal('ovt', ${item.id})" class="p-1 text-slate-400 hover:text-amber-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteRecordPrompt('ovt', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="openEditRecordModal('ovt', ${item.id})" class="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer mr-1" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('ovt', ${item.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
             lucide.createIcons();
         }
 
@@ -1158,12 +1765,19 @@
             const statusFilter = document.getElementById('filter-pos-status').value;
             const search = (document.getElementById('search-positions').value || '').toLowerCase();
 
-            let filtered = appState.positions.filter(item => {
+            const cleanList = appState.positions.filter(item => !isHeaderRow(item));
+
+            let filtered = cleanList.filter(item => {
                 if (appState.globalDateFilter && !matchesDate(item.date, appState.globalDateFilter)) return false;
                 if (statusFilter !== 'all' && item.status !== statusFilter) return false;
                 if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
                 return true;
             });
+
+            const countIndicator = document.getElementById('count-indicator-positions');
+            if (countIndicator) {
+                countIndicator.innerHTML = `Показано: <b class="text-emerald-400">${filtered.length}</b> із <span class="text-slate-400">${cleanList.length}</span>`;
+            }
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 italic">Записів стану позицій не знайдено</td></tr>`;
@@ -1171,16 +1785,16 @@
             }
 
             tbody.innerHTML = filtered.map((item, idx) => `
-                <tr class="hover:bg-slate-800/40 transition-colors">
+                <tr class="${idx % 2 === 0 ? 'bg-[#080d1a]' : 'bg-[#0c1424]'} hover:bg-slate-800/60 transition-colors">
                     <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
-                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.date || '-')}</td>
-                    <td class="p-3 font-bold text-emerald-400 text-sm font-mono">${escapeHtml(item.name || '-')}</td>
-                    <td class="p-3 text-center">${getPositionStatusBadge(item.status)}</td>
-                    <td class="p-3 font-mono text-slate-300">${escapeHtml(item.docNumber || '-')}</td>
-                    <td class="p-3 text-slate-400">${escapeHtml(item.details || '-')}</td>
+                    <td class="p-3 font-mono font-semibold text-slate-300 whitespace-nowrap">${escapeHtml(item.date || '-')}</td>
+                    <td class="p-3 font-bold text-emerald-400 text-sm font-mono whitespace-nowrap">${escapeHtml(item.name || '-')}</td>
+                    <td class="p-3 text-center whitespace-nowrap">${getPositionStatusBadge(item.status)}</td>
+                    <td class="p-3 font-mono text-slate-300 whitespace-nowrap">${escapeHtml(item.docNumber || '-')}</td>
+                    <td class="p-3 text-slate-400 min-w-[200px]">${escapeHtml(item.details || '-')}</td>
                     <td class="p-3 text-right whitespace-nowrap">
-                        <button onclick="openEditRecordModal('positions', ${item.id})" class="p-1 text-slate-400 hover:text-emerald-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteRecordPrompt('positions', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="openEditRecordModal('positions', ${item.id})" class="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer mr-1" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('positions', ${item.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -1193,12 +1807,19 @@
             const stageFilter = document.getElementById('filter-orders-stage').value;
             const search = (document.getElementById('search-orders').value || '').toLowerCase();
 
-            let filtered = appState.orders.filter(item => {
+            const cleanList = appState.orders.filter(item => !isHeaderRow(item));
+
+            let filtered = cleanList.filter(item => {
                 if (appState.globalDateFilter && !matchesDate(item.receiveDate, appState.globalDateFilter)) return false;
                 if (stageFilter !== 'all' && item.stage !== stageFilter) return false;
                 if (search && !JSON.stringify(item).toLowerCase().includes(search)) return false;
                 return true;
             });
+
+            const countIndicator = document.getElementById('count-indicator-orders');
+            if (countIndicator) {
+                countIndicator.innerHTML = `Показано: <b class="text-purple-400">${filtered.length}</b> із <span class="text-slate-400">${cleanList.length}</span>`;
+            }
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-500 italic">Записів бойових розпоряджень не знайдено</td></tr>`;
@@ -1206,21 +1827,21 @@
             }
 
             tbody.innerHTML = filtered.map((item, idx) => `
-                <tr class="hover:bg-slate-800/40 transition-colors">
+                <tr class="${idx % 2 === 0 ? 'bg-[#080d1a]' : 'bg-[#0c1424]'} hover:bg-slate-800/60 transition-colors">
                     <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
-                    <td class="p-3 font-mono font-semibold text-slate-300">${escapeHtml(item.receiveDate || '-')}</td>
-                    <td class="p-3 font-mono font-bold text-purple-300">${escapeHtml(item.orderNumber || '-')}</td>
-                    <td class="p-3 text-white leading-relaxed font-normal">${escapeHtml(item.taskContent || '-')}</td>
-                    <td class="p-3 font-mono text-amber-400 font-semibold">${escapeHtml(item.deadline || '-')}</td>
-                    <td class="p-3 text-center">${getOrderStageBadge(item.stage)}</td>
-                    <td class="p-3 text-center">
+                    <td class="p-3 font-mono font-semibold text-slate-300 whitespace-nowrap">${escapeHtml(item.receiveDate || '-')}</td>
+                    <td class="p-3 font-mono font-bold text-purple-300 whitespace-nowrap">${escapeHtml(item.orderNumber || '-')}</td>
+                    <td class="p-3 text-white leading-relaxed font-normal min-w-[250px]">${escapeHtml(item.taskContent || '-')}</td>
+                    <td class="p-3 font-mono text-amber-400 font-semibold whitespace-nowrap">${escapeHtml(item.deadline || '-')}</td>
+                    <td class="p-3 text-center whitespace-nowrap">${getOrderStageBadge(item.stage)}</td>
+                    <td class="p-3 text-center whitespace-nowrap">
                         <input type="checkbox" ${item.isReported ? 'checked' : ''} onchange="toggleOrderReported(${item.id}, this.checked)"
-                            class="rounded bg-slate-800 border-slate-700 text-purple-500 cursor-pointer">
+                            class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-purple-500 focus:ring-0 cursor-pointer accent-purple-500">
                     </td>
-                    <td class="p-3 font-mono text-slate-300 font-medium">${escapeHtml(item.urgentDocNo || '-')}</td>
+                    <td class="p-3 font-mono text-slate-300 font-medium whitespace-nowrap">${escapeHtml(item.urgentDocNo || '-')}</td>
                     <td class="p-3 text-right whitespace-nowrap">
-                        <button onclick="openEditRecordModal('orders', ${item.id})" class="p-1 text-slate-400 hover:text-purple-400 cursor-pointer" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteRecordPrompt('orders', ${item.id})" class="p-1 text-slate-400 hover:text-rose-400 cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="openEditRecordModal('orders', ${item.id})" class="p-1.5 text-slate-400 hover:text-purple-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer mr-1" title="Редагувати"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteRecordPrompt('orders', ${item.id})" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 rounded-lg transition-all cursor-pointer" title="Видалити"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -1233,37 +1854,40 @@
 
         function getStatusBadge(status) {
             switch (status) {
-                case 'Виконано': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Виконано</span>`;
-                case 'Виконується': return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/30">Виконується</span>`;
-                case 'Заплановано': return `<span class="badge-tag bg-blue-500/20 text-blue-300 border border-blue-500/30">Заплановано</span>`;
-                case 'Не виконано': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30">Не виконано</span>`;
-                default: return `<span class="badge-tag bg-slate-800 text-slate-400">${escapeHtml(status || '-')}</span>`;
+                case 'Виконано': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">Виконано</span>`;
+                case 'Виконується': return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/30 whitespace-nowrap">Виконується</span>`;
+                case 'Заплановано': return `<span class="badge-tag bg-blue-500/20 text-blue-300 border border-blue-500/30 whitespace-nowrap">Заплановано</span>`;
+                case 'Не виконано': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30 whitespace-nowrap">Не виконано</span>`;
+                default: return `<span class="badge-tag bg-slate-800 text-slate-400 whitespace-nowrap">${escapeHtml(status || '-')}</span>`;
             }
         }
 
         function getEnemyStatusBadge(status) {
             const s = (status || '').toLowerCase();
-            if (s.includes('200')) return `<span class="badge-tag bg-red-500/20 text-red-300 border border-red-500/40">200</span>`;
-            if (s.includes('300')) return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/40">300</span>`;
-            if (s.includes('полон')) return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Полонений</span>`;
-            return `<span class="badge-tag bg-slate-800 text-slate-300">${escapeHtml(status || '-')}</span>`;
+            if (s.includes('200')) return `<span class="badge-tag bg-red-500/20 text-red-300 border border-red-500/40 font-mono font-bold whitespace-nowrap">200</span>`;
+            if (s.includes('300')) return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold whitespace-nowrap">300</span>`;
+            if (s.includes('полон')) return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold whitespace-nowrap">Полонений</span>`;
+            return `<span class="badge-tag bg-slate-800 text-slate-300 whitespace-nowrap">${escapeHtml(status || '-')}</span>`;
         }
 
         function getOvtCategoryBadge(cat) {
             switch (cat) {
-                case 'Зброя': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30">🔫 Зброя</span>`;
-                case 'БпЛА': return `<span class="badge-tag bg-blue-500/20 text-blue-300 border border-blue-500/30">🦅 БпЛА</span>`;
-                case 'Транспорт': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">🚗 Транспорт</span>`;
-                default: return `<span class="badge-tag bg-slate-800 text-slate-300">${escapeHtml(cat || '-')}</span>`;
+                case 'Зброя': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30 whitespace-nowrap">🔫 Зброя</span>`;
+                case 'БпЛА': return `<span class="badge-tag bg-blue-500/20 text-blue-300 border border-blue-500/30 whitespace-nowrap">🦅 БпЛА</span>`;
+                case 'Транспорт': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">🚗 Транспорт</span>`;
+                default: return `<span class="badge-tag bg-slate-800 text-slate-300 whitespace-nowrap">${escapeHtml(cat || '-')}</span>`;
             }
         }
 
         function getOvtStatusBadge(status) {
-            switch (status) {
-                case 'ВТРАЧЕНО': return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">ВТРАЧЕНО</span>`;
-                case 'ЗНИЩЕНО': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">ЗНИЩЕНО</span>`;
-                case 'ПОШКОДЖЕНО': return `<span class="badge-tag bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-bold">ПОШКОДЖЕНО</span>`;
-                default: return `<span class="badge-tag bg-slate-800 text-slate-300">${escapeHtml(status || '-')}</span>`;
+            const s = (status || '').toUpperCase();
+            switch (s) {
+                case 'ВТРАЧЕНО': return `<span class="badge-tag bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold whitespace-nowrap">ВТРАЧЕНО</span>`;
+                case 'ЗНИЩЕНО': return `<span class="badge-tag bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold whitespace-nowrap">ЗНИЩЕНО</span>`;
+                case 'ПОШКОДЖЕНО': return `<span class="badge-tag bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 font-bold whitespace-nowrap">ПОШКОДЖЕНО</span>`;
+                case 'ЗНАЙДЕНО':
+                case 'ПОВЕРНУТО': return `<span class="badge-tag bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold whitespace-nowrap">ЗНАЙДЕНО</span>`;
+                default: return `<span class="badge-tag bg-slate-800 text-slate-300 whitespace-nowrap">${escapeHtml(status || '-')}</span>`;
             }
         }
 
@@ -1355,9 +1979,10 @@
                         for (let i = 1; i < rows.length; i++) {
                             const r = rows[i];
                             if (!r || r.length === 0 || !r[0]) continue;
+                            const isRealRaw = r[9] !== undefined && r[9] !== null ? String(r[9]).trim() : 'Так';
                             await saveRecordToStore('enemy', {
                                 date: parseDateValue(r[0]),
-                                time: String(r[1] || '').trim(),
+                                time: parseTimeValue(r[1]),
                                 type: String(r[2] || 'Піхота').trim(),
                                 qty: Number(r[3]) || 1,
                                 status: String(r[4] || '200').trim(),
@@ -1365,7 +1990,7 @@
                                 weapon: String(r[6] || '').trim(),
                                 s2: String(r[7] || 'Ні').trim(),
                                 pbd: String(r[8] || 'Ні').trim(),
-                                isReal: String(r[9] || 'Так').trim(),
+                                isReal: isRealRaw,
                                 callsign: String(r[10] || '').trim(),
                                 locationInfo: String(r[11] || '').trim(),
                                 comment: String(r[12] || '').trim()
@@ -1382,7 +2007,7 @@
                             if (!r || r.length === 0 || !r[0]) continue;
                             await saveRecordToStore('ovt', {
                                 date: parseDateValue(r[0]),
-                                time: String(r[1] || '').trim(),
+                                time: parseTimeValue(r[1]),
                                 position: String(r[2] || '').trim(),
                                 category: String(r[3] || 'Зброя').trim(),
                                 nomenclature: String(r[4] || '').trim(),
@@ -1897,8 +2522,8 @@
             } else if (storeName === 'assaults') {
                 html = `
                     <div class="grid grid-cols-2 gap-2">
-                        <div><label class="font-semibold text-slate-400">Час початку:</label><input type="text" name="startTime" value="${item ? item.startTime : today + ' 08:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
-                        <div><label class="font-semibold text-slate-400">Час завершення:</label><input type="text" name="endTime" value="${item ? item.endTime : today + ' 10:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Час початку:</label><input type="text" name="startTime" value="${item ? parseTimeValue(item.startTime) : today + ' 08:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Час завершення:</label><input type="text" name="endTime" value="${item ? parseTimeValue(item.endTime) : today + ' 10:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
                     </div>
                     <div><label class="font-semibold text-slate-400">Реальна подія:</label>
                         <select name="isReal" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
@@ -1915,7 +2540,7 @@
                 html = `
                     <div class="grid grid-cols-3 gap-2">
                         <div><label class="font-semibold text-slate-400">Дата:</label><input type="text" name="date" value="${item ? item.date : today}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
-                        <div><label class="font-semibold text-slate-400">Час:</label><input type="text" name="time" value="${item ? item.time : '12:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Час:</label><input type="text" name="time" value="${item ? parseTimeValue(item.time) : '12:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
                         <div><label class="font-semibold text-slate-400">К-ть:</label><input type="number" name="qty" value="${item ? item.qty : 1}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
@@ -1937,6 +2562,12 @@
                             </select>
                         </div>
                     </div>
+                    <div><label class="font-semibold text-slate-400">Статус події (Реальна чи Фіктивна з *):</label>
+                        <select name="isReal" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-medium">
+                            <option value="Так" ${!isEnemyFictive(item) ? 'selected' : ''}>🟢 Так (Реальна підтверджена подія)</option>
+                            <option value="Ні" ${isEnemyFictive(item) ? 'selected' : ''}>🟣 Ні (Фіктивна подія з поміткою *)</option>
+                        </select>
+                    </div>
                     <div><label class="font-semibold text-slate-400">Позивний / Ідентифікатор ворога:</label><input type="text" name="callsign" value="${item ? item.callsign || '' : ''}" placeholder="наприклад, Беркут" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
                     <div><label class="font-semibold text-slate-400">Де / ким знищений (Обставини):</label><input type="text" name="locationInfo" value="${item ? item.locationInfo || '' : ''}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white"></div>
                 `;
@@ -1944,7 +2575,7 @@
                 html = `
                     <div class="grid grid-cols-2 gap-2">
                         <div><label class="font-semibold text-slate-400">Дата:</label><input type="text" name="date" value="${item ? item.date : today}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
-                        <div><label class="font-semibold text-slate-400">Час:</label><input type="text" name="time" value="${item ? item.time : '12:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
+                        <div><label class="font-semibold text-slate-400">Час:</label><input type="text" name="time" value="${item ? parseTimeValue(item.time) : '12:00'}" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div><label class="font-semibold text-slate-400">Категорія:</label>
@@ -1963,8 +2594,15 @@
                                 <option value="ВТРАЧЕНО" ${item && item.status === 'ВТРАЧЕНО' ? 'selected' : ''}>🟠 ВТРАЧЕНО</option>
                                 <option value="ЗНИЩЕНО" ${item && item.status === 'ЗНИЩЕНО' ? 'selected' : ''}>🔴 ЗНИЩЕНО</option>
                                 <option value="ПОШКОДЖЕНО" ${item && item.status === 'ПОШКОДЖЕНО' ? 'selected' : ''}>🟡 ПОШКОДЖЕНО</option>
+                                <option value="ЗНАЙДЕНО" ${item && item.status === 'ЗНАЙДЕНО' ? 'selected' : ''}>🟢 ЗНАЙДЕНО</option>
                             </select>
                         </div>
+                    </div>
+                    <div><label class="font-semibold text-slate-400">Статус події:</label>
+                        <select name="isEvent" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white">
+                            <option value="false" ${!item || !item.isEvent ? 'selected' : ''}>🟢 Реальна втрата</option>
+                            <option value="true" ${item && item.isEvent ? 'selected' : ''}>🟣 Подія з поміткою (*)</option>
+                        </select>
                     </div>
                     <div><label class="font-semibold text-slate-400">Серійний номер / VIN / ПІБ:</label><input type="text" name="serialNumber" value="${item ? item.serialNumber || '' : ''}" placeholder="5948657 або VIN" class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-2.5 text-white font-mono"></div>
                     <div class="grid grid-cols-2 gap-2">
@@ -2030,8 +2668,15 @@
                 record[key] = value;
             }
 
+            if (record.time) record.time = parseTimeValue(record.time);
+            if (record.startTime) record.startTime = parseTimeValue(record.startTime);
+            if (record.endTime) record.endTime = parseTimeValue(record.endTime);
+
             if (appState.currentEditStore === 'tasks') record.reportedInPbd = form.reportedInPbd ? form.reportedInPbd.checked : false;
             if (appState.currentEditStore === 'orders') record.isReported = form.isReported ? form.isReported.checked : false;
+            if (appState.currentEditStore === 'ovt' && record.isEvent !== undefined) {
+                record.isEvent = record.isEvent === 'true' || record.isEvent === true;
+            }
             if (appState.currentEditId) record.id = appState.currentEditId;
 
             await saveRecordToStore(appState.currentEditStore, record);
