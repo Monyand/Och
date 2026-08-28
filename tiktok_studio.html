@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Studio & AI Agent | Генератор військового контенту</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- html2canvas for 1080x1920 export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- JSZip for batch download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Google Fonts: Inter, JetBrains Mono, Courier Prime -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        typewriter: ['Courier Prime', 'monospace']
+                    },
+                    colors: {
+                        tactical: {
+                            950: '#06090e',
+                            900: '#0c121c',
+                            800: '#151f30',
+                            700: '#202f47',
+                            accent: '#10b981',
+                            gold: '#f59e0b',
+                            cyan: '#06b6d4',
+                            purple: '#8b5cf6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #06090e;
+            color: #f1f5f9;
+        }
+        
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #06090e; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        /* Film grain effect */
+        .film-grain {
+            background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 0);
+            background-size: 4px 4px;
+        }
+
+        /* Glowing effects */
+        .emerald-glow {
+            box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
+        }
+        .purple-glow {
+            box-shadow: 0 0 30px -5px rgba(139, 92, 246, 0.35);
+        }
+        .gold-glow {
+            box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Sound vinyl spin animation */
+        @keyframes vinylSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-vinyl {
+            animation: vinylSpin 5s linear infinite;
+        }
+        .vinyl-paused {
+            animation-play-state: paused;
+        }
+
+        /* Progress bars at top like TikTok / IG */
+        .progress-bar-fill {
+            transition: width 0.1s linear;
+        }
+
+        /* Scanline animation for AI terminal */
+        .scanlines {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 2px, 3px 100%;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
+
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl px-6 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 via-slate-800 to-emerald-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 shadow-lg shadow-purple-950/40">
+                <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-black text-base tracking-tight text-white flex items-center gap-2 font-sans">
+                        TIKTOK AI AGENT <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/30 font-mono font-bold tracking-normal">VIRAL BRAIN</span>
+                    </h1>
+                    <span class="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-400 border border-slate-700">v2.0.0</span>
+                </div>
+                <p class="text-xs text-slate-400">Автономний аналізатор алгоритмів TikTok, скоринг вірусності та студія каруселей</p>
+            </div>
+        </div>
+
+        <!-- Mode Switcher Tabs & Header Actions -->
+        <div class="flex items-center gap-3">
+            <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 font-mono text-xs">
+                <button id="tab-btn-agent" onclick="switchMainTab('agent')" class="px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 bg-purple-600 text-white shadow cursor-pointer">
+                    <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                    <span>AI Agent Brain</span>
+                </button>
+                <button id="tab-btn-studio" onclick="switchMainTab('studio')" class="px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                    <span>Ручний редактор</span>
+                </button>
+            </div>
+
+            <button id="btn-copy-caption" onclick="copyCaption()" class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-semibold border border-slate-700 transition cursor-pointer shadow-sm">
+                <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span class="hidden sm:inline">Опис + теги</span>
+            </button>
+            <button id="btn-export-all" onclick="exportAllSlides()" class="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs transition cursor-pointer shadow-lg shadow-emerald-950/60">
+                <i data-lucide="package" class="w-3.5 h-3.5"></i>
+                <span>Завантажити (ZIP)</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 max-w-[1760px] w-full mx-auto p-4 lg:p-6 grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        
+        <!-- ==================================================================== -->
+        <!-- LEFT PANEL: AI AGENT BRAIN & CONTROLS (7 COLS) -->
+        <!-- ==================================================================== -->
+        <section class="xl:col-span-7 space-y-6">
+            
+            <!-- AI AGENT INTERACTIVE TERMINAL (HERO BOX) -->
+            <div id="ai-agent-panel" class="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-5 shadow-2xl backdrop-blur-md relative overflow-hidden purple-glow">
+                
+                <!-- Header of Agent Panel -->
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <div class="w-3 h-3 rounded-full bg-purple-500 animate-ping absolute inset-0 opacity-75"></div>
+                            <div class="w-3 h-3 rounded-full bg-purple-400 relative z-10"></div>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Military Viral Brain AI</h2>
+                                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">ONLINE</span>
+                            </div>
+                            <span class="text-[11px] text-slate-400">Натренований на алгоритмах утримання уваги (Watch Time & Shares)</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Preset Task Chips -->
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="runAgentTask('analyze_current')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-mono border border-slate-800 transition cursor-pointer flex items-center gap-1">
+                            <i data-lucide="gauge" class="w-3 h-3 text-cyan-400"></i>
+                            <span>Скоринг вірусності</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Agent Prompt / Instruction Input -->
+                <div class="space-y-3">
+                    <label class="text-xs font-semibold text-slate-300 font-mono flex items-center justify-between">
+                        <span>Запит для Агента (тема, відчуття, інсайт):</span>
+                        <span class="text-[11px] text-purple-400 font-normal">Пишіть вільною мовою</span>
+                    </label>
+                    <div class="relative">
+                        <textarea id="agent-user-prompt" rows="2" placeholder="Наприклад: 'Зроби глибокий пост про нічне чергування о 4 ранку, коли всі сплять, а ти думаєш про дім' або 'Проаналізуй тему втоми і зроби стоїчний хук'..." class="w-full bg-slate-950 border border-purple-500/40 focus:border-purple-400 rounded-xl p-3.5 text-xs text-white placeholder-slate-500 outline-none transition resize-none font-sans shadow-inner"></textarea>
+                        
+                        <button id="btn-run-agent" onclick="executeAgentBrain()" class="absolute right-3 bottom-3 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-purple-950/60">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                            <span>Запустити аналіз та генерацію</span>
+                        </button>
+                    </div>
+
+                    <!-- Quick Prompt Chips -->
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        <span class="text-[10px] text-slate-500 font-mono self-center">Швидкі промпти:</span>
+                        <button onclick="setAgentPrompt('Нічне чергування о 04:00, кава на ящику БК, спогади про мирне життя')" class="px-2.5 py-0.5 rounded-full bg-slate-950 hover:bg-slate-800 text-[11px] text-slate-300 border border-slate-800 transition cursor-pointer">
+                            ☕ 04:00 та тепла кава
+                        </button>
+                        <button onclick="setAgentPrompt('Стоїцизм воїна: спокій під хаосом обстрілу, контроль над емоціями')" class="px-2.5 py-0.5 rounded-full bg-slate-950 hover:bg-slate-800 text-[11px] text-slate-300 border border-slate-800 transition cursor-pointer">
+                            ⚔️ Спокій у хаосі війни
+                        </button>
+                        <button onclick="setAgentPrompt('Дощ у сирому окопі, вода на шоломі, побратимство без слів')" class="px-2.5 py-0.5 rounded-full bg-slate-950 hover:bg-slate-800 text-[11px] text-slate-300 border border-slate-800 transition cursor-pointer">
+                            🌧️ Дощ і мовчання
+                        </button>
+                        <button onclick="setAgentPrompt('Світанок над посадкою після безсонної ночі, нове світло')" class="px-2.5 py-0.5 rounded-full bg-slate-950 hover:bg-slate-800 text-[11px] text-slate-300 border border-slate-800 transition cursor-pointer">
+                            🌅 Світанок і нове світло
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Agent Reasoning Terminal -->
+                <div class="mt-4 pt-4 border-t border-slate-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
+                            <i data-lucide="terminal" class="w-3.5 h-3.5 text-purple-400"></i>
+                            <span>Reasoning Stream (Ланцюжок думок агента)</span>
+                        </span>
+                        <span id="agent-status-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">IDLE</span>
+                    </div>
+
+                    <div id="agent-logs-container" class="bg-black/80 scanlines border border-slate-800 rounded-xl p-3.5 font-mono text-xs text-slate-300 space-y-1.5 max-h-40 overflow-y-auto shadow-inner">
+                        <div class="text-purple-400 font-bold">[SYSTEM] TikTok Military Viral Brain активовано та готовий до роботи.</div>
+                        <div class="text-slate-400">Введіть тему вище або натисніть швидкий промпт, щоб запустити генерацію.</div>
+                    </div>
+                </div>
+
+                <!-- Live Viral Score Meter & Analytics Grid -->
+                <div class="mt-4 p-4 rounded-xl bg-slate-950/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <!-- Total Score Gauge -->
+                    <div class="sm:col-span-1 flex flex-col items-center justify-center p-3 rounded-lg bg-slate-900 border border-slate-800 text-center">
+                        <span class="text-[10px] font-mono text-slate-400 uppercase">Viral Score</span>
+                        <div class="text-3xl font-black font-mono text-emerald-400 my-1" id="viral-total-score">92<span class="text-xs text-slate-500">/100</span></div>
+                        <span id="viral-badge-verdict" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ТОП ВІРУСНІСТЬ</span>
+                    </div>
+
+                    <!-- Breakdown Meters -->
+                    <div class="sm:col-span-3 space-y-2.5">
+                        <div>
+                            <div class="flex justify-between text-[11px] font-mono text-slate-300 mb-1">
+                                <span>🎣 Сила першого хука (Перші 2 сек):</span>
+                                <span id="metric-hook-val" class="font-bold text-emerald-400">94%</span>
+                            </div>
+                            <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div id="metric-hook-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" style="width: 94%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-[11px] font-mono text-slate-300 mb-1">
+                                <span>⏱️ Прогноз утримання (Watch Time / Retention):</span>
+                                <span id="metric-retention-val" class="font-bold text-cyan-400">89%</span>
+                            </div>
+                            <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div id="metric-retention-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-400 rounded-full" style="width: 89%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-[11px] font-mono text-slate-300 mb-1">
+                                <span>🔄 Потенціал збережень / репостів (Saves & Shares):</span>
+                                <span id="metric-shares-val" class="font-bold text-purple-400">95%</span>
+                            </div>
+                            <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                <div id="metric-shares-bar" class="h-full bg-gradient-to-r from-purple-500 to-indigo-400 rounded-full" style="width: 95%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Tips & Recommendations Box -->
+                <div id="agent-tip-box" class="mt-3 p-3 rounded-xl bg-purple-950/20 border border-purple-500/30 text-xs text-purple-200 flex items-start gap-2.5">
+                    <i data-lucide="lightbulb" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+                    <div>
+                        <span class="font-bold text-purple-300">Порада агента:</span>
+                        <span id="agent-tip-text">Цей текст має високий емоційний відгук. Обов'язково використовуйте аудіотрек «Past Lives (Dark Ambient Piano)» для максимального догортання до фінального слайду.</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MANUAL STUDIO CONTROLS (COLLAPSIBLE / ACCORDION) -->
+            <div id="manual-studio-panel" class="space-y-6">
+                
+                <!-- Visual Backgrounds & Sound Selection -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="image" class="w-4 h-4 text-emerald-400"></i>
+                            <h2 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Кінематографічні фони (9:16)</h2>
+                        </div>
+                        <span class="text-xs text-slate-400 font-mono">Atmospheric Photo Library</span>
+                    </div>
+
+                    <!-- Real Photos Grid Gallery -->
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        <button onclick="setPhotoBackground('assets/tiktok/starry_night.jpg', 'Нічне зоряне небо')" class="photo-btn group relative aspect-[9/16] rounded-xl overflow-hidden border-2 border-emerald-500 ring-2 ring-emerald-500/30 transition cursor-pointer text-left">
+                            <img src="assets/tiktok/starry_night.jpg" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
+                                <span class="text-[11px] font-bold text-white leading-tight">🌌 Зоряне небо</span>
+                            </div>
+                        </button>
+
+                        <button onclick="setPhotoBackground('assets/tiktok/coffee_crate.jpg', 'Кава на ящику БК')" class="photo-btn group relative aspect-[9/16] rounded-xl overflow-hidden border-2 border-slate-800 hover:border-emerald-500 transition cursor-pointer text-left">
+                            <img src="assets/tiktok/coffee_crate.jpg" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
+                                <span class="text-[11px] font-bold text-white leading-tight">☕ Кава в бліндажі</span>
+                            </div>
+                        </button>
+
+                        <button onclick="setPhotoBackground('assets/tiktok/misty_morning.jpg', 'Туман у посадці')" class="photo-btn group relative aspect-[9/16] rounded-xl overflow-hidden border-2 border-slate-800 hover:border-emerald-500 transition cursor-pointer text-left">
+                            <img src="assets/tiktok/misty_morning.jpg" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
+                                <span class="text-[11px] font-bold text-white leading-tight">🌲 Ранковий туман</span>
+                            </div>
+                        </button>
+
+                        <button onclick="setPhotoBackground('assets/tiktok/rain_trench.jpg', 'Дощ на склі окопу')" class="photo-btn group relative aspect-[9/16] rounded-xl overflow-hidden border-2 border-slate-800 hover:border-emerald-500 transition cursor-pointer text-left">
+                            <img src="assets/tiktok/rain_trench.jpg" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
+                                <span class="text-[11px] font-bold text-white leading-tight">🌧️ Дощ на склі</span>
+                            </div>
+                        </button>
+
+                        <label class="relative aspect-[9/16] rounded-xl overflow-hidden border-2 border-dashed border-slate-700 hover:border-emerald-500 bg-slate-950/60 transition cursor-pointer flex flex-col items-center justify-center p-3 text-center group">
+                            <div class="w-8 h-8 rounded-full bg-slate-800 group-hover:bg-emerald-500/20 text-slate-400 group-hover:text-emerald-400 flex items-center justify-center mb-1 transition">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-[11px] font-bold text-slate-300 group-hover:text-white">Своє фото</span>
+                            <span class="text-[9px] text-slate-500 font-mono">PNG / JPG</span>
+                            <input type="file" id="upload-bg" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                        </label>
+                    </div>
+
+                    <!-- Sound Track Selector & Player -->
+                    <div class="pt-4 border-t border-slate-800/80 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="music" class="w-4 h-4 text-emerald-400"></i>
+                                <span class="text-xs font-bold text-white uppercase font-mono">Трендовий звук TikTok</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="btn-sound-play" onclick="toggleAudioPlayback()" class="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition cursor-pointer shadow">
+                                    <i id="sound-play-icon" data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
+                                    <span id="sound-play-text">Увімкнути звук</span>
+                                </button>
+                                <a id="tiktok-sound-search-link" href="https://www.tiktok.com/search?q=past%20lives%20slowed" target="_blank" class="flex items-center gap-1 text-[11px] font-mono text-cyan-400 hover:underline bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                                    <span>Знайти в TikTok</span>
+                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <button onclick="setSoundTrack('ambient_piano', 'Past Lives (Dark Ambient Piano)', 'https://www.tiktok.com/search?q=past%20lives%20slowed')" class="sound-track-btn p-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 text-left transition cursor-pointer flex flex-col justify-between">
+                                <span class="text-xs font-bold text-white flex items-center gap-1">🎹 Dark Ambient Piano</span>
+                                <span class="text-[10px] text-slate-400 font-mono mt-0.5">Past Lives (Slowed)</span>
+                            </button>
+                            <button onclick="setSoundTrack('cinematic_strings', 'Interstellar Theme (Slowed Strings)', 'https://www.tiktok.com/search?q=interstellar%20slowed%20reverb')" class="sound-track-btn p-2.5 rounded-xl border border-slate-800 hover:border-emerald-500 bg-slate-950 text-left transition cursor-pointer flex flex-col justify-between">
+                                <span class="text-xs font-bold text-white flex items-center gap-1">🎻 Cinematic Strings</span>
+                                <span class="text-[10px] text-slate-400 font-mono mt-0.5">Interstellar Theme</span>
+                            </button>
+                            <button onclick="setSoundTrack('vinyl_rain', 'Night Thoughts (Rain & Vinyl Synth)', 'https://www.tiktok.com/search?q=dark%20drift%20phonk%20slowed')" class="sound-track-btn p-2.5 rounded-xl border border-slate-800 hover:border-emerald-500 bg-slate-950 text-left transition cursor-pointer flex flex-col justify-between">
+                                <span class="text-xs font-bold text-white flex items-center gap-1">🌧️ Rain & Vinyl Synth</span>
+                                <span class="text-[10px] text-slate-400 font-mono mt-0.5">Atmospheric Pad</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-Slide Deck Editor -->
+                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+                            <h2 class="text-sm font-bold text-white uppercase tracking-wider font-mono">Слайди каруселі (<span id="slides-count-label">4</span>)</h2>
+                        </div>
+                        <button onclick="addNewSlide()" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1 rounded-lg border border-emerald-500/30 transition cursor-pointer">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Додати слайд</span>
+                        </button>
+                    </div>
+
+                    <!-- Slide Cards List Container -->
+                    <div id="slides-editor-list" class="space-y-3">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ==================================================================== -->
+        <!-- RIGHT PANEL: LIVE TIKTOK 9:16 SIMULATOR (5 COLS) -->
+        <!-- ==================================================================== -->
+        <section class="xl:col-span-5 flex flex-col items-center sticky top-20">
+            
+            <!-- Controls Bar above Preview -->
+            <div class="w-full max-w-[360px] flex items-center justify-between mb-3 px-1">
+                <!-- Auto-Play Carousel Button -->
+                <button id="btn-autoplay-carousel" onclick="toggleAutoPlay()" class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-500 hover:to-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-lg shadow-purple-950/60">
+                    <i id="autoplay-icon" data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
+                    <span id="autoplay-text">▶ Запустити як у TikTok</span>
+                </button>
+
+                <label class="flex items-center gap-2 text-xs text-slate-300 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+                    <input type="checkbox" id="toggle-tiktok-ui" checked onchange="toggleTikTokUi()" class="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0">
+                    <span>Інтерфейс</span>
+                </label>
+            </div>
+
+            <!-- Phone Frame & Canvas Wrapper -->
+            <div class="relative w-[340px] sm:w-[360px] h-[600px] sm:h-[640px] rounded-[38px] p-3 bg-gradient-to-b from-slate-800 via-slate-900 to-black border-2 border-slate-700 shadow-2xl shadow-black flex flex-col items-center justify-center">
+                
+                <!-- Phone Notch / Speaker -->
+                <div class="absolute top-4 w-28 h-4 bg-slate-950 rounded-full z-30 flex items-center justify-center">
+                    <div class="w-10 h-1 bg-slate-800 rounded-full"></div>
+                </div>
+
+                <!-- LIVE SCREEN CANVAS (9:16 Aspect Ratio) -->
+                <div id="tiktok-screen" class="relative w-full h-full rounded-[28px] overflow-hidden flex flex-col justify-between p-6 select-none transition-all duration-300 bg-slate-950 bg-cover bg-center">
+                    
+                    <!-- Top Story / Carousel Progress Bars (TikTok Photo Mode) -->
+                    <div id="top-progress-bars" class="absolute top-3 inset-x-4 z-30 flex items-center gap-1">
+                        <!-- Progress bars rendered via JS -->
+                    </div>
+
+                    <!-- Background Overlay Layer -->
+                    <div id="screen-overlay" class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/85 z-0 pointer-events-none"></div>
+                    
+                    <!-- Film Grain Layer -->
+                    <div id="screen-grain" class="absolute inset-0 film-grain z-0 pointer-events-none opacity-50"></div>
+                    
+                    <!-- Vignette Layer -->
+                    <div id="screen-vignette" class="absolute inset-0 z-0 pointer-events-none" style="box-shadow: inset 0 0 120px rgba(0,0,0,0.85);"></div>
+
+                    <!-- TOP HEADER: Slide counter badge -->
+                    <div class="relative z-10 flex items-center justify-between pt-5">
+                        <div class="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-mono text-slate-200 flex items-center gap-1.5 shadow">
+                            <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                            <span id="screen-badge-index">1 / 4</span>
+                        </div>
+                        <div class="text-[11px] font-mono font-bold tracking-widest text-white/70 uppercase drop-shadow">
+                            MILITARY POV
+                        </div>
+                    </div>
+
+                    <!-- CENTER CONTENT: TEXT CARD -->
+                    <div class="relative z-10 my-auto flex flex-col items-center justify-center text-center px-1">
+                        <div id="screen-text-card" class="w-full p-5 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/15 shadow-2xl transition-all duration-300">
+                            <p id="screen-quote-text" class="text-base sm:text-lg text-slate-100 font-typewriter leading-relaxed tracking-wide font-normal drop-shadow">
+                                «Найважче на війні — це не вибухи. Найважче — це тиша між ними...»
+                            </p>
+                            <div id="screen-author-tag" class="mt-3 text-[11px] font-mono text-purple-400 font-semibold tracking-wider flex items-center justify-center gap-1">
+                                <span>— думки в темряві</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTTOM TIKTOK OVERLAY (Simulated UI) -->
+                    <div id="tiktok-ui-layer" class="relative z-20 flex flex-col gap-2.5 pb-2 transition-opacity duration-200">
+                        <!-- Creator tag & sound -->
+                        <div class="space-y-1 text-left">
+                            <div class="text-xs font-bold text-white flex items-center gap-1.5 drop-shadow">
+                                <span>@military_thoughts</span>
+                                <span class="text-[10px] px-1.5 py-0.2 bg-purple-500/30 text-purple-300 rounded font-mono border border-purple-500/30">Автор</span>
+                            </div>
+                            <p id="screen-caption-preview" class="text-[11px] text-slate-200 line-clamp-2 leading-tight drop-shadow">
+                                Те, про що рідко говорять вголос. Бережіть своїх 🕯️ #зсу #військові #думки #ніч #мотивація
+                            </p>
+                            <div class="flex items-center gap-2 text-[10px] text-slate-300 pt-0.5">
+                                <i data-lucide="music" class="w-3 h-3 text-purple-400"></i>
+                                <span id="screen-sound-title" class="truncate max-w-[180px] font-mono">Past Lives (Dark Ambient Piano)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT TIKTOK ACTION BUTTONS (Simulated) -->
+                    <div id="tiktok-ui-actions" class="absolute right-3 bottom-14 z-20 flex flex-col items-center gap-3.5 text-white">
+                        <div class="flex flex-col items-center gap-0.5">
+                            <div class="w-9 h-9 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 flex items-center justify-center shadow">
+                                <i data-lucide="heart" class="w-4 h-4 text-white fill-white/20"></i>
+                            </div>
+                            <span class="text-[9px] font-mono font-bold drop-shadow">48.2K</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-0.5">
+                            <div class="w-9 h-9 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 flex items-center justify-center shadow">
+                                <i data-lucide="message-circle" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <span class="text-[9px] font-mono font-bold drop-shadow">1.2K</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-0.5">
+                            <div class="w-9 h-9 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 flex items-center justify-center shadow">
+                                <i data-lucide="bookmark" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <span class="text-[9px] font-mono font-bold drop-shadow">9.4K</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-0.5">
+                            <div class="w-9 h-9 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 flex items-center justify-center shadow">
+                                <i data-lucide="share-2" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <span class="text-[9px] font-mono font-bold drop-shadow">2.6K</span>
+                        </div>
+                        <!-- Sound rotating vinyl disc (Clickable to toggle sound) -->
+                        <div id="sound-vinyl-disc" onclick="toggleAudioPlayback()" class="w-8 h-8 rounded-full bg-slate-900 border-2 border-purple-500 flex items-center justify-center mt-1 animate-vinyl vinyl-paused cursor-pointer shadow-lg" title="Клікніть, щоб увімкнути/зупинити звук">
+                            <div class="w-3 h-3 rounded-full bg-purple-400 animate-pulse"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Slide Navigation Pagination Controls -->
+            <div class="w-full max-w-[360px] flex items-center justify-between mt-4 px-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-2 shadow-lg">
+                <button onclick="prevSlide()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-mono font-bold text-slate-200" id="pagination-label">Слайд 1 з 4</span>
+                    <div class="flex items-center gap-1" id="pagination-dots">
+                        <!-- Dots populated via JS -->
+                    </div>
+                </div>
+                <button onclick="nextSlide()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl border border-purple-500/50 shadow-2xl flex items-center gap-3 pointer-events-none">
+        <i data-lucide="check-circle" class="w-5 h-5 text-purple-400"></i>
+        <span id="toast-text" class="text-xs font-semibold">Успішно!</span>
+    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        // Preset Carousels Library
+        const PRESETS = {
+            laptop_duty: {
+                title: "💻 Невидима робота ОЧ",
+                caption: "«Я не герой. Я просто роблю свою роботу, поки інші скаржаться, як їм важко жити»... 💻☕🇺🇦\n\n#зсу #військові #думки #ніч #оч #штаб #кава #робота #мотивація #україна",
+                soundName: "Past Lives (Dark Ambient Piano - Slowed)",
+                soundType: "ambient_piano",
+                soundUrl: "https://www.tiktok.com/search?q=past%20lives%20slowed",
+                bgImg: "assets/tiktok/post1/slide1.jpg",
+                slides: [
+                    {
+                        quote: "«Війна — це не завжди окопи під дощем. Іноді це 18 годин без сну перед монітором, коли від твоєї точності залежать чиїсь життя...»",
+                        author: "— невидимий фронт (слайд 1)",
+                        bgImg: "assets/tiktok/post1/slide1.jpg"
+                    },
+                    {
+                        quote: "«Тонни випитої кави, червоні від втоми очі та карти, які сняться навіть тоді, коли нарешті вдається заснути на дві години».",
+                        author: "— ціна чергування (слайд 2)",
+                        bgImg: "assets/tiktok/post1/slide2.jpg"
+                    },
+                    {
+                        quote: "«Я не герой. Я просто мовчки роблю свою роботу — поки хтось у теплих містах скаржиться, як йому “важко жити”».",
+                        author: "— головна істина (слайд 3)",
+                        bgImg: "assets/tiktok/post1/slide3.jpg"
+                    },
+                    {
+                        quote: "«Працюємо далі. До останнього рядка коду, до останнього донесення, до перемоги. Тримаємо стрій 💻☕🇺🇦»",
+                        author: "— новий світанок (слайд 4)",
+                        bgImg: "assets/tiktok/post1/slide4.jpg"
+                    }
+                ]
+            },
+            night: {
+                title: "🌌 Нічні думки ОЧ",
+                caption: "Те, про що рідко говорять вголос. Бережіть своїх 🕯️\n\n#зсу #військові #думки #ніч #мотивація #україна #побратими #тиша",
+                soundName: "Past Lives (Dark Ambient Piano)",
+                soundType: "ambient_piano",
+                soundUrl: "https://www.tiktok.com/search?q=past%20lives%20slowed",
+                bgImg: "assets/tiktok/starry_night.jpg",
+                slides: [
+                    {
+                        quote: "«Найважче на війні — це не вибухи. Найважче — це тиша між ними...»",
+                        author: "— хук (слайд 1)",
+                        bgImg: "assets/tiktok/starry_night.jpg"
+                    },
+                    {
+                        quote: "«Коли в темряві залишаєшся наодинці зі своїми думками, стає зрозуміло, скільки зайвого ми тягнули в собі до цього дня».",
+                        author: "— думки на чергуванні",
+                        bgImg: "assets/tiktok/coffee_crate.jpg"
+                    },
+                    {
+                        quote: "«Тут швидко вчишся цінувати прості речі: гарячий чай з термоса, коротке “плюс” по рації і те, що поруч свої».",
+                        author: "— переоцінка",
+                        bgImg: "assets/tiktok/misty_morning.jpg"
+                    },
+                    {
+                        quote: "«Бережіть тих, хто тримає ваше небо. Спокійної ночі тим, хто на чергуванні 🕯️✨»",
+                        author: "— фінал",
+                        bgImg: "assets/tiktok/starry_night.jpg"
+                    }
+                ]
+            },
+            stoic: {
+                title: "⚔️ Стоїцизм воїна",
+                caption: "Спокій усередині — це найбільша зброя. 🛡️\n\n#стоїцизм #філософія #воїн #дисципліна #зсу #спокій #хаос",
+                soundName: "Interstellar Theme (Slowed Strings)",
+                soundType: "cinematic_strings",
+                soundUrl: "https://www.tiktok.com/search?q=interstellar%20slowed%20reverb",
+                bgImg: "assets/tiktok/misty_morning.jpg",
+                slides: [
+                    {
+                        quote: "«Ти не можеш контролювати напрямок вітру чи приліт. Але ти повністю контролюєш свій спокій і свій сектор».",
+                        author: "— правило №1",
+                        bgImg: "assets/tiktok/misty_morning.jpg"
+                    },
+                    {
+                        quote: "«Страх — це природно для живої людини. Але мужність — це просто рухатися вперед, коли руки роблять свою роботу».",
+                        author: "— про страх",
+                        bgImg: "assets/tiktok/rain_trench.jpg"
+                    },
+                    {
+                        quote: "«Хаос навколо тебе не має значення, якщо всередині тебе панує залізна дисципліна та порядок».",
+                        author: "— дисципліна",
+                        bgImg: "assets/tiktok/post1/slide3.jpg"
+                    },
+                    {
+                        quote: "«Тримай свій стрій і бережи внутрішнє світло. Світанок завжди настає після найдовшої ночі 🌅»",
+                        author: "— фінал",
+                        bgImg: "assets/tiktok/post1/slide4.jpg"
+                    }
+                ]
+            }
+        };
+
+        // State - Default to the flagship laptop duty post
+        let currentSlides = JSON.parse(JSON.stringify(PRESETS.laptop_duty.slides));
+        let activeSlideIndex = 0;
+        let currentBgImage = PRESETS.laptop_duty.slides[0].bgImg;
+        let currentCaption = PRESETS.laptop_duty.caption;
+        let currentSoundName = PRESETS.laptop_duty.soundName;
+        let currentSoundType = PRESETS.laptop_duty.soundType;
+
+        // Web Audio Synthesizer Engine
+        let audioCtx = null;
+        let isAudioPlaying = false;
+        let synthOscillators = [];
+        let autoPlayTimer = null;
+        let isAutoPlaying = false;
+
+        // Initialize UI
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderSlidesEditor();
+            updateLivePreview();
+            calculateViralScore();
+        });
+
+        // Switch main tabs
+        function switchMainTab(tab) {
+            const agentBtn = document.getElementById('tab-btn-agent');
+            const studioBtn = document.getElementById('tab-btn-studio');
+            const agentPanel = document.getElementById('ai-agent-panel');
+            const studioPanel = document.getElementById('manual-studio-panel');
+
+            if (tab === 'agent') {
+                agentBtn.className = 'px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 bg-purple-600 text-white shadow cursor-pointer';
+                studioBtn.className = 'px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 cursor-pointer';
+                agentPanel.style.display = 'block';
+                studioPanel.style.display = 'block';
+                agentPanel.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                studioBtn.className = 'px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow cursor-pointer';
+                agentBtn.className = 'px-3 py-1.5 rounded-lg font-bold text-slate-400 hover:text-white transition flex items-center gap-1.5 cursor-pointer';
+                studioPanel.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function setAgentPrompt(text) {
+            document.getElementById('agent-user-prompt').value = text;
+        }
+
+        // AI Agent Brain: Reasoning Loop Execution
+        async function executeAgentBrain() {
+            const input = document.getElementById('agent-user-prompt');
+            const prompt = input.value.trim();
+            if (!prompt) {
+                showToast("Введіть запит для Агента!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-run-agent');
+            const statusBadge = document.getElementById('agent-status-badge');
+            const logsContainer = document.getElementById('agent-logs-container');
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin">⚡</span> <span>Агент аналізує...</span>`;
+            statusBadge.className = "text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 animate-pulse";
+            statusBadge.textContent = "REASONING";
+
+            logsContainer.innerHTML = '';
+            
+            function addLog(text, color = 'text-slate-300') {
+                const row = document.createElement('div');
+                row.className = color;
+                row.innerHTML = text;
+                logsContainer.appendChild(row);
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            }
+
+            addLog(`⚡ <span class="text-purple-400 font-bold">[USER_PROMPT]</span> "${prompt}"`);
+            await new Promise(r => setTimeout(r, 450));
+
+            addLog(`🔍 <span class="text-cyan-400">[STEP 1/4]</span> Аналіз тригерів алгоритму TikTok (Watch Time & Emotional Contrast)...`);
+            await new Promise(r => setTimeout(r, 600));
+
+            addLog(`🎣 <span class="text-amber-400">[STEP 2/4]</span> Генерація та оптимізація першого хука (Safe Zone: 0-2 sec)...`);
+            await new Promise(r => setTimeout(r, 700));
+
+            addLog(`🎭 <span class="text-emerald-400">[STEP 3/4]</span> Побудова драматургічної кривої каруселі (Хук → Інсайт → Мовчання → Світло)...`);
+            await new Promise(r => setTimeout(r, 600));
+
+            // Generate content dynamically based on prompt keywords
+            const generated = buildSmartCarousel(prompt);
+            currentSlides = generated.slides;
+            currentCaption = generated.caption;
+            setPhotoBackground(generated.bgImg, generated.bgTitle);
+            setSoundTrack(generated.soundType, generated.soundName, generated.soundUrl);
+
+            addLog(`📊 <span class="text-purple-400">[STEP 4/4]</span> Розрахунок Viral Intelligence: <b>${generated.viralScore}/100</b>. Авто-застосування!`);
+            await new Promise(r => setTimeout(r, 400));
+
+            addLog(`✅ <span class="text-emerald-400 font-bold">[DONE]</span> Карусель успішно згенерована та відрендерена!`);
+
+            activeSlideIndex = 0;
+            renderSlidesEditor();
+            updateLivePreview();
+            calculateViralScore();
+
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <span>Запустити аналіз та генерацію</span>`;
+            statusBadge.className = "text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+            statusBadge.textContent = "DONE";
+            lucide.createIcons();
+            showToast("Агент створив нову карусель!");
+        }
+
+        // Smart Generator Engine
+        function buildSmartCarousel(p) {
+            const text = p.toLowerCase();
+            
+            if (text.includes('кав') || text.includes('04') || text.includes('ранк') || text.includes('ніч')) {
+                return {
+                    viralScore: 94,
+                    bgImg: 'assets/tiktok/coffee_crate.jpg',
+                    bgTitle: 'Кава в бліндажі',
+                    soundType: 'ambient_piano',
+                    soundName: 'Past Lives (Dark Ambient Piano)',
+                    soundUrl: 'https://www.tiktok.com/search?q=past%20lives%20slowed',
+                    slides: [
+                        { quote: "«Найважче о 04:00 ранку на позиції — це не холод. Найважче — це спогади про мирне життя...»", author: "— хук (слайд 1)" },
+                        { quote: "«У цей час весь світ спить, а ти тримаєш у замерзлих руках гарячий метал кружки і рахуєш хвилини до світанку».", author: "— реалії" },
+                        { quote: "«У цій тиші немає фальші. Є тільки ти, побратим поруч і розуміння справжньої ціни кожного дня».", author: "— інсайт" },
+                        { quote: "«Бережіть тих, хто тримає ваше небо. Теплого ранку тим, хто на чергуванні ☕🕯️🇺🇦»", author: "— фінал" }
+                    ],
+                    caption: "Те, про що мовчать о четвертій ранку... Бережіть тих, хто тримає ваш спокій 🕯️☕🇺🇦\n\n#зсу #військові #ніч #думки #кава #побратими #тиша #мотивація"
+                };
+            } else if (text.includes('дощ') || text.includes('окоп') || text.includes('сир')) {
+                return {
+                    viralScore: 91,
+                    bgImg: 'assets/tiktok/rain_trench.jpg',
+                    bgTitle: 'Дощ на склі окопу',
+                    soundType: 'vinyl_rain',
+                    soundName: 'Night Thoughts (Rain & Vinyl Synth)',
+                    soundUrl: 'https://www.tiktok.com/search?q=dark%20drift%20phonk%20slowed',
+                    slides: [
+                        { quote: "«Коли годинами ллє дощ у посадці, ти розумієш, що стійкість — це не гучні слова, а здатність мовчки стояти далі».", author: "— хук (слайд 1)" },
+                        { quote: "«Вода стікає по броні, глина чіпляється за кожен крок, але всередині з'являється залізний спокій».", author: "— витримка" },
+                        { quote: "«Будь-яка негода закінчується. Головне — тримати автомат сухим, а серце гарячим».", author: "— правило" },
+                        { quote: "«Теплого вечора всім, хто зараз у сирих бліндажах. Тримаємо стрій! 🌧️🕯️🇺🇦»", author: "— фінал" }
+                    ],
+                    caption: "Стійкість народжується в негоду... Бережіть тепло всередині 🌧️🕯️\n\n#дощ #окоп #думки #зсу #військові #стійкість #побратими"
+                };
+            } else if (text.includes('стоїц') || text.includes('спокій') || text.includes('хаос') || text.includes('страх')) {
+                return {
+                    viralScore: 96,
+                    bgImg: 'assets/tiktok/misty_morning.jpg',
+                    bgTitle: 'Ранковий туман',
+                    soundType: 'cinematic_strings',
+                    soundName: 'Interstellar Theme (Slowed Strings)',
+                    soundUrl: 'https://www.tiktok.com/search?q=interstellar%20slowed%20reverb',
+                    slides: [
+                        { quote: "«Ти не можеш контролювати напрямок вітру чи приліт. Але ти на 100% контролюєш свій внутрішній спокій».", author: "— стоїцизм воїна" },
+                        { quote: "«Страх — це природна реакція тіла. Мужність — це коли руки все одно впевнено роблять свою справу».", author: "— про страх" },
+                        { quote: "«Хаос війни відступає перед тими, у кого всередині панує непохитна дисципліна та порядок».", author: "— дисципліна" },
+                        { quote: "«Тримай свій сектор і бережи внутрішнє світло. Світанок неминучий 🌅🛡️»", author: "— фінал" }
+                    ],
+                    caption: "Спокій усередині — це найсильніша броня 🛡️✨\n\n#стоїцизм #воїн #спокій #дисципліна #зсу #хаос #мотивація"
+                };
+            } else {
+                return {
+                    viralScore: 92,
+                    bgImg: 'assets/tiktok/starry_night.jpg',
+                    bgTitle: 'Зоряне небо',
+                    soundType: 'ambient_piano',
+                    soundName: 'Past Lives (Dark Ambient Piano)',
+                    soundUrl: 'https://www.tiktok.com/search?q=past%20lives%20slowed',
+                    slides: [
+                        { quote: `«Є речі про ${p.toLowerCase()}, які ніколи не зрозуміє той, хто не стояв з тобою пліч-о-пліч...»`, author: "— хук (слайд 1)" },
+                        { quote: "«Тут кожен прожитий день вчить відкидати все пусте й триматися за тих, хто поруч».", author: "— інсайт" },
+                        { quote: "«Ми стоїмо тут не з ненависті до того, що попереду, а з любові до тих, хто позаду».", author: "— головна істина" },
+                        { quote: "«Бережіть своє світло. Новий день завжди принесе світанок 🌅✨🇺🇦»", author: "— фінал" }
+                    ],
+                    caption: `Думки про ${p.toLowerCase()}... Бережіть тих, хто тримає ваше небо 🕯️🇺🇦\n\n#зсу #думки #військові #ніч #мотивація #побратими #україна`
+                };
+            }
+        }
+
+        // Calculate and display dynamic viral metrics
+        function calculateViralScore() {
+            const hook = currentSlides[0]?.quote || "";
+            const slideCount = currentSlides.length;
+
+            let hookScore = Math.min(98, Math.max(75, Math.round(96 - Math.abs(hook.length - 85) * 0.15)));
+            let retScore = slideCount >= 3 && slideCount <= 5 ? 91 : 78;
+            let shareScore = hook.includes('Найважче') || hook.includes('спогади') || hook.includes('тиша') ? 95 : 86;
+            let total = Math.round((hookScore * 0.4) + (retScore * 0.3) + (shareScore * 0.3));
+
+            document.getElementById('viral-total-score').innerHTML = `${total}<span class="text-xs text-slate-500">/100</span>`;
+            document.getElementById('metric-hook-val').textContent = `${hookScore}%`;
+            document.getElementById('metric-hook-bar').style.width = `${hookScore}%`;
+            document.getElementById('metric-retention-val').textContent = `${retScore}%`;
+            document.getElementById('metric-retention-bar').style.width = `${retScore}%`;
+            document.getElementById('metric-shares-val').textContent = `${shareScore}%`;
+            document.getElementById('metric-shares-bar').style.width = `${shareScore}%`;
+        }
+
+        // Run direct analysis
+        function runAgentTask(type) {
+            calculateViralScore();
+            showToast("Скоринг оновлено на основі поточного тексту!");
+        }
+
+        // Set Photo Background
+        function setPhotoBackground(imgPath, title) {
+            currentBgImage = imgPath;
+            document.getElementById('tiktok-screen').style.backgroundImage = `url('${imgPath}')`;
+            
+            document.querySelectorAll('.photo-btn').forEach(btn => {
+                const img = btn.querySelector('img');
+                if (img && img.getAttribute('src') === imgPath) {
+                    btn.classList.add('border-emerald-500', 'ring-2', 'ring-emerald-500/30');
+                    btn.classList.remove('border-slate-800');
+                } else {
+                    btn.classList.remove('border-emerald-500', 'ring-2', 'ring-emerald-500/30');
+                    btn.classList.add('border-slate-800');
+                }
+            });
+
+            updateLivePreview();
+        }
+
+        // Handle Custom Upload
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                currentBgImage = event.target.result;
+                document.getElementById('tiktok-screen').style.backgroundImage = `url('${currentBgImage}')`;
+                updateLivePreview();
+                showToast("Власне фото встановлено на фон!");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Set Sound Track
+        function setSoundTrack(type, name, searchUrl) {
+            currentSoundType = type;
+            currentSoundName = name;
+            document.getElementById('screen-sound-title').textContent = name;
+            document.getElementById('tiktok-sound-search-link').setAttribute('href', searchUrl);
+
+            document.querySelectorAll('.sound-track-btn').forEach(b => {
+                if (b.getAttribute('onclick').includes(type)) {
+                    b.classList.add('border-emerald-500', 'bg-emerald-500/10');
+                    b.classList.remove('border-slate-800', 'bg-slate-950');
+                } else {
+                    b.classList.remove('border-emerald-500', 'bg-emerald-500/10');
+                    b.classList.add('border-slate-800', 'bg-slate-950');
+                }
+            });
+
+            if (isAudioPlaying) {
+                stopAmbientSynth();
+                startAmbientSynth();
+            }
+        }
+
+        // Real Web Audio Ambient Synth Engine
+        function toggleAudioPlayback() {
+            if (isAudioPlaying) {
+                stopAmbientSynth();
+            } else {
+                startAmbientSynth();
+            }
+        }
+
+        function startAmbientSynth() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                let freqs = [110, 164.81, 220, 261.63];
+                if (currentSoundType === 'cinematic_strings') {
+                    freqs = [65.41, 130.81, 196.00, 246.94, 293.66];
+                } else if (currentSoundType === 'vinyl_rain') {
+                    freqs = [87.31, 130.81, 174.61, 220.00];
+                }
+
+                synthOscillators = [];
+                const masterGain = audioCtx.createGain();
+                masterGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                masterGain.connect(audioCtx.destination);
+
+                freqs.forEach((f, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+                    
+                    const lfo = audioCtx.createOscillator();
+                    lfo.frequency.setValueAtTime(0.2 + (i * 0.05), audioCtx.currentTime);
+                    const lfoGain = audioCtx.createGain();
+                    lfoGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                    lfo.connect(gain.gain);
+                    lfo.start();
+
+                    gain.gain.setValueAtTime(0.08 / (i + 1), audioCtx.currentTime);
+                    osc.connect(gain);
+                    gain.connect(masterGain);
+                    osc.start();
+                    synthOscillators.push(osc, lfo);
+                });
+
+                isAudioPlaying = true;
+                document.getElementById('sound-play-icon').setAttribute('data-lucide', 'pause');
+                document.getElementById('sound-play-text').textContent = 'Зупинити звук';
+                document.getElementById('sound-vinyl-disc').classList.remove('vinyl-paused');
+                lucide.createIcons();
+                showToast(`Грає: ${currentSoundName}`);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function stopAmbientSynth() {
+            synthOscillators.forEach(o => {
+                try { o.stop(); o.disconnect(); } catch(e){}
+            });
+            synthOscillators = [];
+            isAudioPlaying = false;
+            document.getElementById('sound-play-icon').setAttribute('data-lucide', 'play');
+            document.getElementById('sound-play-text').textContent = 'Увімкнути звук';
+            document.getElementById('sound-vinyl-disc').classList.add('vinyl-paused');
+            lucide.createIcons();
+        }
+
+        // Auto-Play Carousel Mode
+        function toggleAutoPlay() {
+            if (isAutoPlaying) {
+                stopAutoPlay();
+            } else {
+                startAutoPlay();
+            }
+        }
+
+        function startAutoPlay() {
+            isAutoPlaying = true;
+            if (!isAudioPlaying) startAmbientSynth();
+
+            document.getElementById('autoplay-icon').setAttribute('data-lucide', 'pause');
+            document.getElementById('autoplay-text').textContent = '⏸ Зупинити';
+            lucide.createIcons();
+            showToast("Запущено автоперегляд каруселі!");
+
+            autoPlayTimer = setInterval(() => {
+                nextSlide();
+            }, 3500);
+        }
+
+        function stopAutoPlay() {
+            isAutoPlaying = false;
+            clearInterval(autoPlayTimer);
+            document.getElementById('autoplay-icon').setAttribute('data-lucide', 'play');
+            document.getElementById('autoplay-text').textContent = '▶ Запустити як у TikTok';
+            lucide.createIcons();
+        }
+
+        // Render Top Story Progress Bars
+        function renderTopProgressBars() {
+            const container = document.getElementById('top-progress-bars');
+            container.innerHTML = '';
+            currentSlides.forEach((_, idx) => {
+                const bar = document.createElement('div');
+                bar.className = 'h-1 flex-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-sm';
+                
+                const fill = document.createElement('div');
+                fill.className = 'h-full bg-purple-400 rounded-full progress-bar-fill';
+                fill.style.width = idx <= activeSlideIndex ? '100%' : '0%';
+                
+                bar.appendChild(fill);
+                container.appendChild(bar);
+            });
+        }
+
+        // Render Slides in Left Editor
+        function renderSlidesEditor() {
+            const container = document.getElementById('slides-editor-list');
+            document.getElementById('slides-count-label').textContent = currentSlides.length;
+            
+            container.innerHTML = '';
+            currentSlides.forEach((slide, idx) => {
+                const isSelected = idx === activeSlideIndex;
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border transition ${isSelected ? 'bg-slate-800/90 border-purple-500 shadow-md ring-1 ring-purple-500/30' : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'}`;
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2 cursor-pointer" onclick="setActiveSlide(${idx})">
+                            <span class="w-6 h-6 rounded-lg ${isSelected ? 'bg-purple-500 text-white font-bold' : 'bg-slate-800 text-slate-400'} text-xs font-mono flex items-center justify-center">
+                                ${idx + 1}
+                            </span>
+                            <span class="text-xs font-bold ${isSelected ? 'text-purple-400' : 'text-slate-300'}">
+                                ${idx === 0 ? '🔥 Хук (Перший слайд)' : (idx === currentSlides.length - 1 ? '🏁 Висновок (Фінал)' : `Слайд ${idx + 1}`)}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            ${currentSlides.length > 1 ? `
+                                <button onclick="deleteSlide(${idx})" class="p-1 text-slate-500 hover:text-red-400 rounded hover:bg-slate-800 transition cursor-pointer" title="Видалити слайд">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <textarea oninput="handleSlideTextChange(${idx}, this.value)" rows="2" class="w-full bg-slate-900 border border-slate-800 focus:border-purple-500 rounded-lg p-2.5 text-xs text-slate-100 placeholder-slate-500 outline-none transition resize-none font-sans">${slide.quote}</textarea>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="text-[10px] text-slate-500 font-mono">Підпис / Тег:</span>
+                        <input type="text" value="${slide.author || ''}" oninput="handleSlideAuthorChange(${idx}, this.value)" placeholder="напр. — думки на чергуванні" class="flex-1 bg-slate-900 border border-slate-800 focus:border-purple-500 rounded-md px-2 py-1 text-[11px] text-slate-300 outline-none transition font-mono">
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+            renderPagination();
+            renderTopProgressBars();
+        }
+
+        // Render Pagination Dots
+        function renderPagination() {
+            const label = document.getElementById('pagination-label');
+            const dotsContainer = document.getElementById('pagination-dots');
+            label.textContent = `Слайд ${activeSlideIndex + 1} з ${currentSlides.length}`;
+            
+            dotsContainer.innerHTML = '';
+            currentSlides.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `h-1.5 rounded-full transition-all cursor-pointer ${idx === activeSlideIndex ? 'w-5 bg-purple-400' : 'w-1.5 bg-slate-700 hover:bg-slate-500'}`;
+                dot.onclick = () => setActiveSlide(idx);
+                dotsContainer.appendChild(dot);
+            });
+            
+            document.getElementById('screen-badge-index').textContent = `${activeSlideIndex + 1} / ${currentSlides.length}`;
+            renderTopProgressBars();
+        }
+
+        function setActiveSlide(idx) {
+            activeSlideIndex = idx;
+            renderSlidesEditor();
+            updateLivePreview();
+        }
+
+        function nextSlide() {
+            if (activeSlideIndex < currentSlides.length - 1) {
+                setActiveSlide(activeSlideIndex + 1);
+            } else {
+                setActiveSlide(0);
+            }
+        }
+
+        function prevSlide() {
+            if (activeSlideIndex > 0) {
+                setActiveSlide(activeSlideIndex - 1);
+            } else {
+                setActiveSlide(currentSlides.length - 1);
+            }
+        }
+
+        function addNewSlide() {
+            currentSlides.push({
+                quote: "«Введіть текст нового слайду сюди...»",
+                author: "— думка"
+            });
+            setActiveSlide(currentSlides.length - 1);
+            showToast("Додано новий слайд");
+        }
+
+        function deleteSlide(idx) {
+            if (currentSlides.length <= 1) return;
+            currentSlides.splice(idx, 1);
+            if (activeSlideIndex >= currentSlides.length) {
+                activeSlideIndex = currentSlides.length - 1;
+            }
+            renderSlidesEditor();
+            updateLivePreview();
+        }
+
+        function handleSlideTextChange(idx, val) {
+            currentSlides[idx].quote = val;
+            if (idx === activeSlideIndex) {
+                document.getElementById('screen-quote-text').textContent = val;
+            }
+            calculateViralScore();
+        }
+
+        function handleSlideAuthorChange(idx, val) {
+            currentSlides[idx].author = val;
+            if (idx === activeSlideIndex) {
+                document.getElementById('screen-author-tag').textContent = val;
+            }
+        }
+
+        // Update Live Screen Visuals
+        function updateLivePreview() {
+            const slide = currentSlides[activeSlideIndex] || currentSlides[0];
+            const quoteEl = document.getElementById('screen-quote-text');
+            const authorEl = document.getElementById('screen-author-tag');
+            const screen = document.getElementById('tiktok-screen');
+
+            quoteEl.textContent = slide.quote;
+            authorEl.textContent = slide.author ? slide.author : '';
+            authorEl.style.display = slide.author ? 'flex' : 'none';
+
+            const bgToUse = slide.bgImg || currentBgImage;
+            if (bgToUse) {
+                screen.style.backgroundImage = `url('${bgToUse}')`;
+                screen.style.backgroundSize = 'cover';
+                screen.style.backgroundPosition = 'center';
+            }
+
+            renderPagination();
+        }
+
+        // Toggle Simulated TikTok UI
+        function toggleTikTokUi() {
+            const show = document.getElementById('toggle-tiktok-ui').checked;
+            document.getElementById('tiktok-ui-layer').style.opacity = show ? '1' : '0';
+            document.getElementById('tiktok-ui-actions').style.opacity = show ? '1' : '0';
+            document.getElementById('top-progress-bars').style.opacity = show ? '1' : '0';
+        }
+
+        // Copy Caption with Hashtags
+        function copyCaption() {
+            const textToCopy = currentCaption || `${currentSlides[0].quote}\n\nБережіть своїх 🕯️\n#зсу #військові #думки #ніч #мотивація #україна`;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast("Опис та хештеги скопійовано в буфер!");
+            });
+        }
+
+        // Export Current Slide as 1080x1920 PNG
+        async function exportCurrentSlide() {
+            const screen = document.getElementById('tiktok-screen');
+            showToast("Рендеринг Full HD 1080×1920...");
+
+            const uiLayer = document.getElementById('tiktok-ui-layer');
+            const uiActions = document.getElementById('tiktok-ui-actions');
+            const topBars = document.getElementById('top-progress-bars');
+            const prevLayerOp = uiLayer.style.opacity;
+            const prevActionsOp = uiActions.style.opacity;
+            const prevBarsOp = topBars.style.opacity;
+            
+            uiLayer.style.opacity = '0';
+            uiActions.style.opacity = '0';
+            topBars.style.opacity = '0';
+
+            try {
+                const canvas = await html2canvas(screen, {
+                    scale: 3,
+                    useCORS: true,
+                    backgroundColor: '#020617'
+                });
+
+                const link = document.createElement('a');
+                link.download = `tiktok_slide_${activeSlideIndex + 1}_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast(`Слайд ${activeSlideIndex + 1} успішно завантажено!`);
+            } catch (err) {
+                console.error(err);
+                showToast("Помилка експорту слайду");
+            } finally {
+                uiLayer.style.opacity = prevLayerOp;
+                uiActions.style.opacity = prevActionsOp;
+                topBars.style.opacity = prevBarsOp;
+            }
+        }
+
+        // Export All Slides as ZIP Batch
+        async function exportAllSlides() {
+            const screen = document.getElementById('tiktok-screen');
+            const zip = new JSZip();
+            showToast(`Рендеринг усіх ${currentSlides.length} слайдів у ZIP...`);
+
+            const savedActive = activeSlideIndex;
+            const uiLayer = document.getElementById('tiktok-ui-layer');
+            const uiActions = document.getElementById('tiktok-ui-actions');
+            const topBars = document.getElementById('top-progress-bars');
+            uiLayer.style.opacity = '0';
+            uiActions.style.opacity = '0';
+            topBars.style.opacity = '0';
+
+            try {
+                for (let i = 0; i < currentSlides.length; i++) {
+                    activeSlideIndex = i;
+                    updateLivePreview();
+                    await new Promise(r => setTimeout(r, 140));
+
+                    const canvas = await html2canvas(screen, {
+                        scale: 3,
+                        useCORS: true,
+                        backgroundColor: '#020617'
+                    });
+
+                    const imgData = canvas.toDataURL('image/png').split(',')[1];
+                    zip.file(`slide_${i + 1}.png`, imgData, { base64: true });
+                }
+
+                const textCaption = currentCaption || `${currentSlides[0].quote}\n\n#зсу #військові #думки #мотивація`;
+                zip.file("tiktok_caption_and_tags.txt", textCaption);
+
+                const content = await zip.generateAsync({ type: "blob" });
+                const link = document.createElement('a');
+                link.download = `tiktok_carousel_${Date.now()}.zip`;
+                link.href = URL.createObjectURL(content);
+                link.click();
+
+                showToast("Вся карусель завантажена в ZIP архіві!");
+            } catch (err) {
+                console.error(err);
+                showToast("Помилка пакетного експорту");
+            } finally {
+                activeSlideIndex = savedActive;
+                updateLivePreview();
+                toggleTikTokUi();
+            }
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            toastText.textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -555,7 +555,7 @@
                     {isOpen && (
                         <>
                             <div className="fixed inset-0 z-40 cursor-default" onClick={onToggle}></div>
-                            <div className="absolute top-full left-0 mt-1.5 w-max min-w-[280px] max-w-sm bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-3.5 z-50 space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
+                            <div className="absolute top-full left-0 mt-1.5 w-max min-w-[280px] max-w-[calc(100vw-32px)] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-3.5 z-50 space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
                                 <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                                     <span className="text-[11px] font-bold text-slate-300 uppercase">{title}</span>
                                     <div className="flex gap-1.5 text-[10px] font-mono">
@@ -648,8 +648,9 @@
             
             // Евакуація: розрахунок даних для відображення та копіювання
             let evacFormattedDate = "";
-            if (episode.evacTime) {
-                const eDate = new Date(episode.evacTime);
+            const rawEvacDate = episode.evacTime || episode.evacDate;
+            if (rawEvacDate) {
+                const eDate = new Date(rawEvacDate);
                 if (!isNaN(eDate.getTime())) {
                     evacFormattedDate = eDate.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: '2-digit' });
                 }
@@ -663,7 +664,7 @@
             if (isAwol(episode.lossType)) {
                 evacCopyStr = episode.awolStatus || 'СЗЧ';
             } else if (isEvac || episode.awolStatus === "Повернувся") {
-                evacCopyStr = evacFormattedDate ? `Евакуйований (${formatEpisodeDateUI(episode.evacTime)})` : 'Евакуйований';
+                evacCopyStr = evacFormattedDate ? `Евакуйований (${evacFormattedDate})` : 'Евакуйований';
             } else {
                 evacCopyStr = 'Не евакуйований';
             }
@@ -1332,6 +1333,7 @@
 
             const [activeTab, setActiveTab] = useState("list");
             const [showOnlyLatest, setShowOnlyLatest] = useState(true);
+            const [sortBy, setSortBy] = useState("date_desc"); // 'date_desc', 'date_asc', 'evac_desc', 'evac_asc', 'name_asc', 'name_desc', 'severity_desc'
 
             const [filterLossTypes, setFilterLossTypes] = useState([...LOSS_TYPES]);
             const [filterSeverities, setFilterSeverities] = useState(["Легкий", "Середній", "Важкий", "Критичний"]);
@@ -3270,6 +3272,7 @@
 
             const resetAllFilters = () => {
                 setSearchTerm("");
+                setSortBy("date_desc");
                 setFilterLossTypes([...LOSS_TYPES]);
                 setFilterSeverities(["Легкий", "Середній", "Важкий", "Критичний"]);
                 setFilterEvacStatuses(["Не евакуйований", "Евакуйований", "Не потребує евакуації", "В розшуку", "Повернувся"]);
@@ -3321,7 +3324,7 @@
 
             const filteredList = useMemo(() => {
                 const normSearch = normalizeMilitaryText(searchTerm, { toLower: true, replaceHomoglyphs: true });
-                return activeDataSource.filter(episode => {
+                const list = activeDataSource.filter(episode => {
                     const soldier = soldiersMap.get(episode.soldierId);
                     if (!soldier) return false;
 
@@ -3347,18 +3350,49 @@
                     );
 
                     return matchSearch && matchLoss && matchSeverity && matchEvac && matchCause && matchUdp && matchWeapon && matchReport && matchInjury;
-                }).sort((a, b) => parseSafeDate(b.date) - parseSafeDate(a.date));
-            }, [activeDataSource, soldiersMap, searchTerm, filterLossTypes, filterSeverities, filterEvacStatuses, filterCauses, filterUdp, filterWeapon, filterReport, filterInjuries]);
+                });
+
+                // Багаторежимне сортування (за датою евакуації, датою події, ПІБ, важкістю)
+                const sevOrder = { 'Критичний': 4, 'Важкий': 3, 'Середній': 2, 'Легкий': 1 };
+                return list.sort((a, b) => {
+                    if (sortBy === 'evac_desc' || sortBy === 'evac_asc') {
+                        const timeA = parseSafeDate(a.evacTime || a.evacDate || '');
+                        const timeB = parseSafeDate(b.evacTime || b.evacDate || '');
+                        // Якщо в одного немає дати евакуації - переміщуємо його в кінець
+                        if (timeA === 0 && timeB === 0) return parseSafeDate(b.date) - parseSafeDate(a.date);
+                        if (timeA === 0) return 1;
+                        if (timeB === 0) return -1;
+                        return sortBy === 'evac_desc' ? timeB - timeA : timeA - timeB;
+                    }
+                    if (sortBy === 'date_asc') {
+                        return parseSafeDate(a.date) - parseSafeDate(b.date);
+                    }
+                    if (sortBy === 'name_asc' || sortBy === 'name_desc') {
+                        const solA = soldiersMap.get(a.soldierId)?.name || '';
+                        const solB = soldiersMap.get(b.soldierId)?.name || '';
+                        const cmp = solA.localeCompare(solB, 'uk');
+                        return sortBy === 'name_asc' ? cmp : -cmp;
+                    }
+                    if (sortBy === 'severity_desc') {
+                        const sA = sevOrder[a.severity] || 0;
+                        const sB = sevOrder[b.severity] || 0;
+                        if (sA !== sB) return sB - sA;
+                        return parseSafeDate(b.date) - parseSafeDate(a.date);
+                    }
+                    // default: date_desc
+                    return parseSafeDate(b.date) - parseSafeDate(a.date);
+                });
+            }, [activeDataSource, soldiersMap, searchTerm, filterLossTypes, filterSeverities, filterEvacStatuses, filterCauses, filterUdp, filterWeapon, filterReport, filterInjuries, sortBy]);
 
             // Видима порція списку карток (для максимальної швидкодії)
             const visibleList = useMemo(() => {
                 return filteredList.slice(0, displayLimit);
             }, [filteredList, displayLimit]);
 
-            // При зміні будь-яких фільтрів або пошукового запиту автоматично повертаємо ліміт до 50
+            // При зміні будь-яких фільтрів або сортування автоматично повертаємо ліміт до 50
             useEffect(() => {
                 setDisplayLimit(50);
-            }, [searchTerm, filterLossTypes, filterSeverities, filterEvacStatuses, filterCauses, filterUdp, filterWeapon, filterReport, filterInjuries, listDateFrom, listDateTo, datePreset, showOnlyLatest]);
+            }, [searchTerm, filterLossTypes, filterSeverities, filterEvacStatuses, filterCauses, filterUdp, filterWeapon, filterReport, filterInjuries, listDateFrom, listDateTo, datePreset, showOnlyLatest, sortBy]);
 
             const filteredLogs = useMemo(() => {
                 return logs.filter(log => {
@@ -3473,27 +3507,32 @@
                 let finalSoldierId = selectedSoldierId;
 
                 if (!finalSoldierId) {
-                    const exactMatch = soldiers.find(s => 
-                        s.name.trim().toLowerCase() === newSoldierName.trim().toLowerCase() && 
-                        s.callsign.trim().toLowerCase() === newSoldierCallsign.trim().toLowerCase()
-                    );
+                    const exactMatch = soldiers.find(s => {
+                        const nameMatches = s.name.trim().toLowerCase() === newSoldierName.trim().toLowerCase();
+                        if (!nameMatches) return false;
+                        if (newSoldierCallsign.trim()) {
+                            return s.callsign.trim().toLowerCase() === newSoldierCallsign.trim().toLowerCase();
+                        }
+                        return true;
+                    });
                     if (exactMatch) finalSoldierId = exactMatch.id;
                 }
 
                 if (!finalSoldierId) {
-                    if (!newSoldierName.trim() || !newSoldierCallsign.trim() || !newSoldierUnit) {
-                        return triggerNotification("ПІБ, Позивний та Підрозділ є обов'язковими (Звання - за бажанням)", "error");
+                    if (!newSoldierName.trim() || !newSoldierUnit) {
+                        return triggerNotification("ПІБ та Підрозділ є обов'язковими (Позивний та Звання — за бажанням)", "error");
                     }
 
                     const newSoldierId = 'sol_' + Date.now();
                     const newSoldierObj = { id: newSoldierId, name: newSoldierName.trim(), callsign: newSoldierCallsign.trim(), rank: newSoldierRank || "Не вказано", unit: newSoldierUnit };
                     setSoldiers(prev => [...prev, newSoldierObj]);
                     finalSoldierId = newSoldierId;
-                    addLog("Новий в/сл", `Створено: ${newSoldierRank || ""} ${newSoldierName} «${newSoldierCallsign}»`);
+                    const callsignDisplay = newSoldierCallsign.trim() ? ` «${newSoldierCallsign.trim()}»` : "";
+                    addLog("Новий в/сл", `Створено: ${newSoldierRank || ""} ${newSoldierName}${callsignDisplay}`);
                 } else {
                     setSoldiers(prev => prev.map(s => {
                         if (s.id === finalSoldierId) {
-                            return { ...s, rank: newSoldierRank || s.rank, unit: newSoldierUnit || s.unit };
+                            return { ...s, rank: newSoldierRank || s.rank, unit: newSoldierUnit || s.unit, callsign: newSoldierCallsign.trim() || s.callsign };
                         }
                         return s;
                     }));
@@ -3505,7 +3544,7 @@
                     if (isAny200(lastEp.lossType)) return triggerNotification("Боєць зафіксований як 200. Нових подій додавати не можна.", "error");
                 }
 
-                const soldierObj = soldiers.find(s => s.id === finalSoldierId) || { callsign: newSoldierCallsign };
+                const soldierObj = soldiers.find(s => s.id === finalSoldierId) || { name: newSoldierName, callsign: newSoldierCallsign.trim() };
                 const is300 = isAny300(lossType);
                 const todayStrDate = new Date().toLocaleDateString('en-CA');
 
@@ -3523,7 +3562,8 @@
                 };
 
                 setEpisodes(prev => [newEpisode, ...prev]);
-                addLog("Нова подія", `Зафіксовано ${lossType} у в/сл "${soldierObj.callsign}". Причина: ${cause}.`);
+                const soldierDisplayName = soldierObj.callsign ? `«${soldierObj.callsign}»` : (soldierObj.name || newSoldierName);
+                addLog("Нова подія", `Зафіксовано ${lossType} у в/сл ${soldierDisplayName}. Причина: ${cause}.`);
                 
                 setIsAddWoundedOpen(false);
                 triggerNotification("Запис успішно додано");
@@ -3570,7 +3610,7 @@
                 if(!lossType) return triggerNotification("Оберіть тип події", "error");
                 if(!cause) return triggerNotification("Оберіть причину", "error");
                 if(isAny300(lossType) && !severity) return triggerNotification("Оберіть важкість", "error");
-                if (!newSoldierUnit || !newSoldierName || !newSoldierCallsign) return triggerNotification("ПІБ, Позивний та Підрозділ є обов'язковими", "error");
+                if (!newSoldierUnit || !newSoldierName.trim()) return triggerNotification("ПІБ та Підрозділ є обов'язковими", "error");
 
                 saveHistory();
 
@@ -3593,7 +3633,7 @@
 
                 setEpisodes(prev => prev.map(ep => ep.id === currentEpisode.id ? updatedEpisode : ep));
                 setSoldiers(prev => prev.map(s => s.id === currentEpisode.soldierId ? {
-                    ...s, name: newSoldierName, callsign: newSoldierCallsign, rank: newSoldierRank, unit: newSoldierUnit
+                    ...s, name: newSoldierName.trim(), callsign: newSoldierCallsign.trim(), rank: newSoldierRank, unit: newSoldierUnit
                 } : s));
 
                 let changes = [];
@@ -3603,7 +3643,8 @@
                 }
 
                 const detailsText = changes.length > 0 ? `Зміни: ${changes.join(', ')}` : `Оновлено загальні дані картки`;
-                addLog("Редагування", `Оновлено дані для в/сл: ${newSoldierName} («${newSoldierCallsign}»). ${detailsText}`);
+                const editCallsignDisplay = newSoldierCallsign.trim() ? ` («${newSoldierCallsign.trim()}»)` : "";
+                addLog("Редагування", `Оновлено дані для в/сл: ${newSoldierName}${editCallsignDisplay}. ${detailsText}`);
                 
                 setIsEditOpen(false); setCurrentEpisode(null);
                 triggerNotification("Запис оновлено");
@@ -3612,7 +3653,8 @@
             const handleDeleteEpisode = () => {
                 saveHistory();
                 setEpisodes(prev => prev.filter(ep => ep.id !== currentEpisode.id));
-                addLog("Видалення", `Видалено запис для в/сл: ${newSoldierName} («${newSoldierCallsign}»)`);
+                const delCallsignDisplay = newSoldierCallsign.trim() ? ` («${newSoldierCallsign.trim()}»)` : "";
+                addLog("Видалення", `Видалено запис для в/сл: ${newSoldierName}${delCallsignDisplay}`);
                 setIsEditOpen(false); setCurrentEpisode(null);
                 triggerNotification("Запис видалено");
             };
@@ -4156,7 +4198,7 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.3.0
+                                    ⚡ v3.4.0
                                 </button>
                             </div>
                         </div>
@@ -4320,114 +4362,316 @@
                     <main className="flex-1 w-full flex flex-col gap-3">
                         {/* ГОРИЗОНТАЛЬНА ВЕРХНЯ ПАНЕЛЬ ФІЛЬТРІВ (ДЛЯ ЖУРНАЛУ ТА ТРІАЖУ) */}
                         {(activeTab === "list" || activeTab === "triage") && (
-                            <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-2.5 shadow-lg flex items-center justify-between gap-2.5 flex-wrap">
+                            <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-2 sm:p-2.5 shadow-lg flex items-center gap-2 flex-wrap">
                                 
-                                <div className="flex items-center gap-2.5 flex-wrap flex-1">
-                                    {/* Пошук */}
-                                    <div className="relative min-w-[200px] max-w-[260px]">
-                                        <input 
-                                            id="global-search-input"
-                                            type="text" 
-                                            placeholder="Пошук (ПІБ, позивний)... [Ctrl+F]" 
-                                            value={searchTerm} 
-                                            onChange={(e) => setSearchTerm(e.target.value)} 
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 outline-none transition-colors" 
-                                        />
-                                        <Icon name="search" className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
-                                        {searchTerm && (
-                                            <button onClick={() => setSearchTerm("")} className="absolute right-2 top-2 text-slate-500 hover:text-white cursor-pointer" title="Очистити">
-                                                <Icon name="x" className="w-3.5 h-3.5" />
-                                            </button>
+                                {/* Пошук */}
+                                <div className="relative min-w-[150px] max-w-[200px] flex-1 sm:flex-initial">
+                                    <input 
+                                        id="global-search-input"
+                                        type="text" 
+                                        placeholder="Пошук... [Ctrl+F]" 
+                                        value={searchTerm} 
+                                        onChange={(e) => setSearchTerm(e.target.value)} 
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-7 pr-6 py-1 text-xs text-white placeholder-slate-500 focus:border-amber-500 outline-none transition-colors" 
+                                    />
+                                    <Icon name="search" className="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2" />
+                                    {searchTerm && (
+                                        <button onClick={() => setSearchTerm("")} className="absolute right-1.5 top-1.5 text-slate-500 hover:text-white cursor-pointer" title="Очистити">
+                                            <Icon name="x" className="w-3.5 h-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Фільтр дат: Всі дати + Календар (діапазон) */}
+                                <div className="flex items-center gap-0.5 bg-slate-950 p-0.5 rounded-xl border border-slate-800 text-xs font-mono">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => applyDatePreset('all')} 
+                                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer select-none text-[11px] ${datePreset === 'all' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                                    >
+                                        Всі дати
+                                    </button>
+
+                                    {/* Точний період (календар-поповер) */}
+                                    <div className="relative">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setOpenDropdown(openDropdown === 'custom_date' ? null : 'custom_date')} 
+                                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition cursor-pointer select-none border text-[11px] ${datePreset === 'custom' ? 'bg-amber-500/20 text-amber-300 font-bold border-amber-500/40 shadow-sm' : 'border-transparent text-slate-400 hover:text-white'}`}
+                                            title="Вибрати період дат у календарі"
+                                        >
+                                            <Icon name="calendar" className="w-3.5 h-3.5 text-amber-400" />
+                                            <span>{datePreset === 'custom' && listDateFrom ? `${listDateFrom.slice(5)} — ${listDateTo ? listDateTo.slice(5) : '...'}` : 'Календар'}</span>
+                                            <Icon name="chevron-down" className="w-2.5 h-2.5 text-slate-500" />
+                                        </button>
+                                        {openDropdown === 'custom_date' && (
+                                            <>
+                                                <div className="fixed inset-0 z-40 cursor-default" onClick={() => setOpenDropdown(null)}></div>
+                                                <div className="absolute left-0 top-full mt-2 z-50 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-4 w-72 max-w-[calc(100vw-32px)] animate-in fade-in zoom-in-95 duration-150 space-y-3.5 font-sans">
+                                                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                                                        <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                                                            <Icon name="calendar" className="w-4 h-4 text-amber-400" />
+                                                            <span>Період дат</span>
+                                                        </span>
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => { applyDatePreset('all'); setOpenDropdown(null); }} 
+                                                            className="text-[10px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
+                                                        >
+                                                            Скинути
+                                                        </button>
+                                                    </div>
+                                                    <div className="space-y-2.5 text-xs">
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block mb-1">Від дати:</span>
+                                                            <input 
+                                                                type="date" 
+                                                                value={listDateFrom} 
+                                                                onChange={(e) => { setListDateFrom(e.target.value); setDatePreset('custom'); }} 
+                                                                onClick={(e) => { try { e.target.showPicker(); } catch(err){} }}
+                                                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:border-amber-500 outline-none font-mono cursor-pointer" 
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block mb-1">До дати:</span>
+                                                            <input 
+                                                                type="date" 
+                                                                value={listDateTo} 
+                                                                onChange={(e) => { setListDateTo(e.target.value); setDatePreset('custom'); }} 
+                                                                onClick={(e) => { try { e.target.showPicker(); } catch(err){} }}
+                                                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:border-amber-500 outline-none font-mono cursor-pointer" 
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="pt-2 border-t border-slate-800 flex justify-end">
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setOpenDropdown(null)} 
+                                                            className="w-full py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition cursor-pointer text-center"
+                                                        >
+                                                            Застосувати
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </>
                                         )}
                                     </div>
+                                </div>
 
-                                    {/* Пресети дат + Календар */}
-                                    <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => applyDatePreset('all')} 
-                                            className={`px-2.5 py-1 rounded-lg transition cursor-pointer select-none ${datePreset === 'all' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                                        >
-                                            Всі дати
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => applyDatePreset('1')} 
-                                            className={`px-2.5 py-1 rounded-lg transition cursor-pointer select-none ${datePreset === '1' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                                        >
-                                            За добу
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => applyDatePreset('3')} 
-                                            className={`px-2.5 py-1 rounded-lg transition cursor-pointer select-none ${datePreset === '3' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                                        >
-                                            3 дні
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => applyDatePreset('7')} 
-                                            className={`px-2.5 py-1 rounded-lg transition cursor-pointer select-none ${datePreset === '7' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                                        >
-                                            7 днів
-                                        </button>
+                                {/* Дропдаун: Тип втрати */}
+                                <FilterDropdown 
+                                    title="Тип втрати" 
+                                    count={filterLossTypes.length} 
+                                    total={LOSS_TYPES.length} 
+                                    isOpen={openDropdown === 'types'} 
+                                    onToggle={() => setOpenDropdown(openDropdown === 'types' ? null : 'types')}
+                                    onSelectAll={() => setFilterLossTypes([...LOSS_TYPES])}
+                                    onClearAll={() => setFilterLossTypes([])}
+                                >
+                                    <CheckboxList 
+                                        items={LOSS_TYPES} 
+                                        selected={filterLossTypes} 
+                                        toggle={(v) => toggleFilterItem(filterLossTypes, setFilterLossTypes, v)} 
+                                        onSelectOnly={(v) => setFilterLossTypes([v])} 
+                                    />
+                                </FilterDropdown>
 
-                                        {/* Точний період (календар-поповер) */}
+                                {/* Дропдаун: Евакуація / СЗЧ */}
+                                <FilterDropdown 
+                                    title="Евакуація" 
+                                    count={filterEvacStatuses.length} 
+                                    total={5} 
+                                    isOpen={openDropdown === 'evac'} 
+                                    onToggle={() => setOpenDropdown(openDropdown === 'evac' ? null : 'evac')}
+                                    onSelectAll={() => setFilterEvacStatuses(["Не евакуйований", "Евакуйований", "Не потребує евакуації", "В розшуку", "Повернувся"])}
+                                    onClearAll={() => setFilterEvacStatuses([])}
+                                >
+                                    <div className="flex gap-1 mb-2 p-1 bg-slate-950 rounded-lg border border-slate-800 text-[10px] font-mono">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setFilterEvacStatuses(["Не евакуйований"])} 
+                                            className="flex-1 py-1 rounded bg-red-950/40 hover:bg-red-900/60 text-red-300 font-semibold text-center cursor-pointer transition"
+                                            title="Показати тільки тих, хто очікує на евакуацію"
+                                        >
+                                            ⏳ Очікують
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setFilterEvacStatuses(["Евакуйований"])} 
+                                            className="flex-1 py-1 rounded bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 font-semibold text-center cursor-pointer transition"
+                                            title="Показати тільки евакуйованих"
+                                        >
+                                            ✅ Евакуйовані
+                                        </button>
+                                    </div>
+                                    <CheckboxList 
+                                        items={["Не евакуйований", "Евакуйований", "Не потребує евакуації", "В розшуку", "Повернувся"]} 
+                                        selected={filterEvacStatuses} 
+                                        toggle={(v) => toggleFilterItem(filterEvacStatuses, setFilterEvacStatuses, v)} 
+                                        onSelectOnly={(v) => setFilterEvacStatuses([v])} 
+                                        maxH={false} 
+                                    />
+                                </FilterDropdown>
+
+                                {/* Поповер: Додаткові фільтри [ ⚙️ Інше ] */}
+                                {(() => {
+                                    const otherActiveCount = (
+                                        (filterSeverities.length < 4 ? 1 : 0) +
+                                        (filterCauses.length < settings.causes.length ? 1 : 0) +
+                                        (filterInjuries.length > 0 ? 1 : 0) +
+                                        (filterWeapon.length > 0 ? 1 : 0) +
+                                        (filterReport !== 'all' ? 1 : 0) +
+                                        (filterUdp !== 'all' ? 1 : 0)
+                                    );
+                                    return (
                                         <div className="relative">
                                             <button 
                                                 type="button" 
-                                                onClick={() => setOpenDropdown(openDropdown === 'custom_date' ? null : 'custom_date')} 
-                                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition cursor-pointer select-none border ${datePreset === 'custom' ? 'bg-amber-500/20 text-amber-300 font-bold border-amber-500/40 shadow-sm' : 'border-transparent text-slate-400 hover:text-white'}`}
-                                                title="Вибрати точний період дат у календарі"
+                                                onClick={() => setOpenDropdown(openDropdown === 'other' ? null : 'other')} 
+                                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer select-none ${
+                                                    otherActiveCount > 0
+                                                        ? 'bg-amber-500/15 border-amber-500/50 text-amber-300'
+                                                        : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:text-white'
+                                                }`}
                                             >
-                                                <Icon name="calendar" className="w-3.5 h-3.5 text-amber-400" />
-                                                <span>{datePreset === 'custom' && listDateFrom ? `${listDateFrom.slice(5)} — ${listDateTo ? listDateTo.slice(5) : '...'}` : 'Календар'}</span>
-                                                <Icon name="chevron-down" className="w-2.5 h-2.5 text-slate-500" />
+                                                <Icon name="sliders-horizontal" className="w-3.5 h-3.5" />
+                                                <span>Інше</span>
+                                                {otherActiveCount > 0 && (
+                                                    <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px] flex items-center justify-center font-mono">
+                                                        {otherActiveCount}
+                                                    </span>
+                                                )}
+                                                <Icon name={openDropdown === 'other' ? 'chevron-up' : 'chevron-down'} className="w-3 h-3 text-slate-500" />
                                             </button>
-                                            {openDropdown === 'custom_date' && (
+
+                                            {openDropdown === 'other' && (
                                                 <>
                                                     <div className="fixed inset-0 z-40 cursor-default" onClick={() => setOpenDropdown(null)}></div>
-                                                    <div className="absolute left-0 top-full mt-2 z-50 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-4 w-72 animate-in fade-in zoom-in-95 duration-150 space-y-3.5 font-sans">
-                                                        <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                                                            <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                                                                <Icon name="calendar" className="w-4 h-4 text-amber-400" />
-                                                                <span>Вибір періоду дат</span>
-                                                            </span>
+                                                    <div className="absolute right-0 top-full mt-2 z-50 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-4 w-[400px] max-w-[calc(100vw-32px)] animate-in fade-in zoom-in-95 duration-150 space-y-3.5 font-sans">
+                                                        <div className="flex justify-between items-center pb-2.5 border-b border-slate-800">
+                                                            <div className="flex items-center gap-1.5 font-bold text-xs text-white">
+                                                                <Icon name="sliders-horizontal" className="w-3.5 h-3.5 text-amber-400" />
+                                                                <span>Додаткові фільтри</span>
+                                                            </div>
                                                             <button 
-                                                                type="button" 
-                                                                onClick={() => { applyDatePreset('all'); setOpenDropdown(null); }} 
-                                                                className="text-[10px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setFilterSeverities(["Легкий", "Середній", "Важкий", "Критичний"]);
+                                                                    setFilterCauses(settings.causes);
+                                                                    setFilterInjuries([]);
+                                                                    setFilterWeapon([]);
+                                                                    setFilterReport("all");
+                                                                    setFilterUdp("all");
+                                                                }}
+                                                                className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
                                                             >
-                                                                Скинути
+                                                                Скинути ці
                                                             </button>
                                                         </div>
-                                                        <div className="space-y-2.5 text-xs">
-                                                            <div>
-                                                                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block mb-1">Від дати:</span>
-                                                                <input 
-                                                                    type="date" 
-                                                                    value={listDateFrom} 
-                                                                    onChange={(e) => { setListDateFrom(e.target.value); setDatePreset('custom'); }} 
-                                                                    onClick={(e) => { try { e.target.showPicker(); } catch(err){} }}
-                                                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:border-amber-500 outline-none font-mono cursor-pointer" 
-                                                                />
+
+                                                        {/* 1. Важкість стану */}
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Важкість (300):</span>
+                                                                <div className="flex gap-2 text-[10px] font-mono">
+                                                                    <button type="button" onClick={() => setFilterSeverities(["Легкий", "Середній", "Важкий", "Критичний"])} className="text-amber-400 hover:underline">Всі</button>
+                                                                    <button type="button" onClick={() => setFilterSeverities([])} className="text-slate-400 hover:underline">Зняти</button>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono block mb-1">До дати:</span>
-                                                                <input 
-                                                                    type="date" 
-                                                                    value={listDateTo} 
-                                                                    onChange={(e) => { setListDateTo(e.target.value); setDatePreset('custom'); }} 
-                                                                    onClick={(e) => { try { e.target.showPicker(); } catch(err){} }}
-                                                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:border-amber-500 outline-none font-mono cursor-pointer" 
-                                                                />
+                                                            <div className="grid grid-cols-2 gap-1.5">
+                                                                {["Легкий", "Середній", "Важкий", "Критичний"].map(sev => (
+                                                                    <label key={sev} className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800/80 cursor-pointer hover:text-white select-none">
+                                                                        <input type="checkbox" checked={filterSeverities.includes(sev)} onChange={() => toggleFilterItem(filterSeverities, setFilterSeverities, sev)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
+                                                                        <span className="whitespace-nowrap">{sev}</span>
+                                                                    </label>
+                                                                ))}
                                                             </div>
                                                         </div>
+
+                                                        {/* 2. Причина ураження */}
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Причина ({filterCauses.length}/{settings.causes.length}):</span>
+                                                                <div className="flex gap-2 text-[10px] font-mono">
+                                                                    <button type="button" onClick={() => setFilterCauses(settings.causes)} className="text-amber-400 hover:underline">Всі</button>
+                                                                    <button type="button" onClick={() => setFilterCauses([])} className="text-slate-400 hover:underline">Зняти</button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="max-h-28 overflow-y-auto space-y-1 pr-1 bg-slate-950 p-2 rounded-xl border border-slate-800/80">
+                                                                {settings.causes.map(c => (
+                                                                    <label key={c} className="flex items-center gap-2 text-xs text-slate-300 hover:text-white cursor-pointer select-none py-0.5">
+                                                                        <input type="checkbox" checked={filterCauses.includes(c)} onChange={() => toggleFilterItem(filterCauses, setFilterCauses, c)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
+                                                                        <span className="whitespace-nowrap">{c}</span>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 3. Рапорт & УПД */}
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div className="space-y-1">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Рапорт:</span>
+                                                                <select value={filterReport} onChange={(e) => setFilterReport(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white outline-none cursor-pointer">
+                                                                    <option value="all">Всі випадки</option>
+                                                                    <option value="yes">Складено</option>
+                                                                    <option value="no">Без рапорту</option>
+                                                                </select>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">УПД:</span>
+                                                                <select value={filterUdp} onChange={(e) => setFilterUdp(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white outline-none cursor-pointer">
+                                                                    <option value="all">Всі випадки</option>
+                                                                    <option value="yes">Під час УПД</option>
+                                                                    <option value="no">Без УПД</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 4. Травми */}
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Типи травм ({filterInjuries.length}):</span>
+                                                                {filterInjuries.length > 0 && (
+                                                                    <button type="button" onClick={() => setFilterInjuries([])} className="text-[10px] font-mono text-slate-400 hover:underline">Зняти</button>
+                                                                )}
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-1.5 max-h-28 overflow-y-auto bg-slate-950 p-2 rounded-xl border border-slate-800/80">
+                                                                {[
+                                                                    {k:'amputation', l:'Ампутація'}, {k:'rupture', l:'Розрив'}, {k:'shrapnel', l:'Уламкове'}, 
+                                                                    {k:'bullet', l:'Кульове'}, {k:'fracture', l:'Перелом'}, {k:'burn', l:'Опік'}, 
+                                                                    {k:'akbt', l:'АКБТ'}, {k:'contusion', l:'Забій'}
+                                                                ].map(item => (
+                                                                    <label key={item.k} className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer select-none">
+                                                                        <input type="checkbox" checked={filterInjuries.includes(item.k)} onChange={() => toggleFilterItem(filterInjuries, setFilterInjuries, item.k)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
+                                                                        <span className="whitespace-nowrap">{item.l}</span>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 5. Статус зброї */}
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Статус зброї ({filterWeapon.length}):</span>
+                                                                {filterWeapon.length > 0 && (
+                                                                    <button type="button" onClick={() => setFilterWeapon([])} className="text-[10px] font-mono text-slate-400 hover:underline">Зняти</button>
+                                                                )}
+                                                            </div>
+                                                            <div className="max-h-24 overflow-y-auto space-y-1 bg-slate-950 p-2 rounded-xl border border-slate-800/80">
+                                                                {["втрачена", "знищена", "знаходиться у підрозділі", "знаходиться на позиції", "СЗЧ/Дезертирство зі зброєю", "Не вказано"].map(w => (
+                                                                    <label key={w} className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer select-none py-0.5">
+                                                                        <input type="checkbox" checked={filterWeapon.includes(w)} onChange={() => toggleFilterItem(filterWeapon, setFilterWeapon, w)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
+                                                                        <span className="whitespace-nowrap">{w}</span>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
                                                         <div className="pt-2 border-t border-slate-800 flex justify-end">
                                                             <button 
                                                                 type="button" 
                                                                 onClick={() => setOpenDropdown(null)} 
-                                                                className="w-full py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition cursor-pointer text-center"
+                                                                className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition cursor-pointer text-center"
                                                             >
                                                                 Застосувати
                                                             </button>
@@ -4436,220 +4680,144 @@
                                                 </>
                                             )}
                                         </div>
+                                    );
+                                })()}
+
+                                {/* Дропдаун: Сортування списку */}
+                                {activeTab === "list" && (
+                                    <div className="relative">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')} 
+                                            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer select-none ${
+                                                sortBy.startsWith('evac') 
+                                                    ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 shadow-sm' 
+                                                    : sortBy !== 'date_desc' 
+                                                        ? 'bg-amber-500/15 border-amber-500/50 text-amber-300 shadow-sm' 
+                                                        : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:text-white'
+                                            }`}
+                                            title="Сортування списку втрат"
+                                        >
+                                            <Icon name="arrow-up-down" className={`w-3.5 h-3.5 ${sortBy.startsWith('evac') ? 'text-emerald-400' : 'text-amber-400'}`} />
+                                            <span className="font-bold text-[11px]">
+                                                {sortBy === 'evac_desc' && '🚑 Евак ↓'}
+                                                {sortBy === 'evac_asc' && '🚑 Евак ↑'}
+                                                {sortBy === 'date_desc' && '⏱️ Подія ↓'}
+                                                {sortBy === 'date_asc' && '⏱️ Подія ↑'}
+                                                {sortBy === 'name_asc' && '👤 А → Я'}
+                                                {sortBy === 'name_desc' && '👤 Я → А'}
+                                                {sortBy === 'severity_desc' && '🚨 Важкість ↓'}
+                                            </span>
+                                            <Icon name={openDropdown === 'sort' ? 'chevron-up' : 'chevron-down'} className="w-3 h-3 text-slate-500" />
+                                        </button>
+
+                                        {openDropdown === 'sort' && (
+                                            <>
+                                                <div className="fixed inset-0 z-40 cursor-default" onClick={() => setOpenDropdown(null)}></div>
+                                                <div className="absolute right-0 top-full mt-2 z-50 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-2 w-64 max-w-[calc(100vw-32px)] animate-in fade-in zoom-in-95 duration-150 space-y-1 font-sans">
+                                                    <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase font-bold text-slate-400 border-b border-slate-800 flex items-center justify-between">
+                                                        <span>Оберіть сортування</span>
+                                                    </div>
+                                                    
+                                                    <div className="pt-1 space-y-0.5 text-xs">
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => { setSortBy('evac_desc'); setOpenDropdown(null); }}
+                                                            className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between transition cursor-pointer ${sortBy === 'evac_desc' ? 'bg-emerald-950/80 text-emerald-300 font-bold border border-emerald-800/60' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="text-emerald-400">🚑</span>
+                                                                <span>Дата евакуації (новіші зверху)</span>
+                                                            </span>
+                                                            {sortBy === 'evac_desc' && <Icon name="check" className="w-3.5 h-3.5 text-emerald-400" />}
+                                                        </button>
+
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => { setSortBy('evac_asc'); setOpenDropdown(null); }}
+                                                            className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between transition cursor-pointer ${sortBy === 'evac_asc' ? 'bg-emerald-950/80 text-emerald-300 font-bold border border-emerald-800/60' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="text-emerald-400">🚑</span>
+                                                                <span>Дата евакуації (старіші зверху)</span>
+                                                            </span>
+                                                            {sortBy === 'evac_asc' && <Icon name="check" className="w-3.5 h-3.5 text-emerald-400" />}
+                                                        </button>
+
+                                                        <div className="my-1 border-t border-slate-800/60"></div>
+
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => { setSortBy('date_desc'); setOpenDropdown(null); }}
+                                                            className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between transition cursor-pointer ${sortBy === 'date_desc' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="text-amber-400">⏱️</span>
+                                                                <span>Дата події (новіші зверху)</span>
+                                                            </span>
+                                                            {sortBy === 'date_desc' && <Icon name="check" className="w-3.5 h-3.5 text-amber-400" />}
+                                                        </button>
+
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => { setSortBy('date_asc'); setOpenDropdown(null); }}
+                                                            className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between transition cursor-pointer ${sortBy === 'date_asc' ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="text-amber-400">⏱️</span>
+                                                                <span>Дата події (старіші зверху)</span>
+                                                            </span>
+                                                            {sortBy === 'date_asc' && <Icon name="check" className="w-3.5 h-3.5 text-amber-400" />}
+                                                        </button>
+
+                                                        <div className="my-1 border-t border-slate-800/60"></div>
+
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => { setSortBy('severity_desc'); setOpenDropdown(null); }}
+                                                            className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between transition cursor-pointer ${sortBy === 'severity_desc' ? 'bg-purple-950/80 text-purple-300 font-bold border border-purple-800/60' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="text-purple-400">🚨</span>
+                                                                <span>Важкість (Критичні → Легкі)</span>
+                                                            </span>
+                                                            {sortBy === 'severity_desc' && <Icon name="check" className="w-3.5 h-3.5 text-purple-400" />}
+                                                        </button>
+
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => { setSortBy('name_asc'); setOpenDropdown(null); }}
+                                                            className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between transition cursor-pointer ${sortBy === 'name_asc' ? 'bg-blue-950/80 text-blue-300 font-bold border border-blue-800/60' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="text-blue-400">👤</span>
+                                                                <span>ПІБ бійця (А → Я)</span>
+                                                            </span>
+                                                            {sortBy === 'name_asc' && <Icon name="check" className="w-3.5 h-3.5 text-blue-400" />}
+                                                        </button>
+
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => { setSortBy('name_desc'); setOpenDropdown(null); }}
+                                                            className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between transition cursor-pointer ${sortBy === 'name_desc' ? 'bg-blue-950/80 text-blue-300 font-bold border border-blue-800/60' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="text-blue-400">👤</span>
+                                                                <span>ПІБ бійця (Я → А)</span>
+                                                            </span>
+                                                            {sortBy === 'name_desc' && <Icon name="check" className="w-3.5 h-3.5 text-blue-400" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
+                                )}
 
-                                    {/* Дропдаун: Тип втрати */}
-                                    <FilterDropdown 
-                                        title="Тип втрати" 
-                                        count={filterLossTypes.length} 
-                                        total={LOSS_TYPES.length} 
-                                        isOpen={openDropdown === 'types'} 
-                                        onToggle={() => setOpenDropdown(openDropdown === 'types' ? null : 'types')}
-                                        onSelectAll={() => setFilterLossTypes([...LOSS_TYPES])}
-                                        onClearAll={() => setFilterLossTypes([])}
-                                    >
-                                        <CheckboxList 
-                                            items={LOSS_TYPES} 
-                                            selected={filterLossTypes} 
-                                            toggle={(v) => toggleFilterItem(filterLossTypes, setFilterLossTypes, v)} 
-                                            onSelectOnly={(v) => setFilterLossTypes([v])} 
-                                        />
-                                    </FilterDropdown>
-
-                                    {/* Дропдаун: Евакуація / СЗЧ */}
-                                    <FilterDropdown 
-                                        title="Евакуація / СЗЧ" 
-                                        count={filterEvacStatuses.length} 
-                                        total={5} 
-                                        isOpen={openDropdown === 'evac'} 
-                                        onToggle={() => setOpenDropdown(openDropdown === 'evac' ? null : 'evac')}
-                                        onSelectAll={() => setFilterEvacStatuses(["Не евакуйований", "Евакуйований", "Не потребує евакуації", "В розшуку", "Повернувся"])}
-                                        onClearAll={() => setFilterEvacStatuses([])}
-                                    >
-                                        <CheckboxList 
-                                            items={["Не евакуйований", "Евакуйований", "Не потребує евакуації", "В розшуку", "Повернувся"]} 
-                                            selected={filterEvacStatuses} 
-                                            toggle={(v) => toggleFilterItem(filterEvacStatuses, setFilterEvacStatuses, v)} 
-                                            onSelectOnly={(v) => setFilterEvacStatuses([v])} 
-                                            maxH={false} 
-                                        />
-                                    </FilterDropdown>
-
-                                    {/* Поповер: Додаткові фільтри [ ⚙️ Інше ] */}
-                                    {(() => {
-                                        const otherActiveCount = (
-                                            (filterSeverities.length < 4 ? 1 : 0) +
-                                            (filterCauses.length < settings.causes.length ? 1 : 0) +
-                                            (filterInjuries.length > 0 ? 1 : 0) +
-                                            (filterWeapon.length > 0 ? 1 : 0) +
-                                            (filterReport !== 'all' ? 1 : 0) +
-                                            (filterUdp !== 'all' ? 1 : 0)
-                                        );
-                                        return (
-                                            <div className="relative">
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => setOpenDropdown(openDropdown === 'other' ? null : 'other')} 
-                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer select-none ${
-                                                        otherActiveCount > 0
-                                                            ? 'bg-amber-500/15 border-amber-500/50 text-amber-300'
-                                                            : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:text-white'
-                                                    }`}
-                                                >
-                                                    <Icon name="sliders-horizontal" className="w-3.5 h-3.5" />
-                                                    <span>Інше</span>
-                                                    {otherActiveCount > 0 && (
-                                                        <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px] flex items-center justify-center font-mono">
-                                                            {otherActiveCount}
-                                                        </span>
-                                                    )}
-                                                    <Icon name={openDropdown === 'other' ? 'chevron-up' : 'chevron-down'} className="w-3 h-3 text-slate-500" />
-                                                </button>
-
-                                                {openDropdown === 'other' && (
-                                                    <>
-                                                        <div className="fixed inset-0 z-40 cursor-default" onClick={() => setOpenDropdown(null)}></div>
-                                                        <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 z-50 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-4 w-[440px] max-w-[94vw] animate-in fade-in zoom-in-95 duration-150 space-y-3.5 font-sans">
-                                                            <div className="flex justify-between items-center pb-2.5 border-b border-slate-800">
-                                                                <div className="flex items-center gap-1.5 font-bold text-xs text-white">
-                                                                    <Icon name="sliders-horizontal" className="w-3.5 h-3.5 text-amber-400" />
-                                                                    <span>Додаткові фільтри</span>
-                                                                </div>
-                                                                <button 
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setFilterSeverities(["Легкий", "Середній", "Важкий", "Критичний"]);
-                                                                        setFilterCauses(settings.causes);
-                                                                        setFilterInjuries([]);
-                                                                        setFilterWeapon([]);
-                                                                        setFilterReport("all");
-                                                                        setFilterUdp("all");
-                                                                    }}
-                                                                    className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
-                                                                >
-                                                                    Скинути ці
-                                                                </button>
-                                                            </div>
-
-                                                            {/* 1. Важкість стану */}
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Важкість (300):</span>
-                                                                    <div className="flex gap-2 text-[10px] font-mono">
-                                                                        <button type="button" onClick={() => setFilterSeverities(["Легкий", "Середній", "Важкий", "Критичний"])} className="text-amber-400 hover:underline">Всі</button>
-                                                                        <button type="button" onClick={() => setFilterSeverities([])} className="text-slate-400 hover:underline">Зняти</button>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="grid grid-cols-2 gap-1.5">
-                                                                    {["Легкий", "Середній", "Важкий", "Критичний"].map(sev => (
-                                                                        <label key={sev} className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800/80 cursor-pointer hover:text-white select-none">
-                                                                            <input type="checkbox" checked={filterSeverities.includes(sev)} onChange={() => toggleFilterItem(filterSeverities, setFilterSeverities, sev)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
-                                                                            <span className="whitespace-nowrap">{sev}</span>
-                                                                        </label>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* 2. Причина ураження */}
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Причина ({filterCauses.length}/{settings.causes.length}):</span>
-                                                                    <div className="flex gap-2 text-[10px] font-mono">
-                                                                        <button type="button" onClick={() => setFilterCauses(settings.causes)} className="text-amber-400 hover:underline">Всі</button>
-                                                                        <button type="button" onClick={() => setFilterCauses([])} className="text-slate-400 hover:underline">Зняти</button>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="max-h-28 overflow-y-auto space-y-1 pr-1 bg-slate-950 p-2 rounded-xl border border-slate-800/80">
-                                                                    {settings.causes.map(c => (
-                                                                        <label key={c} className="flex items-center gap-2 text-xs text-slate-300 hover:text-white cursor-pointer select-none py-0.5">
-                                                                            <input type="checkbox" checked={filterCauses.includes(c)} onChange={() => toggleFilterItem(filterCauses, setFilterCauses, c)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
-                                                                            <span className="whitespace-nowrap">{c}</span>
-                                                                        </label>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* 3. Рапорт & УПД */}
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                <div className="space-y-1">
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Рапорт:</span>
-                                                                    <select value={filterReport} onChange={(e) => setFilterReport(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white outline-none cursor-pointer">
-                                                                        <option value="all">Всі випадки</option>
-                                                                        <option value="yes">Складено</option>
-                                                                        <option value="no">Без рапорту</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">УПД:</span>
-                                                                    <select value={filterUdp} onChange={(e) => setFilterUdp(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white outline-none cursor-pointer">
-                                                                        <option value="all">Всі випадки</option>
-                                                                        <option value="yes">Під час УПД</option>
-                                                                        <option value="no">Без УПД</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* 4. Травми */}
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Типи травм ({filterInjuries.length}):</span>
-                                                                    {filterInjuries.length > 0 && (
-                                                                        <button type="button" onClick={() => setFilterInjuries([])} className="text-[10px] font-mono text-slate-400 hover:underline">Зняти</button>
-                                                                    )}
-                                                                </div>
-                                                                <div className="grid grid-cols-2 gap-1.5 max-h-28 overflow-y-auto bg-slate-950 p-2 rounded-xl border border-slate-800/80">
-                                                                    {[
-                                                                        {k:'amputation', l:'Ампутація'}, {k:'rupture', l:'Розрив'}, {k:'shrapnel', l:'Уламкове'}, 
-                                                                        {k:'bullet', l:'Кульове'}, {k:'fracture', l:'Перелом'}, {k:'burn', l:'Опік'}, 
-                                                                        {k:'akbt', l:'АКБТ'}, {k:'contusion', l:'Забій'}
-                                                                    ].map(item => (
-                                                                        <label key={item.k} className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer select-none">
-                                                                            <input type="checkbox" checked={filterInjuries.includes(item.k)} onChange={() => toggleFilterItem(filterInjuries, setFilterInjuries, item.k)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
-                                                                            <span className="whitespace-nowrap">{item.l}</span>
-                                                                        </label>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* 5. Статус зброї */}
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase font-mono">Статус зброї ({filterWeapon.length}):</span>
-                                                                    {filterWeapon.length > 0 && (
-                                                                        <button type="button" onClick={() => setFilterWeapon([])} className="text-[10px] font-mono text-slate-400 hover:underline">Зняти</button>
-                                                                    )}
-                                                                </div>
-                                                                <div className="max-h-24 overflow-y-auto space-y-1 bg-slate-950 p-2 rounded-xl border border-slate-800/80">
-                                                                    {["втрачена", "знищена", "знаходиться у підрозділі", "знаходиться на позиції", "СЗЧ/Дезертирство зі зброєю", "Не вказано"].map(w => (
-                                                                        <label key={w} className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer select-none py-0.5">
-                                                                            <input type="checkbox" checked={filterWeapon.includes(w)} onChange={() => toggleFilterItem(filterWeapon, setFilterWeapon, w)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
-                                                                            <span className="whitespace-nowrap">{w}</span>
-                                                                        </label>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="pt-2 border-t border-slate-800 flex justify-end">
-                                                                <button 
-                                                                    type="button" 
-                                                                    onClick={() => setOpenDropdown(null)} 
-                                                                    className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition cursor-pointer text-center"
-                                                                >
-                                                                    Застосувати
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-
-                                {/* Права частина: Зведена статистика + Записів + Актуальні & Скинути */}
-                                <div className="flex items-center gap-2 flex-wrap shrink-0">
+                                {/* РЯДОК 2: Зведена статистика + Записів + Актуальні & Скинути */}
+                                <div className="w-full flex items-center justify-between gap-2 border-t border-slate-800/60 pt-2 flex-wrap">
                                     {/* Зведена швидка статистика */}
-                                    <div className="hidden xl:flex items-center gap-2 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800 text-xs shadow-inner">
+                                    <div className="flex items-center gap-2 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800 text-xs shadow-inner">
                                         <span className="text-slate-300 text-xs font-semibold flex items-center gap-1" title="Унікальних військових у базі">
                                             <Icon name="users" className="w-3.5 h-3.5 text-slate-400" />
                                             <span className="font-mono text-slate-200 font-bold">{stats.uniqueSoldiersCount}</span>
@@ -4672,30 +4840,32 @@
                                         </span>
                                     </div>
 
-                                    {activeTab === "list" && (
-                                        <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-inner" title="Кількість відфільтрованих записів">
-                                            <Icon name="list-filter" className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                            <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">Записів:</span>
-                                            <span className="text-amber-400 font-mono font-bold text-xs">
-                                                {filteredList.length > displayLimit ? `${visibleList.length} з ${filteredList.length}` : filteredList.length}
-                                            </span>
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        {activeTab === "list" && (
+                                            <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-inner" title="Кількість відфільтрованих записів">
+                                                <Icon name="list-filter" className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                                <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">Записів:</span>
+                                                <span className="text-amber-400 font-mono font-bold text-xs">
+                                                    {filteredList.length > displayLimit ? `${visibleList.length} з ${filteredList.length}` : filteredList.length}
+                                                </span>
+                                            </div>
+                                        )}
 
-                                    <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-white bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs select-none" title="Показувати тільки один (останній) актуальний стан бійця">
-                                        <input type="checkbox" checked={showOnlyLatest} onChange={(e) => setShowOnlyLatest(e.target.checked)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer"/>
-                                        <span className="font-medium text-[11px]">Актуальні</span>
-                                    </label>
+                                        <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-white bg-slate-950 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs select-none" title="Показувати тільки один (останній) актуальний стан бійця">
+                                            <input type="checkbox" checked={showOnlyLatest} onChange={(e) => setShowOnlyLatest(e.target.checked)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer"/>
+                                            <span className="font-medium text-[11px]">Актуальні</span>
+                                        </label>
 
-                                    <button 
-                                        type="button" 
-                                        onClick={resetAllFilters} 
-                                        className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold rounded-xl border border-slate-800 transition cursor-pointer flex items-center gap-1"
-                                        title="Скинути всі фільтри"
-                                    >
-                                        <Icon name="rotate-ccw" className="w-3 h-3" />
-                                        <span>Скинути</span>
-                                    </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={resetAllFilters} 
+                                            className="px-2.5 py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold rounded-xl border border-slate-800 transition cursor-pointer flex items-center gap-1"
+                                            title="Скинути всі фільтри"
+                                        >
+                                            <Icon name="rotate-ccw" className="w-3 h-3" />
+                                            <span>Скинути</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -5543,7 +5713,7 @@
 
                     {/* МОДАЛЬНІ ВІКНА */}
                     {(isAddWoundedOpen || isEditOpen) && (
-                        <div onClick={(e) => { if (e.target === e.currentTarget) { setIsAddWoundedOpen(false); setIsEditOpen(false); } }} className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200">
+                        <div onClick={(e) => { if (e.target === e.currentTarget) { setIsAddWoundedOpen(false); setIsEditOpen(false); } }} className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200">
                             <form onSubmit={isEditOpen ? handleUpdateWounded : handleSaveWounded} className="bg-slate-900 border border-slate-700/80 w-full max-w-5xl max-h-[94vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
                                 {/* Header */}
                                 <div className="px-6 py-4 bg-slate-950/70 border-b border-slate-800 flex justify-between items-center shrink-0">
@@ -5600,7 +5770,7 @@
                                                 />
                                                 <input 
                                                     type="text" 
-                                                    placeholder="Позивний..." 
+                                                    placeholder="Позивний (за наявності)..." 
                                                     value={newSoldierCallsign} 
                                                     onChange={(e) => handleSmartInput('callsign', e.target.value)} 
                                                     className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none transition font-sans" 
@@ -5855,7 +6025,7 @@
 
                                     {/* 3. Права колонка: Інтерактивна тактична карта тіла (Органічний анатомічний силует) */}
                                     {isAny300(lossType) ? (
-                                        <div className="lg:col-span-4 bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col items-center shadow-2xl space-y-3 relative overflow-hidden">
+                                        <div className="lg:col-span-4 bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col items-center shadow-2xl space-y-3 relative overflow-visible">
                                             
                                             {/* Заголовок анатомічного блоку */}
                                             <div className="w-full flex items-center justify-between border-b border-slate-800/80 pb-2">
@@ -6131,7 +6301,7 @@
                     )}
 
                     {isSettingsOpen && (
-                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsSettingsOpen(false); }} className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsSettingsOpen(false); }} className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
                             <div className="bg-slate-900 border border-slate-700/80 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150">
                                 {/* Header */}
                                 <div className="px-6 py-4 bg-slate-950/70 border-b border-slate-800 flex justify-between items-center">
@@ -6236,7 +6406,7 @@
                     )}
 
                     {isBatchReplaceOpen && (
-                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsBatchReplaceOpen(false); }} className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsBatchReplaceOpen(false); }} className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
                             <div className="bg-slate-900 border border-slate-700/80 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150">
                                 {/* Header */}
                                 <div className="px-6 py-4 bg-slate-950/70 border-b border-slate-800 flex justify-between items-center shrink-0">
@@ -6559,7 +6729,7 @@
                     )}
 
                     {isBackupOpen && (
-                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsBackupOpen(false); }} className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsBackupOpen(false); }} className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
                             <div className="bg-slate-900 border border-slate-700/80 w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-150">
                                 {/* Header */}
                                 <div className="px-6 py-4 bg-slate-950/70 border-b border-slate-800 flex justify-between items-center">
@@ -6787,7 +6957,7 @@
                     )}
 
                     {isClearDbConfirmOpen && (
-                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsClearDbConfirmOpen(false); }} className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4">
+                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsClearDbConfirmOpen(false); }} className="fixed inset-0 z-[210] bg-black/90 flex items-center justify-center p-4">
                             <div className="bg-red-950 border border-red-800 w-full max-w-sm rounded-xl overflow-hidden shadow-2xl p-5 text-center">
                                 <Icon name="alert-octagon" className="w-12 h-12 text-red-500 mx-auto mb-3" />
                                 <h3 className="font-bold text-white text-lg mb-2">УВАГА! Очищення бази</h3>
@@ -6803,7 +6973,7 @@
                     )}
 
                     {isChangelogOpen && (
-                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsChangelogOpen(false); }} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div onClick={(e) => { if (e.target === e.currentTarget) setIsChangelogOpen(false); }} className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                             <div className="bg-slate-900 border border-slate-700/80 w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
                                 <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
                                     <div className="flex items-center gap-3">
@@ -6820,10 +6990,24 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                                    {/* 26.08.2026 */}
+                                    {/* 28.08.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.3.0 (Авто-відновлення дат, ланцюжки статусів та захист цілісності)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.4.0 (Сортування за евакуацією, лаконічні фільтри & рок-солід тулбар)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">28.08.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Сортування за датою евакуації:</strong> Додано режими сортування за часом/датою евакуації бійців (новіші/старіші зверху), збереження дати евакуації при перегляді та швидкі чіпси [⏳ Очікують] / [✅ Евакуйовані].</li>
+                                            <li><strong className="text-white">Лаконічний фільтр дат:</strong> Мінімалістичний інтерфейс із чистим вибором [Всі дати] та календарем точного періоду Від/До.</li>
+                                            <li><strong className="text-white">Рок-солід 2-рівневий тулбар:</strong> Повний захист від зсувів при масштабуванні — рядок 1 для фільтрів, повноширинний рядок 2 для статистики та дій.</li>
+                                            <li><strong className="text-white">Оптимізація випадаючих меню:</strong> Поповери «Інше» та «Сортування» вирівнюються за правим краєм і не обрізаються екраном.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 26.08.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">⚡ v3.3.0 (Авто-відновлення дат, ланцюжки статусів та захист цілісності)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">26.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
