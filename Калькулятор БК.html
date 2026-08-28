@@ -65,7 +65,7 @@
                             AMMO_PARSER
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.1.3
+                            ⚡ v1.2.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -247,7 +247,25 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.1.3 (RHEAT-7MA2 & Документування коду)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.0 (РПГ-75М, розширені калібри 7.62/5.56 NATO & одиничний облік РПГ)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">28.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Підтримка гранатомета РПГ-75М:</strong> Додано позицію `РПГ-75М` (`RPG75`) з автоматичним розпізнаванням кирилиці та латиниці.</li>
+                        <li><strong class="text-white">Розширення одиничного підрахунку РПГ:</strong> Включено до списку `implicitConfigs` одноразові гранатомети `РПГ-18`, `РПГ-22`, `РПГ-26`, `РПГ-75М`, `РПГ-76` (автоматичний підрахунок як 1 шт за згадкою).</li>
+                        <li><strong class="text-white">Розширені калібри NATO та стрілецької зброї:</strong>
+                            <ul class="pl-4 space-y-1 list-disc text-slate-400">
+                                <li>`7.62х51 мм (NATO)`: підтримка позначень `UAR-10`, `Win`, `.308`, `NATO`.</li>
+                                <li>`5.56х45 мм (NATO)`: підтримка позначень `UAR-15`, `NATO`.</li>
+                                <li>`7.62х54R`: підтримка маркування з гільзою `R`.</li>
+                                <li>`ПГ-7В / РПГ-7`: покращене розпізнавання сирих записів.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.1.3 (RHEAT-7MA2 & Документування коду)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">24.08.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
