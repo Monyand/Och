@@ -56,7 +56,7 @@
                 <div class="flex items-center gap-3">
                     <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Форматер Майна</h1>
                     <span class="text-xs bg-blue-600/80 text-white font-mono font-bold px-2.5 py-0.5 rounded-full shadow-sm">
-                        🚀 v1.2.0
+                        🚀 v1.3.0
                     </span>
                 </div>
                 <p class="text-slate-400 text-sm mt-1">Вставте будь-який сирий текст списків майна — отримайте ідеально чистий стандартизований шаблон.</p>
@@ -150,6 +150,9 @@
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пара / пари / пар</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">к-кт / комплект</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">од.</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">м / пог. м</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">рул. / бухта</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">уп. / ящ. / бан. / л / кг</span>
             </div>
             <div class="flex items-center gap-1.5 text-slate-500">
                 <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
@@ -234,11 +237,11 @@
                 const isHeaderCandidate = text.endsWith(':') ||
                     /^(?:по\s+служб[іе]|служб[ае]|майно|по\s+груп[іе]|груп[ае]|відділення|взвод|рота|батальйон|підрозділ)/i.test(text);
 
-                // 1. Прибираємо початкові маркери (тире, крапки, зірочки, маркери списку, нумерацію 1., 2))
-                let cleanText = text.replace(/^[-•*–—\s\d.)]+/, '').trim();
+                // 1. Прибираємо початкові маркери (1., 1), a., a), -, •, *, –, +) без пошкодження калібрів типу 5.45 чи 7.62
+                let cleanText = text.replace(/^\s*(?:(?:\d+|[a-zA-Zа-яА-ЯіїєґІЇЄҐ])[\.\)]\s*|[-•*–—+]\s*)+/, '').trim();
 
                 // 2. Шукаємо ОСТАННЄ входження кількості та одиниці виміру в рядку
-                const qtyRegex = /[-\s–—]*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|т\.?|пара|пар|пари|к-кт|к-т|комплект(?:и)?|компл\.?|од\.?)/gi;
+                const qtyRegex = /[-\s–—]*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|т\.?|пара|пар|пари|к-кт|к-т|комплект(?:и)?|компл\.?|од\.?|пог\.?\s*м\.?|м\.?|метр(?:и|ів)?|рулон(?:и|ів)?|рул\.?|бухт(?:а|и|)?|бухт\.?|упаков(?:ка|ки|ок)?|упак\.?|уп\.?|ящик(?:и|ів)?|ящ\.?|банк(?:а|и|ок)?|бан\.?|пляшк(?:а|и|ок)?|пляш\.?|каністр(?:а|и)?|кан\.?|літр(?:и|ів)?|л\.?|кг\.?|кілограм(?:и|ів)?)/gi;
                 let lastMatch = null;
                 let match;
 
@@ -257,13 +260,14 @@
 
                 if (lastMatch) {
                     const quantity = lastMatch[1].replace(',', '.');
-                    let unit = lastMatch[2].toLowerCase().replace('.', '');
+                    let rawUnit = lastMatch[2].toLowerCase().replace(/\s+/g, ' ').trim();
+                    let unit = rawUnit.replace(/\./g, '');
+                    const q = parseFloat(quantity);
 
                     // Нормалізуємо одиниці виміру
                     if (unit === 'шт' || unit === 'щт' || unit === 'т') {
                         unit = 'шт.';
                     } else if (unit === 'пара' || unit === 'пар' || unit === 'пари') {
-                        const q = parseFloat(quantity);
                         if (q === 1) unit = 'пара';
                         else if (q >= 2 && q <= 4) unit = 'пари';
                         else unit = 'пар';
@@ -271,6 +275,30 @@
                         unit = 'к-кт';
                     } else if (unit === 'од') {
                         unit = 'од.';
+                    } else if (rawUnit.includes('пог') || unit === 'пог м' || unit === 'погм') {
+                        unit = 'пог. м';
+                    } else if (unit === 'м' || unit.startsWith('метр')) {
+                        unit = 'м';
+                    } else if (unit === 'рул' || unit.startsWith('рулон')) {
+                        unit = 'рул.';
+                    } else if (unit === 'бухт' || unit.startsWith('бухт')) {
+                        if (q === 1) unit = 'бухта';
+                        else if (q >= 2 && q <= 4) unit = 'бухти';
+                        else unit = 'бухт';
+                    } else if (unit === 'уп' || unit === 'упак' || unit.startsWith('упаков')) {
+                        unit = 'уп.';
+                    } else if (unit === 'ящ' || unit.startsWith('ящик')) {
+                        unit = 'ящ.';
+                    } else if (unit === 'бан' || unit.startsWith('банк')) {
+                        unit = 'бан.';
+                    } else if (unit === 'пляш' || unit.startsWith('пляшк')) {
+                        unit = 'пляш.';
+                    } else if (unit === 'кан' || unit.startsWith('каністр')) {
+                        unit = 'кан.';
+                    } else if (unit === 'л' || unit.startsWith('літр')) {
+                        unit = 'л';
+                    } else if (unit === 'кг' || unit.startsWith('кілограм')) {
+                        unit = 'кг';
                     }
 
                     // Назва — це все, що було ДО знайденої кількості
