@@ -4198,7 +4198,7 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.4.0
+                                    ⚡ v3.5.0
                                 </button>
                             </div>
                         </div>
@@ -5714,7 +5714,7 @@
                     {/* МОДАЛЬНІ ВІКНА */}
                     {(isAddWoundedOpen || isEditOpen) && (
                         <div onClick={(e) => { if (e.target === e.currentTarget) { setIsAddWoundedOpen(false); setIsEditOpen(false); } }} className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-hidden animate-in fade-in duration-200">
-                            <form onSubmit={isEditOpen ? handleUpdateWounded : handleSaveWounded} className="bg-slate-900 border border-slate-700/80 w-full max-w-5xl max-h-[94vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+                            <form onSubmit={isEditOpen ? handleUpdateWounded : handleSaveWounded} className="bg-slate-900 border border-slate-700/80 w-full max-w-7xl max-h-[94vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
                                 {/* Header */}
                                 <div className="px-6 py-4 bg-slate-950/70 border-b border-slate-800 flex justify-between items-center shrink-0">
                                     <div className="flex items-center gap-3">
@@ -5741,22 +5741,22 @@
 
                                 <div className="p-5 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
                                     {/* 1. Ліва колонка */}
-                                    <div className="lg:col-span-4 space-y-4 flex flex-col">
+                                    <div className={`${isAny300(lossType) ? 'lg:col-span-3' : 'lg:col-span-6'} space-y-4 flex flex-col`}>
                                         <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-3 relative">
                                             <div className="flex justify-between items-center gap-2 mb-1">
                                                 <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider flex items-center gap-1.5 whitespace-nowrap shrink-0">
                                                     <Icon name="user-check" className="w-3.5 h-3.5 text-amber-400" />
-                                                    <span>Анкетні дані бійця</span>
+                                                    <span>Анкетні дані</span>
                                                 </label>
                                                 {selectedSoldierId && (
                                                     <button 
                                                         type="button" 
                                                         onClick={clearSelectedSoldier} 
-                                                        className="text-[10px] text-emerald-400 hover:text-red-300 flex items-center gap-1 bg-emerald-950/60 hover:bg-red-950/60 px-2 py-0.5 rounded-md border border-emerald-800/60 hover:border-red-800/60 font-mono font-bold whitespace-nowrap shrink-0 transition cursor-pointer"
-                                                        title="Клікніть, щоб відв'язати бійця та створити новий профіль"
+                                                        className="text-[9px] text-emerald-400 hover:text-red-300 flex items-center gap-1 bg-emerald-950/60 hover:bg-red-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60 hover:border-red-800/60 font-mono font-bold whitespace-nowrap shrink-0 transition cursor-pointer"
+                                                        title="Клікніть, щоб відв'язати бійця"
                                                     >
-                                                        <Icon name="check-circle" className="w-3 h-3" />
-                                                        <span>Прив'язано [Відв'язати]</span>
+                                                        <Icon name="check-circle" className="w-2.5 h-2.5" />
+                                                        <span>Прив'язано ✕</span>
                                                     </button>
                                                 )}
                                             </div>
@@ -5912,7 +5912,7 @@
                                     </div>
 
                                     {/* 2. Середня колонка */}
-                                    <div className="lg:col-span-4 space-y-4">
+                                    <div className={`${isAny300(lossType) ? 'lg:col-span-4' : 'lg:col-span-6'} space-y-4`}>
                                         <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-3">
                                             <div>
                                                 <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider block mb-1.5">Час події</label>
@@ -6025,7 +6025,7 @@
 
                                     {/* 3. Права колонка: Інтерактивна тактична карта тіла (Органічний анатомічний силует) */}
                                     {isAny300(lossType) ? (
-                                        <div className="lg:col-span-4 bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col items-center shadow-2xl space-y-3 relative overflow-visible">
+                                        <div className="lg:col-span-5 bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col shadow-2xl space-y-3 relative overflow-visible">
                                             
                                             {/* Заголовок анатомічного блоку */}
                                             <div className="w-full flex items-center justify-between border-b border-slate-800/80 pb-2">
@@ -6049,196 +6049,275 @@
                                                 </div>
                                             </div>
 
-                                            {/* Анатомічний силует HUD */}
-                                            <div className="relative w-[180px] aspect-[1/2] border border-slate-800/80 rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900/95 to-slate-950 p-2 shadow-inner flex items-center justify-center group">
-                                                
-                                                {/* Сітка фону HUD */}
-                                                <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:12px_12px] opacity-20 pointer-events-none rounded-2xl"></div>
+                                            {/* Тіло блоку: Силует зліва + Панель вибору кнопок справа */}
+                                            <div className="w-full flex-1 flex flex-col sm:flex-row items-stretch gap-3.5 min-h-[360px]">
+                                                {/* Силует HUD */}
+                                                <div className="relative w-full sm:w-[140px] shrink-0 border border-slate-800/80 rounded-2xl bg-gradient-to-b from-slate-950 via-slate-900/95 to-slate-950 p-2 shadow-inner flex items-center justify-center group">
+                                                    <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:12px_12px] opacity-20 pointer-events-none rounded-2xl"></div>
 
-                                                {/* Мітки сторін бійця */}
-                                                <span className="absolute top-2.5 left-2.5 text-[9px] font-mono font-bold text-slate-500 bg-slate-950/90 px-1.5 py-0.5 rounded-md border border-slate-800/80 shadow-sm" title="Права сторона бійця">П (Права)</span>
-                                                <span className="absolute top-2.5 right-2.5 text-[9px] font-mono font-bold text-slate-500 bg-slate-950/90 px-1.5 py-0.5 rounded-md border border-slate-800/80 shadow-sm" title="Ліва сторона бійця">Л (Ліва)</span>
+                                                    <span className="absolute top-2.5 left-2.5 text-[9px] font-mono font-bold text-slate-500 bg-slate-950/90 px-1.5 py-0.5 rounded-md border border-slate-800/80 shadow-sm" title="Права сторона бійця">П</span>
+                                                    <span className="absolute top-2.5 right-2.5 text-[9px] font-mono font-bold text-slate-500 bg-slate-950/90 px-1.5 py-0.5 rounded-md border border-slate-800/80 shadow-sm" title="Ліва сторона бійця">Л</span>
 
-                                                <svg viewBox="0 0 220 380" className="w-full h-full drop-shadow-lg select-none">
-                                                    <defs>
-                                                        <filter id="glow-red-med" x="-20%" y="-20%" width="140%" height="140%">
-                                                            <feGaussianBlur stdDeviation="3" result="blur" />
-                                                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                                                        </filter>
-                                                    </defs>
+                                                    <svg viewBox="0 0 220 380" className="w-full h-auto max-h-[350px] drop-shadow-lg select-none">
+                                                        <defs>
+                                                            <filter id="glow-red-med" x="-20%" y="-20%" width="140%" height="140%">
+                                                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                                            </filter>
+                                                        </defs>
 
-                                                    {/* Голова */}
-                                                    <g onClick={() => setSelectedRegion('head')} className="cursor-pointer">
-                                                        <path 
-                                                            d="M110,18 C94,18 84,32 84,48 C84,65 96,78 110,82 C124,78 136,65 136,48 C136,32 126,18 110,18 Z" 
-                                                            fill={hasAnyInjury('head') ? '#ef4444' : (selectedRegion === 'head' ? '#1e293b' : '#0f172a')} 
-                                                            stroke={selectedRegion === 'head' ? '#f59e0b' : (hasAnyInjury('head') ? '#f87171' : '#334155')} 
-                                                            strokeWidth={selectedRegion === 'head' ? '2.5' : '1.5'} 
-                                                            filter={hasAnyInjury('head') ? 'url(#glow-red-med)' : undefined}
-                                                            className="transition-all hover:stroke-amber-400"
-                                                        />
-                                                        {hasAnyInjury('head') && (
-                                                            <circle cx="110" cy="48" r="5" fill="#fff" className="animate-pulse" />
-                                                        )}
-                                                    </g>
+                                                        {/* Голова */}
+                                                        <g onClick={() => setSelectedRegion('head')} className="cursor-pointer">
+                                                            <path 
+                                                                d="M110,18 C94,18 84,32 84,48 C84,65 96,78 110,82 C124,78 136,65 136,48 C136,32 126,18 110,18 Z" 
+                                                                fill={hasAnyInjury('head') ? '#ef4444' : (selectedRegion === 'head' ? '#1e293b' : '#0f172a')} 
+                                                                stroke={selectedRegion === 'head' ? '#f59e0b' : (hasAnyInjury('head') ? '#f87171' : '#334155')} 
+                                                                strokeWidth={selectedRegion === 'head' ? '2.5' : '1.5'} 
+                                                                filter={hasAnyInjury('head') ? 'url(#glow-red-med)' : undefined}
+                                                                className="transition-all hover:stroke-amber-400"
+                                                            />
+                                                            {hasAnyInjury('head') && (
+                                                                <circle cx="110" cy="48" r="5" fill="#fff" className="animate-pulse" />
+                                                            )}
+                                                        </g>
 
-                                                    {/* Шия */}
-                                                    <g onClick={() => setSelectedRegion('neck')} className="cursor-pointer">
-                                                        <path 
-                                                            d="M102,82 L118,82 L122,96 L98,96 Z" 
-                                                            fill={hasAnyInjury('neck') ? '#ef4444' : (selectedRegion === 'neck' ? '#1e293b' : '#0f172a')} 
-                                                            stroke={selectedRegion === 'neck' ? '#f59e0b' : (hasAnyInjury('neck') ? '#f87171' : '#334155')} 
-                                                            strokeWidth={selectedRegion === 'neck' ? '2.5' : '1.5'} 
-                                                            filter={hasAnyInjury('neck') ? 'url(#glow-red-med)' : undefined}
-                                                            className="transition-all hover:stroke-amber-400"
-                                                        />
-                                                    </g>
+                                                        {/* Шия */}
+                                                        <g onClick={() => setSelectedRegion('neck')} className="cursor-pointer">
+                                                            <path 
+                                                                d="M102,82 L118,82 L122,96 L98,96 Z" 
+                                                                fill={hasAnyInjury('neck') ? '#ef4444' : (selectedRegion === 'neck' ? '#1e293b' : '#0f172a')} 
+                                                                stroke={selectedRegion === 'neck' ? '#f59e0b' : (hasAnyInjury('neck') ? '#f87171' : '#334155')} 
+                                                                strokeWidth={selectedRegion === 'neck' ? '2.5' : '1.5'} 
+                                                                filter={hasAnyInjury('neck') ? 'url(#glow-red-med)' : undefined}
+                                                                className="transition-all hover:stroke-amber-400"
+                                                            />
+                                                        </g>
 
-                                                    {/* Грудна клітка / Торс */}
-                                                    <g onClick={() => setSelectedRegion('chest')} className="cursor-pointer">
-                                                        <path 
-                                                            d="M98,96 L122,96 L148,104 L142,165 L78,165 L72,104 Z" 
-                                                            fill={hasAnyInjury('chest') ? '#ef4444' : (selectedRegion === 'chest' ? '#1e293b' : '#0f172a')} 
-                                                            stroke={selectedRegion === 'chest' ? '#f59e0b' : (hasAnyInjury('chest') ? '#f87171' : '#334155')} 
-                                                            strokeWidth={selectedRegion === 'chest' ? '2.5' : '1.5'} 
-                                                            filter={hasAnyInjury('chest') ? 'url(#glow-red-med)' : undefined}
-                                                            className="transition-all hover:stroke-amber-400"
-                                                        />
-                                                        {hasAnyInjury('chest') && (
-                                                            <circle cx="110" cy="130" r="5" fill="#fff" className="animate-pulse" />
-                                                        )}
-                                                    </g>
+                                                        {/* Грудна клітка / Торс */}
+                                                        <g onClick={() => setSelectedRegion('chest')} className="cursor-pointer">
+                                                            <path 
+                                                                d="M98,96 L122,96 L148,104 L142,165 L78,165 L72,104 Z" 
+                                                                fill={hasAnyInjury('chest') ? '#ef4444' : (selectedRegion === 'chest' ? '#1e293b' : '#0f172a')} 
+                                                                stroke={selectedRegion === 'chest' ? '#f59e0b' : (hasAnyInjury('chest') ? '#f87171' : '#334155')} 
+                                                                strokeWidth={selectedRegion === 'chest' ? '2.5' : '1.5'} 
+                                                                filter={hasAnyInjury('chest') ? 'url(#glow-red-med)' : undefined}
+                                                                className="transition-all hover:stroke-amber-400"
+                                                            />
+                                                            {hasAnyInjury('chest') && (
+                                                                <circle cx="110" cy="130" r="5" fill="#fff" className="animate-pulse" />
+                                                            )}
+                                                        </g>
 
-                                                    {/* Живіт / Пах */}
-                                                    <g onClick={() => setSelectedRegion('abdomen')} className="cursor-pointer">
-                                                        <path 
-                                                            d="M78,165 L142,165 L136,215 L84,215 Z" 
-                                                            fill={hasAnyInjury('abdomen') ? '#ef4444' : (selectedRegion === 'abdomen' ? '#1e293b' : '#0f172a')} 
-                                                            stroke={selectedRegion === 'abdomen' ? '#f59e0b' : (hasAnyInjury('abdomen') ? '#f87171' : '#334155')} 
-                                                            strokeWidth={selectedRegion === 'abdomen' ? '2.5' : '1.5'} 
-                                                            filter={hasAnyInjury('abdomen') ? 'url(#glow-red-med)' : undefined}
-                                                            className="transition-all hover:stroke-amber-400"
-                                                        />
-                                                        {hasAnyInjury('abdomen') && (
-                                                            <circle cx="110" cy="190" r="5" fill="#fff" className="animate-pulse" />
-                                                        )}
-                                                    </g>
+                                                        {/* Живіт / Пах */}
+                                                        <g onClick={() => setSelectedRegion('abdomen')} className="cursor-pointer">
+                                                            <path 
+                                                                d="M78,165 L142,165 L136,215 L84,215 Z" 
+                                                                fill={hasAnyInjury('abdomen') ? '#ef4444' : (selectedRegion === 'abdomen' ? '#1e293b' : '#0f172a')} 
+                                                                stroke={selectedRegion === 'abdomen' ? '#f59e0b' : (hasAnyInjury('abdomen') ? '#f87171' : '#334155')} 
+                                                                strokeWidth={selectedRegion === 'abdomen' ? '2.5' : '1.5'} 
+                                                                filter={hasAnyInjury('abdomen') ? 'url(#glow-red-med)' : undefined}
+                                                                className="transition-all hover:stroke-amber-400"
+                                                            />
+                                                            {hasAnyInjury('abdomen') && (
+                                                                <circle cx="110" cy="190" r="5" fill="#fff" className="animate-pulse" />
+                                                            )}
+                                                        </g>
 
-                                                    {/* Права рука бійця (Viewer left) */}
-                                                    <g onClick={() => setSelectedRegion('arm_r')} className="cursor-pointer">
-                                                        <path 
-                                                            d="M72,104 C60,110 46,135 40,165 C34,195 28,225 34,230 C40,235 48,225 54,195 C60,165 72,140 78,120 Z" 
-                                                            fill={hasAnyInjury('arm_r') ? '#ef4444' : (selectedRegion === 'arm_r' ? '#1e293b' : '#0f172a')} 
-                                                            stroke={selectedRegion === 'arm_r' ? '#f59e0b' : (hasAnyInjury('arm_r') ? '#f87171' : '#334155')} 
-                                                            strokeWidth={selectedRegion === 'arm_r' ? '2.5' : '1.5'} 
-                                                            filter={hasAnyInjury('arm_r') ? 'url(#glow-red-med)' : undefined}
-                                                            className="transition-all hover:stroke-amber-400"
-                                                        />
-                                                        {hasAnyInjury('arm_r') && (
-                                                            <circle cx="48" cy="165" r="5" fill="#fff" className="animate-pulse" />
-                                                        )}
-                                                    </g>
+                                                        {/* Права рука бійця (Viewer left) */}
+                                                        <g onClick={() => setSelectedRegion('arm_r')} className="cursor-pointer">
+                                                            <path 
+                                                                d="M72,104 C60,110 46,135 40,165 C34,195 28,225 34,230 C40,235 48,225 54,195 C60,165 72,140 78,120 Z" 
+                                                                fill={hasAnyInjury('arm_r') ? '#ef4444' : (selectedRegion === 'arm_r' ? '#1e293b' : '#0f172a')} 
+                                                                stroke={selectedRegion === 'arm_r' ? '#f59e0b' : (hasAnyInjury('arm_r') ? '#f87171' : '#334155')} 
+                                                                strokeWidth={selectedRegion === 'arm_r' ? '2.5' : '1.5'} 
+                                                                filter={hasAnyInjury('arm_r') ? 'url(#glow-red-med)' : undefined}
+                                                                className="transition-all hover:stroke-amber-400"
+                                                            />
+                                                            {hasAnyInjury('arm_r') && (
+                                                                <circle cx="48" cy="165" r="5" fill="#fff" className="animate-pulse" />
+                                                            )}
+                                                        </g>
 
-                                                    {/* Ліва рука бійця (Viewer right) */}
-                                                    <g onClick={() => setSelectedRegion('arm_l')} className="cursor-pointer">
-                                                        <path 
-                                                            d="M148,104 C160,110 174,135 180,165 C186,195 192,225 186,230 C180,235 172,225 166,195 C160,165 148,140 142,120 Z" 
-                                                            fill={hasAnyInjury('arm_l') ? '#ef4444' : (selectedRegion === 'arm_l' ? '#1e293b' : '#0f172a')} 
-                                                            stroke={selectedRegion === 'arm_l' ? '#f59e0b' : (hasAnyInjury('arm_l') ? '#f87171' : '#334155')} 
-                                                            strokeWidth={selectedRegion === 'arm_l' ? '2.5' : '1.5'} 
-                                                            filter={hasAnyInjury('arm_l') ? 'url(#glow-red-med)' : undefined}
-                                                            className="transition-all hover:stroke-amber-400"
-                                                        />
-                                                        {hasAnyInjury('arm_l') && (
-                                                            <circle cx="172" cy="165" r="5" fill="#fff" className="animate-pulse" />
-                                                        )}
-                                                    </g>
+                                                        {/* Ліва рука бійця (Viewer right) */}
+                                                        <g onClick={() => setSelectedRegion('arm_l')} className="cursor-pointer">
+                                                            <path 
+                                                                d="M148,104 C160,110 174,135 180,165 C186,195 192,225 186,230 C180,235 172,225 166,195 C160,165 148,140 142,120 Z" 
+                                                                fill={hasAnyInjury('arm_l') ? '#ef4444' : (selectedRegion === 'arm_l' ? '#1e293b' : '#0f172a')} 
+                                                                stroke={selectedRegion === 'arm_l' ? '#f59e0b' : (hasAnyInjury('arm_l') ? '#f87171' : '#334155')} 
+                                                                strokeWidth={selectedRegion === 'arm_l' ? '2.5' : '1.5'} 
+                                                                filter={hasAnyInjury('arm_l') ? 'url(#glow-red-med)' : undefined}
+                                                                className="transition-all hover:stroke-amber-400"
+                                                            />
+                                                            {hasAnyInjury('arm_l') && (
+                                                                <circle cx="172" cy="165" r="5" fill="#fff" className="animate-pulse" />
+                                                            )}
+                                                        </g>
 
-                                                    {/* Права нога бійця (Viewer left) */}
-                                                    <g onClick={() => setSelectedRegion('leg_r')} className="cursor-pointer">
-                                                        <path 
-                                                            d="M84,215 L106,215 L100,290 L98,365 L74,365 L72,290 Z" 
-                                                            fill={hasAnyInjury('leg_r') ? '#ef4444' : (selectedRegion === 'leg_r' ? '#1e293b' : '#0f172a')} 
-                                                            stroke={selectedRegion === 'leg_r' ? '#f59e0b' : (hasAnyInjury('leg_r') ? '#f87171' : '#334155')} 
-                                                            strokeWidth={selectedRegion === 'leg_r' ? '2.5' : '1.5'} 
-                                                            filter={hasAnyInjury('leg_r') ? 'url(#glow-red-med)' : undefined}
-                                                            className="transition-all hover:stroke-amber-400"
-                                                        />
-                                                        {hasAnyInjury('leg_r') && (
-                                                            <circle cx="86" cy="285" r="5" fill="#fff" className="animate-pulse" />
-                                                        )}
-                                                    </g>
+                                                        {/* Права нога бійця (Viewer left) */}
+                                                        <g onClick={() => setSelectedRegion('leg_r')} className="cursor-pointer">
+                                                            <path 
+                                                                d="M84,215 L106,215 L100,290 L98,365 L74,365 L72,290 Z" 
+                                                                fill={hasAnyInjury('leg_r') ? '#ef4444' : (selectedRegion === 'leg_r' ? '#1e293b' : '#0f172a')} 
+                                                                stroke={selectedRegion === 'leg_r' ? '#f59e0b' : (hasAnyInjury('leg_r') ? '#f87171' : '#334155')} 
+                                                                strokeWidth={selectedRegion === 'leg_r' ? '2.5' : '1.5'} 
+                                                                filter={hasAnyInjury('leg_r') ? 'url(#glow-red-med)' : undefined}
+                                                                className="transition-all hover:stroke-amber-400"
+                                                            />
+                                                            {hasAnyInjury('leg_r') && (
+                                                                <circle cx="86" cy="285" r="5" fill="#fff" className="animate-pulse" />
+                                                            )}
+                                                        </g>
 
-                                                    {/* Ліва нога бійця (Viewer right) */}
-                                                    <g onClick={() => setSelectedRegion('leg_l')} className="cursor-pointer">
-                                                        <path 
-                                                            d="M114,215 L136,215 L148,290 L146,365 L122,365 L120,290 Z" 
-                                                            fill={hasAnyInjury('leg_l') ? '#ef4444' : (selectedRegion === 'leg_l' ? '#1e293b' : '#0f172a')} 
-                                                            stroke={selectedRegion === 'leg_l' ? '#f59e0b' : (hasAnyInjury('leg_l') ? '#f87171' : '#334155')} 
-                                                            strokeWidth={selectedRegion === 'leg_l' ? '2.5' : '1.5'} 
-                                                            filter={hasAnyInjury('leg_l') ? 'url(#glow-red-med)' : undefined}
-                                                            className="transition-all hover:stroke-amber-400"
-                                                        />
-                                                        {hasAnyInjury('leg_l') && (
-                                                            <circle cx="134" cy="285" r="5" fill="#fff" className="animate-pulse" />
-                                                        )}
-                                                    </g>
-                                                </svg>
-                                            </div>
-
-                                            {/* Панель вибору травм для активної зони з повним текстом */}
-                                            <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-2.5 shadow-md">
-                                                <div className="text-xs font-bold text-amber-400 uppercase font-mono border-b border-slate-800 pb-1.5 flex justify-between items-center">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                                                        <span>{BODY_REGIONS.find(r => r.id === selectedRegion)?.name || 'Зона'}</span>
-                                                    </span>
-                                                    {hasAnyInjury(selectedRegion) && (
-                                                        <button 
-                                                            type="button" 
-                                                            onClick={() => {
-                                                                const updated = { ...injuries };
-                                                                delete updated[selectedRegion];
-                                                                setInjuries(updated);
-                                                            }}
-                                                            className="text-[10px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer hover:underline"
-                                                        >
-                                                            Очистити цю
-                                                        </button>
-                                                    )}
+                                                        {/* Ліва нога бійця (Viewer right) */}
+                                                        <g onClick={() => setSelectedRegion('leg_l')} className="cursor-pointer">
+                                                            <path 
+                                                                d="M114,215 L136,215 L148,290 L146,365 L122,365 L120,290 Z" 
+                                                                fill={hasAnyInjury('leg_l') ? '#ef4444' : (selectedRegion === 'leg_l' ? '#1e293b' : '#0f172a')} 
+                                                                stroke={selectedRegion === 'leg_l' ? '#f59e0b' : (hasAnyInjury('leg_l') ? '#f87171' : '#334155')} 
+                                                                strokeWidth={selectedRegion === 'leg_l' ? '2.5' : '1.5'} 
+                                                                filter={hasAnyInjury('leg_l') ? 'url(#glow-red-med)' : undefined}
+                                                                className="transition-all hover:stroke-amber-400"
+                                                            />
+                                                            {hasAnyInjury('leg_l') && (
+                                                                <circle cx="134" cy="285" r="5" fill="#fff" className="animate-pulse" />
+                                                            )}
+                                                        </g>
+                                                    </svg>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-1.5">
-                                                    {[
-                                                        { key: 'bullet', label: '🩸 Кульове' },
-                                                        { key: 'shrapnel', label: '💥 Уламкове' },
-                                                        { key: 'amputation', label: '✂️ Ампутація' },
-                                                        { key: 'rupture', label: '⚡ Розрив' },
-                                                        { key: 'fracture', label: '🦴 Перелом' },
-                                                        { key: 'burn', label: '🔥 Опік' },
-                                                        { key: 'akbt', label: '💣 АКБТ' },
-                                                        { key: 'contusion', label: '🛡️ Забій' }
-                                                    ].map(i => {
-                                                        const isChecked = injuries[selectedRegion]?.[i.key] || false;
-                                                        return (
-                                                            <label 
-                                                                key={i.key} 
-                                                                className={`flex justify-between items-center px-2 py-1.5 border rounded-xl text-[11px] font-semibold cursor-pointer select-none transition-all ${
-                                                                    isChecked 
-                                                                        ? 'bg-red-950/90 border-red-600 text-red-100 shadow-sm' 
-                                                                        : 'bg-slate-950 hover:bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
-                                                                }`}
+                                                {/* Панель вибору травм для активної зони з повним текстом */}
+                                                <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-3 flex flex-col justify-start space-y-2.5 shadow-md min-w-0">
+                                                    <div className="text-xs font-bold text-amber-400 uppercase font-mono border-b border-slate-800 pb-1.5 flex justify-between items-center shrink-0">
+                                                        <span className="flex items-center gap-1.5 min-w-0">
+                                                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+                                                            <span className="truncate">{BODY_REGIONS.find(r => r.id === selectedRegion)?.name || 'Зона'}</span>
+                                                        </span>
+                                                        {hasAnyInjury(selectedRegion) && (
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => {
+                                                                    const updated = { ...injuries };
+                                                                    delete updated[selectedRegion];
+                                                                    setInjuries(updated);
+                                                                }}
+                                                                className="text-[10px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer hover:underline shrink-0 ml-1"
                                                             >
-                                                                <span className="whitespace-nowrap">{i.label}</span>
-                                                                <input 
-                                                                    type="checkbox" 
-                                                                    checked={isChecked} 
-                                                                    onChange={() => toggleInjuryType(selectedRegion, i.key)} 
-                                                                    className="rounded bg-slate-900 border-slate-700 text-red-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer shrink-0 ml-1"
-                                                                />
-                                                            </label>
+                                                                Очистити
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {(() => {
+                                                        let injuryOptions = [
+                                                            { key: 'shrapnel', icon: '💥', label: 'Уламкове', desc: 'Ураження уламками снарядів, мін, гранат, ВОГ або FPV-дронів' },
+                                                            { key: 'bullet', icon: '🩸', label: 'Кульове', desc: 'Вогнепальне поранення кулями стрілецької зброї' },
+                                                            { key: 'fracture', icon: '🦴', label: 'Перелом', desc: 'Закритий або відкритий перелом кісток внаслідок удару, вибуху чи завалу' },
+                                                            { key: 'burn', icon: '🔥', label: 'Опік', desc: 'Термічний або хімічний опік шкіри та тканин' },
+                                                            { key: 'laceration', icon: '🩹', label: 'Рвана рана', desc: 'Рвана, забійна або різана рана м’яких тканин' },
+                                                            { key: 'contusion', icon: '🛡️', label: 'Забій', desc: 'Закрите механічне ушкодження тканин без порушення цілісності шкіри' }
+                                                        ];
+
+                                                        if (selectedRegion === 'arm_l' || selectedRegion === 'arm_r') {
+                                                            injuryOptions = [
+                                                                { key: 'shrapnel', icon: '💥', label: 'Уламкове', desc: 'Ураження уламками снарядів, мін, гранат, ВОГ або FPV-дронів' },
+                                                                { key: 'bullet', icon: '🩸', label: 'Кульове', desc: 'Вогнепальне кульове поранення руки' },
+                                                                { key: 'amputation', icon: '✂️', label: 'Ампутація руки', desc: 'Повний або неповний травматичний відрив верхньої кінцівки (вище кисті)' },
+                                                                { key: 'amp_hand', icon: '🖐️', label: 'Ампутація кисті', desc: 'Травматичний відрив або розтрощення кисті руки' },
+                                                                { key: 'amp_fingers', icon: '🤏', label: 'Ампутація пальців', desc: 'Травматичний відрив або розтрощення пальців руки' },
+                                                                { key: 'fracture', icon: '🦴', label: 'Перелом', desc: 'Перелом плечової, променевої, ліктьової кістки або пальців' },
+                                                                { key: 'rupture', icon: '⚡', label: 'Розрив', desc: 'Тяжке розтрощення та розрив м’яких тканин, м’язів і зв’язок' },
+                                                                { key: 'burn', icon: '🔥', label: 'Опік', desc: 'Термічний або хімічний опік верхньої кінцівки' },
+                                                                { key: 'laceration', icon: '🩹', label: 'Рвана рана', desc: 'Рвана або різана рана м’яких тканин руки' },
+                                                                { key: 'contusion', icon: '🛡️', label: 'Забій', desc: 'Забій, гематома або сильний удар верхньої кінцівки' }
+                                                            ];
+                                                        } else if (selectedRegion === 'leg_l' || selectedRegion === 'leg_r') {
+                                                            injuryOptions = [
+                                                                { key: 'shrapnel', icon: '💥', label: 'Уламкове', desc: 'Ураження уламками снарядів, мін, гранат, ВОГ або FPV-дронів' },
+                                                                { key: 'bullet', icon: '🩸', label: 'Кульове', desc: 'Вогнепальне кульове поранення ноги' },
+                                                                { key: 'amputation', icon: '✂️', label: 'Ампутація ноги', desc: 'Повний або неповний травматичний відрив нижньої кінцівки (гомілка/стегно)' },
+                                                                { key: 'amp_foot', icon: '🦶', label: 'Ампутація стопи', desc: 'Травматичний відрив або руйнування стопи (підрив на міні ПМН)' },
+                                                                { key: 'amp_fingers', icon: '🤏', label: 'Ампутація пальців', desc: 'Травматичний відрив або розтрощення пальців стопи' },
+                                                                { key: 'fracture', icon: '🦴', label: 'Перелом', desc: 'Перелом стегнової, великогомілкової кістки або стопи' },
+                                                                { key: 'rupture', icon: '⚡', label: 'Розрив', desc: 'Тяжке розтрощення та розрив м’яких тканин, м’язів і сухожилків' },
+                                                                { key: 'burn', icon: '🔥', label: 'Опік', desc: 'Термічний або хімічний опік нижньої кінцівки' },
+                                                                { key: 'crush', icon: '🪨', label: 'Краш-синдром', desc: 'Синдром тривалого стиснення ноги (присипання в бліндажі/окопі, небезпека токсикозу нирок)' },
+                                                                { key: 'contusion', icon: '🛡️', label: 'Забій', desc: 'Забій, синець або масивна гематома ноги' }
+                                                            ];
+                                                        } else if (selectedRegion === 'head') {
+                                                            injuryOptions = [
+                                                                { key: 'shrapnel', icon: '💥', label: 'Уламкове', desc: 'Уламкове поранення м’яких тканин голови або обличчя' },
+                                                                { key: 'bullet', icon: '🩸', label: 'Кульове', desc: 'Вогнепальне кульове поранення голови' },
+                                                                { key: 'tbi', icon: '🧠', label: 'ЧМТ / Контузія / Струс', desc: 'Закрита/відкрита черепно-мозкова травма, струс або забій головного мозку' },
+                                                                { key: 'eye', icon: '👁️', label: 'Травма ока', desc: 'Ураження очного яблука або орбіти уламками, склом, порохом' },
+                                                                { key: 'akbt', icon: '💣', label: 'АКБТ', desc: 'Акубаротравма (контузія слуху, різкий перепад тиску, шум у вухах)' },
+                                                                { key: 'barotrauma', icon: '💨', label: 'Баротравма', desc: 'Ураження органів слуху та носоглотки вибуховою хвилею' },
+                                                                { key: 'fracture', icon: '🦴', label: 'Перелом', desc: 'Перелом кісток черепа, носа або щелепи' },
+                                                                { key: 'burn', icon: '🔥', label: 'Опік', desc: 'Опік обличчя, голови чи очей' },
+                                                                { key: 'laceration', icon: '🩹', label: 'Рвана рана', desc: 'Рвана рана волосистої частини голови або обличчя' },
+                                                                { key: 'contusion', icon: '🛡️', label: 'Забій', desc: 'Забій або гематома м’яких тканин голови' }
+                                                            ];
+                                                        } else if (selectedRegion === 'chest') {
+                                                            injuryOptions = [
+                                                                { key: 'shrapnel', icon: '💥', label: 'Уламкове', desc: 'Проникаюче або непроникаюче уламкове поранення грудей' },
+                                                                { key: 'bullet', icon: '🩸', label: 'Кульове', desc: 'Кульове поранення грудної клітки' },
+                                                                { key: 'pneumothorax', icon: '🫁', label: 'Пневмоторакс', desc: 'Скупчення повітря в плевральній порожнині, колапс легені (загроза життю)' },
+                                                                { key: 'rupture', icon: '⚡', label: 'Розрив', desc: 'Розрив м’язів грудної стінки або діафрагми' },
+                                                                { key: 'fracture', icon: '🦴', label: 'Перелом ребер', desc: 'Перелом ребер, ключиці або грудини' },
+                                                                { key: 'burn', icon: '🔥', label: 'Опік', desc: 'Термічний або хімічний опік грудної клітки' },
+                                                                { key: 'crush', icon: '🪨', label: 'Краш-синдром', desc: 'Здавлення грудної клітки завалом або ґрунтом (асфіксія, шок)' },
+                                                                { key: 'contusion', icon: '🛡️', label: 'Забій', desc: 'Тупа травма / забій грудної клітки, легень або серця' }
+                                                            ];
+                                                        } else if (selectedRegion === 'abdomen') {
+                                                            injuryOptions = [
+                                                                { key: 'shrapnel', icon: '💥', label: 'Уламкове', desc: 'Проникаюче або сліпе уламкове поранення живота/тазу' },
+                                                                { key: 'bullet', icon: '🩸', label: 'Кульове', desc: 'Кульове поранення черевної порожнини' },
+                                                                { key: 'rupture', icon: '⚡', label: 'Розрив', desc: 'Розрив внутрішніх органів (печінка, селезінка, кишківник)' },
+                                                                { key: 'burn', icon: '🔥', label: 'Опік', desc: 'Термічний опік передньої черевної стінки' },
+                                                                { key: 'laceration', icon: '🩹', label: 'Рвана рана', desc: 'Рвана рана м’яких тканин черевної стінки' },
+                                                                { key: 'contusion', icon: '🛡️', label: 'Забій', desc: 'Тупа травма живота, забій внутрішніх органів' }
+                                                            ];
+                                                        } else if (selectedRegion === 'neck') {
+                                                            injuryOptions = [
+                                                                { key: 'shrapnel', icon: '💥', label: 'Уламкове', desc: 'Уламкове поранення шиї (ризик пошкодження сонної артерії, трахеї)' },
+                                                                { key: 'bullet', icon: '🩸', label: 'Кульове', desc: 'Кульове поранення шиї' },
+                                                                { key: 'laceration', icon: '🩹', label: 'Рвана рана', desc: 'Рвана рана м’яких тканин шиї' },
+                                                                { key: 'burn', icon: '🔥', label: 'Опік', desc: 'Термічний опік шиї' },
+                                                                { key: 'fracture', icon: '🦴', label: 'Перелом', desc: 'Травма / перелом шийного відділу хребта чи гортані' },
+                                                                { key: 'contusion', icon: '🛡️', label: 'Забій', desc: 'Забій або гематома шиї' }
+                                                            ];
+                                                        }
+
+                                                        return (
+                                                            <div className="w-full flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-[310px]">
+                                                                {injuryOptions.map(i => {
+                                                                    const isChecked = injuries[selectedRegion]?.[i.key] || false;
+                                                                    return (
+                                                                        <button 
+                                                                            type="button"
+                                                                            key={i.key} 
+                                                                            onClick={() => toggleInjuryType(selectedRegion, i.key)}
+                                                                            title={`${i.label}: ${i.desc}`}
+                                                                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none text-left group/btn ${
+                                                                                isChecked 
+                                                                                    ? 'bg-red-950/90 border-2 border-red-500 text-white shadow-md shadow-red-950/60 ring-1 ring-red-500/40 font-bold' 
+                                                                                    : 'bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 text-slate-300 hover:text-white'
+                                                                            }`}
+                                                                        >
+                                                                            <span className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                                                                                <span className="shrink-0 text-base leading-none group-hover/btn:scale-110 transition-transform">{i.icon}</span>
+                                                                                <span className="text-xs font-semibold whitespace-normal leading-snug">{i.label}</span>
+                                                                            </span>
+                                                                            {isChecked ? (
+                                                                                <span className="w-4 h-4 rounded bg-red-500 text-slate-950 flex items-center justify-center font-black text-[10px] shrink-0 shadow-sm">✓</span>
+                                                                            ) : (
+                                                                                <span className="w-4 h-4 rounded border border-slate-700 bg-slate-900/90 shrink-0"></span>
+                                                                            )}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
                                                         );
-                                                    })}
+                                                    })()}
                                                 </div>
                                             </div>
                                         </div>
@@ -6990,10 +7069,24 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                                    {/* 28.08.2026 */}
+                                    {/* 29.08.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.4.0 (Сортування за евакуацією, лаконічні фільтри & рок-солід тулбар)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.5.0 (Розширений Body Map HUD, анатомічні ураження & медичні підказки)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">29.08.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Розширений анатомічний блок уражень (Body Map HUD):</strong> Інтерактивна тактична карта тіла з компонуванням «пліч-о-пліч» (силует + повноширинні кнопки уражень) у просторій модалці max-w-7xl без скорочень і трикрапок.</li>
+                                            <li><strong className="text-white">Повний військово-медичний класифікатор травм:</strong> Додано ампутації сегментів (рука, нога, стопа, кисть, пальці), краш-синдром, пневмоторакс, травму ока, баротравму, розрив тканин та рвані рани з адаптивним набором для кожної зони тіла.</li>
+                                            <li><strong className="text-white">Військово-медичні підказки при наведенні (Tooltips):</strong> Кожна кнопка містить детальне клінічне роз'яснення специфіки ураження та його небезпеки.</li>
+                                            <li><strong className="text-white">Збалансована сітка модального вікна 3/4/5:</strong> Охайна фіксація кнопки прив'язки [Прив'язано ✕] у своїй картці та усунення вертикальних пустот.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 28.08.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">⚡ v3.4.0 (Сортування за евакуацією, лаконічні фільтри & рок-солід тулбар)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">28.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
