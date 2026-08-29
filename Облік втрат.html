@@ -4198,7 +4198,7 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.5.0
+                                    ⚡ v3.5.1
                                 </button>
                             </div>
                         </div>
@@ -6321,30 +6321,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    ) : (
-                                        <div className="lg:col-span-4 bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-between shadow-inner space-y-3 relative overflow-hidden">
-                                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500 font-mono tracking-wider">
-                                                <Icon name="user" className="w-3.5 h-3.5 text-slate-600" />
-                                                <span>Локалізація травм</span>
-                                            </div>
-                                            <div className="relative w-[150px] aspect-[1/2] border border-slate-800/40 rounded-2xl bg-slate-950/80 p-2 opacity-20 pointer-events-none filter grayscale">
-                                                <svg viewBox="0 0 200 350" className="w-full h-full text-slate-600">
-                                                    <circle cx="100" cy="35" r="18" fill="#1e293b" stroke="#334155" strokeWidth="1.2"/>
-                                                    <rect x="94" y="53" width="12" height="15" rx="3" fill="#1e293b" stroke="#334155" strokeWidth="1.2"/>
-                                                    <path d="M75,68 L125,68 L120,135 L80,135 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2"/>
-                                                    <path d="M80,135 L120,135 L115,180 L85,180 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2"/>
-                                                    <path d="M72,70 L55,75 L45,140 L55,145 L68,100 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2"/>
-                                                    <path d="M128,70 L145,75 L155,140 L145,145 L132,100 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2"/>
-                                                    <path d="M83,180 L70,320 L92,320 L98,220 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2"/>
-                                                    <path d="M117,180 L130,320 L108,320 L102,220 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2"/>
-                                                </svg>
-                                            </div>
-                                            <div className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl p-3 text-center space-y-1">
-                                                <div className="text-[11px] font-bold text-slate-300 font-mono">Анатомія не застосовується</div>
-                                                <p className="text-[10px] text-slate-500 leading-tight">Для подій типу «{lossType || '200 / ЗБВ / СЗЧ'}» анатомічні ураження не фіксуються</p>
-                                            </div>
-                                        </div>
-                                    )}
+                                    ) : null}
                                 </div>
                                 
                                 {/* Footer */}
@@ -7072,7 +7049,19 @@
                                     {/* 29.08.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.5.0 (Розширений Body Map HUD, анатомічні ураження & медичні підказки)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.5.1 (Адаптивна симетрична сітка модалки для 200 / ЗБВ / СЗЧ)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">29.08.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Чиста 2-колонкова сітка для 200 / ЗБВ / СЗЧ:</strong> Усунуто некоректну заглушку, яка обрізала силует та залишала порожні 8 колонок. Форма для небойових/безтравматичних епізодів тепер ідеально симетрична та збалансована (6 + 6).</li>
+                                            <li><strong className="text-white">Збереження повної 3-колонкової структури 300:</strong> Для поранень та травм продовжує працювати інтерактивна тактична карта тіла (3/4/5).</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 29.08.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">⚡ v3.5.0 (Розширений Body Map HUD, анатомічні ураження & медичні підказки)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">29.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
