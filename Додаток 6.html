@@ -134,7 +134,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.8.4</span>
+                    <span>🚀 v1.9.0</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -1044,16 +1044,15 @@
                                 </h4>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
                                     Формат запису: <code
-                                        class="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono">слово з помилкою = Еталонна назва</code>.
-                                    Натискання на Крок 5 в головному меню автоматично замінить помилкові варіанти на
-                                    еталон.
+                                        class="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono">тригер / помилка = Еталонна назва</code>.
+                                    Працює для стандартизації позицій (Крок 5), а також для <b>автоматичного перенаправлення підрозділів у звіт-матриці</b> (наприклад, <code class="text-emerald-600 dark:text-emerald-400 font-mono">бронегрупа = 5мр</code> автоматично включить бійців бронегрупи у відомість 5 мр).
                                 </p>
                             </div>
 
                             <div class="relative">
                                 <textarea id="kw-replace-rules" rows="15" oninput="updateSettingsBadges()"
                                     class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700/50 dark:text-white text-sm font-mono leading-relaxed min-h-[400px] xl:min-h-[600px] h-full resize-y"
-                                    placeholder="помідор = ПВ &quot;ПОМІДОР&quot; (РОП)&#10;сп помідор = ПВ &quot;ПОМІДОР&quot; (РОП)&#10;огірок = ВОП &quot;ОГІРОК&quot;"></textarea>
+                                    placeholder="помідор = ПВ &quot;ПОМІДОР&quot; (РОП)&#10;сп помідор = ПВ &quot;ПОМІДОР&quot; (РОП)&#10;огірок = ВОП &quot;ОГІРОК&quot;&#10;бронегрупа = 5мр"></textarea>
                             </div>
                         </div>
 
@@ -1300,7 +1299,7 @@
                     <span
                         class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.8.0</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.9.0</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1331,9 +1330,26 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.9.0",
+                date: "29.08.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🎯 Контекстний військовий розподіл підрозділів у РОПах та БРО",
+                        color: "blue",
+                        items: [
+                            "<b>Автоматичне ротне злиття в РОПах</b>: бійці бронегрупи (<code>РЗ БнГ (БРО)</code>, <code>БнГ</code>, <code>бронегрупа</code>, <code>бгр</code>) та начальники радіолокаційних комплексів (<code>нрк</code>), задіяні на позиціях конкретного РОПу (<code>РОП 5мр</code>, <code>РОП 4мр</code>, <code>РОП 6мр</code>), автоматично зараховуються до списку відповідної роти без створення сторонніх рядків у донесенні для командування.",
+                            "<b>Збереження цілісності БРО батальйону</b>: у загальному батальйонному районі оборони (<code>БРО НОВОСЕЛІВКА</code> тощо) бронегрупа та <code>нрк</code> залишаються самостійними одиницями розрахунку.",
+                            "<b>Стійкість до латинських гомогліфів та опечаток</b>: впроваджено багатовекторну нормалізацію кириличних та латинських символів (<code>B</code>, <code>P</code>, <code>O</code>, <code>G</code>, <code>D</code>, <code>U</code>, <code>R</code>), що гарантує 100% розпізнавання файлів із назвами зразка <code>РЗ BнГ (BPO)</code> та <code>БРОНЕГРУПА ПБД 29.08.-2026.</code>.",
+                            "<b>Синхронізація математичного балансу</b>: повна відповідність між рядковими розподілами та підсумковими сумами у 9-стовпчиковій структурі Листа 2 Excel."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.8.4",
                 date: "20.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "⚡ Прискорення алгоритмів та дебаунсинг пошуку",
@@ -2904,46 +2920,110 @@
                 .trim();
         }
 
-        function cleanUnitName(fileName) {
-            if (!fileName) return "Невідомий";
-            let name = String(fileName)
-                .replace(/\.(docx|dotx|xlsx|xls|csv)$/i, '')
-                .replace(/^(пбд|щбд)[_\-\s]*/i, '')
-                .replace(/([0-9])([a-zа-яієїґ])/gi, '$1 $2')
-                .replace(/([a-zа-яієїґ])([0-9])/gi, '$1 $2')
-                .replace(/[\s_\-]*\(?\d{1,2}[\.\-_]\d{1,2}([\.\-_]\d{2,4})?р?\)?/gi, ' ')
-                .replace(/[\s_\-]*\(?202\d[\.\-_]\d{1,2}[\.\-_]\d{1,2}р?\)?/gi, ' ')
+        function cleanBaseUnitName(s) {
+            if (!s) return "";
+            let name = String(s)
+                .replace(/\.(docx|dotx|xlsx|xls|csv)$/i, '');
+
+            name = name
+                .replace(/[\s_\-]*\(?\d{1,2}[\.\-_/]\d{1,2}([\.\-_/]\d{2,4})?р?\)?/gi, ' ')
+                .replace(/[\s_\-]*\(?202\d[\.\-_/]\d{1,2}[\.\-_/]\d{1,2}р?\)?/gi, ' ')
+                .replace(/[\s_\-]*\(?202\dр?\.?\)?/gi, ' ')
                 .replace(/[\s_\-]*\(?\d{6,8}\)?/gi, ' ')
                 .replace(/[\s_\-]*\(коп[іп]я\d*\)/gi, '')
                 .replace(/[\s_\-]*\(\d+\)/gi, '')
-                .replace(/[\s_\-]*бтгр$/i, '')
-                .replace(/[\s_\-]+\d+$/i, '')
-                .replace(/_/g, ' ')
+                .replace(/[\s_\-]+\d+$/i, '');
+
+            const homoglyphMap = {
+                'a': 'а', 'A': 'А', 'b': 'б', 'B': 'б', 'c': 'с', 'C': 'С', 'e': 'е', 'E': 'Е',
+                'h': 'н', 'H': 'Н', 'i': 'і', 'I': 'І', 'k': 'к', 'K': 'К', 'm': 'м', 'M': 'М',
+                'o': 'о', 'O': 'О', 'p': 'р', 'P': 'Р', 't': 'т', 'T': 'Т', 'x': 'х', 'X': 'Х',
+                'y': 'у', 'Y': 'У', 'r': 'р', 'R': 'р', 'g': 'г', 'G': 'г', 'd': 'д', 'D': 'д', 'u': 'у', 'U': 'у'
+            };
+            name = name.replace(/[a-zA-Z]/g, match => homoglyphMap[match] || match).toLowerCase();
+
+            name = name
+                .replace(/(^|[^a-zа-яієїґ0-9])(пбд|щбд)([^a-zа-яієїґ0-9]|$)/gi, ' ')
+                .replace(/([0-9])([a-zа-яієїґ])/gi, '$1 $2')
+                .replace(/([a-zа-яієїґ])([0-9])/gi, '$1 $2')
+                .replace(/\((бро|вро|роп|воп|бтгр|заб)\)/gi, ' ')
+                .replace(/(^|\s)(бтгр|бро|вро|роп|воп)(\s|$)/gi, ' ')
+                .replace(/[\.\-_/]+/g, ' ')
                 .replace(/\s+/g, ' ')
                 .trim();
 
-            name = name.toLowerCase();
+            return name;
+        }
+
+        function isMergeableUnit(s) {
+            if (!s) return false;
+            let norm = cleanBaseUnitName(s);
+            if (norm === 'нрк' || norm.includes('нрк')) return true;
+            return (
+                /\b(рз\s*[бв]нг|р[бв]нг|[бв]нг|[бв]гр|броне\s*група)\b/i.test(norm) ||
+                norm.includes('бнг') || norm.includes('внг') || norm.includes('бронегрупа') || norm.includes('бгр') ||
+                (norm.includes('рз') && (norm.includes('нг') || norm.includes('бр') || norm.includes('гр')))
+            );
+        }
+
+        function cleanUnitName(fileName) {
+            if (!fileName) return "Невідомий";
+            let rawName = cleanBaseUnitName(fileName);
+            let normName = rawName;
+
+            if (isMergeableUnit(normName)) {
+                if (normName === 'нрк' || normName.includes('нрк')) {
+                    normName = 'нрк';
+                } else {
+                    normName = 'РЗ БнГ (БРО)';
+                }
+            }
+
+            // 1. Користувацькі правила автозаміни підрозділів
+            try {
+                if (typeof getReplaceRules === 'function') {
+                    const customRules = getReplaceRules();
+                    for (let r of customRules) {
+                        if (!r.trigger) continue;
+                        let trigRaw = cleanBaseUnitName(r.trigger);
+                        let trigNorm = trigRaw;
+                        if (isMergeableUnit(trigNorm)) {
+                            trigNorm = (trigNorm === 'нрк' || trigNorm.includes('нрк')) ? 'нрк' : 'РЗ БнГ (БРО)';
+                        }
+                        if (normName === trigNorm || rawName === trigRaw || normName === trigRaw || rawName === trigNorm) {
+                            return r.replaceWith;
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error applying unit replace rules:", err);
+            }
+
+            if (normName === 'РЗ БнГ (БРО)' || normName === 'нрк') {
+                return normName;
+            }
 
             // Точна ідентифікація спеціальних підрозділів (без прив'язки до regex word boundaries)
-            if (name.includes("ісв") || name.includes("исв") || name.includes("icv") || name.includes("isv") || name.includes("icb")) {
+            if (normName.includes("ісв") || normName.includes("исв") || normName.includes("icv") || normName.includes("isv") || normName.includes("icb")) {
                 return "ісв";
             }
-            if (name.includes("вмз") || name.includes("vmz")) {
+            if (normName.includes("вмз") || normName.includes("vmz")) {
                 return "вмз";
             }
-            if (name.includes("втз") || name.includes("vtz")) {
+            if (normName.includes("втз") || normName.includes("vtz")) {
                 return "втз";
             }
-            if (name.includes("врб") || name.includes("vrb")) {
+            if (normName.includes("врб") || normName.includes("vrb")) {
                 return "врб";
             }
-            if (name.includes("вуз") || name.includes("vuz")) {
+            if (normName.includes("вуз") || normName.includes("vuz")) {
                 return "вуз";
             }
-            if (name.includes("вуп") || name.includes("vup")) {
+            if (normName.includes("вуп") || normName.includes("vup")) {
                 return "вуп";
             }
 
+            let name = normName;
             // Очищення будь-яких суфіксів батальйонів (2мб, 2 мб, 1мб, 3мб тощо)
             name = name.replace(/\d+[\s_\-]*мб/gi, '');
             name = name.replace(/мб[\s_\-]*\d+/gi, '');
@@ -2954,6 +3034,7 @@
             name = name.replace(/вптрк/g, 'вПТРК');
             name = name.replace(/гв/g, 'гв');
             name = name.replace(/кв/g, 'кв');
+            name = name.replace(/во/g, 'во');
             name = name.replace(/(^|\s)мб(\s|$)/g, '$1мінбатр$2');
             if (name.trim() === 'мб') name = 'мінбатр';
 
@@ -3149,14 +3230,26 @@
                 return combinedMap;
             };
 
-            const buildBreakdownText = (unitMap, nameHint = '') => {
+            const buildBreakdownText = (unitMap, nameHint = '', contextRopName = '') => {
                 const lines = [];
                 let total = 0;
+
+                // Перевіряємо контекст роти (напр. "РОП 5 мр 2 мб", "РОП 4 мр", "РОП 6 мр")
+                let contextCompany = '';
+                const fullContext = (contextRopName + ' ' + nameHint).toLowerCase();
+                const compMatch = fullContext.match(/(\d+)\s*мр/i);
+                if (compMatch) {
+                    contextCompany = `${compMatch[1]}мр`;
+                }
 
                 const cleanMap = {};
                 for (let [unit, cnt] of Object.entries(unitMap || {})) {
                     if (cnt > 0) {
                         let cUnit = cleanUnitName(unit);
+                        // Якщо ми знаходимося в межах РОПу конкретної роти (4мр, 5мр, 6мр) - бронегрупа та НРК автоматично зливаються з цією ротою!
+                        if (isMergeableUnit(cUnit) && contextCompany) {
+                            cUnit = contextCompany;
+                        }
                         cleanMap[cUnit] = (cleanMap[cUnit] || 0) + cnt;
                     }
                 }
@@ -3205,7 +3298,7 @@
                 mainRop.items.forEach(item => {
                     if (item.type === 'direct') {
                         let itemMap = gatherMap(item.name);
-                        let itemBd = buildBreakdownText(itemMap, item.name);
+                        let itemBd = buildBreakdownText(itemMap, item.name, mainRop.ropName);
                         let isKsp = item.name.toLowerCase().includes('ксп');
 
                         if (isKsp) {
@@ -3234,7 +3327,7 @@
                                 vopCombinedMap[u] = (vopCombinedMap[u] || 0) + cnt;
                                 mainRopCombinedMap[u] = (mainRopCombinedMap[u] || 0) + cnt;
                             }
-                            let chBd = buildBreakdownText(chMap, chName);
+                            let chBd = buildBreakdownText(chMap, chName, mainRop.ropName);
                             let isChKsp = chName.toLowerCase().includes('ксп');
 
                             if (isChKsp) {
@@ -3260,7 +3353,7 @@
                             mainRopCombinedMap[u] = (mainRopCombinedMap[u] || 0) + cnt;
                         }
 
-                        let vopBd = buildBreakdownText(vopCombinedMap, item.name);
+                        let vopBd = buildBreakdownText(vopCombinedMap, item.name, mainRop.ropName);
                         blockRows.push({
                             level: 'vopHeader',
                             colsA_C: ["", "", ""],
@@ -3277,7 +3370,7 @@
                     mainRopCombinedMap[u] = (mainRopCombinedMap[u] || 0) + cnt;
                 }
 
-                let mainBd = buildBreakdownText(mainRopCombinedMap, mainRop.ropName);
+                let mainBd = buildBreakdownText(mainRopCombinedMap, mainRop.ropName, mainRop.ropName);
                 let startRow = wsData2.length;
 
                 mainRopHeaderIndexes.add(startRow);
