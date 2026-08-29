@@ -128,7 +128,7 @@
         const DEFAULT_UNITS = ["1-ша рота", "2-га рота", "3-тя рота", "Взвод вогневої підтримки", "Розвідвзвод", "Управління батальйону"];
         const DEFAULT_SECTORS = ["Позиція 'Альфа'", "Позиція 'Браво'", "КСП батальйону", "Точка вивантаження", "Стабпункт"];
         const DEFAULT_CAUSES = [
-            "Удар FPV", "Удар FPV (оптоволокно)", "Удар FPV (крило)", "Скид з БПЛА", 
+            "Удар КАБом", "Удар FPV", "Удар FPV (оптоволокно)", "Удар FPV (крило)", "Скид з БПЛА", 
             "Скид горючої суміші з дрона", "Скид з важкого бомбера", "Обстріл з міномета, 82мм", 
             "Обстріл з міномета, 120мм", "Обстріл з ствольної артилерії", "Підрив на ворожому мінуванні", 
             "Стрілецька зброя", "Залишив позицію", "Нещасний випадок / Хвороба", "Інше"
@@ -574,6 +574,17 @@
         };
 
         
+        const formatCallsignUI = (raw) => {
+            if (!raw) return '';
+            let clean = String(raw).trim();
+            clean = clean.replace(/^[\"\'«»\(\)\[\]]+|[\"\'«»\(\)\[\]]+$/g, '').trim();
+            if (!clean) return '';
+            return clean.split(/([\s\-]+)/).map(part => {
+                if (/^[\s\-]+$/.test(part) || !part) return part;
+                return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+            }).join('');
+        };
+        
         const formatEpisodeDateUI = (dStr) => {
             if (!dStr) return '';
             const ms = parseSafeDate(dStr);
@@ -601,7 +612,7 @@
             const displayRank = episode.rank || soldier?.rank || '';
             const cleanRank = (!displayRank || displayRank === 'Не вказано' || displayRank === 'Невідомо') ? 'В/сл' : displayRank;
             const sName = soldier?.name || 'Невідомо';
-            const sCallsign = soldier?.callsign ? ` «${soldier.callsign}»` : '';
+            const sCallsign = soldier?.callsign ? ` «${formatCallsignUI(soldier.callsign)}»` : '';
             const unitStr = episode.unit || soldier?.unit || 'Не вказано';
             const dateStr = formatEpisodeDateUI(episode.date);
             const causeStr = episode.cause ? `, ${episode.cause}` : '';
@@ -795,7 +806,7 @@
                                 <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap">
                                     {sCallsign && (
                                         <span className="text-amber-400 text-xs font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm shrink-0">
-                                           «{sCallsign}»
+                                           «{formatCallsignUI(sCallsign)}»
                                         </span>
                                     )}
                                     <span className="text-slate-300 font-medium flex items-center gap-1 bg-slate-950/60 border border-slate-800/80 px-1.5 py-0.5 rounded text-[11px] truncate max-w-[150px]" title={displayUnit}>
@@ -956,7 +967,7 @@
                                 <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap">
                                     {sCallsign && (
                                         <span className="text-amber-400 text-xs font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm shrink-0">
-                                            «{sCallsign}»
+                                            «{formatCallsignUI(sCallsign)}»
                                         </span>
                                     )}
                                     <span className="text-slate-300 font-medium flex items-center gap-1 bg-slate-950/60 border border-slate-800/80 px-1.5 py-0.5 rounded text-[11px] truncate max-w-[150px]" title={displayUnit}>
@@ -1141,7 +1152,7 @@
                                 </span>
                                 {sCallsign && (
                                     <span className="text-amber-400 text-xs font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm">
-                                        «{sCallsign}»
+                                        «{formatCallsignUI(sCallsign)}»
                                     </span>
                                 )}
                                 <span className="text-slate-300 font-medium text-xs truncate max-w-[120px]" title={displayUnit}>
@@ -1318,10 +1329,17 @@
                             localforage.setItem('med_episodes_v3', cleanedEpisodes).catch(() => {});
                         }
 
+                        const allLoadedCauses = Array.from(new Set([
+                            ...(savedSettings.causes || DEFAULT_CAUSES),
+                            ...(cleanedEpisodes || []).map(ep => ep.cause).filter(Boolean)
+                        ]));
+                        savedSettings.causes = allLoadedCauses;
+
                         setSoldiers(savedSoldiers || []);
                         setEpisodes(cleanedEpisodes);
                         setLogs(savedLogs?.slice(0, 200) || []);
                         setSettings(savedSettings);
+                        setFilterCauses(allLoadedCauses);
                         setIsLoading(false);
                     } catch (e) {
                         console.error("Помилка завантаження бази", e);
@@ -2214,6 +2232,23 @@
                     }
                 });
 
+                // 3. Check & normalize soldier callsigns formatting (Quotes, Title Case)
+                let callsignsStandardizedCount = 0;
+                fixedSoldiers.forEach(s => {
+                    if (s.callsign) {
+                        const formatted = formatCallsignUI(s.callsign);
+                        if (formatted !== s.callsign) {
+                            callsignsStandardizedCount++;
+                            issues.push({
+                                id: s.id,
+                                soldier: s,
+                                text: `Позивний бійця ${s.name}: "${s.callsign}" -> стандартизовано до «${formatted}»`
+                            });
+                            if (autoRepair) s.callsign = formatted;
+                        }
+                    }
+                });
+
                 const isHealthy = issues.length === 0;
                 const result = {
                     checked: true,
@@ -2232,7 +2267,7 @@
                     await localforage.setItem('med_episodes_v3', fixedEpisodes);
                     await localforage.setItem('med_soldiers_v3', fixedSoldiers);
                     const logSummary = issues.map(i => typeof i === 'string' ? i : i.text).join('; ');
-                    logAction('INTEGRITY_REPAIR', `Вилікувано базу: ${orphansCount} сирітських записів, ${datesFixedCount} дат`, logSummary);
+                    logAction('INTEGRITY_REPAIR', `Вилікувано базу: ${orphansCount} сиріт, ${datesFixedCount} дат, ${callsignsStandardizedCount} позивних`, logSummary);
                     triggerNotification(`Базу поліковано! Виправлено ${issues.length} зауважень.`, 'success');
                     setIntegrityStatus({
                         checked: true,
@@ -2248,6 +2283,31 @@
                         triggerNotification(`⚠️ Знайдено ${issues.length} зауважень. Натисніть "Виправити автоматично".`, 'warning');
                     }
                 }
+            };
+
+            const handleStandardizeAllCallsigns = async () => {
+                let fixedCount = 0;
+                const updatedSoldiers = soldiers.map(s => {
+                    if (s.callsign) {
+                        const std = formatCallsignUI(s.callsign);
+                        if (std !== s.callsign) {
+                            fixedCount++;
+                            return { ...s, callsign: std };
+                        }
+                    }
+                    return s;
+                });
+
+                if (fixedCount === 0) {
+                    triggerNotification("Усі позивні в базі вже відповідають стандарту Title Case!", "success");
+                    return;
+                }
+
+                await createSafetySnapshot("Знімок перед стандартизацією позивних");
+                setSoldiers(updatedSoldiers);
+                await localforage.setItem('med_soldiers_v3', updatedSoldiers);
+                addLog('STANDARDIZE_CALLSIGNS', `Стандартизовано ${fixedCount} позивних до Title Case («Бугор», «Юрист»)`);
+                triggerNotification(`Успішно стандартизовано ${fixedCount} позивних!`, "success");
             };
 
             const handleOpenPrintableReport = () => {
@@ -2320,7 +2380,25 @@
                                     leg_r: 'П.нога' 
                                 }[reg] || (BODY_REGIONS.find(r => r.id === reg)?.name || reg);
                                 const activeTypes = Object.entries(types).filter(([_, v]) => v).map(([t]) => {
-                                    return { amputation: 'Ампутація', rupture: 'Відрив', shrapnel: 'Уламкове', bullet: 'Кульове', fracture: 'Перелом', burn: 'Опік', akbt: 'АКБТ', contusion: 'Контузія' }[t] || t;
+                                    return { 
+                                        shrapnel: 'Уламкове',
+                                        bullet: 'Кульове',
+                                        amputation: 'Ампутація',
+                                        amp_hand: 'Ампутація кисті',
+                                        amp_foot: 'Ампутація стопи',
+                                        amp_fingers: 'Ампутація пальців',
+                                        fracture: 'Перелом',
+                                        rupture: 'Розрив',
+                                        burn: 'Опік',
+                                        crush: 'Краш-синдром',
+                                        tbi: 'ЧМТ',
+                                        eye: 'Травма ока',
+                                        akbt: 'АКБТ',
+                                        barotrauma: 'Баротравма',
+                                        pneumothorax: 'Пневмоторакс',
+                                        laceration: 'Рвана рана',
+                                        contusion: 'Забій'
+                                    }[t] || t;
                                 }).join(', ');
                                 return `${regName}: ${activeTypes}`;
                             }).join('; ') || '—';
@@ -2364,7 +2442,7 @@
                                 <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; white-space:nowrap;">${ep.date.replace('T', ' ')}</td>
                                 <td style="font-size:8pt;">${s.rank || '—'}</td>
                                 <td style="font-weight:bold; font-size:8.5pt;">${s.name || '—'}</td>
-                                <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; color:#b45309;">${s.callsign ? `«${s.callsign}»` : '—'}</td>
+                                <td style="font-family:'JetBrains Mono',monospace; font-size:8pt; color:#b45309;">${s.callsign ? `«${formatCallsignUI(s.callsign)}»` : '—'}</td>
                                 <td style="font-size:8pt;">${s.unit || ep.unit || '—'}</td>
                                 <td style="font-weight:600; font-size:8pt;">${ep.lossType}</td>
                                 <td style="font-size:8pt;">${severityBadge}</td>
@@ -2988,8 +3066,28 @@
                 const sevCounts = { 'Легкий': 0, 'Середній': 0, 'Важкий': 0, 'Критичний': 0 };
                 const injCounts = {};
                 const woundCauses = {};
+                let totalInjuriesCount = 0;
+                let woundedWithInjCount = 0;
                 
-                const injDict = {amputation:'Ампутація', rupture:'Розрив', shrapnel:'Уламкове', bullet:'Кульове', fracture:'Перелом', burn:'Опік', akbt:'АКБТ', contusion:'Забій'};
+                const injDict = {
+                    shrapnel: 'Уламкове',
+                    bullet: 'Кульове',
+                    amputation: 'Ампутація',
+                    amp_hand: 'Ампутація кисті',
+                    amp_foot: 'Ампутація стопи',
+                    amp_fingers: 'Ампутація пальців',
+                    fracture: 'Перелом',
+                    rupture: 'Розрив',
+                    burn: 'Опік',
+                    crush: 'Краш-синдром',
+                    tbi: 'ЧМТ',
+                    eye: 'Травма ока',
+                    akbt: 'АКБТ',
+                    barotrauma: 'Баротравма',
+                    pneumothorax: 'Пневмоторакс',
+                    laceration: 'Рвана рана',
+                    contusion: 'Забій'
+                };
                 
                 anFilteredEpisodes.forEach(ep => {
                     const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : ep.lossType;
@@ -3010,11 +3108,17 @@
                         woundCauses[ep.cause || "Інше"] = (woundCauses[ep.cause || "Інше"] || 0) + 1;
                         
                         if (ep.injuries) {
+                            let epHasInj = false;
                             Object.values(ep.injuries).forEach(r => {
                                 Object.entries(r).forEach(([k, v]) => {
-                                    if (v && injDict[k]) injCounts[injDict[k]] = (injCounts[injDict[k]] || 0) + 1;
+                                    if (v && injDict[k]) {
+                                        injCounts[injDict[k]] = (injCounts[injDict[k]] || 0) + 1;
+                                        totalInjuriesCount++;
+                                        epHasInj = true;
+                                    }
                                 });
                             });
+                            if (epHasInj) woundedWithInjCount++;
                         }
                         
                         const epEvacMs = parseSafeDate(ep.evacTime || ep.evacDate || '');
@@ -3090,7 +3194,8 @@
                     if (!eps.length) return "";
                     const calls = eps.map(e => {
                         const s = soldiers.find(s => s.id === e.soldierId);
-                        return s ? (s.callsign || s.name || "Невідомо") : "Невідомо";
+                        if (!s) return "";
+                        return s.callsign ? `«${formatCallsignUI(s.callsign)}»` : (s.name || "Невідомо");
                     });
                     const uniqueCalls = [...new Set(calls)].filter(Boolean);
                     if (!uniqueCalls.length) return "";
@@ -3126,8 +3231,14 @@
                     report += `    • ${sevStr.join(', ')};\n`;
                     report += `    • Евакуйовано – ${periodWoundedEvacEps.length}${getCallsigns(periodWoundedEvacEps)}, не евакуйовано – ${periodWoundedNotEvacEps.length}${getCallsigns(periodWoundedNotEvacEps)};\n`;
                     
-                    let injStr = Object.entries(injCounts).map(([k, v]) => `${k} – ${v}`).join(', ');
-                    if (injStr) report += `    • ${injStr};\n`;
+                    let sortedInj = Object.entries(injCounts).sort((a, b) => b[1] - a[1]);
+                    if (sortedInj.length > 0) {
+                        let injStr = sortedInj.map(([k, v]) => `${k} – ${v}`).join(', ');
+                        let multiNote = totalInjuriesCount > woundedWithInjCount 
+                            ? ` (всього ${totalInjuriesCount} уражень у ${woundedWithInjCount} в/сл, є поєднані/множинні травми)` 
+                            : '';
+                        report += `    • Характер уражень: ${injStr}${multiNote};\n`;
+                    }
                     
                     let wcStr = Object.entries(woundCauses).map(([k, v]) => `${k} – ${v}`).join(', ');
                     if (wcStr) report += `    • ${wcStr}\n`;
@@ -3235,7 +3346,7 @@
                         date: ep.date.replace('T', ' '),
                         rank: s.rank || '',
                         name: s.name || '',
-                        callsign: s.callsign || '',
+                        callsign: s.callsign ? formatCallsignUI(s.callsign) : '',
                         unit: s.unit || '',
                         lossType: ep.lossType || '',
                         severity: ep.severity || '',
@@ -3335,10 +3446,10 @@
                     }
 
                     const matchLoss = filterLossTypes.includes(episode.lossType);
-                    const matchSeverity = isAny300(episode.lossType) ? filterSeverities.includes(episode.severity) : true;
+                    const matchSeverity = isAny300(episode.lossType) ? (!episode.severity || filterSeverities.includes(episode.severity)) : true;
                     const currentStatus = isAwol(episode.lossType) ? episode.awolStatus : episode.evacStatus;
                     const matchEvac = filterEvacStatuses.includes(currentStatus);
-                    const matchCause = filterCauses.includes(episode.cause);
+                    const matchCause = !episode.cause || filterCauses.includes(episode.cause);
                     const matchUdp = filterUdp === "all" ? true : (filterUdp === "yes" ? episode.inUdp : !episode.inUdp);
                     
                     const matchWeapon = filterWeapon.length === 0 || filterWeapon.includes(episode.weaponStatus || "Не вказано");
@@ -3524,15 +3635,17 @@
                     }
 
                     const newSoldierId = 'sol_' + Date.now();
-                    const newSoldierObj = { id: newSoldierId, name: newSoldierName.trim(), callsign: newSoldierCallsign.trim(), rank: newSoldierRank || "Не вказано", unit: newSoldierUnit };
+                    const cleanCallsign = formatCallsignUI(newSoldierCallsign);
+                    const newSoldierObj = { id: newSoldierId, name: newSoldierName.trim(), callsign: cleanCallsign, rank: newSoldierRank || "Не вказано", unit: newSoldierUnit };
                     setSoldiers(prev => [...prev, newSoldierObj]);
                     finalSoldierId = newSoldierId;
-                    const callsignDisplay = newSoldierCallsign.trim() ? ` «${newSoldierCallsign.trim()}»` : "";
+                    const callsignDisplay = cleanCallsign ? ` «${cleanCallsign}»` : "";
                     addLog("Новий в/сл", `Створено: ${newSoldierRank || ""} ${newSoldierName}${callsignDisplay}`);
                 } else {
+                    const cleanCallsign = formatCallsignUI(newSoldierCallsign);
                     setSoldiers(prev => prev.map(s => {
                         if (s.id === finalSoldierId) {
-                            return { ...s, rank: newSoldierRank || s.rank, unit: newSoldierUnit || s.unit, callsign: newSoldierCallsign.trim() || s.callsign };
+                            return { ...s, rank: newSoldierRank || s.rank, unit: newSoldierUnit || s.unit, callsign: cleanCallsign || s.callsign };
                         }
                         return s;
                     }));
@@ -3631,9 +3744,10 @@
                     hasReport, reportDate: hasReport ? (reportDate || todayStrDate) : ""
                 };
 
+                const cleanCallsign = formatCallsignUI(newSoldierCallsign);
                 setEpisodes(prev => prev.map(ep => ep.id === currentEpisode.id ? updatedEpisode : ep));
                 setSoldiers(prev => prev.map(s => s.id === currentEpisode.soldierId ? {
-                    ...s, name: newSoldierName.trim(), callsign: newSoldierCallsign.trim(), rank: newSoldierRank, unit: newSoldierUnit
+                    ...s, name: newSoldierName.trim(), callsign: cleanCallsign, rank: newSoldierRank, unit: newSoldierUnit
                 } : s));
 
                 let changes = [];
@@ -3643,7 +3757,7 @@
                 }
 
                 const detailsText = changes.length > 0 ? `Зміни: ${changes.join(', ')}` : `Оновлено загальні дані картки`;
-                const editCallsignDisplay = newSoldierCallsign.trim() ? ` («${newSoldierCallsign.trim()}»)` : "";
+                const editCallsignDisplay = cleanCallsign ? ` («${cleanCallsign}»)` : "";
                 addLog("Редагування", `Оновлено дані для в/сл: ${newSoldierName}${editCallsignDisplay}. ${detailsText}`);
                 
                 setIsEditOpen(false); setCurrentEpisode(null);
@@ -4198,7 +4312,7 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.5.1
+                                    ⚡ v3.5.2
                                 </button>
                             </div>
                         </div>
@@ -6912,14 +7026,14 @@
                                             Автоматичний захист від сирітських записів, пошкоджених дат та аварійних помилок синхронізації.
                                         </p>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
                                             <button 
                                                 type="button" 
                                                 onClick={() => handleRunIntegrityDiagnosis(false)} 
                                                 className="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 font-semibold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
                                             >
                                                 <Icon name="search" className="w-3.5 h-3.5 text-amber-400" />
-                                                <span>Діагностика структури</span>
+                                                <span>Діагностика</span>
                                             </button>
 
                                             <button 
@@ -6929,6 +7043,16 @@
                                             >
                                                 <Icon name="check-circle" className="w-3.5 h-3.5 text-amber-400" />
                                                 <span>Полікувати базу</span>
+                                            </button>
+
+                                            <button 
+                                                type="button" 
+                                                onClick={handleStandardizeAllCallsigns} 
+                                                className="py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-white border border-amber-500/40 font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                                                title="Привести всі позивні в базі до єдиного стандарту Title Case («Бугор», «Юрист»)"
+                                            >
+                                                <Icon name="sparkles" className="w-3.5 h-3.5 text-amber-400" />
+                                                <span>Стандартизувати позивні</span>
                                             </button>
                                         </div>
 
@@ -7049,7 +7173,21 @@
                                     {/* 29.08.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.5.1 (Адаптивна симетрична сітка модалки для 200 / ЗБВ / СЗЧ)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.5.2 (Стандартизація позивних Title Case, синхронізація причин та цілісність бази)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">29.08.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Єдиний канонічний стандарт позивних (Title Case):</strong> Автоматичне форматування всіх позивних до чистого вигляду «Бугор», «Юрист», «Дракон» (з очищенням зайвих лапок/дужок та підтримкою складних імен на кшталт «Дядя-Ваня») у картках Журналу, Тріажі, Excel, друку та текстових звітах.</li>
+                                            <li><strong className="text-white">Швидка стандартизація бази в 1 клік:</strong> Додано кнопку «✨ Стандартизувати позивні» та автоматичну діагностику регістрів у Data Integrity Guard зі створенням точки відновлення.</li>
+                                            <li><strong className="text-white">Синхронізація фільтрів при старті:</strong> Повне узгодження чекбоксів причин при завантаженні (loadData) з збереженим довідником та наявними епізодами; «Удар КАБом» включено до системного словника за замовчуванням.</li>
+                                            <li><strong className="text-white">Безпечний фільтр причин та важкості:</strong> Усунуто раптове приховування записів з новими або незаповненими полями при перезавантаженні сторінки.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 29.08.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">⚡ v3.5.1 (Адаптивна симетрична сітка модалки для 200 / ЗБВ / СЗЧ)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">29.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
