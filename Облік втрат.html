@@ -2306,7 +2306,7 @@
                 await createSafetySnapshot("Знімок перед стандартизацією позивних");
                 setSoldiers(updatedSoldiers);
                 await localforage.setItem('med_soldiers_v3', updatedSoldiers);
-                addLog('STANDARDIZE_CALLSIGNS', `Стандартизовано ${fixedCount} позивних до Title Case («Бугор», «Юрист»)`);
+                addLog('STANDARDIZE_CALLSIGNS', `Стандартизовано ${fixedCount} позивних до Title Case («Сокіл», «Тайфун»)`);
                 triggerNotification(`Успішно стандартизовано ${fixedCount} позивних!`, "success");
             };
 
@@ -7049,7 +7049,7 @@
                                                 type="button" 
                                                 onClick={handleStandardizeAllCallsigns} 
                                                 className="py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-white border border-amber-500/40 font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-                                                title="Привести всі позивні в базі до єдиного стандарту Title Case («Бугор», «Юрист»)"
+                                                title="Привести всі позивні в базі до єдиного стандарту Title Case («Сокіл», «Тайфун»)"
                                             >
                                                 <Icon name="sparkles" className="w-3.5 h-3.5 text-amber-400" />
                                                 <span>Стандартизувати позивні</span>
@@ -7177,7 +7177,7 @@
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">29.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
-                                            <li><strong className="text-white">Єдиний канонічний стандарт позивних (Title Case):</strong> Автоматичне форматування всіх позивних до чистого вигляду «Бугор», «Юрист», «Дракон» (з очищенням зайвих лапок/дужок та підтримкою складних імен на кшталт «Дядя-Ваня») у картках Журналу, Тріажі, Excel, друку та текстових звітах.</li>
+                                            <li><strong className="text-white">Єдиний канонічний стандарт позивних (Title Case):</strong> Автоматичне форматування всіх позивних до чистого вигляду «Сокіл», «Байрактар», «Тайфун» (з очищенням зайвих лапок/дужок та підтримкою складних імен на кшталт «Альфа-1») у картках Журналу, Тріажі, Excel, друку та текстових звітах.</li>
                                             <li><strong className="text-white">Швидка стандартизація бази в 1 клік:</strong> Додано кнопку «✨ Стандартизувати позивні» та автоматичну діагностику регістрів у Data Integrity Guard зі створенням точки відновлення.</li>
                                             <li><strong className="text-white">Синхронізація фільтрів при старті:</strong> Повне узгодження чекбоксів причин при завантаженні (loadData) з збереженим довідником та наявними епізодами; «Удар КАБом» включено до системного словника за замовчуванням.</li>
                                             <li><strong className="text-white">Безпечний фільтр причин та важкості:</strong> Усунуто раптове приховування записів з новими або незаповненими полями при перезавантаженні сторінки.</li>
