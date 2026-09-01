@@ -134,7 +134,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.9.0</span>
+                    <span>🚀 v1.9.1</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -288,6 +288,16 @@
                                         </path>
                                     </svg>
                                     <span>DUMP_MATRIX.XLSX</span>
+                                </button>
+
+                                <button type="button" id="btn-merge-rop-units" onclick="toggleMergeRopUnitsClick()"
+                                    class="group flex items-center bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 font-mono font-bold py-1.5 px-3 rounded-md border border-cyan-300 dark:border-cyan-500/50 hover:border-cyan-400 transition-all shadow-sm hover:shadow-[0_0_12px_rgba(6,182,212,0.35)] focus:outline-none text-xs hover:-translate-y-0.5 cursor-pointer"
+                                    title="Злиття БнГ/НРК/Приданих у РОПах: УВІМКНЕНО (штабний вигляд). Клікніть, щоб перемкнути">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-cyan-500 dark:text-cyan-400 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                    </svg>
+                                    <span id="btn-merge-rop-text">MERGE: ON</span>
+                                    <span id="btn-merge-rop-dot" class="ml-1.5 w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse"></span>
                                 </button>
 
                                 <button onclick="downloadAllCategoriesExcel()"
@@ -1087,6 +1097,18 @@
                                     </div>
                                 </div>
 
+                                <!-- Опція: Автоматичне злиття БнГ/НРК у РОПах -->
+                                <div class="bg-blue-50/60 dark:bg-blue-950/30 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40 mb-3">
+                                    <label class="font-bold text-gray-800 dark:text-gray-200 text-xs md:text-sm flex items-center gap-2 cursor-pointer select-none">
+                                        <input type="checkbox" id="chk-merge-rop-units-settings" onchange="toggleMergeRopUnits(this.checked)" class="rounded text-blue-600 focus:ring-0 w-4 h-4">
+                                        <span>Автоматично об'єднувати БнГ та НРК з ротами у РОПах (Лист 2 Excel)</span>
+                                    </label>
+                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed pl-6">
+                                        <b>Увімкнено (Штабний вигляд)</b>: бійці БнГ та НРК на позиціях конкретного РОПу роти (напр. <code>РОП 5мр</code>) автоматично зараховуються до чисельності роти у зведеному звіті для командування.<br>
+                                        <b>Вимкнено (Детальний вигляд)</b>: виводяться 100% реальні назви прикомандированих підрозділів окремо (напр. <code>5мр - 12</code>, <code>РЗ БнГ (БРО) - 1</code>, <code>нрк - 1</code>).
+                                    </p>
+                                </div>
+
                                 <!-- Візуальний конструктор -->
                                 <div id="rop-visual-view" class="space-y-3">
                                     <div
@@ -1330,9 +1352,25 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.9.1",
+                date: "01.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🎯 Розширення злиття підрозділів (Придані сили)",
+                        color: "blue",
+                        items: [
+                            "<b>Автоматичне злиття приданих сил (MERGE: ON)</b>: файли звітів <code>Придані.docx</code>, <code>придані</code>, <code>приданий о/с</code> тощо автоматично нормалізуються та при увімкненому тумблері злиття на позиціях конкретного РОПу (наприклад, <code>РОП 4мр</code>, <code>РОП 5мр</code>, <code>РОП 6мр</code>) підсумовуються до відповідної роти.",
+                            "<b>Автономний статус (MERGE: OFF)</b>: при вимкненому тумблері або на позиціях загального підпорядкування бійці акуратно відображаються єдиною категорією <code>придані</code>.",
+                            "<b>Оновлення UI & підказок</b>: тумблер та системні тоасти отримали розширений опис <code>Злиття БнГ / НРК / Приданих</code>."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.9.0",
                 date: "29.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🎯 Контекстний військовий розподіл підрозділів у РОПах та БРО",
@@ -1756,10 +1794,57 @@
         } else {
             document.documentElement.classList.remove('dark');
         }
+        function getMergeRopUnitsState() {
+            return localStorage.getItem('dod6_merge_rop_units') !== 'false';
+        }
+
+        function toggleMergeRopUnitsClick() {
+            const currentState = getMergeRopUnitsState();
+            toggleMergeRopUnits(!currentState);
+        }
+
+        function toggleMergeRopUnits(checked) {
+            localStorage.setItem('dod6_merge_rop_units', checked ? 'true' : 'false');
+            updateMergeRopUnitsButtonUI(checked);
+            const chkSettings = document.getElementById('chk-merge-rop-units-settings');
+            if (chkSettings) chkSettings.checked = checked;
+            showToast(checked ? "⚡ Увімкнено злиття БнГ/НРК/Приданих з ротами на РОПах (Штабний вигляд)" : "⚪ Вимкнено злиття: у РОПах виводитимуться реальні підрозділи роздільно", "info");
+        }
+
+        function updateMergeRopUnitsButtonUI(state) {
+            const btn = document.getElementById('btn-merge-rop-units');
+            const txt = document.getElementById('btn-merge-rop-text');
+            const dot = document.getElementById('btn-merge-rop-dot');
+            if (!btn) return;
+
+            if (state) {
+                btn.className = "group flex items-center bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 font-mono font-bold py-1.5 px-3 rounded-md border border-cyan-300 dark:border-cyan-500/50 hover:border-cyan-400 transition-all shadow-sm hover:shadow-[0_0_12px_rgba(6,182,212,0.35)] focus:outline-none text-xs hover:-translate-y-0.5 cursor-pointer";
+                if (txt) txt.textContent = "MERGE: ON";
+                if (dot) dot.className = "ml-1.5 w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse";
+                btn.title = "Злиття БнГ/НРК/Приданих у РОПах: УВІМКНЕНО (штабний вигляд). Клікніть, щоб вимкнути";
+            } else {
+                btn.className = "group flex items-center bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono font-bold py-1.5 px-3 rounded-md border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all shadow-sm focus:outline-none text-xs hover:-translate-y-0.5 cursor-pointer";
+                if (txt) txt.textContent = "MERGE: OFF";
+                if (dot) dot.className = "ml-1.5 w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600";
+                btn.title = "Злиття БнГ/НРК/Приданих у РОПах: ВИМКНЕНО (деталізований реальний вигляд). Клікніть, щоб увімкнути";
+            }
+        }
+
+        function initMergeRopUnitsUI() {
+            const state = getMergeRopUnitsState();
+            updateMergeRopUnitsButtonUI(state);
+            const chkSettings = document.getElementById('chk-merge-rop-units-settings');
+            if (chkSettings) chkSettings.checked = state;
+        }
+
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', updateThemeIcon);
+            document.addEventListener('DOMContentLoaded', () => {
+                updateThemeIcon();
+                initMergeRopUnitsUI();
+            });
         } else {
             updateThemeIcon();
+            initMergeRopUnitsUI();
         }
 
         function toggleDarkMode() {
@@ -2959,6 +3044,7 @@
             if (!s) return false;
             let norm = cleanBaseUnitName(s);
             if (norm === 'нрк' || norm.includes('нрк')) return true;
+            if (norm === 'придані' || norm.includes('придан') || norm.includes('прид')) return true;
             return (
                 /\b(рз\s*[бв]нг|р[бв]нг|[бв]нг|[бв]гр|броне\s*група)\b/i.test(norm) ||
                 norm.includes('бнг') || norm.includes('внг') || norm.includes('бронегрупа') || norm.includes('бгр') ||
@@ -2974,6 +3060,8 @@
             if (isMergeableUnit(normName)) {
                 if (normName === 'нрк' || normName.includes('нрк')) {
                     normName = 'нрк';
+                } else if (normName === 'придані' || normName.includes('придан') || normName.includes('прид')) {
+                    normName = 'придані';
                 } else {
                     normName = 'РЗ БнГ (БРО)';
                 }
@@ -2988,7 +3076,13 @@
                         let trigRaw = cleanBaseUnitName(r.trigger);
                         let trigNorm = trigRaw;
                         if (isMergeableUnit(trigNorm)) {
-                            trigNorm = (trigNorm === 'нрк' || trigNorm.includes('нрк')) ? 'нрк' : 'РЗ БнГ (БРО)';
+                            if (trigNorm === 'нрк' || trigNorm.includes('нрк')) {
+                                trigNorm = 'нрк';
+                            } else if (trigNorm === 'придані' || trigNorm.includes('придан') || trigNorm.includes('прид')) {
+                                trigNorm = 'придані';
+                            } else {
+                                trigNorm = 'РЗ БнГ (БРО)';
+                            }
                         }
                         if (normName === trigNorm || rawName === trigRaw || normName === trigRaw || rawName === trigNorm) {
                             return r.replaceWith;
@@ -2999,7 +3093,7 @@
                 console.error("Error applying unit replace rules:", err);
             }
 
-            if (normName === 'РЗ БнГ (БРО)' || normName === 'нрк') {
+            if (normName === 'РЗ БнГ (БРО)' || normName === 'нрк' || normName === 'придані') {
                 return normName;
             }
 
@@ -3246,8 +3340,9 @@
                 for (let [unit, cnt] of Object.entries(unitMap || {})) {
                     if (cnt > 0) {
                         let cUnit = cleanUnitName(unit);
-                        // Якщо ми знаходимося в межах РОПу конкретної роти (4мр, 5мр, 6мр) - бронегрупа та НРК автоматично зливаються з цією ротою!
-                        if (isMergeableUnit(cUnit) && contextCompany) {
+                        const shouldMerge = getMergeRopUnitsState();
+                        // Якщо ми знаходимося в межах РОПу конкретної роти (4мр, 5мр, 6мр) та увімкнено тумблер - бронегрупа та НРК зливаються з цією ротою!
+                        if (shouldMerge && isMergeableUnit(cUnit) && contextCompany) {
                             cUnit = contextCompany;
                         }
                         cleanMap[cUnit] = (cleanMap[cUnit] || 0) + cnt;

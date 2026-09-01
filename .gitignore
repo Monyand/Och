@@ -4,3 +4,8 @@ _backups/
 __pycache__/
 *.py
 !suite_agent.py
+
+# Ignore personal chat archive and TikTok dump
+mari_archive.html
+user_data_tiktok.json
+
