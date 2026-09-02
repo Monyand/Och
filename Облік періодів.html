@@ -155,113 +155,115 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         };
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 9999px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #475569; }
 
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .drop-zone { transition: all 0.2s ease; }
-        .drop-zone.dragover { transform: scale(1.01); border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
-        .row-expanded { background-color: rgba(30, 41, 59, 0.6); }
+        .drop-zone { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .drop-zone.dragover { transform: scale(1.01); border-color: #38bdf8; background-color: rgba(56, 189, 248, 0.12); box-shadow: 0 0 25px rgba(56, 189, 248, 0.2); }
+        .row-expanded { background-color: rgba(30, 41, 59, 0.8) !important; }
         .chevron { transition: transform 0.2s ease; }
-        .row-expanded .chevron { transform: rotate(180deg); }
+        .row-expanded .chevron { transform: rotate(180deg); color: #38bdf8; }
         .break-word-safe { word-break: break-word; overflow-wrap: break-word; }
     </style>
 </head>
 
-<body class="bg-slate-950 text-slate-200 min-h-screen p-4 sm:p-6 selection:bg-blue-500/30 flex flex-col items-center">
+<body class="bg-[#0b101e] text-slate-200 min-h-screen p-3 sm:p-5 selection:bg-blue-500/30 flex flex-col items-center antialiased">
 
-    <div class="w-full max-w-[1560px] space-y-5">
+    <div class="w-full max-w-[1600px] space-y-4">
 
         <!-- Шапка програми -->
-        <header class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <header class="bg-slate-900/80 backdrop-blur-md border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div class="flex items-center gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 border border-blue-400/30">
-                    <i data-lucide="calendar-range" class="w-5 h-5"></i>
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 border border-blue-400/40 shrink-0">
+                    <i data-lucide="calendar-range" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2.5">
-                        <h1 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Аналізатор періодів бойових завдань та ДВ</h1>
-                        <button onclick="openModal('modal-changelog')" class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.1.0
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300">
+                            Аналізатор періодів бойових завдань та ДВ
+                        </h1>
+                        <button onclick="openModal('modal-changelog')" class="text-xs bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(59,130,246,0.2)]" title="Історія оновлень">
+                            ⚡ v1.2.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs mt-0.5">
-                        Автоматичний аналіз щоденних списків бойових завдань (РОП/ВОП) та ДВ 30. Розрахунок інтервалів і зведення діб.
+                        Автоматичний аналіз щоденних списків бойових завдань (РОП/ВОП/БРО) та ДВ 30. Розрахунок інтервалів і зведення діб.
                     </p>
                 </div>
             </div>
         </header>
 
-        <!-- Блок завантаження файлів (2-колонковий макет у стилі Додатку 6) -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mb-4 items-stretch">
+        <!-- Блок завантаження файлів (2-колонковий макет) -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
             
             <!-- Ліва колонка: Dropzone + Toolbar із підсумками категорій (8 колонок) -->
             <div class="xl:col-span-8 flex flex-col gap-3">
                 <!-- Drop Zone -->
                 <div id="dropZone"
-                    class="drop-zone w-full border-2 border-dashed border-blue-500/40 hover:border-blue-400 bg-blue-500/5 hover:bg-blue-500/10 rounded-2xl p-5 text-center cursor-pointer transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-4 group shadow-sm"
+                    class="drop-zone w-full border-2 border-dashed border-blue-500/35 hover:border-cyan-400 bg-gradient-to-b from-blue-500/5 to-slate-900/40 hover:bg-blue-500/10 rounded-2xl p-5 text-center cursor-pointer transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-4 group shadow-md"
                     onclick="document.getElementById('fileInput').click()">
-                    <div class="bg-blue-500/20 text-blue-400 p-3 rounded-2xl group-hover:scale-105 transition-transform shrink-0 border border-blue-400/30 shadow-lg shadow-blue-500/10">
+                    <div class="bg-blue-500/15 text-blue-400 group-hover:text-cyan-300 p-3.5 rounded-2xl group-hover:scale-105 transition-transform shrink-0 border border-blue-400/30 shadow-lg shadow-blue-500/15">
                         <i data-lucide="upload-cloud" class="w-6 h-6"></i>
                     </div>
                     <div class="text-center sm:text-left">
-                        <p class="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">
+                        <p class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
                             Натисніть або перетягніть файли сюди
                         </p>
                         <p class="text-xs text-slate-400 mt-0.5">
-                            Крок 1: Завантажте щоденні списки завдань ВОП/РОП/БРО та ДВ 30 <span class="text-[10px] font-mono text-slate-500">(.xlsx, .docx)</span>
+                            Крок 1: Завантажте щоденні списки завдань ВОП/РОП/БРО та ДВ 30 <span class="text-[10px] font-mono px-1.5 py-0.5 bg-slate-800/80 rounded text-cyan-300 border border-slate-700/60 ml-1">.xlsx, .docx</span>
                         </p>
                     </div>
                     <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .docx" multiple>
                 </div>
 
                 <!-- Progress Bar (при завантаженні) -->
-                <div id="loadingIndicator" class="hidden p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                <div id="loadingIndicator" class="hidden p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-md">
                     <div class="flex items-center justify-between text-xs font-mono">
                         <span class="text-slate-300 flex items-center gap-2">
-                            <span class="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span>
+                            <span class="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
                             <span id="loadingText" class="truncate max-w-[400px]">Обробка...</span>
                         </span>
-                        <span id="loadingPercent" class="text-blue-400 font-bold">0%</span>
+                        <span id="loadingPercent" class="text-cyan-400 font-bold">0%</span>
                     </div>
                     <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div id="progressBar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+                        <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
                     </div>
                 </div>
 
                 <!-- Панель підсумків та швидких дій (Toolbar) -->
-                <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800/80 shadow-sm flex flex-wrap items-center justify-between gap-2.5">
+                <div class="p-2.5 bg-slate-900/85 backdrop-blur-md rounded-xl border border-slate-800/80 shadow-md flex flex-wrap items-center justify-between gap-2">
                     <div class="flex items-center gap-2 font-mono text-xs flex-wrap">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1 mr-0.5">Дні / Категорії:</span>
-                        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span>БРО:</span>
-                            <strong id="badge-count-bro" class="text-emerald-300">0</strong>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 mr-0.5">Дні / Категорії:</span>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"></span>
+                            <span class="text-[11px] font-sans font-medium text-slate-300">БРО:</span>
+                            <strong id="badge-count-bro" class="text-emerald-300 text-xs font-mono font-bold">0</strong>
                         </span>
-                        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300">
-                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                            <span>РОП:</span>
-                            <strong id="badge-count-rop" class="text-amber-300">0</strong>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300 shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]"></span>
+                            <span class="text-[11px] font-sans font-medium text-slate-300">РОП:</span>
+                            <strong id="badge-count-rop" class="text-amber-300 text-xs font-mono font-bold">0</strong>
                         </span>
-                        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300">
-                            <span class="w-2 h-2 rounded-full bg-orange-400"></span>
-                            <span>ВОП:</span>
-                            <strong id="badge-count-vop" class="text-orange-300">0</strong>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-300 shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.8)]"></span>
+                            <span class="text-[11px] font-sans font-medium text-slate-300">ВОП:</span>
+                            <strong id="badge-count-vop" class="text-rose-300 text-xs font-mono font-bold">0</strong>
                         </span>
-                        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-slate-300">
-                            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-                            <span>ДВ 30:</span>
-                            <strong id="badge-count-dv30" class="text-cyan-300">0</strong>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-950/40 border border-sky-500/30 text-sky-300 shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]"></span>
+                            <span class="text-[11px] font-sans font-medium text-slate-300">ДВ 30:</span>
+                            <strong id="badge-count-dv30" class="text-cyan-300 text-xs font-mono font-bold">0</strong>
                         </span>
                     </div>
 
-                    <button id="clearBtn" class="hidden flex items-center gap-1.5 px-3 py-1 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold transition-all border border-red-500/30 cursor-pointer" title="Очистити всі завантажені файли з пам'яті">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
+                    <button id="clearBtn" class="hidden flex items-center gap-1.5 px-3 py-1 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-lg text-xs font-semibold transition-all border border-rose-500/40 cursor-pointer shadow-sm" title="Очистити всі завантажені файли з пам'яті">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i>
                         <span>Скинути дані</span>
                     </button>
                 </div>
@@ -269,19 +271,22 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
             <!-- Права колонка: Опрацьовані файли (4 колонки) -->
             <div class="xl:col-span-4 flex flex-col">
-                <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between h-full shadow-sm">
+                <div class="bg-slate-900/85 backdrop-blur-md border border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between h-full shadow-md">
                     <div>
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between border-b border-slate-800 pb-2">
-                            <span class="flex items-center gap-1.5">
-                                <i data-lucide="folder-check" class="w-4 h-4 text-blue-400"></i>
+                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between border-b border-slate-800 pb-2.5">
+                            <span class="flex items-center gap-2">
+                                <i data-lucide="folder-check" class="w-4 h-4 text-cyan-400"></i>
                                 <span>Опрацьовані файли</span>
                             </span>
-                            <span id="files-processed-badge" class="bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[11px] px-2 py-0.5 rounded-md font-mono font-bold">0 шт.</span>
+                            <span id="files-processed-badge" class="bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[11px] px-2.5 py-0.5 rounded-md font-mono font-bold">0 шт.</span>
                         </h3>
                         
                         <div id="processedFilesList" class="mt-2.5">
                             <ul id="fileLog" class="space-y-1.5 max-h-[145px] overflow-y-auto pr-1 custom-scrollbar text-xs">
-                                <li class="text-slate-600 italic text-xs py-8 text-center">Очікування файлів...</li>
+                                <li class="text-slate-500 italic text-xs py-8 text-center flex flex-col items-center justify-center gap-1.5">
+                                    <i data-lucide="file-spreadsheet" class="w-6 h-6 text-slate-600"></i>
+                                    <span>Очікування файлів...</span>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -290,35 +295,43 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         </div>
 
         <!-- Повнорозмірна таблиця результатів (100% ширини екрану) -->
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl flex flex-col h-[calc(100vh-250px)] min-h-[500px] overflow-hidden">
+        <div class="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-[calc(100vh-250px)] min-h-[520px] overflow-hidden">
                 
                 <!-- Шапка таблиці з пошуком та фільтрами -->
-                <div class="p-3.5 border-b border-slate-800 bg-slate-800/40 space-y-3">
+                <div class="p-3.5 border-b border-slate-800/90 bg-slate-900/95 space-y-3">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="table" class="w-4 h-4 text-emerald-400"></i>
-                            <h2 class="text-sm font-bold text-white">Зведена таблиця періодів</h2>
-                            <span id="statsText" class="font-mono text-[11px] text-slate-400 ml-1"></span>
+                            <div class="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                                <i data-lucide="table" class="w-3.5 h-3.5"></i>
+                            </div>
+                            <h2 class="text-sm font-extrabold text-white tracking-wide">Зведена таблиця періодів</h2>
+                            <span id="statsText" class="font-mono text-[11px] text-slate-400 ml-1 font-medium"></span>
                         </div>
 
                         <div class="flex items-center gap-2">
                             <!-- Перемикач режимів перегляду -->
-                            <div class="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                            <div class="flex items-center bg-slate-950 p-0.5 rounded-xl border border-slate-800 shadow-inner">
                                 <button type="button" onclick="setViewMode('list')" id="view-mode-list"
-                                    class="px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer bg-blue-600 text-white shadow-sm">
+                                    class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md">
                                     <i data-lucide="list" class="w-3.5 h-3.5"></i>
                                     <span>Список</span>
                                 </button>
                                 <button type="button" onclick="setViewMode('matrix')" id="view-mode-matrix"
-                                    class="px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer text-slate-400 hover:text-slate-200">
+                                    class="px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer text-slate-400 hover:text-white">
                                     <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                                     <span>Табель</span>
                                 </button>
                             </div>
 
-                            <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
+                            <!-- Кнопка скидання вибору (з'являється коли обрано > 0) -->
+                            <button id="clearSelectionBtn" onclick="clearSelection()" class="hidden px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-blue-950/60 hover:bg-blue-900/80 text-blue-200 border border-blue-500/50 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Скинути вибір бійців">
+                                <span id="clearSelectionCount">✓ Обрано: 0</span>
+                                <i data-lucide="x" class="w-3.5 h-3.5 text-blue-400 hover:text-rose-400"></i>
+                            </button>
+
+                            <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span>Завантажити Excel</span>
+                                <span id="exportExcelBtnText">Завантажити Excel</span>
                             </button>
                         </div>
                     </div>
@@ -327,35 +340,35 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     <div class="flex flex-col sm:flex-row items-center gap-2.5">
                         <!-- Пошук -->
                         <div class="relative flex-1 w-full">
-                            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5"></i>
-                            <input type="text" id="searchInput" placeholder="Пошук за ПІБ, званням, посадою або локацією..."
-                                class="w-full bg-slate-950 text-slate-200 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs font-mono placeholder:text-slate-600 focus:border-blue-500 outline-none transition-all">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                            <input type="text" id="searchInput" placeholder="Пошук за ПІБ, званням, посадою (можна через кому)..."
+                                class="w-full bg-slate-950/90 text-slate-100 border border-slate-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs font-sans placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner">
                         </div>
 
                         <!-- Фільтри -->
                         <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
                             <button type="button" onclick="setFilter('all')" id="filter-all"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-500 text-white border border-blue-400 transition-all cursor-pointer">
+                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-600 text-white border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all cursor-pointer">
                                 Всі
                             </button>
                             <button type="button" onclick="setFilter('bro')" id="filter-bro"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/30 border border-slate-800 transition-all cursor-pointer">
+                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/40 border border-emerald-900/60 transition-all cursor-pointer">
                                 🛡️ БРО
                             </button>
                             <button type="button" onclick="setFilter('rop')" id="filter-rop"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-yellow-400 hover:bg-yellow-950/30 border border-slate-800 transition-all cursor-pointer">
+                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-amber-400 hover:bg-amber-950/40 border border-amber-900/60 transition-all cursor-pointer">
                                 🛡️ РОП
                             </button>
                             <button type="button" onclick="setFilter('vop')" id="filter-vop"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-rose-400 hover:bg-rose-950/30 border border-slate-800 transition-all cursor-pointer">
+                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-rose-400 hover:bg-rose-950/40 border border-rose-900/60 transition-all cursor-pointer">
                                 ⚔️ ВОП
                             </button>
                             <button type="button" onclick="setFilter('dv30')" id="filter-dv30"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-sky-400 hover:bg-sky-950/30 border border-slate-800 transition-all cursor-pointer">
+                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-cyan-400 hover:bg-cyan-950/40 border border-cyan-900/60 transition-all cursor-pointer">
                                 🏷️ ДВ 30
                             </button>
                             <button type="button" onclick="setFilter('active')" id="filter-active"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/30 border border-slate-800 transition-all cursor-pointer">
+                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/40 border border-emerald-900/60 transition-all cursor-pointer">
                                 🟢 Активні
                             </button>
                             <button type="button" onclick="setFilter('inactive')" id="filter-inactive"
@@ -369,39 +382,44 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 <!-- Таблиця результатів (Список з періодами) -->
                 <div id="listViewContainer" class="flex-1 overflow-auto custom-scrollbar p-0 relative">
                     <table class="w-full text-left border-collapse text-xs">
-                        <thead class="bg-slate-950 sticky top-0 border-b border-slate-800 shadow-md z-10 font-mono text-[11px] text-slate-400">
+                        <thead class="bg-slate-950 sticky top-0 border-b border-slate-700/80 shadow-md z-10 font-mono text-[11px] text-slate-300">
                             <tr>
-                                <th class="py-2.5 px-2 text-center w-[5%] border-r border-slate-800">№</th>
-                                <th class="py-2.5 px-2 w-[12%] border-r border-slate-800">Звання</th>
+                                <th class="py-2.5 px-2 text-center w-[6%] border-r border-slate-800">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <input type="checkbox" id="list-select-all" onchange="toggleSelectAll(this.checked)" class="rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-0 cursor-pointer" title="Обрати всіх / Зняти вибір">
+                                        <span>№</span>
+                                    </div>
+                                </th>
+                                <th class="py-2.5 px-2.5 w-[12%] border-r border-slate-800">Звання</th>
                                 
-                                <th class="py-2.5 px-2 w-[22%] border-r border-slate-800 cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('name')">
+                                <th class="py-2.5 px-2.5 w-[22%] border-r border-slate-800 cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('name')">
                                     <div class="flex items-center justify-between">
                                         <span>ПІБ</span>
-                                        <span id="sort-name" class="text-slate-600">↕</span>
+                                        <span id="sort-name" class="text-slate-500">↕</span>
                                     </div>
                                 </th>
                                 
-                                <th class="py-2.5 px-2 w-[20%] border-r border-slate-800">Посада</th>
+                                <th class="py-2.5 px-2.5 w-[24%] border-r border-slate-800">Посада</th>
                                 
-                                <th class="py-2.5 px-2 w-[26%] border-r border-slate-800 cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('locations')">
+                                <th class="py-2.5 px-2.5 w-[22%] border-r border-slate-800 cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('locations')">
                                     <div class="flex items-center justify-between">
                                         <span>Локації / Завдання</span>
-                                        <span id="sort-locations" class="text-slate-600">↕</span>
+                                        <span id="sort-locations" class="text-slate-500">↕</span>
                                     </div>
                                 </th>
                                 
-                                <th class="py-2.5 px-1.5 w-[11%] text-center cursor-pointer hover:bg-slate-900 transition-colors border-r border-slate-800" onclick="window.handleSort('days')">
+                                <th class="py-2.5 px-2 w-[10%] text-center cursor-pointer hover:bg-slate-900 transition-colors border-r border-slate-800" onclick="window.handleSort('days')">
                                     <div class="flex items-center justify-center gap-1">
                                         <span>Всього діб</span>
-                                        <span id="sort-days" class="text-slate-600">↕</span>
+                                        <span id="sort-days" class="text-slate-500">↕</span>
                                     </div>
                                 </th>
                                 <th class="w-[4%] text-center"></th>
                             </tr>
                         </thead>
-                        <tbody id="resultTableBody" class="divide-y divide-slate-800/60 font-sans">
+                        <tbody id="resultTableBody" class="divide-y divide-slate-800/80 font-sans">
                             <tr>
-                                <td colspan="7" class="py-24 text-center text-slate-600 italic">
+                                <td colspan="7" class="py-24 text-center text-slate-500 italic">
                                     <i data-lucide="folder-search" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
                                     Перетягніть щоденні файли у ліву панель для формування зведення
                                 </td>
@@ -413,18 +431,20 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 <!-- Таблиця результатів (Табель-матриця) -->
                 <div id="matrixViewContainer" class="flex-1 overflow-auto custom-scrollbar p-0 relative hidden">
                     <table class="w-max min-w-full text-left border-collapse text-xs">
-                        <thead class="bg-slate-950 sticky top-0 border-b border-slate-800 shadow-md z-30 font-mono text-[11px] text-slate-400">
+                        <thead class="bg-slate-950 sticky top-0 border-b border-slate-700/80 shadow-md z-30 font-mono text-[11px] text-slate-300">
                             <tr id="matrixTableHeader">
                                 <!-- Динамічна шапка табеля -->
                             </tr>
                         </thead>
-                        <tbody id="matrixTableBody" class="divide-y divide-slate-800/60 font-sans">
+                        <tbody id="matrixTableBody" class="divide-y divide-slate-800/80 font-sans">
                             <!-- Динамічні рядки табеля -->
                         </tbody>
                     </table>
                 </div>
 
             </div>
+
+    </div>
 
     </div>
 
@@ -448,6 +468,17 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             <div class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs font-sans">
                 <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
                     <div class="font-bold text-white flex items-center justify-between font-mono">
+                        <span class="text-cyan-400">⚡ v1.2.0 — Вибірковий експорт та Tactical UI</span>
+                        <span class="text-[10px] text-slate-500">02.09.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
+                        <li><b>Вибірковий експорт в Excel</b>: додано чекбокси бійців, накопичувальний вибір при фільтрах і вивантаження витягів.</li>
+                        <li><b>Tactical High-Contrast редизайн</b>: контрастна палітра, неонові плашки категорій, зебра-розмітка рядків.</li>
+                        <li><b>Списковий пошук</b>: швидкий пошук одразу кількох бійців через кому або крапку з комою.</li>
+                    </ul>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
+                    <div class="font-bold text-slate-300 flex items-center justify-between font-mono">
                         <span class="text-blue-400">⚡ v1.1.0 — Стандарт інтерфейсу «Ротації»</span>
                         <span class="text-[10px] text-slate-500">01.09.2026</span>
                     </div>
@@ -471,6 +502,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         // State
         const database = new Map(); // normalizedKey -> { name, pib, ipn, records: Map(dateStr -> { rank, pos, taskType, depth, fileName }) }
         const successDatesCount = new Set();
+        const selectedPersonNames = new Set();
         let uploadedFilesCount = 0;
         let globalMaxDateStr = null;
         let tableDataForExport = [];
@@ -481,11 +513,92 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
         window.database = database;
         window.successDatesCount = successDatesCount;
+        window.selectedPersonNames = selectedPersonNames;
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             initApp();
         });
+
+        window.toggleSelectPerson = function(name) {
+            if (selectedPersonNames.has(name)) {
+                selectedPersonNames.delete(name);
+            } else {
+                selectedPersonNames.add(name);
+            }
+            updateSelectionUI();
+        };
+
+        window.toggleSelectAll = function(checked) {
+            if (!tableDataForExport || tableDataForExport.length === 0) return;
+            if (checked) {
+                tableDataForExport.forEach(r => selectedPersonNames.add(r.name));
+            } else {
+                tableDataForExport.forEach(r => selectedPersonNames.delete(r.name));
+            }
+            updateSelectionUI();
+        };
+
+        window.clearSelection = function() {
+            selectedPersonNames.clear();
+            updateSelectionUI();
+        };
+
+        function updateSelectionUI() {
+            const selCount = selectedPersonNames.size;
+            const clearBtn = document.getElementById('clearSelectionBtn');
+            const clearCount = document.getElementById('clearSelectionCount');
+            const exportBtnText = document.getElementById('exportExcelBtnText');
+            const exportBtn = document.getElementById('exportExcelBtn');
+
+            if (clearBtn && clearCount) {
+                if (selCount > 0) {
+                    clearBtn.classList.remove('hidden');
+                    clearCount.innerHTML = `✓ Обрано: <strong class="text-white">${selCount}</strong>`;
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
+
+            if (exportBtnText) {
+                if (selCount > 0) {
+                    exportBtnText.innerText = `Завантажити Excel (${selCount} обр.)`;
+                    if (exportBtn) {
+                        exportBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                        exportBtn.classList.add('bg-blue-600', 'hover:bg-blue-500', 'ring-2', 'ring-blue-400/50');
+                    }
+                } else {
+                    exportBtnText.innerText = `Завантажити Excel`;
+                    if (exportBtn) {
+                        exportBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500', 'ring-2', 'ring-blue-400/50');
+                        exportBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+                    }
+                }
+            }
+
+            // Update row checkboxes and highlighting in DOM
+            document.querySelectorAll('.person-checkbox').forEach(cb => {
+                const name = cb.getAttribute('data-name');
+                const isChecked = selectedPersonNames.has(name);
+                cb.checked = isChecked;
+                const rowEl = cb.closest('tr');
+                if (rowEl) {
+                    if (isChecked) {
+                        rowEl.classList.add('bg-blue-950/40');
+                    } else {
+                        rowEl.classList.remove('bg-blue-950/40');
+                    }
+                }
+            });
+
+            // Update master checkboxes
+            const allFilteredSelected = (tableDataForExport.length > 0) && tableDataForExport.every(r => selectedPersonNames.has(r.name));
+            const listMaster = document.getElementById('list-select-all');
+            const matrixMaster = document.getElementById('matrix-select-all');
+            if (listMaster) listMaster.checked = allFilteredSelected;
+            if (matrixMaster) matrixMaster.checked = allFilteredSelected;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
 
         function initApp() {
             const dropZone = document.getElementById('dropZone');
@@ -519,6 +632,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 if (confirm("Очистити всі опрацьовані результати з пам'яті?")) {
                     database.clear();
                     successDatesCount.clear();
+                    selectedPersonNames.clear();
                     uploadedFilesCount = 0;
                     globalMaxDateStr = null;
                     document.getElementById('fileLog').innerHTML = '<li class="text-slate-600 italic text-xs py-8 text-center">Очікування файлів...</li>';
@@ -529,6 +643,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     document.getElementById('badge-count-dv30').innerText = '0';
                     clearBtn.classList.add('hidden');
                     fileInput.value = '';
+                    updateSelectionUI();
                     window.renderTableFunc();
                 }
             });
@@ -1046,8 +1161,15 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 if (currentFilter === 'inactive' && !row.details.isGloballyInactive) return false;
 
                 if (searchQuery) {
-                    const targetStr = `${row.name} ${row.latestRank} ${row.latestPosition} ${row.latestIpn} ${row.details.uniqueLocations.join(' ')}`.toLowerCase();
-                    if (!targetStr.includes(searchQuery)) return false;
+                    const terms = searchQuery.split(/[,;\n]+/).map(t => t.trim().toLowerCase()).filter(Boolean);
+                    if (terms.length > 1) {
+                        const targetStr = `${row.name} ${row.latestRank} ${row.latestPosition} ${row.latestIpn} ${row.details.uniqueLocations.join(' ')}`.toLowerCase();
+                        const matchesAny = terms.some(t => targetStr.includes(t));
+                        if (!matchesAny) return false;
+                    } else if (terms.length === 1) {
+                        const targetStr = `${row.name} ${row.latestRank} ${row.latestPosition} ${row.latestIpn} ${row.details.uniqueLocations.join(' ')}`.toLowerCase();
+                        if (!targetStr.includes(terms[0])) return false;
+                    }
                 }
                 return true;
             });
@@ -1089,71 +1211,92 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     const personId = `p-${idx}`;
                     const details = row.details;
                     const formattedRank = (row.latestRank || '—').replace(/\s+/g, '<br>');
+                    const isSelected = selectedPersonNames.has(row.name);
 
                     let locationBadgesHtml = details.uniqueLocations.length > 0
-                        ? `<div class="flex flex-wrap gap-1">${details.uniqueLocations.map(loc => {
-                            let color = 'bg-slate-800 border-slate-700 text-slate-300';
-                            if (/бро/i.test(loc)) color = 'bg-emerald-950/60 border-emerald-800/80 text-emerald-300';
-                            else if (/роп/i.test(loc)) color = 'bg-yellow-950/60 border-yellow-700/80 text-yellow-300';
-                            else if (/воп/i.test(loc)) color = 'bg-rose-950/60 border-rose-800/80 text-rose-300';
-                            else if (/дв|30/i.test(loc)) color = 'bg-sky-950/60 border-sky-800/80 text-sky-300';
-                            return `<span class="${color} border rounded px-1.5 py-0.5 text-[10px] font-mono whitespace-nowrap" title="${escapeHtml(loc)}">${escapeHtml(loc)}</span>`;
+                        ? `<div class="flex flex-wrap gap-1.5">${details.uniqueLocations.map(loc => {
+                            let color = 'bg-slate-800/80 border-slate-700 text-slate-300';
+                            let label = loc;
+                            if (/бро/i.test(loc)) {
+                                color = 'bg-emerald-950/70 border-emerald-600/60 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.15)]';
+                                label = '🛡️ БРО';
+                            } else if (/роп/i.test(loc)) {
+                                color = 'bg-amber-950/70 border-amber-600/60 text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.15)]';
+                                label = '🛡️ РОП';
+                            } else if (/воп/i.test(loc)) {
+                                color = 'bg-rose-950/70 border-rose-600/60 text-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.15)]';
+                                label = '⚔️ ВОП';
+                            } else if (/дв|30/i.test(loc)) {
+                                color = 'bg-sky-950/70 border-sky-600/60 text-sky-300 shadow-[0_0_8px_rgba(14,165,233,0.15)]';
+                                label = '🏷️ ДВ 30';
+                            }
+                            return `<span class="${color} border rounded-md px-2 py-0.5 text-[11px] font-mono font-bold whitespace-nowrap inline-flex items-center gap-1 transition-transform hover:scale-105" title="${escapeHtml(loc)}">${label}</span>`;
                         }).join('')}</div>`
-                        : '<span class="text-slate-600 italic text-xs">Немає</span>';
+                        : '<span class="text-slate-500 italic text-xs">Немає</span>';
 
-                    let daysBadgeClass = "text-blue-300 bg-blue-950/60 border-blue-800/80 font-bold";
+                    let daysBadgeClass = "text-blue-200 bg-blue-950/70 border-blue-500/50 font-black shadow-sm";
                     if (details.isGloballyInactive) {
                         daysBadgeClass = "text-slate-500 bg-slate-900 border-slate-800 opacity-60";
                     }
 
+                    const isEven = idx % 2 === 0;
+                    const rowBgClass = isSelected 
+                        ? 'bg-blue-950/60 border-l-4 border-l-blue-500' 
+                        : (isEven ? 'bg-slate-900/30' : 'bg-slate-900/70');
+
                     const trMain = document.createElement('tr');
                     trMain.id = `row-${personId}`;
-                    trMain.className = `cursor-pointer hover:bg-slate-800/60 transition-all border-b border-slate-800/60 group ${details.isGloballyInactive ? 'opacity-60' : ''}`;
+                    trMain.className = `cursor-pointer hover:bg-slate-800/80 hover:border-slate-700 transition-all border-b border-slate-800/70 group ${details.isGloballyInactive ? 'opacity-60' : ''} ${rowBgClass}`;
                     trMain.onclick = () => toggleDetails(personId);
 
                     trMain.innerHTML = `
-                        <td class="py-2 px-2 text-slate-500 font-mono text-center border-r border-slate-800/60">${idx + 1}</td>
-                        <td class="py-2 px-2 text-slate-400 border-r border-slate-800/60 leading-tight break-word-safe">${formattedRank}</td>
-                        <td class="py-2 px-2 font-bold text-white border-r border-slate-800/60 break-word-safe" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
-                            <span class="group-hover:text-blue-400 transition-colors">${escapeHtml(row.name)}</span>
-                            ${details.isGloballyInactive ? '<span class="block text-[9px] font-mono text-red-400 font-normal">⚠️ Вибув зі списків</span>' : ''}
+                        <td class="py-2.5 px-2 text-center border-r border-slate-800/70" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <input type="checkbox" data-name="${escapeHtml(row.name)}" onchange="toggleSelectPerson('${escapeHtml(row.name)}')" ${isSelected ? 'checked' : ''} class="person-checkbox rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-0 cursor-pointer" title="Обрати бійця">
+                                <span class="text-xs text-slate-400 font-mono font-bold">${idx + 1}</span>
+                            </div>
                         </td>
-                        <td class="py-2 px-2 text-slate-400 text-[11px] border-r border-slate-800/60 leading-tight">${escapeHtml(row.latestPosition || '—')}</td>
-                        <td class="py-1 px-2 border-r border-slate-800/60">${locationBadgesHtml}</td>
-                        <td class="py-1.5 px-1 text-center border-r border-slate-800/60">
-                            <span class="inline-flex items-center justify-center w-8 h-7 rounded-lg border font-mono ${daysBadgeClass}">${details.totalDays}</span>
+                        <td class="py-2.5 px-2.5 text-slate-300 font-medium text-[11px] border-r border-slate-800/70 leading-tight break-word-safe">${formattedRank}</td>
+                        <td class="py-2.5 px-2.5 font-extrabold text-white text-[13px] border-r border-slate-800/70 break-word-safe tracking-wide" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
+                            <span class="group-hover:text-blue-300 transition-colors">${escapeHtml(row.name)}</span>
+                            ${details.isGloballyInactive ? '<span class="inline-block ml-1.5 px-1.5 py-0.2 rounded text-[9px] font-mono bg-rose-950/80 text-rose-300 border border-rose-800/80 font-normal">⚠️ Вибув</span>' : ''}
                         </td>
-                        <td class="py-2 px-1 text-center text-slate-600 group-hover:text-blue-400 transition-colors">
+                        <td class="py-2.5 px-2.5 text-slate-300 text-xs border-r border-slate-800/70 leading-relaxed max-w-sm break-word-safe">${escapeHtml(row.latestPosition || '—')}</td>
+                        <td class="py-2 px-2.5 border-r border-slate-800/70">${locationBadgesHtml}</td>
+                        <td class="py-2 px-2 text-center border-r border-slate-800/70">
+                            <span class="inline-flex items-center justify-center min-w-[34px] h-7 px-2 rounded-lg border font-mono text-xs ${daysBadgeClass}">${details.totalDays}</span>
+                        </td>
+                        <td class="py-2 px-1 text-center text-slate-500 group-hover:text-blue-400 transition-colors">
                             <i data-lucide="chevron-down" class="chevron w-4 h-4 mx-auto"></i>
                         </td>
                     `;
 
                     const trDetails = document.createElement('tr');
                     trDetails.id = `details-${personId}`;
-                    trDetails.className = 'hidden bg-slate-950/60 border-b border-slate-800/80 shadow-inner';
+                    trDetails.className = 'hidden bg-slate-950/80 border-b border-slate-800 shadow-inner';
 
                     let periodsHtml = details.periods.map(p => {
-                        let badgeBg = 'bg-slate-900 border-slate-800 text-slate-400';
-                        if (/бро/i.test(p.location)) badgeBg = 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300';
-                        else if (/роп/i.test(p.location)) badgeBg = 'bg-yellow-950/40 border-yellow-700/60 text-yellow-300';
-                        else if (/воп/i.test(p.location)) badgeBg = 'bg-rose-950/40 border-rose-800/60 text-rose-300';
-                        else if (/дв|30/i.test(p.location)) badgeBg = 'bg-sky-950/40 border-sky-800/60 text-sky-300';
+                        let badgeBg = 'bg-slate-900 border-slate-800 text-slate-300';
+                        if (/бро/i.test(p.location)) badgeBg = 'bg-emerald-950/50 border-emerald-700/60 text-emerald-300';
+                        else if (/роп/i.test(p.location)) badgeBg = 'bg-amber-950/50 border-amber-700/60 text-amber-300';
+                        else if (/воп/i.test(p.location)) badgeBg = 'bg-rose-950/50 border-rose-700/60 text-rose-300';
+                        else if (/дв|30/i.test(p.location)) badgeBg = 'bg-sky-950/50 border-sky-700/60 text-sky-300';
 
                         return `
-                            <div class="flex flex-col md:flex-row md:items-center justify-between p-2.5 rounded-xl border mb-2 shadow-sm text-xs font-mono ${badgeBg}">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between p-3 rounded-xl border mb-2 shadow-sm text-xs font-mono ${badgeBg}">
                                 <div class="flex-1 space-y-1">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-blue-400 font-bold">
+                                        <span class="text-cyan-400 font-bold">
                                             📅 ${formatDateDisplay(p.start)} - ${formatDateDisplay(p.end)}
                                         </span>
-                                        <span class="font-semibold text-white">${escapeHtml(p.location)}</span>
+                                        <span class="font-bold text-white">${escapeHtml(p.location)}</span>
                                         ${p.task !== p.location ? `<span class="text-slate-400 text-[11px]">(${escapeHtml(p.task)})</span>` : ''}
                                     </div>
-                                    <div class="text-[10px] text-slate-400">
-                                        ${escapeHtml(p.rank || 'В/С')} &bull; ${escapeHtml(p.pos || 'Посада не вказана')} ${p.ipn ? `&bull; ІПН: ${p.ipn}` : ''}
+                                    <div class="text-[11px] text-slate-300 font-sans">
+                                        ${escapeHtml(p.rank || 'В/С')} &bull; ${escapeHtml(p.pos || 'Посада не вказана')} ${p.ipn ? `&bull; <span class="font-mono text-slate-400">ІПН: ${p.ipn}</span>` : ''}
                                     </div>
                                 </div>
-                                <span class="text-blue-400 self-end md:self-auto mt-1 md:mt-0 font-bold text-sm bg-black/40 px-2 py-0.5 rounded">
+                                <span class="text-blue-300 self-end md:self-auto mt-1 md:mt-0 font-bold text-sm bg-slate-950/80 px-2.5 py-1 rounded-lg border border-blue-500/30">
                                     ${p.days} дн.
                                 </span>
                             </div>
@@ -1172,6 +1315,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
             statsText.textContent = `(Показано: ${filtered.length} із ${database.size} бійців • Дат: ${successDatesCount.size} • Зріз: ${formatDateDisplay(globalMaxDateStr)})`;
             exportExcelBtn.classList.remove('hidden');
+            updateSelectionUI();
             lucide.createIcons();
         };
 
@@ -1184,34 +1328,39 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             tbody.innerHTML = '';
 
             if (filtered.length === 0 || sortedDates.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="py-24 text-center text-slate-600 italic"><i data-lucide="calendar" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>Немає даних для побудови табеля</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="py-24 text-center text-slate-500 italic"><i data-lucide="calendar" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>Немає даних для побудови табеля</td></tr>`;
                 lucide.createIcons();
                 return;
             }
 
             // Build Header
             headerTr.innerHTML = `
-                <th class="sticky left-0 top-0 z-40 bg-slate-950 py-2 px-1 text-center w-10 min-w-[40px] max-w-[40px] border-r border-slate-800">№</th>
-                <th class="sticky left-[40px] top-0 z-40 bg-slate-950 py-2 px-2 w-24 min-w-[96px] max-w-[96px] border-r border-slate-800 truncate">Звання</th>
-                <th class="sticky left-[136px] top-0 z-40 bg-slate-950 py-2 px-2.5 w-60 min-w-[240px] max-w-[240px] border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('name')">
+                <th class="sticky left-0 top-0 z-40 bg-slate-950 py-2.5 px-1 text-center w-14 min-w-[56px] max-w-[56px] border-r border-slate-800">
+                    <div class="flex items-center justify-center gap-1">
+                        <input type="checkbox" id="matrix-select-all" onchange="toggleSelectAll(this.checked)" class="rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-0 cursor-pointer" title="Обрати всіх / Зняти вибір">
+                        <span>№</span>
+                    </div>
+                </th>
+                <th class="sticky left-[56px] top-0 z-40 bg-slate-950 py-2.5 px-2 w-24 min-w-[96px] max-w-[96px] border-r border-slate-800 truncate">Звання</th>
+                <th class="sticky left-[152px] top-0 z-40 bg-slate-950 py-2.5 px-2.5 w-60 min-w-[240px] max-w-[240px] border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('name')">
                     <div class="flex items-center justify-between">
                         <span>ПІБ</span>
-                        <span class="text-slate-600">${currentSort.col === 'name' ? (currentSort.asc ? '↑' : '↓') : '↕'}</span>
+                        <span class="text-slate-500">${currentSort.col === 'name' ? (currentSort.asc ? '↑' : '↓') : '↕'}</span>
                     </div>
                 </th>
                 ${sortedDates.map(dStr => {
                     const parts = dStr.split('-');
                     const displayDate = parts.length === 3 ? `${parts[2]}.${parts[1]}` : dStr;
-                    return `<th class="py-2 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800 font-mono text-[10px] text-slate-300" title="Дата: ${formatDateDisplay(dStr)}">${displayDate}</th>`;
+                    return `<th class="py-2.5 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800 font-mono text-[11px] text-slate-300 font-semibold" title="Дата: ${formatDateDisplay(dStr)}">${displayDate}</th>`;
                 }).join('')}
-                <th class="py-2 px-2 text-center min-w-[46px] border-r border-slate-800 text-emerald-400 font-bold">БРО</th>
-                <th class="py-2 px-2 text-center min-w-[46px] border-r border-slate-800 text-yellow-400 font-bold">РОП</th>
-                <th class="py-2 px-2 text-center min-w-[46px] border-r border-slate-800 text-rose-400 font-bold">ВОП</th>
-                <th class="py-2 px-2 text-center min-w-[52px] border-r border-slate-800 text-sky-400 font-bold">ЗабБД</th>
-                <th class="py-2 px-2 text-center min-w-[62px] text-blue-400 font-bold cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('days')">
+                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-emerald-400 font-bold">БРО</th>
+                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-amber-400 font-bold">РОП</th>
+                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-rose-400 font-bold">ВОП</th>
+                <th class="py-2.5 px-2 text-center min-w-[52px] border-r border-slate-800 text-cyan-400 font-bold">ЗабБД</th>
+                <th class="py-2.5 px-2 text-center min-w-[62px] text-blue-400 font-bold cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('days')">
                     <div class="flex items-center justify-center gap-1">
                         <span>Всього</span>
-                        <span class="text-slate-600">${currentSort.col === 'days' ? (currentSort.asc ? '↑' : '↓') : '↕'}</span>
+                        <span class="text-slate-500">${currentSort.col === 'days' ? (currentSort.asc ? '↑' : '↓') : '↕'}</span>
                     </div>
                 </th>
             `;
@@ -1224,6 +1373,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 const details = row.details;
                 const formattedRank = (row.latestRank || '—').replace(/\s+/g, '<br>');
                 const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ');
+                const isSelected = selectedPersonNames.has(row.name);
 
                 sumBro += details.broDays;
                 sumRop += details.ropDays;
@@ -1242,40 +1392,49 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         const tooltipText = `${formatDateDisplay(dStr)}\nЛокація: ${rec.location}\nЗавдання: ${rec.task}\nФайл: ${rec.fileName}`;
 
                         if (cat === 'bro') {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-700/80 shadow-sm" title="${escapeHtml(tooltipText)}">БРО</span>`;
+                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">БРО</span>`;
                         } else if (cat === 'rop') {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-yellow-950/80 text-yellow-300 border border-yellow-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">РОП</span>`;
+                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950/80 text-amber-300 border border-amber-500/80 shadow-sm" title="${escapeHtml(tooltipText)}">РОП</span>`;
                         } else if (cat === 'vop') {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-700/80 shadow-sm" title="${escapeHtml(tooltipText)}">ВОП</span>`;
+                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">ВОП</span>`;
                         } else if (cat === 'dv30') {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-sky-950/80 text-sky-300 border border-sky-700/80 shadow-sm" title="${escapeHtml(tooltipText)}">Заб</span>`;
+                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-sky-950/80 text-sky-300 border border-sky-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">Заб</span>`;
                         } else {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-blue-950/80 text-blue-300 border border-blue-700/80 shadow-sm" title="${escapeHtml(tooltipText)}">БД</span>`;
+                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-blue-950/80 text-blue-300 border border-blue-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">БД</span>`;
                         }
-                        dateCellsHtml += `<td class="py-1 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/60">${badgeHtml}</td>`;
+                        dateCellsHtml += `<td class="py-1 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70">${badgeHtml}</td>`;
                     } else {
-                        dateCellsHtml += `<td class="py-1 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/60"><span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold text-red-400/80 bg-red-950/25 border border-red-900/40 shadow-sm">✕</span></td>`;
+                        dateCellsHtml += `<td class="py-1 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70"><span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold text-rose-400/80 bg-rose-950/20 border border-rose-900/40 shadow-sm">✕</span></td>`;
                     }
                 });
 
+                const isEven = idx % 2 === 0;
+                const matrixRowBg = isSelected ? 'bg-blue-950/60' : (isEven ? 'bg-slate-900/30' : 'bg-slate-900/70');
+                const stickyColBg = isSelected ? 'bg-blue-950' : 'bg-slate-950';
+
                 const tr = document.createElement('tr');
-                tr.className = `hover:bg-slate-800/50 transition-colors border-b border-slate-800/60 ${details.isGloballyInactive ? 'opacity-60' : ''}`;
+                tr.className = `hover:bg-slate-800/70 transition-colors border-b border-slate-800/70 ${details.isGloballyInactive ? 'opacity-60' : ''} ${matrixRowBg}`;
                 tr.innerHTML = `
-                    <td class="sticky left-0 z-20 bg-slate-900 py-1.5 px-1 text-slate-500 font-mono text-center w-10 min-w-[40px] max-w-[40px] border-r border-slate-800/60">${idx + 1}</td>
-                    <td class="sticky left-[40px] z-20 bg-slate-900 py-1.5 px-2 text-slate-400 border-r border-slate-800/60 leading-tight w-24 min-w-[96px] max-w-[96px] whitespace-nowrap overflow-hidden text-ellipsis" title="${escapeHtml(cleanRank)}">${formattedRank}</td>
-                    <td class="sticky left-[136px] z-20 bg-slate-900 py-1.5 px-2.5 font-bold text-white border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] w-60 min-w-[240px] max-w-[240px] whitespace-nowrap overflow-hidden text-ellipsis" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
+                    <td class="sticky left-0 z-20 ${stickyColBg} py-1.5 px-1 text-center w-14 min-w-[56px] max-w-[56px] border-r border-slate-800/70" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <input type="checkbox" data-name="${escapeHtml(row.name)}" onchange="toggleSelectPerson('${escapeHtml(row.name)}')" ${isSelected ? 'checked' : ''} class="person-checkbox rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-0 cursor-pointer" title="Обрати бійця">
+                            <span class="text-slate-400 font-mono font-bold text-[11px]">${idx + 1}</span>
+                        </div>
+                    </td>
+                    <td class="sticky left-[56px] z-20 ${stickyColBg} py-1.5 px-2 text-slate-300 font-medium border-r border-slate-800/70 leading-tight w-24 min-w-[96px] max-w-[96px] whitespace-nowrap overflow-hidden text-ellipsis text-[11px]" title="${escapeHtml(cleanRank)}">${formattedRank}</td>
+                    <td class="sticky left-[152px] z-20 ${stickyColBg} py-1.5 px-2.5 font-extrabold text-white border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] w-60 min-w-[240px] max-w-[240px] whitespace-nowrap overflow-hidden text-ellipsis text-[12px]" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
                         <div class="flex items-center gap-1.5 truncate">
                             <span class="truncate">${escapeHtml(row.name)}</span>
-                            ${details.isGloballyInactive ? '<span class="text-[9px] font-mono text-red-400 font-normal shrink-0" title="Вибув зі списків">⚠️</span>' : ''}
+                            ${details.isGloballyInactive ? '<span class="text-[9px] font-mono text-rose-400 font-normal shrink-0" title="Вибув зі списків">⚠️</span>' : ''}
                         </div>
                     </td>
                     ${dateCellsHtml}
-                    <td class="py-1.5 px-2 text-center border-r border-slate-800/60 font-mono ${details.broDays > 0 ? 'text-emerald-400 font-bold' : 'text-slate-700'}">${details.broDays > 0 ? details.broDays : '—'}</td>
-                    <td class="py-1.5 px-2 text-center border-r border-slate-800/60 font-mono ${details.ropDays > 0 ? 'text-yellow-400 font-bold' : 'text-slate-700'}">${details.ropDays > 0 ? details.ropDays : '—'}</td>
-                    <td class="py-1.5 px-2 text-center border-r border-slate-800/60 font-mono ${details.vopDays > 0 ? 'text-rose-400 font-bold' : 'text-slate-700'}">${details.vopDays > 0 ? details.vopDays : '—'}</td>
-                    <td class="py-1.5 px-2 text-center border-r border-slate-800/60 font-mono ${details.dv30Days > 0 ? 'text-sky-400 font-bold' : 'text-slate-700'}">${details.dv30Days > 0 ? details.dv30Days : '—'}</td>
+                    <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.broDays > 0 ? 'text-emerald-400 font-bold' : 'text-slate-600'}">${details.broDays > 0 ? details.broDays : '—'}</td>
+                    <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.ropDays > 0 ? 'text-amber-400 font-bold' : 'text-slate-600'}">${details.ropDays > 0 ? details.ropDays : '—'}</td>
+                    <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.vopDays > 0 ? 'text-rose-400 font-bold' : 'text-slate-600'}">${details.vopDays > 0 ? details.vopDays : '—'}</td>
+                    <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.dv30Days > 0 ? 'text-cyan-400 font-bold' : 'text-slate-600'}">${details.dv30Days > 0 ? details.dv30Days : '—'}</td>
                     <td class="py-1.5 px-2 text-center font-mono font-bold text-blue-300">
-                        <span class="inline-block bg-blue-950/60 border border-blue-800/80 px-2 py-0.5 rounded text-xs">${details.totalDays}</span>
+                        <span class="inline-block bg-blue-950/80 border border-blue-500/50 px-2 py-0.5 rounded text-xs">${details.totalDays}</span>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1285,21 +1444,21 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             const summaryTr = document.createElement('tr');
             summaryTr.className = 'bg-slate-950 font-mono text-xs border-t-2 border-slate-700 sticky bottom-0 z-30 shadow-lg';
             summaryTr.innerHTML = `
-                <td class="sticky left-0 z-40 bg-slate-950 py-2 px-1 border-r border-slate-800 w-10 min-w-[40px] max-w-[40px]"></td>
-                <td class="sticky left-[40px] z-40 bg-slate-950 py-2 px-2 border-r border-slate-800 w-24 min-w-[96px] max-w-[96px]"></td>
-                <td class="sticky left-[136px] z-40 bg-slate-950 py-2 px-2.5 border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] font-bold text-slate-300 uppercase tracking-wider text-[10px] text-right w-60 min-w-[240px] max-w-[240px]">
+                <td class="sticky left-0 z-40 bg-slate-950 py-2.5 px-1 border-r border-slate-800 w-14 min-w-[56px] max-w-[56px]"></td>
+                <td class="sticky left-[56px] z-40 bg-slate-950 py-2.5 px-2 border-r border-slate-800 w-24 min-w-[96px] max-w-[96px]"></td>
+                <td class="sticky left-[152px] z-40 bg-slate-950 py-2.5 px-2.5 border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] font-bold text-slate-200 uppercase tracking-wider text-[11px] text-right w-60 min-w-[240px] max-w-[240px]">
                     РАЗОМ ПО ДНЯХ:
                 </td>
                 ${sortedDates.map(dStr => `
-                    <td class="py-1.5 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/60">
-                        <span class="inline-block bg-slate-800 text-white font-bold px-1.5 py-0.5 rounded text-[10px] min-w-[24px]">${dateActiveCounts[dStr]}</span>
+                    <td class="py-1.5 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70">
+                        <span class="inline-block bg-slate-800 text-cyan-300 border border-slate-700 font-bold px-1.5 py-0.5 rounded text-[10px] min-w-[24px] shadow-sm">${dateActiveCounts[dStr]}</span>
                     </td>
                 `).join('')}
-                <td class="py-2 px-2 text-center border-r border-slate-800 text-emerald-400 font-bold">${sumBro || 0}</td>
-                <td class="py-2 px-2 text-center border-r border-slate-800 text-yellow-400 font-bold">${sumRop || 0}</td>
-                <td class="py-2 px-2 text-center border-r border-slate-800 text-rose-400 font-bold">${sumVop || 0}</td>
-                <td class="py-2 px-2 text-center border-r border-slate-800 text-sky-400 font-bold">${sumDv30 || 0}</td>
-                <td class="py-2 px-2 text-center text-blue-400 font-extrabold text-sm">${sumTotal || 0}</td>
+                <td class="py-2.5 px-2 text-center border-r border-slate-800 text-emerald-400 font-bold text-xs">${sumBro || 0}</td>
+                <td class="py-2.5 px-2 text-center border-r border-slate-800 text-amber-400 font-bold text-xs">${sumRop || 0}</td>
+                <td class="py-2.5 px-2 text-center border-r border-slate-800 text-rose-400 font-bold text-xs">${sumVop || 0}</td>
+                <td class="py-2.5 px-2 text-center border-r border-slate-800 text-cyan-400 font-bold text-xs">${sumDv30 || 0}</td>
+                <td class="py-2.5 px-2 text-center text-blue-400 font-black text-sm">${sumTotal || 0}</td>
             `;
             tbody.appendChild(summaryTr);
         }
@@ -1325,6 +1484,16 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 return;
             }
 
+            const isSelective = selectedPersonNames.size > 0;
+            const targetRows = isSelective
+                ? tableDataForExport.filter(r => selectedPersonNames.has(r.name))
+                : tableDataForExport;
+
+            if (targetRows.length === 0) {
+                alert("Серед обраних бійців немає записів для експорту!");
+                return;
+            }
+
             const sortedDates = Array.from(successDatesCount).sort();
 
             const headerTitles = [
@@ -1346,7 +1515,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             const dateActiveCounts = {};
             sortedDates.forEach(d => { dateActiveCounts[d] = 0; });
 
-            tableDataForExport.forEach((row, i) => {
+            targetRows.forEach((row, i) => {
                 const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ');
                 sumBro += row.details.broDays;
                 sumRop += row.details.ropDays;
@@ -1537,10 +1706,14 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             ws['!freeze'] = { xSplit: 3, ySplit: 1, topLeftCell: 'D2' };
 
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Табель періодів");
+            const sheetName = isSelective ? `Обрані (${targetRows.length})` : "Табель періодів";
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
             const dateStr = new Date().toLocaleDateString('uk-UA').replace(/\./g, '_');
-            XLSX.writeFile(wb, `Табель_періодів_завдань_${dateStr}.xlsx`);
+            const fileName = isSelective 
+                ? `Табель_періодів_обрані_${targetRows.length}_вс_${dateStr}.xlsx`
+                : `Табель_періодів_завдань_${dateStr}.xlsx`;
+            XLSX.writeFile(wb, fileName);
         }
 
         function escapeHtml(str) {
