@@ -189,12 +189,18 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             Аналізатор періодів бойових завдань та ДВ
                         </h1>
                         <button onclick="openModal('modal-changelog')" class="text-xs bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(59,130,246,0.2)]" title="Історія оновлень">
-                            ⚡ v1.2.0
+                            ⚡ v1.3.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs mt-0.5">
                         Автоматичний аналіз щоденних списків бойових завдань (РОП/ВОП/БРО) та ДВ 30. Розрахунок інтервалів і зведення діб.
                     </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <div id="storageIndicator" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-slate-950/70 border border-slate-800 text-slate-400 shadow-inner" title="Дані автоматично зберігаються в локальному сховищі браузера (100% офлайн)">
+                    <span id="storageIndicatorDot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+                    <span id="storageIndicatorText">Сховище порожнє</span>
                 </div>
             </div>
         </header>
@@ -206,20 +212,54 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             <div class="xl:col-span-8 flex flex-col gap-3">
                 <!-- Drop Zone -->
                 <div id="dropZone"
-                    class="drop-zone w-full border-2 border-dashed border-blue-500/35 hover:border-cyan-400 bg-gradient-to-b from-blue-500/5 to-slate-900/40 hover:bg-blue-500/10 rounded-2xl p-5 text-center cursor-pointer transition-all duration-200 flex flex-col sm:flex-row items-center justify-center gap-4 group shadow-md"
-                    onclick="document.getElementById('fileInput').click()">
-                    <div class="bg-blue-500/15 text-blue-400 group-hover:text-cyan-300 p-3.5 rounded-2xl group-hover:scale-105 transition-transform shrink-0 border border-blue-400/30 shadow-lg shadow-blue-500/15">
-                        <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                    class="drop-zone w-full border-2 border-dashed border-blue-500/35 hover:border-cyan-400 bg-gradient-to-b from-blue-500/5 to-slate-900/40 hover:bg-blue-500/10 rounded-2xl p-4.5 text-center transition-all duration-200 flex flex-col sm:flex-row items-center justify-between gap-4 group shadow-md cursor-pointer">
+                    <div class="flex items-center gap-3.5 text-center sm:text-left min-w-0" onclick="document.getElementById('fileInput').click()">
+                        <div class="bg-blue-500/15 text-blue-400 group-hover:text-cyan-300 p-3 rounded-2xl group-hover:scale-105 transition-transform shrink-0 border border-blue-400/30 shadow-lg shadow-blue-500/15">
+                            <i data-lucide="folder-up" class="w-6 h-6"></i>
+                        </div>
+                        <div class="truncate min-w-0">
+                            <p class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
+                                Перетягніть файли або цілу папку сюди
+                            </p>
+                            <p class="text-xs text-slate-400 mt-0.5">
+                                Підтримуються вкладені папки, списки ВОП/РОП/БРО та ДВ 30 <span class="text-[10px] font-mono px-1.5 py-0.5 bg-slate-800/80 rounded text-cyan-300 border border-slate-700/60 ml-1">.xlsx, .docx</span>
+                            </p>
+                        </div>
                     </div>
-                    <div class="text-center sm:text-left">
-                        <p class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
-                            Натисніть або перетягніть файли сюди
-                        </p>
-                        <p class="text-xs text-slate-400 mt-0.5">
-                            Крок 1: Завантажте щоденні списки завдань ВОП/РОП/БРО та ДВ 30 <span class="text-[10px] font-mono px-1.5 py-0.5 bg-slate-800/80 rounded text-cyan-300 border border-slate-700/60 ml-1">.xlsx, .docx</span>
-                        </p>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"
+                            class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
+                            <i data-lucide="file-plus" class="w-3.5 h-3.5 text-blue-400"></i>
+                            Файли
+                        </button>
+                        <button type="button" onclick="event.stopPropagation(); document.getElementById('folderInput').click()"
+                            class="px-3.5 py-1.5 rounded-xl bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-400/60 hover:border-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-blue-600/20 cursor-pointer">
+                            <i data-lucide="folder" class="w-3.5 h-3.5 text-cyan-300"></i>
+                            Ціла папка
+                        </button>
                     </div>
                     <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .docx" multiple>
+                    <input type="file" id="folderInput" class="hidden" webkitdirectory directory multiple>
+                </div>
+
+                <!-- Фільтр назв файлів (вхідний відбір списків) -->
+                <div class="p-2.5 bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-800/90 shadow-md flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2 text-xs text-slate-300 font-semibold shrink-0">
+                        <div class="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-cyan-400">
+                            <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                        </div>
+                        <span>Фільтр файлів:</span>
+                    </div>
+                    <div class="relative flex-1 w-full">
+                        <input type="text" id="fileNameFilterInput" placeholder="Ключові слова у назвах файлів (через кому, напр. списки, відомість)..."
+                            class="w-full bg-slate-950/90 text-cyan-300 border border-slate-700/80 rounded-lg pl-3 pr-8 py-1.5 text-xs font-mono placeholder:text-slate-500 placeholder:font-sans focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner">
+                        <button type="button" id="clearFileNameFilterBtn" onclick="clearFileNameFilter()" class="hidden absolute right-2 top-2 text-slate-400 hover:text-rose-400 p-0.5 rounded cursor-pointer" title="Очистити фільтр назв">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <span class="text-[11px] font-sans text-slate-400 shrink-0 hidden md:inline" title="Регістр і зайві пробіли ігноруються. Якщо порожньо — беруться всі файли з датами">
+                        (через кому)
+                    </span>
                 </div>
 
                 <!-- Progress Bar (при завантаженні) -->
@@ -468,13 +508,24 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             <div class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs font-sans">
                 <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
                     <div class="font-bold text-white flex items-center justify-between font-mono">
-                        <span class="text-cyan-400">⚡ v1.2.0 — Вибірковий експорт та Tactical UI</span>
+                        <span class="text-cyan-400">⚡ v1.3.0 — Розумний фільтр файлів, 100% парсинг та Tactical UI</span>
                         <span class="text-[10px] text-slate-500">02.09.2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
-                        <li><b>Вибірковий експорт в Excel</b>: додано чекбокси бійців, накопичувальний вибір при фільтрах і вивантаження витягів.</li>
-                        <li><b>Tactical High-Contrast редизайн</b>: контрастна палітра, неонові плашки категорій, зебра-розмітка рядків.</li>
-                        <li><b>Списковий пошук</b>: швидкий пошук одразу кількох бійців через кому або крапку з комою.</li>
+                        <li><b>Налаштовуваний фільтр файлів</b>: вхідний відбір списків за ключовими словами через кому, автозбереження шаблону в <code>localStorage</code> та відсікання сторонніх файлів (ПБД, ЖБД, СЗЧ тощо).</li>
+                        <li><b>100% точність парсингу</b>: усунено блокування прізвищ (зокрема Дронь), встановлено точний пріоритет рубежів (ВОП > РОП > БРО > ДВ 30).</li>
+                        <li><b>Вибірковий експорт в Excel</b>: додано чекбокси вибору бійців, накопичувальний вибір при фільтрах і вивантаження витягів з кастомною назвою.</li>
+                        <li><b>Tactical High-Contrast редизайн</b>: контрастна палітра <code>#0b101e</code>, мікро-бейджі категорій, зебра-розмітка та списковий пошук через кому.</li>
+                    </ul>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
+                    <div class="font-bold text-slate-300 flex items-center justify-between font-mono">
+                        <span class="text-blue-400">⚡ v1.2.0 — Вибірковий експорт та розширений пошук</span>
+                        <span class="text-[10px] text-slate-500">02.09.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
+                        <li><b>Вибірковий експорт в Excel</b>: чекбокси бійців, майстер-вибір та динамічний експорт.</li>
+                        <li><b>Списковий пошук</b>: підтримка масового вводу ПІБ через кому/крапку з комою.</li>
                     </ul>
                 </div>
                 <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
@@ -500,9 +551,11 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
     <!-- Application Script -->
     <script>
         // State
+        const STORAGE_KEY = 'period_tracker_state_v1';
         const database = new Map(); // normalizedKey -> { name, pib, ipn, records: Map(dateStr -> { rank, pos, taskType, depth, fileName }) }
         const successDatesCount = new Set();
         const selectedPersonNames = new Set();
+        let uploadedFilesHistory = [];
         let uploadedFilesCount = 0;
         let globalMaxDateStr = null;
         let tableDataForExport = [];
@@ -520,6 +573,159 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             initApp();
         });
 
+        function updateStorageIndicator(hasData) {
+            const dot = document.getElementById('storageIndicatorDot');
+            const text = document.getElementById('storageIndicatorText');
+            if (!dot || !text) return;
+
+            if (hasData && database.size > 0) {
+                dot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]";
+                text.className = "text-emerald-400 font-semibold";
+                text.innerText = `Збережено (${database.size} бійців)`;
+            } else {
+                dot.className = "w-2 h-2 rounded-full bg-slate-600";
+                text.className = "text-slate-400";
+                text.innerText = `Сховище порожнє`;
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                if (database.size === 0) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    updateStorageIndicator(false);
+                    return;
+                }
+
+                const serializedDb = [];
+                for (const [name, personData] of database.entries()) {
+                    const recs = [];
+                    if (personData.records) {
+                        for (const [dateStr, rec] of personData.records.entries()) {
+                            recs.push({ date: dateStr, ...rec });
+                        }
+                    }
+                    serializedDb.push({
+                        name: personData.name,
+                        records: recs
+                    });
+                }
+
+                const state = {
+                    database: serializedDb,
+                    successDates: Array.from(successDatesCount),
+                    uploadedFilesCount: uploadedFilesCount,
+                    uploadedFilesHistory: uploadedFilesHistory,
+                    globalMaxDateStr: globalMaxDateStr,
+                    selectedPersons: Array.from(selectedPersonNames),
+                    viewMode: currentViewMode,
+                    savedAt: new Date().toISOString()
+                };
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                updateStorageIndicator(true);
+            } catch (e) {
+                console.error("Помилка збереження в LocalStorage:", e);
+            }
+        }
+
+        function loadFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    updateStorageIndicator(false);
+                    return false;
+                }
+                const state = JSON.parse(raw);
+                if (!state || !state.database || state.database.length === 0) {
+                    updateStorageIndicator(false);
+                    return false;
+                }
+
+                database.clear();
+                successDatesCount.clear();
+                selectedPersonNames.clear();
+                uploadedFilesHistory = state.uploadedFilesHistory || [];
+
+                state.database.forEach(p => {
+                    const recordsMap = new Map();
+                    if (p.records && Array.isArray(p.records)) {
+                        p.records.forEach(r => {
+                            const { date, ...recData } = r;
+                            recordsMap.set(date, recData);
+                        });
+                    }
+                    database.set(p.name, {
+                        name: p.name,
+                        records: recordsMap
+                    });
+                });
+
+                if (state.successDates && Array.isArray(state.successDates)) {
+                    state.successDates.forEach(d => successDatesCount.add(d));
+                }
+
+                if (state.selectedPersons && Array.isArray(state.selectedPersons)) {
+                    state.selectedPersons.forEach(name => selectedPersonNames.add(name));
+                }
+
+                uploadedFilesCount = state.uploadedFilesCount || uploadedFilesHistory.length || successDatesCount.size;
+                globalMaxDateStr = state.globalMaxDateStr || null;
+
+                // Render file list
+                renderFileLogList();
+
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) clearBtn.classList.remove('hidden');
+
+                const badgeProcessed = document.getElementById('files-processed-badge');
+                if (badgeProcessed) {
+                    badgeProcessed.innerText = `${uploadedFilesCount} шт. • ${successDatesCount.size} дат`;
+                }
+
+                if (state.viewMode && (state.viewMode === 'list' || state.viewMode === 'matrix')) {
+                    window.setViewMode(state.viewMode);
+                }
+
+                window.renderTableFunc();
+                updateSelectionUI();
+                updateStorageIndicator(true);
+                return true;
+            } catch (e) {
+                console.error("Помилка відновлення з LocalStorage:", e);
+                updateStorageIndicator(false);
+                return false;
+            }
+        }
+
+        function clearStorage() {
+            database.clear();
+            successDatesCount.clear();
+            selectedPersonNames.clear();
+            uploadedFilesHistory = [];
+            uploadedFilesCount = 0;
+            globalMaxDateStr = null;
+            localStorage.removeItem(STORAGE_KEY);
+
+            renderFileLogList();
+            
+            document.getElementById('files-processed-badge').innerText = '0 шт.';
+            document.getElementById('badge-count-bro').innerText = '0';
+            document.getElementById('badge-count-rop').innerText = '0';
+            document.getElementById('badge-count-vop').innerText = '0';
+            document.getElementById('badge-count-dv30').innerText = '0';
+            
+            const clearBtn = document.getElementById('clearBtn');
+            if (clearBtn) clearBtn.classList.add('hidden');
+            
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) fileInput.value = '';
+            
+            updateSelectionUI();
+            updateStorageIndicator(false);
+            window.renderTableFunc();
+        }
+
         window.toggleSelectPerson = function(name) {
             if (selectedPersonNames.has(name)) {
                 selectedPersonNames.delete(name);
@@ -527,6 +733,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 selectedPersonNames.add(name);
             }
             updateSelectionUI();
+            saveToStorage();
         };
 
         window.toggleSelectAll = function(checked) {
@@ -537,11 +744,13 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 tableDataForExport.forEach(r => selectedPersonNames.delete(r.name));
             }
             updateSelectionUI();
+            saveToStorage();
         };
 
         window.clearSelection = function() {
             selectedPersonNames.clear();
             updateSelectionUI();
+            saveToStorage();
         };
 
         function updateSelectionUI() {
@@ -603,6 +812,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         function initApp() {
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
+            const folderInput = document.getElementById('folderInput');
             const searchInput = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearBtn');
             const exportExcelBtn = document.getElementById('exportExcelBtn');
@@ -614,41 +824,81 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             });
 
             // Drag & Drop
-            dropZone.addEventListener('click', (e) => {
-                if (e.target.tagName !== 'INPUT') fileInput.click();
+            dropZone.addEventListener('dragover', (e) => { 
+                e.preventDefault(); 
+                dropZone.classList.add('dragover'); 
             });
-            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
             dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-            dropZone.addEventListener('drop', (e) => {
+            dropZone.addEventListener('drop', async (e) => {
                 e.preventDefault();
                 dropZone.classList.remove('dragover');
-                if (e.dataTransfer.files.length) processFiles(e.dataTransfer.files);
-            });
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length) processFiles(e.target.files);
+                if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+                    const files = await getAllFileEntries(e.dataTransfer.items);
+                    if (files && files.length) processFiles(files);
+                } else if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                    processFiles(e.dataTransfer.files);
+                }
             });
 
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length) processFiles(e.target.files);
+            });
+
+            if (folderInput) {
+                folderInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files.length) processFiles(e.target.files);
+                });
+            }
+
             clearBtn.addEventListener('click', () => {
-                if (confirm("Очистити всі опрацьовані результати з пам'яті?")) {
-                    database.clear();
-                    successDatesCount.clear();
-                    selectedPersonNames.clear();
-                    uploadedFilesCount = 0;
-                    globalMaxDateStr = null;
-                    document.getElementById('fileLog').innerHTML = '<li class="text-slate-600 italic text-xs py-8 text-center">Очікування файлів...</li>';
-                    document.getElementById('files-processed-badge').innerText = '0 шт.';
-                    document.getElementById('badge-count-bro').innerText = '0';
-                    document.getElementById('badge-count-rop').innerText = '0';
-                    document.getElementById('badge-count-vop').innerText = '0';
-                    document.getElementById('badge-count-dv30').innerText = '0';
-                    clearBtn.classList.add('hidden');
-                    fileInput.value = '';
-                    updateSelectionUI();
-                    window.renderTableFunc();
+                if (confirm("Очистити всі опрацьовані результати з пам'яті та сховища браузера?")) {
+                    clearStorage();
                 }
             });
 
             exportExcelBtn.addEventListener('click', exportToExcel);
+
+            // Initialize custom filename filter input
+            initFileNameFilter();
+
+            // Load saved state from LocalStorage on initialization
+            loadFromStorage();
+        }
+
+        const FILENAME_FILTER_STORAGE_KEY = 'period_calc_filename_filter';
+
+        window.clearFileNameFilter = function() {
+            const input = document.getElementById('fileNameFilterInput');
+            const clearBtn = document.getElementById('clearFileNameFilterBtn');
+            if (input) input.value = '';
+            if (clearBtn) clearBtn.classList.add('hidden');
+            try { localStorage.removeItem(FILENAME_FILTER_STORAGE_KEY); } catch (e) {}
+        };
+
+        function initFileNameFilter() {
+            const input = document.getElementById('fileNameFilterInput');
+            const clearBtn = document.getElementById('clearFileNameFilterBtn');
+            if (!input) return;
+
+            try {
+                const saved = localStorage.getItem(FILENAME_FILTER_STORAGE_KEY);
+                if (saved) {
+                    input.value = saved;
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                }
+            } catch (e) {}
+
+            input.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (clearBtn) {
+                    if (val.trim()) clearBtn.classList.remove('hidden');
+                    else clearBtn.classList.add('hidden');
+                }
+                try {
+                    if (val.trim()) localStorage.setItem(FILENAME_FILTER_STORAGE_KEY, val);
+                    else localStorage.removeItem(FILENAME_FILTER_STORAGE_KEY);
+                } catch (err) {}
+            });
         }
 
         window.setViewMode = function(mode) {
@@ -670,6 +920,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 listCont.classList.add('hidden');
             }
             if (database.size > 0) window.renderTableFunc();
+            saveToStorage();
         };
 
         function setFilter(filterType) {
@@ -777,13 +1028,34 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             const isVopRegex = /(?:^|[^а-яіїєґ\w])воп(?:[^а-яіїєґ\w]|$)|глибин.*воп/i;
             const isDvRegex = /(?:^|[^а-яіїєґ\w])(?:дв|30|забезпеченн)(?:[^а-яіїєґ\w]|$)/i;
 
-            if (isBroRegex.test(loc) || isBroRegex.test(depth) || isBroRegex.test(task)) {
-                loc = 'На глибину БРО';
-            } else if (isRopRegex.test(loc) || isRopRegex.test(depth) || isRopRegex.test(task)) {
-                loc = 'На глибину РОП';
-            } else if (isVopRegex.test(loc) || isVopRegex.test(depth) || isVopRegex.test(task)) {
+            // 1. Explicit depth has top priority (ВОП > РОП > БРО > ДВ)
+            if (isVopRegex.test(depth)) {
                 loc = 'На глибину ВОП';
-            } else if (isDvRegex.test(loc) || isDvRegex.test(depth) || isDvRegex.test(task)) {
+            } else if (isRopRegex.test(depth)) {
+                loc = 'На глибину РОП';
+            } else if (isBroRegex.test(depth)) {
+                loc = 'На глибину БРО';
+            } else if (isDvRegex.test(depth)) {
+                loc = 'ДВ 30';
+            }
+            // 2. If depth is absent/empty, check task
+            else if (isVopRegex.test(task)) {
+                loc = 'На глибину ВОП';
+            } else if (isRopRegex.test(task)) {
+                loc = 'На глибину РОП';
+            } else if (isBroRegex.test(task)) {
+                loc = 'На глибину БРО';
+            } else if (isDvRegex.test(task)) {
+                loc = 'ДВ 30';
+            }
+            // 3. Fallback on loc string
+            else if (isBroRegex.test(loc)) {
+                loc = 'На глибину БРО';
+            } else if (isRopRegex.test(loc)) {
+                loc = 'На глибину РОП';
+            } else if (isVopRegex.test(loc)) {
+                loc = 'На глибину ВОП';
+            } else if (isDvRegex.test(loc)) {
                 loc = 'ДВ 30';
             } else if (!loc) {
                 loc = 'Бойове чергування';
@@ -809,44 +1081,252 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             return 'other';
         }
 
-        function logMessage(text, colorClass = 'text-slate-300', meta = null) {
+        function renderFileLogList() {
             const fileLog = document.getElementById('fileLog');
-            if (fileLog.children.length === 1 && fileLog.children[0].textContent.includes('Очікування')) {
-                fileLog.innerHTML = '';
-            }
-            const li = document.createElement('li');
-            li.className = `flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-950/90 border border-slate-800/80 text-xs font-mono hover:border-slate-700 transition-colors shadow-sm`;
+            if (!fileLog) return;
 
-            if (meta) {
-                const tagColor = meta.isDV ? 'bg-cyan-950 text-cyan-300 border-cyan-800/80' : 'bg-emerald-950 text-emerald-300 border-emerald-800/80';
-                const tagLabel = meta.isDV ? 'ДВ 30' : 'БД';
+            const badgeProcessed = document.getElementById('files-processed-badge');
+            if (badgeProcessed) {
+                badgeProcessed.innerText = uploadedFilesHistory && uploadedFilesHistory.length > 0 
+                    ? `${uploadedFilesHistory.length} шт. • ${successDatesCount.size} дат` 
+                    : '0 шт.';
+            }
+
+            if (!uploadedFilesHistory || uploadedFilesHistory.length === 0) {
+                fileLog.innerHTML = '<li class="text-slate-600 italic text-xs py-8 text-center">Очікування файлів...</li>';
+                return;
+            }
+
+            fileLog.innerHTML = '';
+            uploadedFilesHistory.forEach(meta => {
+                const li = document.createElement('li');
+                li.className = `flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-950/90 border border-slate-800/80 text-xs font-mono hover:border-slate-700 transition-colors shadow-sm group`;
+
+                const isDvTag = meta.isDV || /дв[\s_\-]*30|30[\s_\-]*тис|30к/i.test(meta.fileName);
+                const tagColor = isDvTag ? 'bg-cyan-950 text-cyan-300 border-cyan-800/80' : 'bg-emerald-950 text-emerald-300 border-emerald-800/80';
+                const tagLabel = isDvTag ? 'ДВ 30' : 'БД';
+
                 li.innerHTML = `
                     <div class="flex items-center gap-2 truncate min-w-0">
                         <span class="text-blue-400">📄</span>
-                        <span class="text-white font-bold shrink-0">${meta.shortDate}</span>
+                        <span class="text-white font-bold shrink-0">${escapeHtml(meta.shortDate || '')}</span>
                         <span class="text-slate-400 truncate text-[11px]" title="${escapeHtml(meta.fileName)}">${escapeHtml(meta.fileName)}</span>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${tagColor}">${tagLabel}</span>
-                        <span class="text-slate-300 text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">${meta.count} ос.</span>
+                        <span class="text-slate-300 text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">${meta.count || 0} ос.</span>
+                        <button onclick="event.stopPropagation(); window.removeUploadedFile('${escapeHtml(meta.fileName)}')" 
+                                class="p-1 rounded bg-slate-900 hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 transition-colors cursor-pointer" 
+                                title="Видалити файл і його записи">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>
+                        </button>
                     </div>
                 `;
-            } else {
-                li.innerHTML = `<span class="${colorClass}">${text}</span>`;
-            }
+                fileLog.appendChild(li);
+            });
 
-            fileLog.appendChild(li);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
             fileLog.scrollTop = fileLog.scrollHeight;
         }
 
-        async function processFiles(files) {
-            const filesArray = Array.from(files);
-            if (filesArray.length === 0) return;
+        window.removeUploadedFile = function(fileName) {
+            if (!confirm(`Видалити файл "${fileName}" та всі пов'язані з ним щоденні записи?`)) return;
 
-            const fileLog = document.getElementById('fileLog');
-            if (fileLog.children.length === 1 && fileLog.children[0].textContent.includes('Очікування')) {
-                fileLog.innerHTML = '';
+            // 1. Remove records matching this fileName from database
+            const toDeletePersons = [];
+            for (const [key, person] of database.entries()) {
+                if (person.records) {
+                    for (const [dateStr, rec] of person.records.entries()) {
+                        if (rec.fileName === fileName) {
+                            person.records.delete(dateStr);
+                        }
+                    }
+                    if (person.records.size === 0) {
+                        toDeletePersons.push(key);
+                    }
+                }
             }
+            toDeletePersons.forEach(k => {
+                const person = database.get(k);
+                if (person) selectedPersonNames.delete(person.name);
+                database.delete(k);
+            });
+
+            // 2. Recompute successDatesCount and globalMaxDateStr
+            successDatesCount.clear();
+            let maxDate = null;
+            for (const person of database.values()) {
+                if (person.records) {
+                    for (const d of person.records.keys()) {
+                        successDatesCount.add(d);
+                        if (!maxDate || d > maxDate) maxDate = d;
+                    }
+                }
+            }
+            globalMaxDateStr = maxDate;
+
+            // 3. Remove from uploadedFilesHistory
+            uploadedFilesHistory = uploadedFilesHistory.filter(h => h.fileName !== fileName);
+            uploadedFilesCount = uploadedFilesHistory.length;
+
+            // 4. Update UI
+            renderFileLogList();
+            const badgeProcessed = document.getElementById('files-processed-badge');
+            if (badgeProcessed) {
+                badgeProcessed.innerText = uploadedFilesCount > 0 ? `${uploadedFilesCount} шт. • ${successDatesCount.size} дат` : '0 шт.';
+            }
+
+            const clearBtn = document.getElementById('clearBtn');
+            if (clearBtn) {
+                if (database.size > 0) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
+            updateSelectionUI();
+            window.renderTableFunc();
+            saveToStorage();
+        };
+
+        function logMessage(text, colorClass = 'text-slate-300', meta = null, addToHistory = true) {
+            if (meta && addToHistory) {
+                uploadedFilesHistory = uploadedFilesHistory.filter(h => h.fileName !== meta.fileName);
+                uploadedFilesHistory.push(meta);
+                uploadedFilesCount = uploadedFilesHistory.length;
+                renderFileLogList();
+                return;
+            }
+            if (text) {
+                const fileLog = document.getElementById('fileLog');
+                if (!fileLog) return;
+                const li = document.createElement('li');
+                li.className = `flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-950/90 border border-slate-800/80 text-xs font-mono shadow-sm`;
+                li.innerHTML = `<span class="${colorClass}">${text}</span>`;
+                fileLog.appendChild(li);
+                fileLog.scrollTop = fileLog.scrollHeight;
+            }
+        }
+
+        async function getAllFileEntries(dataTransferItemList) {
+            const fileEntries = [];
+            const queue = [];
+
+            for (let i = 0; i < dataTransferItemList.length; i++) {
+                const item = dataTransferItemList[i];
+                if (item.webkitGetAsEntry) {
+                    const entry = item.webkitGetAsEntry();
+                    if (entry) queue.push(entry);
+                } else if (item.getAsFile) {
+                    const file = item.getAsFile();
+                    if (file) fileEntries.push(file);
+                }
+            }
+
+            while (queue.length > 0) {
+                const entry = queue.shift();
+                if (entry.isFile) {
+                    const file = await new Promise((resolve) => entry.file(resolve, () => resolve(null)));
+                    if (file) fileEntries.push(file);
+                } else if (entry.isDirectory) {
+                    const dirReader = entry.createReader();
+                    const entries = await readAllDirectoryEntries(dirReader);
+                    queue.push(...entries);
+                }
+            }
+
+            return fileEntries;
+        }
+
+        async function readAllDirectoryEntries(dirReader) {
+            const entries = [];
+            let readMore = true;
+            while (readMore) {
+                const batch = await new Promise((resolve) => dirReader.readEntries(resolve, () => resolve([])));
+                if (batch && batch.length > 0) {
+                    entries.push(...batch);
+                } else {
+                    readMore = false;
+                }
+            }
+            return entries;
+        }
+
+        function filterRelevantFiles(rawFiles) {
+            const rawFilter = (document.getElementById('fileNameFilterInput')?.value || '').trim();
+            const filterTerms = rawFilter
+                ? rawFilter.split(/[,;\n]+/).map(t => t.trim().toLowerCase().replace(/\s+/g, ' ')).filter(Boolean)
+                : [];
+
+            // Blacklist of known non-roster documents (PBD, matrices, journals, losses, charts etc.)
+            const NON_ROSTER_REGEX = /(^|[\s_\-\.\(\)\[\]])(пбд|матриц[яіе]|жбд|донесен|сзч|поранен|втрат|шпк|штат|звіт|акт|накладн|схема|карта)([\s_\-\.\(\)\[\]]|$)/i;
+
+            return Array.from(rawFiles).filter(file => {
+                if (!file || !file.name) return false;
+                // Ignore lock files and hidden files
+                if (file.name.startsWith('~$') || file.name.startsWith('.')) return false;
+
+                // Allowed extensions
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!['xlsx', 'xls', 'docx'].includes(ext)) return false;
+
+                // Must contain a valid recognizable date
+                const date = extractDateFromFilename(file.name);
+                if (!date) return false;
+
+                const normName = file.name.toLowerCase().replace(/[\s_\-]+/g, ' ');
+
+                // 1. If user specified custom keywords: file MUST match at least one keyword
+                if (filterTerms.length > 0) {
+                    const matchesKeyword = filterTerms.some(term => normName.includes(term));
+                    if (!matchesKeyword) return false;
+
+                    // Safety: reject explicit non-rosters unless user specifically put that term in the filter
+                    const userWantsNonRoster = filterTerms.some(t => NON_ROSTER_REGEX.test(t));
+                    if (!userWantsNonRoster && NON_ROSTER_REGEX.test(file.name)) {
+                        return false;
+                    }
+                    return true;
+                }
+
+                // 2. If no custom keywords given, filter out known non-rosters automatically
+                if (NON_ROSTER_REGEX.test(file.name)) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        async function processFiles(files) {
+            const rawFiles = Array.from(files);
+            if (rawFiles.length === 0) return;
+
+            const relevantFiles = filterRelevantFiles(rawFiles);
+            const rawFilter = (document.getElementById('fileNameFilterInput')?.value || '').trim();
+
+            if (relevantFiles.length === 0) {
+                if (rawFilter) {
+                    logMessage(`⚠️ Жоден файл не відповідає фільтру назв "<b>${escapeHtml(rawFilter)}</b>" або не містить дати.`, 'text-amber-400', null, false);
+                } else {
+                    logMessage('⚠️ У вибраних файлах/папці не знайдено бойових списків (.xlsx, .docx) із датами у назві.', 'text-amber-400', null, false);
+                }
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) fileInput.value = '';
+                const folderInput = document.getElementById('folderInput');
+                if (folderInput) folderInput.value = '';
+                return;
+            }
+
+            if (rawFiles.length > relevantFiles.length) {
+                const skippedCount = rawFiles.length - relevantFiles.length;
+                logMessage(`🔍 Відібрано <b>${relevantFiles.length}</b> із ${rawFiles.length} файлів (відсіяно ${skippedCount} сторонніх/невідповідних)`, 'text-cyan-400', null, false);
+            }
+
+            // Sort by date chronologically
+            relevantFiles.sort((a, b) => {
+                const da = extractDateFromFilename(a.name) || '';
+                const db = extractDateFromFilename(b.name) || '';
+                return da.localeCompare(db);
+            });
 
             const loadingIndicator = document.getElementById('loadingIndicator');
             const loadingText = document.getElementById('loadingText');
@@ -858,22 +1338,27 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             clearBtn.classList.remove('hidden');
 
             let current = 0;
-            const total = filesArray.length;
+            const total = relevantFiles.length;
 
-            for (const file of filesArray) {
+            for (const file of relevantFiles) {
                 current++;
                 const pct = Math.round((current / total) * 100);
                 loadingText.textContent = `Обробка ${current}/${total}: ${file.name}`;
                 progressBar.style.width = `${pct}%`;
                 loadingPercent.textContent = `${pct}%`;
-                await sleep(5);
+                await sleep(3);
                 await processSingleFile(file);
             }
 
             loadingIndicator.classList.add('hidden');
-            document.getElementById('fileInput').value = '';
-            document.getElementById('files-processed-badge').innerText = `${uploadedFilesCount} шт. • ${successDatesCount.size} дат`;
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) fileInput.value = '';
+            const folderInput = document.getElementById('folderInput');
+            if (folderInput) folderInput.value = '';
+
+            renderFileLogList();
             window.renderTableFunc();
+            saveToStorage();
         }
 
         function sleep(ms) {
@@ -887,12 +1372,8 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 const isDV30 = /дв[\s_\-]*30|30[\s_\-]*тис|30к/i.test(file.name);
 
                 if (!extractedDate) {
-                    logMessage(`❌ "${file.name}" — Не вдалося знайти дату`, 'text-red-400');
+                    logMessage(`❌ "${file.name}" — Не вдалося знайти дату`, 'text-red-400', null, false);
                     return resolve();
-                }
-
-                if (!globalMaxDateStr || extractedDate > globalMaxDateStr) {
-                    globalMaxDateStr = extractedDate;
                 }
 
                 const reader = new FileReader();
@@ -911,28 +1392,70 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             }
                         }
 
+                        if (rows.length === 0) {
+                            logMessage(`⚠️ <b>${escapeHtml(file.name)}</b> — файл порожній`, 'text-amber-400', null, false);
+                            return resolve();
+                        }
+
+                        const KNOWN_MILITARY_RANKS = [
+                            'солдат', 'ст. солдат', 'старший солдат', 'мол. сержант', 'молодший сержант',
+                            'сержант', 'ст. сержант', 'старший сержант', 'головний сержант', 'штаб-сержант',
+                            'майстер-сержант', 'старший майстер-сержант', 'головний майстер-сержант',
+                            'мол. лейтенант', 'молодший лейтенант', 'лейтенант', 'ст. лейтенант', 'старший лейтенант',
+                            'капітан', 'майор', 'підполковник', 'полковник', 'матрос', 'старший матрос', 'старшина'
+                        ];
+
+                        const ROSTER_HEADER_REGEX = /(військов.*зван|звання|в\/зван|п[іi]б|пр[іi]звищ|посада|рнокпп|[іi]пн|бо[йо]в.*завдан|розпорядж|\b(воп|роп|бро|дв)\b|глибин.*(воп|роп|бро))/i;
+
                         let colMap = { rank: -1, name: -1, position: -1, ipn: -1, task: -1, depth: -1 };
-                        for (let i = 0; i < Math.min(12, rows.length); i++) {
+                        let headerMatchCount = 0;
+                        let ranksFoundCount = 0;
+
+                        for (let i = 0; i < Math.min(15, rows.length); i++) {
                             const row = rows[i];
                             if (!row) continue;
                             for (let j = 0; j < row.length; j++) {
-                                const cell = String(row[j]).toLowerCase().replace(/\s+/g, '');
-                                if (cell.includes('звання')) colMap.rank = j;
-                                if (cell.includes('піб') || cell.includes('прізвище')) colMap.name = j;
-                                if (cell.includes('посада')) colMap.position = j;
-                                if (cell.includes('іпн') || cell.includes('рнокпп')) colMap.ipn = j;
-                                if (cell.includes('тип') || cell.includes('завдання')) colMap.task = j;
-                                if (cell.includes('глибина')) colMap.depth = j;
+                                const rawCell = String(row[j] || '').trim();
+                                const cell = rawCell.toLowerCase().replace(/\s+/g, '');
+                                if (cell.includes('звання') || cell.includes('в/звання')) { colMap.rank = j; headerMatchCount++; }
+                                if (cell.includes('піб') || cell.includes('прізвище') || cell.includes('ініціали')) { colMap.name = j; headerMatchCount++; }
+                                if (cell.includes('посада')) { colMap.position = j; headerMatchCount++; }
+                                if (cell.includes('іпн') || cell.includes('рнокпп')) { colMap.ipn = j; headerMatchCount++; }
+                                if (cell.includes('тип') || cell.includes('завдання') || cell.includes('розпорядж')) { colMap.task = j; headerMatchCount++; }
+                                if (cell.includes('глибина') || cell.includes('локація') || cell.includes('воп') || cell.includes('роп') || cell.includes('бро')) { colMap.depth = j; headerMatchCount++; }
                             }
-                            if (colMap.name !== -1) break;
+                            if (colMap.name !== -1 && headerMatchCount >= 2) break;
                         }
 
-                        // Default fallback column positions
+                        // Check rows for recognizable military ranks
+                        for (let i = 0; i < Math.min(30, rows.length); i++) {
+                            const row = rows[i];
+                            if (!row) continue;
+                            for (let j = 0; j < Math.min(4, row.length); j++) {
+                                const val = String(row[j] || '').toLowerCase().trim();
+                                if (KNOWN_MILITARY_RANKS.some(r => val === r || val.startsWith(r + ' '))) {
+                                    ranksFoundCount++;
+                                    if (colMap.rank === -1) colMap.rank = j;
+                                }
+                            }
+                        }
+
+                        // Guard: If no roster header matches and no military ranks found, this is an unrelated document
+                        if (headerMatchCount === 0 && ranksFoundCount === 0) {
+                            logMessage(`⚠️ <b>${escapeHtml(file.name)}</b> — пропущено (сторонній документ, не містить особового складу)`, 'text-amber-400', null, false);
+                            return resolve();
+                        }
+
                         if (colMap.name === -1) {
-                            colMap = { rank: 1, name: 2, position: 3, ipn: 4, task: 5, depth: 6 };
+                            if (headerMatchCount > 0) {
+                                colMap.name = 2;
+                            } else {
+                                colMap = { rank: 1, name: 2, position: 3, ipn: 4, task: 5, depth: 6 };
+                            }
                         }
 
-                        let namesFound = 0;
+                        const pendingRecords = [];
+
                         for (let i = 0; i < rows.length; i++) {
                             const r = rows[i];
                             if (!r || r.length < 2) continue;
@@ -947,7 +1470,11 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             }
 
                             rawName = rawName.replace(/^\d+[\.\)]\s*/, '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
-                            if (rawName.length < 3) continue;
+                            
+                            // Must contain Cyrillic letters, not be a summary row (разом/всього), and not be pure numbers
+                            if (rawName.length < 3 || !/[а-яіїєґА-ЯІЇЄҐ]/i.test(rawName) || /^(разом|всього|підсумок|командир\s+в\/ч|бухгалтер)\b/i.test(rawName.trim())) {
+                                continue;
+                            }
 
                             let rawRank = colMap.rank !== -1 ? String(r[colMap.rank] || '').trim() : '';
                             let rawPos = colMap.position !== -1 ? String(r[colMap.position] || '').trim() : '';
@@ -958,15 +1485,10 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             const cleaned = cleanLocationAndTask(rawTask, rawDepth, isDV30);
                             const normalizedKey = rawName.toUpperCase();
 
-                            if (!database.has(normalizedKey)) {
-                                database.set(normalizedKey, {
-                                    name: rawName,
-                                    records: new Map()
-                                });
-                            }
-
-                            const person = database.get(normalizedKey);
-                            person.records.set(extractedDate, {
+                            pendingRecords.push({
+                                key: normalizedKey,
+                                name: rawName,
+                                date: extractedDate,
                                 rank: rawRank,
                                 pos: rawPos,
                                 ipn: rawIpn,
@@ -974,23 +1496,59 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                                 task: cleaned.task,
                                 fileName: file.name
                             });
-
-                            namesFound++;
                         }
 
-                        uploadedFilesCount++;
+                        // VALIDATION GUARD: If 0 soldiers found, skip this file cleanly without polluting dates
+                        if (pendingRecords.length === 0) {
+                            logMessage(`⚠️ <b>${escapeHtml(file.name)}</b> — пропущено (не містить списку особового складу)`, 'text-amber-400', null, false);
+                            return resolve();
+                        }
+
+                        // Clean old records for this exact file to avoid duplication on re-upload
+                        for (const [key, person] of database.entries()) {
+                            if (person.records) {
+                                for (const [d, rec] of person.records.entries()) {
+                                    if (rec.fileName === file.name) {
+                                        person.records.delete(d);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Commit valid records to database
+                        for (const item of pendingRecords) {
+                            if (!database.has(item.key)) {
+                                database.set(item.key, {
+                                    name: item.name,
+                                    records: new Map()
+                                });
+                            }
+                            const person = database.get(item.key);
+                            person.records.set(item.date, {
+                                rank: item.rank,
+                                pos: item.pos,
+                                ipn: item.ipn,
+                                location: item.location,
+                                task: item.task,
+                                fileName: item.fileName
+                            });
+                        }
+
+                        if (!globalMaxDateStr || extractedDate > globalMaxDateStr) {
+                            globalMaxDateStr = extractedDate;
+                        }
+
                         successDatesCount.add(extractedDate);
                         const shortDate = formatDateDisplay(extractedDate);
                         logMessage('', 'text-slate-300', {
                             shortDate: shortDate,
                             fileName: file.name,
-                            count: namesFound,
+                            count: pendingRecords.length,
                             isDV: isDV30
-                        });
+                        }, true);
                         resolve();
                     } catch (err) {
-                        uploadedFilesCount++;
-                        logMessage(`❌ <b>${file.name}</b> — ${escapeHtml(err.message)}`, 'text-red-400');
+                        logMessage(`❌ <b>${escapeHtml(file.name)}</b> — ${escapeHtml(err.message)}`, 'text-red-400', null, false);
                         resolve();
                     }
                 };
@@ -1313,7 +1871,8 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             // Render Matrix View
             renderMatrixTable(filtered, sortedDates);
 
-            statsText.textContent = `(Показано: ${filtered.length} із ${database.size} бійців • Дат: ${successDatesCount.size} • Зріз: ${formatDateDisplay(globalMaxDateStr)})`;
+            const maxDate = globalMaxDateStr || (sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : '');
+            statsText.textContent = `(Показано: ${filtered.length} із ${database.size} бійців • Дат: ${successDatesCount.size}${maxDate ? ` • Зріз: ${formatDateDisplay(maxDate)}` : ''})`;
             exportExcelBtn.classList.remove('hidden');
             updateSelectionUI();
             lucide.createIcons();
