@@ -112,7 +112,7 @@
                             ДОДАТОК_6
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.2.0
+                            ⚡ v1.3.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs mt-0.5">
@@ -153,10 +153,16 @@
                     <span>Фільтр виключень</span>
                 </button>
 
-                <!-- Кнопка очищення бази -->
-                <button id="clearBtn" class="hidden flex items-center gap-1.5 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-xl text-xs font-semibold transition-all border border-red-500/30 cursor-pointer shadow-sm">
+                <!-- Індикатор збереження в пам'ять -->
+                <span id="storageStatusBadge" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-950/40 border border-purple-800/60 text-purple-300 font-mono text-xs shadow-sm" title="Стан збереження у пам'яті браузера (IndexedDB)">
+                    <i data-lucide="database" class="w-3.5 h-3.5 text-purple-400"></i>
+                    <span id="storageStatusText">Пам'ять активна</span>
+                </span>
+
+                <!-- Кнопка очищення пам'яті -->
+                <button id="clearBtn" class="hidden flex items-center gap-1.5 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-xl text-xs font-semibold transition-all border border-red-500/30 cursor-pointer shadow-sm" title="Очистити збережену базу та звільнити пам'ять">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
-                    <span>Очистити</span>
+                    <span>Очистити пам'ять</span>
                 </button>
             </div>
         </header>
@@ -334,10 +340,10 @@
                         </button>
                     </div>
 
-                    <!-- Кнопка експорту Excel -->
+                    <!-- Кнопка експорту Excel (Табель) -->
                     <button id="exportExcelBtn" class="hidden w-full lg:w-auto bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-md shadow-emerald-900/30 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                        <span id="exportExcelBtnText">Завантажити Excel</span>
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                        <span id="exportExcelBtnText">Табель Excel</span>
                     </button>
                 </div>
 
@@ -476,18 +482,31 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
-                <!-- v1.2.0 -->
+                <!-- v1.3.0 -->
                 <div class="relative pl-4 border-l-2 border-purple-500 space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-purple-400 font-mono text-sm">⚡ v1.2.0 (Поточна версія)</span>
+                        <span class="font-bold text-purple-400 font-mono text-sm">⚡ v1.3.0 (Поточна версія)</span>
                         <span class="text-[11px] font-mono text-slate-500">03.09.2026</span>
                     </div>
                     <ul class="space-y-1 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Згортання блоку завантаження:</strong> Автоматичне або ручне перемикання у компактний статус-рядок, вивільняючи 100% екрана для таблиці.</li>
-                        <li><strong class="text-white">Розумна дедуплікація локацій:</strong> Усунено дублювання однакових назв у різному регістрі (наприклад, `КСП НЕВАДА` та `КСП Невада`).</li>
-                        <li><strong class="text-white">Армійська щільність таблиці:</strong> Оптимізована висота рядків, коректний регістр звань, обмеження посади до 2 рядків із повною підказкою.</li>
-                        <li><strong class="text-white">Вибірковий експорт в Excel:</strong> Чекбокси `[✓]` та майстер-чекбокс для вивантаження вибраних військовослужбовців.</li>
-                        <li><strong class="text-white">Масовий пошук через кому:</strong> Швидкий пошук кількох бійців одночасно без обрізання підказки.</li>
+                        <li><strong class="text-white">Армійський «Табель Excel»:</strong> Двоаркушева книга Excel: Аркуш 1 — повноцінна календарна матриця чергування по днях із закріпленими стовпцями (№, Звання, ПІБ), підсумками бойових діб та рядком «РАЗОМ НА ПОЗИЦІЯХ»; Аркуш 2 — «Зведений реєстр».</li>
+                        <li><strong class="text-white">Постійна пам'ять (IndexedDB):</strong> Автоматичне збереження завантаженої бази у браузері без обмежень у 5 МБ. При оновленні сторінки всі сотні бійців та дати миттєво готові до роботи.</li>
+                        <li><strong class="text-white">Кнопка «Очистити пам'ять»:</strong> Швидке скидання бази та звільнення пам'яті в 1 клік із безпечним підтвердженням.</li>
+                        <li><strong class="text-white">Розумне зшивання позицій:</strong> Нормалізація `normalizeLocationKey()` ігнорує регістр і суфікси (РОП/ВОП), запобігаючи штучним розривам періодів.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.2.0 -->
+                <div class="relative pl-4 border-l-2 border-slate-700 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.2.0</span>
+                        <span class="text-[11px] font-mono text-slate-500">03.09.2026</span>
+                    </div>
+                    <ul class="space-y-1 text-slate-400 list-disc list-inside">
+                        <li>Повнорозмірний 100% тактичний редизайн (Full-Width UI).</li>
+                        <li>Автоматичне згортання верхнього блоку завантаження.</li>
+                        <li>Вибірковий експорт в Excel та чекбокси вибору бійців.</li>
+                        <li>Масовий пошук військовослужбовців через кому.</li>
                     </ul>
                 </div>
 
@@ -555,6 +574,119 @@
             const parts = dateStr.split('-');
             if (parts.length !== 3) return dateStr;
             return `${parts[2]}.${parts[1]}.${parts[0]}`;
+        }
+
+        // Локальна база пам'яті браузера (IndexedDB)
+        const DB_NAME = 'RotationsDod6DB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'app_state';
+
+        function openAppDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME);
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function saveStateToDB(data) {
+            try {
+                const db = await openAppDB();
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.put(data, 'current_state');
+                return new Promise((resolve) => {
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => resolve(false);
+                });
+            } catch (e) {
+                console.error("IndexedDB save error:", e);
+                return false;
+            }
+        }
+
+        async function loadStateFromDB() {
+            try {
+                const db = await openAppDB();
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get('current_state');
+                return new Promise((resolve) => {
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => resolve(null);
+                });
+            } catch (e) {
+                console.error("IndexedDB load error:", e);
+                return null;
+            }
+        }
+
+        async function clearStateFromDB() {
+            try {
+                const db = await openAppDB();
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                store.delete('current_state');
+                return new Promise((resolve) => {
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => resolve(false);
+                });
+            } catch (e) {
+                console.error("IndexedDB clear error:", e);
+                return false;
+            }
+        }
+
+        function showStorageStatus(text) {
+            const badge = document.getElementById('storageStatusBadge');
+            const txt = document.getElementById('storageStatusText');
+            if (badge && txt) {
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                txt.textContent = text;
+                lucide.createIcons();
+            }
+        }
+
+        function hideStorageStatus() {
+            const badge = document.getElementById('storageStatusBadge');
+            if (badge) {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        async function persistCurrentState() {
+            if (database.size === 0) {
+                await clearStateFromDB();
+                hideStorageStatus();
+                return;
+            }
+            const serializedDb = [];
+            for (let [key, val] of database.entries()) {
+                serializedDb.push([
+                    key,
+                    {
+                        name: val.name,
+                        records: Array.from(val.records.entries())
+                    }
+                ]);
+            }
+            const state = {
+                database: serializedDb,
+                successDates: Array.from(successDatesCount),
+                globalMinDateStr,
+                globalMaxDateStr,
+                timestamp: Date.now()
+            };
+            await saveStateToDB(state);
+            showStorageStatus(`Пам'ять: ${successDatesCount.size} дат`);
         }
 
         // Глобальний стан
@@ -711,11 +843,11 @@
                 banner.classList.remove('hidden');
                 banner.classList.add('flex');
                 countSpan.textContent = selCount;
-                exportBtnText.textContent = `Завантажити Excel (${selCount} обр.)`;
+                exportBtnText.textContent = `Табель Excel (${selCount} обр.)`;
             } else {
                 banner.classList.add('hidden');
                 banner.classList.remove('flex');
-                exportBtnText.textContent = `Завантажити Excel`;
+                exportBtnText.textContent = `Табель Excel`;
             }
 
             const masterCb = document.getElementById('masterCheckbox');
@@ -795,13 +927,15 @@
                 if (e.target.files.length) processFiles(e.target.files);
             });
 
-            clearBtn.addEventListener('click', () => {
-                if (confirm("Очистити всі завантажені файли та скинути таблицю ротацій?")) {
+            clearBtn.addEventListener('click', async () => {
+                if (confirm("Очистити збережену базу ротацій з пам'яті браузера?\nВсі завантажені списки та історію дат буде скинуто.")) {
                     database.clear();
                     successDatesCount.clear();
                     selectedSoldiers.clear();
                     globalMaxDateStr = null;
                     globalMinDateStr = null;
+                    await clearStateFromDB();
+                    hideStorageStatus();
                     fileLog.innerHTML = '<li class="text-slate-500 italic flex items-center gap-2"><i data-lucide="info" class="w-3.5 h-3.5 text-slate-500"></i><span>Очікування завантаження файлів для аналізу...</span></li>';
                     document.getElementById('log-count').innerText = '0 записів';
                     document.getElementById('files-processed-badge').innerText = '0 дат';
@@ -816,7 +950,7 @@
                 }
             });
 
-            // Експорт в Excel (підтримує вибіркові чекбокси)
+            // Експорт в Excel у вигляді ТАБЕЛЯ (Календарна матриця дат + Зведений реєстр)
             exportExcelBtn.addEventListener('click', () => {
                 let dataToExport = tableDataForExport;
                 if (selectedSoldiers.size > 0) {
@@ -828,42 +962,194 @@
                     return;
                 }
 
-                const ws_data = [
-                    ["№", "Звання", "ПІБ", "Посада", "Всі локації / позиції", "Хронологія періодів (Дати: Статус)", "Днів безперервно (Активний стрік)", "Статус о/с"]
+                const todayStr = new Date().toLocaleDateString('uk-UA');
+                const minD = globalMinDateStr ? formatDateDisplay(globalMinDateStr) : '';
+                const maxD = globalMaxDateStr ? formatDateDisplay(globalMaxDateStr) : '';
+
+                // Хронологічно відсортовані дати для колонок Табеля
+                const sortedDates = Array.from(successDatesCount).sort();
+
+                // Отримуємо актуальні виключення
+                const ignoreText = document.getElementById('ignoredStatuses') ? document.getElementById('ignoredStatuses').value : '';
+                const activeIgnored = ignoreText.split('\n').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+
+                // --- 1. АРКУШ ТАБЕЛЯ (Календарна сітка по днях) ---
+                const tabel_headers = [
+                    "№",
+                    "Звання",
+                    "ПІБ",
+                    "Посада",
+                    ...sortedDates.map(dStr => {
+                        const p = dStr.split('-');
+                        return p.length === 3 ? `${p[2]}.${p[1]}` : dStr;
+                    }),
+                    "Днів безперервно",
+                    "Всього на позиціях",
+                    "Строк ротації",
+                    "Статус у списках"
                 ];
+
+                const tabel_data = [tabel_headers];
+
+                // Лічильники для підсумкового рядка
+                const dailyCombatCounts = {};
+                sortedDates.forEach(dStr => { dailyCombatCounts[dStr] = 0; });
+                let totalCombatPersonDays = 0;
+
+                dataToExport.forEach((row, i) => {
+                    const person = database.get(row.key);
+                    const cleanRank = formatRank(row.latestRank);
+                    const cleanPos = (row.latestPosition || '').replace(/\n|\r/g, ' ').trim();
+
+                    // Строк ротації
+                    let rotCategory = "Норма (<50 діб)";
+                    if (row.details.isGloballyInactive) {
+                        rotCategory = "Вибув зі списків";
+                    } else if (row.details.currentStreak >= 60) {
+                        rotCategory = "60+ діб (критично)";
+                    } else if (row.details.currentStreak >= 50) {
+                        rotCategory = "50-59 діб (підготовка)";
+                    }
+
+                    // Обчислюємо значення кожної клітинки дня та сумарні бойові дні
+                    let soldierCombatDays = 0;
+                    const dayCells = sortedDates.map(dStr => {
+                        if (person && person.records.has(dStr)) {
+                            const rec = person.records.get(dStr);
+                            const locName = cleanLocationName(rec.status);
+                            const locNormKey = normalizeLocationKey(locName);
+                            const isIgn = activeIgnored.some(kw => locNormKey.includes(kw));
+
+                            if (!isIgn) {
+                                soldierCombatDays++;
+                                dailyCombatCounts[dStr]++;
+                            }
+                            return locName || '—';
+                        }
+                        return '—';
+                    });
+
+                    totalCombatPersonDays += soldierCombatDays;
+                    const soldierStatus = row.details.isGloballyInactive ? "Вибув" : "В строю";
+
+                    tabel_data.push([
+                        i + 1,
+                        cleanRank,
+                        row.name,
+                        cleanPos,
+                        ...dayCells,
+                        row.details.currentStreak,
+                        soldierCombatDays,
+                        rotCategory,
+                        soldierStatus
+                    ]);
+                });
+
+                // Підсумковий рядок внизу табеля: РАЗОМ НА ПОЗИЦІЯХ
+                const summaryRow = [
+                    "",
+                    "",
+                    "РАЗОМ НА ПОЗИЦІЯХ:",
+                    "",
+                    ...sortedDates.map(dStr => dailyCombatCounts[dStr]),
+                    "", // Днів безперервно
+                    totalCombatPersonDays,
+                    "",
+                    ""
+                ];
+                tabel_data.push(summaryRow);
+
+                const wsTabel = XLSX.utils.aoa_to_sheet(tabel_data);
+
+                // Налаштування ширини колонок Табеля
+                wsTabel['!cols'] = [
+                    { wch: 6 },  // №
+                    { wch: 18 }, // Звання
+                    { wch: 32 }, // ПІБ
+                    { wch: 45 }, // Посада
+                    ...sortedDates.map(() => ({ wch: 16 })), // Колонки дат
+                    { wch: 18 }, // Днів безперервно
+                    { wch: 18 }, // Всього на позиціях
+                    { wch: 22 }, // Строк ротації
+                    { wch: 16 }  // Статус
+                ];
+
+                // Freeze Panes: закріплюємо шапку (рядок 1) та перші 3 стовпці (№, Звання, ПІБ)
+                wsTabel['!freeze'] = { xSplit: 3, ySplit: 1, topLeftCell: 'D2' };
+
+                // Автофільтр на шапку Табеля
+                const lastColTabelIdx = tabel_headers.length - 1;
+                const lastColTabelLetter = XLSX.utils.encode_col(lastColTabelIdx);
+                wsTabel['!autofilter'] = { ref: `A1:${lastColTabelLetter}${tabel_data.length}` };
+
+                // --- 2. АРКУШ 2: ЗВЕДЕНИЙ РЕЄСТР (Хронологія та список) ---
+                const reestr_headers = [
+                    "№",
+                    "Звання",
+                    "ПІБ",
+                    "Посада",
+                    "Днів безперервно",
+                    "Строк ротації",
+                    "Поточна позиція (крайній зріз)",
+                    "Всі локації чергування",
+                    "Хронологія бойового чергування (періоди)",
+                    "Статус у списках"
+                ];
+                const reestr_data = [reestr_headers];
 
                 dataToExport.forEach((row, i) => {
                     const cleanRank = formatRank(row.latestRank);
                     const cleanPos = (row.latestPosition || '').replace(/\n|\r/g, ' ').trim();
-                    const allLocs = row.details.uniqueStatuses.join(', ');
-                    const periodsString = row.details.periods.map(p => `[${formatDateDisplay(p.start)}-${formatDateDisplay(p.end)}: ${p.status}${p.isIgnored ? ' (Ігнор)' : ''}]`).join('; ');
-                    const soldierStatus = row.details.isGloballyInactive ? "Вибув зі списків" : "В строю (Активний)";
 
-                    ws_data.push([
-                        i + 1, cleanRank, row.name, cleanPos, allLocs, periodsString, row.details.currentStreak, soldierStatus
+                    let rotCategory = "Норма (<50 діб)";
+                    if (row.details.isGloballyInactive) {
+                        rotCategory = "Вибув зі списків";
+                    } else if (row.details.currentStreak >= 60) {
+                        rotCategory = "60+ діб (критично)";
+                    } else if (row.details.currentStreak >= 50) {
+                        rotCategory = "50-59 діб (підготовка)";
+                    }
+
+                    const latestPeriod = row.details.periods.length > 0 ? row.details.periods[row.details.periods.length - 1] : null;
+                    const currentPos = latestPeriod ? latestPeriod.status : "—";
+                    const allLocs = row.details.uniqueStatuses.join(', ');
+                    const periodsString = row.details.periods.map(p => 
+                        `${formatDateDisplay(p.start)}–${formatDateDisplay(p.end)}: ${p.status} (${p.days} дн.)${p.isIgnored ? ' [Скидання ліку]' : ''}`
+                    ).join('; ');
+                    const soldierStatus = row.details.isGloballyInactive ? "Вибув" : "В строю";
+
+                    reestr_data.push([
+                        i + 1,
+                        cleanRank,
+                        row.name,
+                        cleanPos,
+                        row.details.currentStreak,
+                        rotCategory,
+                        currentPos,
+                        allLocs,
+                        periodsString,
+                        soldierStatus
                     ]);
                 });
 
-                const ws = XLSX.utils.aoa_to_sheet(ws_data);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Ротації");
-
-                const wscols = [
-                    { wch: 6 },
-                    { wch: 18 },
-                    { wch: 32 },
-                    { wch: 30 },
-                    { wch: 45 },
-                    { wch: 65 },
-                    { wch: 16 },
-                    { wch: 20 }
+                const wsReestr = XLSX.utils.aoa_to_sheet(reestr_data);
+                wsReestr['!cols'] = [
+                    { wch: 6 }, { wch: 20 }, { wch: 34 }, { wch: 60 },
+                    { wch: 18 }, { wch: 24 }, { wch: 30 }, { wch: 50 },
+                    { wch: 70 }, { wch: 16 }
                 ];
-                ws['!cols'] = wscols;
+                wsReestr['!autofilter'] = { ref: `A1:J${reestr_data.length}` };
 
-                const dateStr = new Date().toLocaleDateString('uk-UA').replace(/\./g, '_');
+                // Створення робочої книги Excel з двома аркушами (Табель — головний)
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, wsTabel, "Табель ротацій");
+                XLSX.utils.book_append_sheet(wb, wsReestr, "Зведений реєстр");
+
+                const dateFileStr = todayStr.replace(/\./g, '_');
+                const periodSuffix = (minD && maxD) ? `_${minD}_${maxD}`.replace(/\./g, '_') : '';
                 const filename = selectedSoldiers.size > 0
-                    ? `Звіт_ротацій_обрані_${selectedSoldiers.size}_осіб_${dateStr}.xlsx`
-                    : `Звіт_безперервної_ротації_${dateStr}.xlsx`;
+                    ? `Табель_ротацій_обрані_${selectedSoldiers.size}_осіб_${dateFileStr}.xlsx`
+                    : `Табель_ротацій_дод6${periodSuffix}.xlsx`;
 
                 XLSX.writeFile(wb, filename);
             });
@@ -901,6 +1187,9 @@
 
                 // Спочатку гарантовано будуємо таблицю
                 window.renderTableFunc();
+
+                // Автоматично зберігаємо стан у IndexedDB
+                await persistCurrentState();
 
                 // Автоматично згортаємо панель завантаження при успішному розборі, щоб дати 100% простору таблиці
                 if (successDatesCount.size > 0) {
@@ -1448,9 +1737,47 @@
                 document.getElementById('log-count').innerText = `${fileLog.children.length} записів`;
             }
 
-            // Початкова ініціалізація
-            window.renderTableFunc();
-            lucide.createIcons();
+            // Відновлення з пам'яті (IndexedDB) при відкритті
+            async function restoreFromMemory() {
+                try {
+                    const state = await loadStateFromDB();
+                    if (!state || !state.database || state.database.length === 0) {
+                        window.renderTableFunc();
+                        lucide.createIcons();
+                        return;
+                    }
+
+                    database.clear();
+                    for (let [key, val] of state.database) {
+                        database.set(key, {
+                            name: val.name,
+                            records: new Map(val.records)
+                        });
+                    }
+
+                    successDatesCount = new Set(state.successDates || []);
+                    globalMinDateStr = state.globalMinDateStr || null;
+                    globalMaxDateStr = state.globalMaxDateStr || null;
+
+                    document.getElementById('files-processed-badge').innerText = `${successDatesCount.size} дат`;
+                    if (globalMaxDateStr) {
+                        document.getElementById('latestDateNote').innerText = `Крайній зріз: ${formatDateDisplay(globalMaxDateStr)}`;
+                    }
+
+                    clearBtn.classList.remove('hidden');
+                    toggleUploadPanel(false);
+                    window.renderTableFunc();
+                    showStorageStatus(`Пам'ять: ${successDatesCount.size} дат`);
+                    logMessage(`💾 Базу успішно відновлено з локальної пам'яті (${successDatesCount.size} дат, ${database.size} бійців)`, 'text-purple-300 font-bold');
+                    lucide.createIcons();
+                } catch(err) {
+                    console.error("Error restoring from memory:", err);
+                    window.renderTableFunc();
+                    lucide.createIcons();
+                }
+            }
+
+            restoreFromMemory();
         });
 
         function escapeHtml(text) {
