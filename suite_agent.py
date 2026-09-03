@@ -43,7 +43,7 @@ HUB_PATH = os.path.join(WORKSPACE_DIR, "index.html")
 CHANGELOG_PATH = os.path.join(WORKSPACE_DIR, "CHANGELOG.md")
 BACKUPS_DIR = os.path.join(WORKSPACE_DIR, "_backups")
 
-# Реєстр 12 програм комплексу
+# Реєстр 14 програм комплексу
 SUITE_REGISTRY = [
     {"name": "Додаток 6", "file": "Додаток 6.html", "hub_card": "Додаток 6", "category": "Кадри / Звітність"},
     {"name": "Звіт ПБД", "file": "Звіт ПБД.html", "hub_card": "Звіт ПБД", "category": "Бойові донесення"},
@@ -52,11 +52,13 @@ SUITE_REGISTRY = [
     {"name": "Калькулятор БК", "file": "Калькулятор БК.html", "hub_card": "Калькулятор БК", "category": "Боєприпаси"},
     {"name": "Калькулятор ВгЗ", "file": "Калькулятор ВгЗ.html", "hub_card": "Калькулятор ВгЗ", "category": "Вогневі засоби"},
     {"name": "Ротації (дод6)", "file": "Ротації (дод6).html", "hub_card": "Ротації (дод6)", "category": "Аналітика ротацій"},
+    {"name": "Облік періодів (БЗ & ДВ 30)", "file": "Облік періодів.html", "hub_card": "Облік періодів (БЗ & ДВ 30)", "category": "БЗ & ДВ 30"},
     {"name": "Облік втрат (MedTactical)", "file": "Облік втрат.html", "hub_card": "Облік втрат (MedTactical)", "category": "Медичний облік"},
     {"name": "Облік перевіряючих", "file": "Облік перевіряючих.html", "hub_card": "Облік перевіряючих", "category": "Контроль доступу"},
     {"name": "Форматер майна", "file": "Форматер майна.html", "hub_card": "Форматер майна", "category": "Логістика та майно"},
     {"name": "ТАКТ-ОБЛІК (v8)", "file": "v8/Такт-Облік.html", "hub_card": "ТАКТ-ОБЛІК (v8)", "category": "Тактичний комплекс"},
-    {"name": "Оперативний Журнал (ЖБД)", "file": "Оперативний журнал.html", "hub_card": "Оперативний Журнал (ЖБД)", "category": "Журнал бойових дій"}
+    {"name": "Оперативний Журнал (ЖБД)", "file": "Оперативний журнал.html", "hub_card": "Оперативний Журнал (ЖБД)", "category": "Журнал бойових дій"},
+    {"name": "Аналізатор переміщень (дод6)", "file": "Переміщення (дод6).html", "hub_card": "Аналізатор переміщень (Додаток 6)", "category": "Логістика о/с"}
 ]
 
 def parse_hub_cards():
@@ -371,9 +373,9 @@ def generate_html_dashboard(audit_results):
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="text-lg font-bold text-white tracking-tight">Suite QA & Integrity Guard</h1>
-                        <span class="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">v1.0.0</span>
+                        <span class="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">v1.1.0</span>
                     </div>
-                    <p class="text-xs text-slate-400">Автономний моніторинг та контроль якості 12 додатків комплексу</p>
+                    <p class="text-xs text-slate-400">Автономний моніторинг та контроль якості {total_apps} додатків комплексу</p>
                 </div>
             </div>
 
