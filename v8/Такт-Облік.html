@@ -192,7 +192,7 @@
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <h1 class="text-sm font-extrabold text-white leading-tight font-sans tracking-tight">ТАКТ-ОБЛІК</h1>
                             <button onclick="openChangelogModal()" class="text-[10px] text-amber-400 font-mono font-bold border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-1.5 py-0.5 rounded-full transition-all cursor-pointer whitespace-nowrap inline-flex items-center shrink-0" title="Натисніть для перегляду історії оновлень">
-                                ⚡ v1.4.0
+                                ⚡ v1.4.1
                             </button>
                         </div>
                         <div class="mt-0.5">
@@ -782,16 +782,17 @@
     // ─── AUTONOMOUS CHANGELOG DATA ───────────────────────────────────────────
     const APP_CHANGELOG = [
         {
-            version: "1.4.0",
+            version: "1.4.1",
             date: "04.09.2026",
             isCurrent: true,
             sections: [
                 {
-                    title: "🎯 Переміщення позицій (Drag-and-Drop & Target Mode)",
+                    title: "🎯 Оптимізація Drag-and-Drop та неонові індикатори",
                     items: [
-                        "<b>Drag-and-Drop карток позицій</b>: Додано ручку перетягування (grip) у шапку кожної картки, можливість зміни порядку всередині груп та перенесення між групами/РОПами.",
-                        "<b>Режим вибору цілі (Target Mode)</b>: Швидке переміщення позиції в 1 клік на іншу позицію чи заголовок групи без необхідності утримувати мишу.",
-                        "<b>Тактильна та візуальна індикація</b>: Неонова індиго-радка картки, активна кнопка прицілу, спливаючий тост підтвердження та ізоляція кліку від випадкового скидання режиму."
+                        "<b>Неонові індикатори точки вставки (Drop Indicators)</b>: При наведенні на ліву чи праву половину картки з'являється чітка індиго-лінія (border-l-4 або border-r-4), що показує точку вставки перед або після цілі.",
+                        "<b>Повнорозмірний прев'ю-фантом</b>: Під час перетягування позиції браузер тягне повноцінну напівпрозору мініатюру картки з бійцями замість обрізаної смужки.",
+                        "<b>Математично точна черговість у сітці</b>: Виправлено алгоритм розрахунку індексу в 2D-сітці (Grid) без відскоків і зависань позицій.",
+                        "<b>Режим вибору цілі (Target Mode)</b>: Швидке переміщення позиції в 1 клік з ізоляцією подій та скасуванням повторним кліком або через Esc."
                     ]
                 }
             ]
@@ -2065,11 +2066,11 @@
                     ? 'text-white bg-indigo-600 hover:bg-indigo-500 ring-2 ring-indigo-400 border border-indigo-400 p-1 rounded-md transition-all shadow-md inline-flex'
                     : 'text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-indigo-400 border border-slate-700 p-1 rounded-md transition-colors shadow-sm hidden group-hover:inline-flex';
 
-                return `<div ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${pos.id}')" onclick="if(window.isMovingSoldierId) handleTargetModeDrop('${pos.id}'); else if(window.isMovingPosId) handlePosTargetModeDrop('${pos.id}');" class="rounded-2xl border flex flex-col relative tactical-card group transition-all duration-200 ${cardClasses}">
+                return `<div data-pos-id="${pos.id}" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${pos.id}')" onclick="if(window.isMovingSoldierId) handleTargetModeDrop('${pos.id}'); else if(window.isMovingPosId) handlePosTargetModeDrop('${pos.id}');" class="rounded-2xl border flex flex-col relative tactical-card group transition-all duration-200 ${cardClasses}">
                     ${rotBadge}
-                    <div class="px-3 py-2 flex items-center justify-between ${headerClasses} rounded-t-2xl gap-2 min-h-[42px] select-none" draggable="true" ondragstart="handlePosDragStart(event, '${pos.id}')">
-                        <div class="flex items-center gap-2 min-w-0 flex-1 cursor-grab active:cursor-grabbing" title="Перетягнути позицію (Drag-and-Drop)">
-                            <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 shrink-0"></i>
+                    <div class="px-3 py-2 flex items-center justify-between ${headerClasses} rounded-t-2xl gap-2 min-h-[42px] select-none">
+                        <div class="flex items-center gap-2 min-w-0 flex-1 cursor-grab active:cursor-grabbing hover:opacity-90" draggable="true" ondragstart="handlePosDragStart(event, '${pos.id}')" title="Перетягнути позицію (Drag-and-Drop)">
+                            <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 hover:text-white shrink-0"></i>
                             <i data-lucide="${pos.icon || 'crosshair'}" class="w-4 h-4 ${isCom ? 'text-rose-400' : 'text-slate-400'} shrink-0"></i>
                             <h3 class="font-extrabold text-sm text-white leading-tight truncate" title="${esc(pos.name)}">${esc(pos.name)}</h3>
                             <span class="bg-slate-800 text-slate-300 border border-slate-700 px-1.5 py-0.5 rounded-md font-mono text-[10px] font-bold flex items-center shrink-0" title="Кількість бійців"><i data-lucide="users" class="w-2.5 h-2.5 mr-1 text-slate-400"></i>${sol.length}</span>
@@ -3502,8 +3503,9 @@
     function handleDragStart(e, soldierId) {
         draggedSoldierId = soldierId;
         draggedPosId = null;
+        lastDropSide = null;
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', soldierId); // Required for some browsers
+        e.dataTransfer.setData('text/plain', soldierId);
         setTimeout(() => e.target.classList.add('opacity-50'), 0);
     }
 
@@ -3511,62 +3513,92 @@
         e.stopPropagation();
         draggedPosId = posId;
         draggedSoldierId = null;
+        lastDropSide = null;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', 'pos:' + posId);
         const card = e.target.closest('.tactical-card');
         if (card) {
+            if (e.dataTransfer.setDragImage) {
+                e.dataTransfer.setDragImage(card, 50, 25);
+            }
             setTimeout(() => card.classList.add('opacity-40', 'scale-[0.98]'), 0);
         }
     }
 
     let lastHoveredCard = null;
+    let lastDropSide = null; // 'before' | 'after'
+
+    function cleanCardHoverIndicators() {
+        if (lastHoveredCard) {
+            lastHoveredCard.classList.remove(
+                'border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50',
+                'border-indigo-500', 'dark:border-indigo-400', 'ring-indigo-500/40', 'bg-indigo-950/20',
+                'border-r-4', '!border-r-indigo-500', 'border-l-4', '!border-l-indigo-500'
+            );
+            lastHoveredCard = null;
+        }
+        lastDropSide = null;
+    }
 
     function handleDragOver(e) {
         e.preventDefault(); 
+        e.stopPropagation();
         e.dataTransfer.dropEffect = 'move';
         
         const card = e.target.closest('.tactical-card');
-        if (card !== lastHoveredCard) {
-            if (lastHoveredCard) {
-                lastHoveredCard.classList.remove(
-                    'border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50',
-                    'border-indigo-500', 'dark:border-indigo-400', 'ring-indigo-500/50', 'bg-indigo-950/20'
-                );
+        if (!card) return;
+
+        if (draggedSoldierId) {
+            if (card !== lastHoveredCard) {
+                cleanCardHoverIndicators();
+                card.classList.add('border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50');
+                lastHoveredCard = card;
             }
-            if (card) {
-                if (draggedSoldierId) {
-                    card.classList.add('border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50');
-                } else if (draggedPosId) {
-                    card.classList.add('border-indigo-500', 'dark:border-indigo-400', 'ring-2', 'ring-indigo-500/50', 'bg-indigo-950/20');
+            return;
+        }
+
+        if (draggedPosId) {
+            const targetPosId = card.getAttribute('data-pos-id');
+            if (targetPosId === draggedPosId) {
+                cleanCardHoverIndicators();
+                return;
+            }
+
+            const rect = card.getBoundingClientRect();
+            // В сітці орієнтуємося на ліву або праву половину картки
+            const isAfter = (e.clientX > rect.left + rect.width / 2);
+            const side = isAfter ? 'after' : 'before';
+
+            if (card !== lastHoveredCard || side !== lastDropSide) {
+                cleanCardHoverIndicators();
+                
+                if (isAfter) {
+                    card.classList.add('border-r-4', '!border-r-indigo-500', 'ring-2', 'ring-indigo-500/40', 'bg-indigo-950/20');
+                } else {
+                    card.classList.add('border-l-4', '!border-l-indigo-500', 'ring-2', 'ring-indigo-500/40', 'bg-indigo-950/20');
                 }
+                lastHoveredCard = card;
+                lastDropSide = side;
             }
-            lastHoveredCard = card;
         }
     }
 
     function handleDragLeave(e) {
         const card = e.target.closest('.tactical-card');
         if (card && card === lastHoveredCard && !card.contains(e.relatedTarget)) {
-            card.classList.remove(
-                'border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50',
-                'border-indigo-500', 'dark:border-indigo-400', 'ring-indigo-500/50', 'bg-indigo-950/20'
-            );
-            lastHoveredCard = null;
+            cleanCardHoverIndicators();
         }
     }
 
     function handleDrop(e, targetPosId) {
         e.preventDefault();
-        const card = e.target.closest('.tactical-card');
-        if (card) {
-            card.classList.remove(
-                'border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50',
-                'border-indigo-500', 'dark:border-indigo-400', 'ring-indigo-500/50', 'bg-indigo-950/20'
-            );
-        }
+        e.stopPropagation();
+        const dropSide = lastDropSide;
+        cleanCardHoverIndicators();
 
         if (draggedSoldierId) {
             const s = personnel.find(x => x.id === draggedSoldierId);
+            draggedSoldierId = null;
             if (!s) return;
 
             if (s.positionId !== targetPosId) {
@@ -3584,7 +3616,6 @@
                 saveState(); // includes re-render
                 showToast('Переміщено!');
             }
-            draggedSoldierId = null;
             return;
         }
 
@@ -3606,24 +3637,20 @@
             const ropChanged = oldRop !== newRop;
             movedPos.rop = tgtPos.rop;
 
-            const tgtIdx = positions.findIndex(p => p.id === targetPosId);
-            let insertIdx = tgtIdx;
-            if (card) {
-                const rect = card.getBoundingClientRect();
-                if (e.clientY > rect.top + rect.height / 2) {
-                    insertIdx = tgtIdx + 1;
+            // Знаходимо точний індекс цілі у списку після вилучення
+            const newTgtIdx = positions.findIndex(p => p.id === targetPosId);
+            if (newTgtIdx !== -1) {
+                const insertIdx = (dropSide === 'after') ? newTgtIdx + 1 : newTgtIdx;
+                positions.splice(insertIdx, 0, movedPos);
+                _posDirty = true;
+                saveState(['positions']);
+                if (ropChanged) {
+                    addLog(`[${movedPos.name}] ➔ переміщено в [${newRop}]`, 'Позиції');
+                    showToast(`Позицію "${movedPos.name}" переміщено в [${newRop}]!`, 'success');
+                } else {
+                    addLog(`[${movedPos.name}] ➔ змінено порядок`, 'Позиції');
+                    showToast(`Порядок позиції "${movedPos.name}" змінено!`, 'success');
                 }
-            }
-            positions.splice(insertIdx, 0, movedPos);
-
-            _posDirty = true;
-            saveState(['positions']);
-            if (ropChanged) {
-                addLog(`[${movedPos.name}] ➔ переміщено в [${newRop}]`, 'Позиції');
-                showToast(`Позицію "${movedPos.name}" переміщено в [${newRop}]!`, 'success');
-            } else {
-                addLog(`[${movedPos.name}] ➔ змінено порядок`, 'Позиції');
-                showToast(`Порядок позиції "${movedPos.name}" змінено!`, 'success');
             }
         }
     }
@@ -3631,17 +3658,18 @@
     function handleGroupGridDragOver(e) {
         if (!draggedPosId) return;
         e.preventDefault();
+        e.stopPropagation();
         e.dataTransfer.dropEffect = 'move';
         const grid = e.currentTarget;
         if (grid && !grid.classList.contains('ring-2')) {
-            grid.classList.add('ring-2', 'ring-indigo-500/50', 'bg-indigo-950/10');
+            grid.classList.add('ring-2', 'ring-indigo-500/60', 'bg-indigo-950/15');
         }
     }
 
     function handleGroupGridDragLeave(e) {
         const grid = e.currentTarget;
         if (grid && !grid.contains(e.relatedTarget)) {
-            grid.classList.remove('ring-2', 'ring-indigo-500/50', 'bg-indigo-950/10');
+            grid.classList.remove('ring-2', 'ring-indigo-500/60', 'bg-indigo-950/15');
         }
     }
 
@@ -3651,8 +3679,9 @@
         e.stopPropagation();
         const grid = e.currentTarget;
         if (grid) {
-            grid.classList.remove('ring-2', 'ring-indigo-500/50', 'bg-indigo-950/10');
+            grid.classList.remove('ring-2', 'ring-indigo-500/60', 'bg-indigo-950/15');
         }
+        cleanCardHoverIndicators();
         const srcPosId = draggedPosId;
         draggedPosId = null;
 
@@ -3679,15 +3708,17 @@
         draggedSoldierId = null;
         draggedPosId = null;
         clearAutoScroll();
+        cleanCardHoverIndicators();
         document.querySelectorAll('.tactical-card').forEach(c => {
             c.classList.remove(
                 'opacity-40', 'opacity-50', 'scale-[0.98]',
                 'border-green-500', 'dark:border-green-500', 'ring-2', 'ring-green-500/50',
-                'border-indigo-500', 'dark:border-indigo-400', 'ring-indigo-500/50', 'bg-indigo-950/20'
+                'border-indigo-500', 'dark:border-indigo-400', 'ring-indigo-500/50', 'bg-indigo-950/20',
+                'border-r-4', '!border-r-indigo-500', 'border-l-4', '!border-l-indigo-500'
             );
         });
         document.querySelectorAll('.grid').forEach(g => {
-            g.classList.remove('ring-2', 'ring-indigo-500/50', 'bg-indigo-950/10');
+            g.classList.remove('ring-2', 'ring-indigo-500/50', 'ring-indigo-500/60', 'bg-indigo-950/10', 'bg-indigo-950/15');
         });
     });
 
