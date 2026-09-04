@@ -33,6 +33,8 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <!-- docx.js для генерації офіційних Word-документів -->
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
     <style>
         /* Custom Scrollbars */
         ::-webkit-scrollbar {
@@ -134,7 +136,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.9.1</span>
+                    <span>🚀 v1.9.2</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -310,6 +312,15 @@
                                         </path>
                                     </svg>
                                     <span>ALL_TIERS [270k..30k]</span>
+                                </button>
+
+                                <button onclick="openDocxExportModal()"
+                                    class="group flex items-center bg-blue-600 hover:bg-blue-500 text-white font-mono font-bold py-1.5 px-3 rounded-md border border-blue-400/60 transition-all shadow-sm hover:shadow-[0_0_14px_rgba(59,130,246,0.5)] focus:outline-none text-xs hover:-translate-y-0.5 cursor-pointer"
+                                    title="Сформувати та завантажити офіційний бойовий наказ/відомість Додатка 6 (.docx)">
+                                    <svg class="w-4 h-4 mr-1.5 text-blue-200 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span>DOCX_REPORT.DOCX</span>
                                 </button>
                             </div>
 
@@ -945,6 +956,10 @@
                             id="badge-count-units"
                             class="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0</span>
                     </button>
+                    <button id="set-tab-btn-docx" onclick="switchSettingsTab('docx')"
+                        class="px-3 md:px-4 py-2.5 rounded-lg bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800 focus:outline-none text-sm whitespace-nowrap transition-all flex items-center justify-start gap-2.5 w-full text-left font-medium">
+                        <span class="text-lg">📄</span> <span class="flex-1">Шаблон Word (.docx)</span>
+                    </button>
                 </div>
 
                 <!-- Вміст вкладок -->
@@ -1186,6 +1201,107 @@
                                     placeholder="1 мр&#10;2 мр&#10;3 мр&#10;1 мінбат&#10;2 мінбат&#10;рбр&#10;зрбатр&#10;взвод зв'язку&#10;управління"></textarea>
                             </div>
                         </div>
+
+                        <!-- Вкладка 6: Шаблон Word (.docx) -->
+                        <div id="set-tab-content-docx" class="hidden space-y-6">
+                            <div class="bg-blue-50/50 dark:bg-blue-950/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/40">
+                                <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm md:text-base mb-1 flex items-center gap-2">
+                                    <span>📄 Налаштування шаблону бойового наказу / Додатка 6 (.docx)</span>
+                                </h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    Тут налаштовуються всі тексти, номери бойових наказів (БН), преамбули трьох таблиць розподілу о/с, посада та звання підписанта. Дані автоматично зберігаються в пам'яті браузера та використовуються при експорті Word.
+                                </p>
+                            </div>
+
+                            <!-- Блок 1: Шапка документа -->
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-3">
+                                <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span>1. Шапка документа (Гриф і заголовок)</span>
+                                </h5>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                        <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Гриф у правому верхньому куті:</label>
+                                        <textarea id="docx-cfg-header-right" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-mono text-xs resize-y"></textarea>
+                                        <span class="text-[11px] text-gray-400">Кожен рядок вирівнюється по правому краю</span>
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Заголовок списку (по центру):</label>
+                                        <textarea id="docx-cfg-title" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-mono text-xs resize-y"></textarea>
+                                        <span class="text-[11px] text-gray-400">Дата чергування додається автоматично</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Блок 2: Накази БН над таблицями -->
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
+                                <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span>2. Преамбули бойових наказів над таблицями</span>
+                                </h5>
+                                
+                                <div class="space-y-1 text-xs">
+                                    <label class="block font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                        <span>Наказ для Таблиці 1 (1-й ешелон оборони / ЛБЗ до РОПу включно — ВОПи):</span>
+                                    </label>
+                                    <textarea id="docx-cfg-order-t1" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-sans text-xs resize-y leading-relaxed"></textarea>
+                                </div>
+
+                                <div class="space-y-1 text-xs">
+                                    <label class="block font-semibold text-purple-700 dark:text-purple-400 flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                                        <span>Наказ для Таблиці 2 (Район оборони батальйону / КСП та глибина):</span>
+                                    </label>
+                                    <textarea id="docx-cfg-order-t2" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700/50 dark:text-white font-sans text-xs resize-y leading-relaxed"></textarea>
+                                </div>
+
+                                <div class="space-y-1 text-xs">
+                                    <label class="block font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                        <span>Наказ для Таблиці 3 (Всебічне забезпечення — Заб. БД):</span>
+                                    </label>
+                                    <textarea id="docx-cfg-order-t3" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700/50 dark:text-white font-sans text-xs resize-y leading-relaxed"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Блок 3: Підписант документа -->
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-3">
+                                <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span>3. Підписант документа (Підвал)</span>
+                                </h5>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                    <div>
+                                        <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Посада підписанта:</label>
+                                        <input type="text" id="docx-cfg-signer-post" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-sans text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Військове звання:</label>
+                                        <input type="text" id="docx-cfg-signer-rank" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-sans text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Ім'я та ПРІЗВИЩЕ:</label>
+                                        <input type="text" id="docx-cfg-signer-name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-sans text-xs">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Блок 4: Технічні відмітки друку -->
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-3">
+                                <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span>4. Технічні відмітки друку (Лівий нижній кут)</span>
+                                </h5>
+                                <div>
+                                    <textarea id="docx-cfg-tech-notes" rows="6" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-mono text-xs resize-y"></textarea>
+                                    <span class="text-[11px] text-gray-400">Примірники, ПСІ-2023, категорія ПЕОМ, номер комплекту, телефон</span>
+                                </div>
+                            </div>
+
+                            <!-- Дія скидання -->
+                            <div class="flex justify-end pt-2">
+                                <button type="button" onclick="resetDocxSettingsToDefault()" class="px-4 py-2 rounded-lg border border-red-300 dark:border-red-800/80 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
+                                    <span>↺ Скинути налаштування Word до бойового зразка</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div> <!-- End max-w-7xl -->
             </div>
@@ -1309,6 +1425,101 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНЕ ВІКНО ЕКСПОРТУ ДОДАТКА 6 У WORD (.DOCX) -->
+    <div id="modal-docx-export"
+        class="fixed inset-0 bg-black/60 z-[150] hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/80 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <!-- Шапка -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/80">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 shadow-inner">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <span>Генерація Додатка 6 (.docx)</span>
+                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 border border-blue-300 dark:border-blue-700">WORD NATIVE</span>
+                        </h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Офіційний бойовий наказ за еталонним бланком</p>
+                    </div>
+                </div>
+                <button onclick="closeDocxExportModal()" class="w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Тіло модалки -->
+            <div class="p-6 space-y-4 text-xs">
+                <!-- Вибір дат -->
+                <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700/80 space-y-3">
+                    <label class="block font-bold text-gray-700 dark:text-gray-300 text-xs uppercase tracking-wider font-mono">
+                        📅 Період бойового чергування (з 12:00 до 12:00):
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <span class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Початок доби:</span>
+                            <input type="text" id="docx-export-start-date" placeholder="01.09.2026"
+                                class="mt-1 w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-xs font-mono font-bold text-gray-800 dark:text-gray-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm">
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Кінець доби (дата наказу):</span>
+                            <input type="text" id="docx-export-end-date" placeholder="02.09.2026"
+                                class="mt-1 w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-xs font-mono font-bold text-gray-800 dark:text-gray-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Зведення структури документа -->
+                <div class="border border-gray-200 dark:border-gray-700/80 rounded-xl overflow-hidden divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-850">
+                    <div class="p-3 flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            <span>Таблиця 1: 1-й ешелон (ЛБЗ / ВОПи до РОПу)</span>
+                        </span>
+                        <span class="font-mono font-bold text-blue-600 dark:text-blue-400" id="docx-stat-t1">0 в/сл</span>
+                    </div>
+                    <div class="p-3 flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                            <span>Таблиця 2: Район оборони (КСП та глибина)</span>
+                        </span>
+                        <span class="font-mono font-bold text-purple-600 dark:text-purple-400" id="docx-stat-t2">0 в/сл</span>
+                    </div>
+                    <div class="p-3 flex items-center justify-between text-xs">
+                        <span class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span>Таблиця 3: Всебічне забезпечення (Заб. БД)</span>
+                        </span>
+                        <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400" id="docx-stat-t3">0 в/сл</span>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-gray-900/60 flex items-center justify-between text-xs font-bold">
+                        <span class="text-gray-900 dark:text-white">РАЗОМ У НАКАЗІ:</span>
+                        <span class="font-mono text-gray-900 dark:text-white text-sm" id="docx-stat-total">0 військовослужбовців</span>
+                    </div>
+                </div>
+
+                <!-- Підписант інфо -->
+                <div class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-between px-1">
+                    <span id="docx-preview-signer" class="truncate mr-2">Підписант: ...</span>
+                    <button type="button" onclick="closeDocxExportModal(); openSettings(); switchSettingsTab('docx');" class="text-blue-600 dark:text-blue-400 hover:underline shrink-0 cursor-pointer">⚙️ Змінити накази/підписанта</button>
+                </div>
+            </div>
+
+            <!-- Футер дій -->
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-2.5">
+                <button onclick="closeDocxExportModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200/60 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                    Скасувати
+                </button>
+                <button onclick="executeDocxExport()" class="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-900/30 hover:shadow-lg transition-all flex items-center gap-2 active:scale-95 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>Завантажити Word (.docx)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- МОДАЛЬНЕ ВІКНО ІСТОРІЇ ОНОВЛЕНЬ (CHANGELOG) -->
     <div id="changelogModal"
         class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-md transition-opacity p-2 md:p-4">
@@ -1321,7 +1532,7 @@
                     <span
                         class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.9.0</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.9.2</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1352,9 +1563,25 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.9.2",
+                date: "04.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "📄 Генератор офіційного документа Word (.docx) за армійським стандартом",
+                        color: "blue",
+                        items: [
+                            "<b>Військовий стандарт Додатка 6</b>: Повна відповідність структурі офіційного документа: гарнітура Times New Roman 12pt, міжрядковий інтервал 1.0, вирівнювання та відступи.",
+                            "<b>Блоки за категоріями з наказами</b>: Автоматичне формування Блоку 1 (1-й ешелон: ВОП + РОП), Блоку 2 (Район оборони: БРО/КСП) та Блоку 3 (Всебічне забезпечення: Заб. БД) з текстами наказів.",
+                            "<b>Підпис та технічні відмітки на окремому аркуші</b>: Підпис Начальника штабу внизу документа, а технічні відмітки (виконавець, тираж, дата) виносяться внизу наступного аркуша згідно з правилами діловодства."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.9.1",
                 date: "01.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🎯 Розширення злиття підрозділів (Придані сили)",
@@ -1768,6 +1995,7 @@
                 closeSettings();
                 closeChangelogModal();
                 closeEditModal();
+                closeDocxExportModal();
             }
         });
 
@@ -1775,10 +2003,12 @@
             const settingsModal = document.getElementById('settingsModal');
             const changelogModal = document.getElementById('changelogModal');
             const editRecordModal = document.getElementById('editRecordModal');
+            const docxExportModal = document.getElementById('modal-docx-export');
 
             if (e.target === settingsModal) closeSettings();
             if (e.target === changelogModal) closeChangelogModal();
             if (e.target === editRecordModal) closeEditModal();
+            if (e.target === docxExportModal) closeDocxExportModal();
         });
         // Ініціалізація та керування темною темою
         function updateThemeIcon() {
@@ -1986,7 +2216,7 @@
         }
 
         function switchSettingsTab(tab) {
-            const tabs = ['kw', 'whitelist', 'replacements', 'rop', 'units'];
+            const tabs = ['kw', 'whitelist', 'replacements', 'rop', 'units', 'docx'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`set-tab-btn-${t}`);
                 const content = document.getElementById(`set-tab-content-${t}`);
@@ -2039,6 +2269,7 @@
 
             syncRopFromText();
             updateSettingsBadges();
+            loadDocxSettings();
             switchSettingsTab('kw');
             modal.classList.remove('hidden');
         }
@@ -2063,6 +2294,7 @@
             localStorage.setItem('replace_rules', document.getElementById('kw-replace-rules').value);
             localStorage.setItem('rop_hierarchy', document.getElementById('kw-rop-hierarchy').value);
             localStorage.setItem('required_units', document.getElementById('kw-required-units').value);
+            saveDocxSettings();
             closeSettings();
 
             if (vopData.length > 0 || btgrData.length > 0 || broData.length > 0 || zabData.length > 0) {
@@ -2070,6 +2302,430 @@
                 checkInvalidTasks();
             }
             checkMissingFiles();
+        }
+
+        // ─── НАЛАШТУВАННЯ ТА ГЕНЕРАТОР ОФІЦІЙНОГО ДОДАТКА 6 (.DOCX) ───────────────
+        const DOCX_CONFIG_DEFAULTS = {
+            headerRight: "Додаток 6 до 5.18/КЦ\nДля службового\nкористування\nПрим. №____",
+            title: "СПИСОК\nвійськовослужбовців підрозділу задіяних на позиціях",
+            orderTier1: "На виконання БН командира військової частини від __.__.2026 №___, БН командира підрозділу від __.__.2026 №___/дск, виконували бойові (спеціальні) завдання під час ведення бойових (спеціальних) дій на лінії бойового зіткнення з противником на відстані виконання бойових (спеціальних) завдань підрозділом першого ешелону оборони до ротного опорного пункту включно в районі оборони підрозділу населеного пункту [НАСЕЛЕНИЙ ПУНКТ], із завданням з цілодобового бойового чергування, контролю за зміною бойової обстановки, стійкого утримання району оборони, недопущення просування ворога в глибину РОПу та нанесення вогневого ураження противнику.",
+            orderTier2: "На виконання БН командира військової частини від __.__.2026 №___, БН командира підрозділу від __.__.2026 №___/дск, виконували бойові (спеціальні) завдання під час ведення бойових (спеціальних) дій з завданням з цілодобового бойового чергування, контролю за зміною бойової обстановки у підрозділі в районі оборони підрозділу на глибину виконання бойових завдань, стійкого утримання району оборони, недопущення просування ворога в глибину РОПу та нанесення вогневого ураження противнику:",
+            orderTier3: "На виконання БН командира військової частини від __.__.2026 №___, БН командира підрозділу від __.__.2026 №___/дск, виконували бойові (спеціальні) завдання у складі діючих угруповань військ (сил) сил оборони держави, визначені завдання зі всебічного забезпечення перебуваючи безпосередньо в районах їх здійснення:",
+            signerPost: "Начальник штабу – заступник командира батальйону",
+            signerRank: "майор",
+            signerName: "Ім'я ПРІЗВИЩЕ",
+            techNotes: "Надруковано один примірник\nПрим. №1 – ел.копія згідно розрахунку розсилки\nПрим. №2 – в справу військової частини\nПункт 1.2. Переліку відомостей ЗСУ, що становлять службову інформацію (ПСІ-2023)\nВик. та віддрук. на ПЕОМ 4 категорії\nКомплект №______\nТел. __-___"
+        };
+
+        function getDocxConfig() {
+            return {
+                headerRight: localStorage.getItem('docx_header_right') !== null ? localStorage.getItem('docx_header_right') : DOCX_CONFIG_DEFAULTS.headerRight,
+                title: localStorage.getItem('docx_title') !== null ? localStorage.getItem('docx_title') : DOCX_CONFIG_DEFAULTS.title,
+                orderTier1: localStorage.getItem('docx_order_tier1') !== null ? localStorage.getItem('docx_order_tier1') : DOCX_CONFIG_DEFAULTS.orderTier1,
+                orderTier2: localStorage.getItem('docx_order_tier2') !== null ? localStorage.getItem('docx_order_tier2') : DOCX_CONFIG_DEFAULTS.orderTier2,
+                orderTier3: localStorage.getItem('docx_order_tier3') !== null ? localStorage.getItem('docx_order_tier3') : DOCX_CONFIG_DEFAULTS.orderTier3,
+                signerPost: localStorage.getItem('docx_signer_post') !== null ? localStorage.getItem('docx_signer_post') : DOCX_CONFIG_DEFAULTS.signerPost,
+                signerRank: localStorage.getItem('docx_signer_rank') !== null ? localStorage.getItem('docx_signer_rank') : DOCX_CONFIG_DEFAULTS.signerRank,
+                signerName: localStorage.getItem('docx_signer_name') !== null ? localStorage.getItem('docx_signer_name') : DOCX_CONFIG_DEFAULTS.signerName,
+                techNotes: localStorage.getItem('docx_tech_notes') !== null ? localStorage.getItem('docx_tech_notes') : DOCX_CONFIG_DEFAULTS.techNotes
+            };
+        }
+
+        function loadDocxSettings() {
+            const cfg = getDocxConfig();
+            const elHeader = document.getElementById('docx-cfg-header-right');
+            const elTitle = document.getElementById('docx-cfg-title');
+            const elT1 = document.getElementById('docx-cfg-order-t1');
+            const elT2 = document.getElementById('docx-cfg-order-t2');
+            const elT3 = document.getElementById('docx-cfg-order-t3');
+            const elPost = document.getElementById('docx-cfg-signer-post');
+            const elRank = document.getElementById('docx-cfg-signer-rank');
+            const elName = document.getElementById('docx-cfg-signer-name');
+            const elTech = document.getElementById('docx-cfg-tech-notes');
+
+            if (elHeader) elHeader.value = cfg.headerRight;
+            if (elTitle) elTitle.value = cfg.title;
+            if (elT1) elT1.value = cfg.orderTier1;
+            if (elT2) elT2.value = cfg.orderTier2;
+            if (elT3) elT3.value = cfg.orderTier3;
+            if (elPost) elPost.value = cfg.signerPost;
+            if (elRank) elRank.value = cfg.signerRank;
+            if (elName) elName.value = cfg.signerName;
+            if (elTech) elTech.value = cfg.techNotes;
+        }
+
+        function saveDocxSettings() {
+            const elHeader = document.getElementById('docx-cfg-header-right');
+            const elTitle = document.getElementById('docx-cfg-title');
+            const elT1 = document.getElementById('docx-cfg-order-t1');
+            const elT2 = document.getElementById('docx-cfg-order-t2');
+            const elT3 = document.getElementById('docx-cfg-order-t3');
+            const elPost = document.getElementById('docx-cfg-signer-post');
+            const elRank = document.getElementById('docx-cfg-signer-rank');
+            const elName = document.getElementById('docx-cfg-signer-name');
+            const elTech = document.getElementById('docx-cfg-tech-notes');
+
+            if (elHeader) localStorage.setItem('docx_header_right', elHeader.value);
+            if (elTitle) localStorage.setItem('docx_title', elTitle.value);
+            if (elT1) localStorage.setItem('docx_order_tier1', elT1.value);
+            if (elT2) localStorage.setItem('docx_order_tier2', elT2.value);
+            if (elT3) localStorage.setItem('docx_order_tier3', elT3.value);
+            if (elPost) localStorage.setItem('docx_signer_post', elPost.value);
+            if (elRank) localStorage.setItem('docx_signer_rank', elRank.value);
+            if (elName) localStorage.setItem('docx_signer_name', elName.value);
+            if (elTech) localStorage.setItem('docx_tech_notes', elTech.value);
+        }
+
+        function resetDocxSettingsToDefault() {
+            if (!confirm("Скинути всі налаштування шаблону Word (преамбули наказів БН, підписанта, реквізити) до бойового зразка за замовчуванням?")) {
+                return;
+            }
+            localStorage.removeItem('docx_header_right');
+            localStorage.removeItem('docx_title');
+            localStorage.removeItem('docx_order_tier1');
+            localStorage.removeItem('docx_order_tier2');
+            localStorage.removeItem('docx_order_tier3');
+            localStorage.removeItem('docx_signer_post');
+            localStorage.removeItem('docx_signer_rank');
+            localStorage.removeItem('docx_signer_name');
+            localStorage.removeItem('docx_tech_notes');
+            loadDocxSettings();
+            showToast("Налаштування шаблону Word відновлено до зразка!", "info");
+        }
+
+        function openDocxExportModal() {
+            const totalSoldiers = vopData.length + btgrData.length + broData.length + zabData.length;
+            if (totalSoldiers === 0) {
+                alert("Немає розібраних даних для формування Додатка 6! Будь ласка, спочатку завантажте файли рот.");
+                return;
+            }
+
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            const formatD = (d) => {
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const yyyy = d.getFullYear();
+                return `${dd}.${mm}.${yyyy}`;
+            };
+
+            const elStart = document.getElementById('docx-export-start-date');
+            const elEnd = document.getElementById('docx-export-end-date');
+            if (elStart && (!elStart.value || elStart.value.trim() === '')) {
+                elStart.value = formatD(yesterday);
+            }
+            if (elEnd && (!elEnd.value || elEnd.value.trim() === '')) {
+                elEnd.value = formatD(today);
+            }
+
+            const tier1Count = vopData.length + btgrData.length;
+            const tier2Count = broData.length;
+            const tier3Count = zabData.length;
+
+            const elT1 = document.getElementById('docx-stat-t1');
+            const elT2 = document.getElementById('docx-stat-t2');
+            const elT3 = document.getElementById('docx-stat-t3');
+            const elTotal = document.getElementById('docx-stat-total');
+
+            if (elT1) elT1.innerText = `${tier1Count} в/сл`;
+            if (elT2) elT2.innerText = `${tier2Count} в/сл`;
+            if (elT3) elT3.innerText = `${tier3Count} в/сл`;
+            if (elTotal) elTotal.innerText = `${totalSoldiers} військовослужбовців`;
+
+            const cfg = getDocxConfig();
+            const elSigner = document.getElementById('docx-preview-signer');
+            if (elSigner) elSigner.innerText = `Підписант: ${cfg.signerPost}, ${cfg.signerRank} ${cfg.signerName}`;
+
+            const modal = document.getElementById('modal-docx-export');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeDocxExportModal() {
+            const modal = document.getElementById('modal-docx-export');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        async function executeDocxExport() {
+            if (typeof docx === 'undefined') {
+                alert("Бібліотека docx.js ще не завантажилася. Перевірте інтернет-з'єднання.");
+                return;
+            }
+
+            const startDate = (document.getElementById('docx-export-start-date').value || "").trim();
+            const endDate = (document.getElementById('docx-export-end-date').value || "").trim();
+
+            if (!startDate || !endDate) {
+                alert("Будь ласка, вкажіть дати початку та закінчення доби чергування!");
+                return;
+            }
+
+            const cfg = getDocxConfig();
+            closeDocxExportModal();
+
+            try {
+                showToast("Формування офіційного Додатка 6 (.docx)...", "info");
+
+                const {
+                    Document,
+                    Packer,
+                    Paragraph,
+                    TextRun,
+                    Table,
+                    TableRow,
+                    TableCell,
+                    AlignmentType,
+                    WidthType,
+                    BorderStyle,
+                    SectionType,
+                    VerticalAlign
+                } = docx;
+
+                const COL_WIDTHS = [577, 1226, 1979, 3437, 1861]; // точні розміри в dxa
+                const borderSingle = { style: BorderStyle.SINGLE, size: 4, color: "000000" };
+                const tableBorders = {
+                    top: borderSingle,
+                    bottom: borderSingle,
+                    left: borderSingle,
+                    right: borderSingle,
+                    insideHorizontal: borderSingle,
+                    insideVertical: borderSingle
+                };
+
+                function makeCell(text, isHeader = false, customWidth = null, align = null) {
+                    const cellAlign = align || (isHeader ? AlignmentType.CENTER : AlignmentType.LEFT);
+                    return new TableCell({
+                        width: customWidth ? { size: customWidth, type: WidthType.DXA } : undefined,
+                        children: [
+                            new Paragraph({
+                                children: [
+                                    new TextRun({
+                                        text: String(text !== undefined && text !== null ? text : ""),
+                                        bold: isHeader,
+                                        italics: true,
+                                        font: "Times New Roman",
+                                        size: 24 // 12pt за військовим стандартом
+                                    })
+                                ],
+                                alignment: cellAlign,
+                                spacing: { before: 30, after: 30, line: 240 }
+                            })
+                        ],
+                        margins: { top: 50, bottom: 50, left: 70, right: 70 },
+                        borders: tableBorders
+                    });
+                }
+
+                function makeTable(dataArray) {
+                    const rows = [];
+                    const headers = ["№ п/п", "Звання", "ПІБ", "Займана посада", "Завдання які виконувались"];
+                    rows.push(new TableRow({
+                        children: headers.map((h, i) => makeCell(h, true, COL_WIDTHS[i], i === 0 ? AlignmentType.CENTER : AlignmentType.LEFT)),
+                        tableHeader: true
+                    }));
+
+                    dataArray.forEach((item, idx) => {
+                        rows.push(new TableRow({
+                            children: [
+                                makeCell(idx + 1, false, COL_WIDTHS[0], AlignmentType.CENTER),
+                                makeCell(item.rank || "", false, COL_WIDTHS[1], AlignmentType.LEFT),
+                                makeCell(item.name || "", false, COL_WIDTHS[2], AlignmentType.LEFT),
+                                makeCell(item.pos || "", false, COL_WIDTHS[3], AlignmentType.LEFT),
+                                makeCell(item.task || "", false, COL_WIDTHS[4], AlignmentType.LEFT)
+                            ]
+                        }));
+                    });
+
+                    return new Table({
+                        rows: rows,
+                        width: { size: 9080, type: WidthType.DXA },
+                        alignment: AlignmentType.CENTER
+                    });
+                }
+
+                const docChildren = [];
+
+                // 1. Шапка праворуч (блок з лівим відступом 6480 dxa ~11.4 см, 12pt)
+                const headerRightLines = (cfg.headerRight || "").split('\n');
+                headerRightLines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return;
+                    if (trimmed.toLowerCase() === 'для службового користування') {
+                        docChildren.push(new Paragraph({
+                            children: [new TextRun({ text: "Для службового", font: "Times New Roman", size: 24 })],
+                            alignment: AlignmentType.LEFT,
+                            indent: { left: 6480 },
+                            spacing: { before: 0, after: 20, line: 240 }
+                        }));
+                        docChildren.push(new Paragraph({
+                            children: [new TextRun({ text: "користування", font: "Times New Roman", size: 24 })],
+                            alignment: AlignmentType.LEFT,
+                            indent: { left: 6480 },
+                            spacing: { before: 0, after: 20, line: 240 }
+                        }));
+                    } else {
+                        docChildren.push(new Paragraph({
+                            children: [new TextRun({ text: trimmed, font: "Times New Roman", size: 24 })],
+                            alignment: AlignmentType.LEFT,
+                            indent: { left: 6480 },
+                            spacing: { before: 0, after: 20, line: 240 }
+                        }));
+                    }
+                });
+
+                docChildren.push(new Paragraph({ children: [], spacing: { before: 0, after: 120 } }));
+
+                // 2. Заголовок по центру (12pt, звичайний прямий шрифт)
+                const titleLines = (cfg.title || "").split('\n');
+                titleLines.forEach(line => {
+                    if (line.trim()) {
+                        docChildren.push(new Paragraph({
+                            children: [new TextRun({ text: line.trim(), font: "Times New Roman", size: 24 })],
+                            alignment: AlignmentType.CENTER,
+                            spacing: { before: 0, after: 40, line: 240 }
+                        }));
+                    }
+                });
+
+                // Дата чергування (12pt)
+                docChildren.push(new Paragraph({
+                    children: [new TextRun({ text: `з 12.00 ${startDate} до 12.00 ${endDate}`, font: "Times New Roman", size: 24 })],
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 0, after: 180, line: 240 }
+                }));
+
+                // 3. Блок 1: 1-й ешелон (ВОП + РОП)
+                const tier1Data = [...vopData, ...btgrData];
+                if (tier1Data.length > 0 || cfg.orderTier1) {
+                    if (cfg.orderTier1) {
+                        docChildren.push(new Paragraph({
+                            children: [new TextRun({ text: cfg.orderTier1.trim(), font: "Times New Roman", size: 24 })],
+                            alignment: AlignmentType.JUSTIFIED,
+                            indent: { firstLine: 708 }, // 1.25 см
+                            spacing: { before: 100, after: 120, line: 240 }
+                        }));
+                    }
+                    docChildren.push(makeTable(tier1Data));
+                    docChildren.push(new Paragraph({ children: [], spacing: { before: 0, after: 180 } }));
+                }
+
+                // 4. Блок 2: Район оборони батальйону (БРО / КСП)
+                if (broData.length > 0 || cfg.orderTier2) {
+                    if (cfg.orderTier2) {
+                        docChildren.push(new Paragraph({
+                            children: [new TextRun({ text: cfg.orderTier2.trim(), font: "Times New Roman", size: 24 })],
+                            alignment: AlignmentType.JUSTIFIED,
+                            indent: { firstLine: 708 },
+                            spacing: { before: 100, after: 120, line: 240 }
+                        }));
+                    }
+                    docChildren.push(makeTable(broData));
+                    docChildren.push(new Paragraph({ children: [], spacing: { before: 0, after: 180 } }));
+                }
+
+                // 5. Блок 3: Всебічне забезпечення (Заб. БД)
+                if (zabData.length > 0 || cfg.orderTier3) {
+                    if (cfg.orderTier3) {
+                        docChildren.push(new Paragraph({
+                            children: [new TextRun({ text: cfg.orderTier3.trim(), font: "Times New Roman", size: 24 })],
+                            alignment: AlignmentType.JUSTIFIED,
+                            indent: { firstLine: 708 },
+                            spacing: { before: 100, after: 120, line: 240 }
+                        }));
+                    }
+                    docChildren.push(makeTable(zabData));
+                    docChildren.push(new Paragraph({ children: [], spacing: { before: 0, after: 200 } }));
+                }
+
+                // 6. Підпис Начальника штабу (12pt)
+                docChildren.push(new Paragraph({
+                    children: [new TextRun({ text: cfg.signerPost || "", font: "Times New Roman", size: 24 })],
+                    alignment: AlignmentType.LEFT,
+                    spacing: { before: 100, after: 20, line: 240 }
+                }));
+                docChildren.push(new Paragraph({
+                    children: [new TextRun({ text: cfg.signerRank || "", font: "Times New Roman", size: 24 })],
+                    alignment: AlignmentType.LEFT,
+                    spacing: { before: 0, after: 20, line: 240 }
+                }));
+                docChildren.push(new Paragraph({
+                    children: [new TextRun({ text: cfg.signerName || "", font: "Times New Roman", size: 24 })],
+                    alignment: AlignmentType.RIGHT,
+                    spacing: { before: 0, after: 240, line: 240 }
+                }));
+
+                // 7. Технічні відмітки на окремому аркуші внизу (12pt)
+                const techChildren = [];
+                const techLines = (cfg.techNotes || "").split('\n');
+                techLines.forEach(line => {
+                    if (line.trim()) {
+                        techChildren.push(new Paragraph({
+                            children: [new TextRun({ text: line.trim(), font: "Times New Roman", size: 24 })],
+                            alignment: AlignmentType.LEFT,
+                            spacing: { before: 0, after: 20, line: 240 }
+                        }));
+                    }
+                });
+                // Дата підпису технічного блоку
+                techChildren.push(new Paragraph({
+                    children: [new TextRun({ text: endDate, font: "Times New Roman", size: 24 })],
+                    alignment: AlignmentType.LEFT,
+                    spacing: { before: 0, after: 20, line: 240 }
+                }));
+
+                // Створення документа: Секція 1 (основна частина) + Секція 2 (технічні відмітки внизу наступного аркуша)
+                const docFile = new Document({
+                    sections: [
+                        {
+                            properties: {
+                                page: {
+                                    margin: {
+                                        top: 850,    // ~15 мм
+                                        bottom: 850, // ~15 мм
+                                        left: 1134,  // ~20 мм
+                                        right: 567   // ~10 мм
+                                    }
+                                }
+                            },
+                            children: docChildren
+                        },
+                        {
+                            properties: {
+                                type: SectionType.NEXT_PAGE,
+                                verticalAlign: VerticalAlign.BOTTOM,
+                                page: {
+                                    margin: {
+                                        top: 850,
+                                        bottom: 850,
+                                        left: 1134,
+                                        right: 567
+                                    }
+                                }
+                            },
+                            children: techChildren
+                        }
+                    ]
+                });
+
+                const blob = await Packer.toBlob(docFile);
+                const cleanEnd = endDate.replace(/\./g, '_');
+                const outFileName = `Додаток_6_${cleanEnd}.docx`;
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = outFileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast(`Офіційний Додаток 6 успішно завантажено (${outFileName})!`, "success");
+            } catch (err) {
+                console.error("Error generating docx:", err);
+                alert("Помилка під час генерації документа Word: " + err.message);
+            }
         }
 
         function checkMissingFiles() {
