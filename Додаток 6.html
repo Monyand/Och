@@ -136,7 +136,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.9.2</span>
+                    <span>🚀 v1.9.3</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -1532,7 +1532,7 @@
                     <span
                         class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.9.2</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.9.3</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1563,9 +1563,24 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.9.3",
+                date: "05.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "📊 Зведена матриця та нормалізація підрозділів",
+                        color: "blue",
+                        items: [
+                            "<b>Автоматичне очищення позначок коригування та версій файлів</b>: назви файлів з примітками <code>корегований</code>, <code>коригований</code>, <code>уточнений</code>, <code>виправлений</code> тощо гарантовано нормалізуються до базового підрозділу (наприклад, <code>6мр корегований.docx</code> ➔ <code>6мр</code>).",
+                            "<b>Усунення розривів рядків у Зведеному звіті (Лист 2)</b>: особовий склад із повторно поданих або уточнених файлів автоматично сумується до єдиного підрозділу замість створення дублюючих розірваних рядків."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.9.2",
                 date: "04.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "📄 Генератор офіційного документа Word (.docx) за армійським стандартом",
@@ -3682,6 +3697,10 @@
                 'y': 'у', 'Y': 'У', 'r': 'р', 'R': 'р', 'g': 'г', 'G': 'г', 'd': 'д', 'D': 'д', 'u': 'у', 'U': 'у'
             };
             name = name.replace(/[a-zA-Z]/g, match => homoglyphMap[match] || match).toLowerCase();
+
+            // Очищення позначок коригування, правок, повторних подач та версій файлів
+            name = name.replace(/[\s_\-\(\[]*(корег[а-яієїґ0-9]*|кориг[а-яієїґ0-9]*|скориг[а-яієїґ0-9]*|скорег[а-яієїґ0-9]*|уточнен[а-яієїґ0-9]*|виправлен[а-яієїґ0-9]*|доопрацьован[а-яієїґ0-9]*|перероблен[а-яієїґ0-9]*|змінен[а-яієїґ0-9]*|корекці[а-яієїґ0-9]*|правк[а-яієїґ0-9]*|фінал[а-яієїґ0-9]*|редагован[а-яієїґ0-9]*|коп[іп]я[а-яієїґ0-9]*)[\s_\-\)\]]*/gi, ' ');
+            name = name.replace(/(^|[^a-zа-яієїґ0-9])(новий|нова|нове|нові)([^a-zа-яієїґ0-9]|$)/gi, ' ');
 
             name = name
                 .replace(/(^|[^a-zа-яієїґ0-9])(пбд|щбд)([^a-zа-яієїґ0-9]|$)/gi, ' ')
