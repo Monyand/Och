@@ -4,8 +4,7 @@ _backups/
 __pycache__/
 *.py
 !suite_agent.py
+!dispatcher_service.py
 
-# Ignore personal chat archive and TikTok dump
-mari_archive.html
-user_data_tiktok.json
-
+# Local system utilities
+sys_utils/

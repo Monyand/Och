@@ -136,7 +136,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.9.3</span>
+                    <span>🚀 v1.9.4</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -179,6 +179,60 @@
 
                 <!-- Ліва колонка: Елементи керування (Dropzone + Toolbar) -->
                 <div class="xl:col-span-8 flex flex-col gap-4">
+                    <!-- ШТАБНИЙ ДИСПЕТЧЕР (AUTO-INGEST AGENT) -->
+                    <div id="dispatcherWidget"
+                        class="bg-gradient-to-r from-slate-900 via-indigo-950/70 to-slate-900 rounded-xl p-3 sm:p-4 border border-indigo-500/30 shadow-[0_4px_25px_rgba(0,0,0,0.35)] transition-all">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <!-- Ліва частина: статус та показники -->
+                            <div class="flex items-center gap-3">
+                                <div class="relative flex items-center justify-center w-9 h-9 rounded-lg bg-indigo-500/20 border border-indigo-500/40 shrink-0">
+                                    <span id="dispPulseDot" class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse"></span>
+                                </div>
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="text-xs font-mono font-extrabold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                                            <span>⚡ ШТАБНИЙ ДИСПЕТЧЕР</span>
+                                            <span class="text-indigo-400/60">//</span>
+                                        </span>
+                                        <span id="dispDateBadge" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-900/80 text-indigo-200 border border-indigo-600/50">--.--</span>
+                                        <span id="dispStatusBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1">
+                                            <span>🟢 ГОТОВО</span>
+                                        </span>
+                                    </div>
+                                    <p id="dispSummaryText" class="text-xs text-gray-300 mt-1 flex flex-wrap items-center gap-2">
+                                        <span>Перевірка зв'язку з локальним сервісом...</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Права частина: кнопки дій -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" id="btnDispLoad" onclick="loadDispatcherReports()"
+                                    class="group relative flex items-center bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold py-2 px-4 rounded-lg border border-emerald-400/50 shadow-[0_0_16px_rgba(16,185,129,0.4)] hover:shadow-[0_0_24px_rgba(6,182,212,0.6)] transition-all duration-200 focus:outline-none hover:-translate-y-0.5 cursor-pointer">
+                                    <svg class="w-4 h-4 mr-1.5 text-yellow-300 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                                    </svg>
+                                    <span class="font-mono text-xs font-extrabold tracking-wide uppercase">⚡ ПРИЙНЯТИ ДЕНЬ (1-КЛІК)</span>
+                                </button>
+
+                                <button type="button" id="btnDispModal" onclick="openDispatcherModal()"
+                                    class="flex items-center bg-slate-800/90 hover:bg-slate-700 text-gray-200 hover:text-white font-mono text-xs font-bold py-2 px-3 rounded-lg border border-slate-700 hover:border-indigo-400/50 transition-all cursor-pointer shadow-sm"
+                                    title="Шаховка здачі звітів та аналіз дублікатів">
+                                    <span>📋 ШАХОВКА</span>
+                                    <span id="dispMissingBadge" class="ml-1.5 px-1.5 py-0.2 text-[10px] font-bold rounded bg-indigo-900 text-indigo-200 border border-indigo-700/50">--/--</span>
+                                </button>
+
+                                <button type="button" onclick="checkDispatcherStatus(true)"
+                                    class="p-2 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-gray-400 hover:text-white border border-slate-700 transition-all cursor-pointer"
+                                    title="Оновити дані диспетчера">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="drop-zone"
                         class="w-full border-2 border-dashed border-blue-300 dark:border-blue-700/60 bg-blue-50/40 dark:bg-blue-900/10 rounded-xl p-4 text-center cursor-pointer transition-all duration-200 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 flex flex-col sm:flex-row items-center justify-center gap-4"
                         onclick="document.getElementById('fileInput').click()">
@@ -294,7 +348,7 @@
 
                                 <button type="button" id="btn-merge-rop-units" onclick="toggleMergeRopUnitsClick()"
                                     class="group flex items-center bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 font-mono font-bold py-1.5 px-3 rounded-md border border-cyan-300 dark:border-cyan-500/50 hover:border-cyan-400 transition-all shadow-sm hover:shadow-[0_0_12px_rgba(6,182,212,0.35)] focus:outline-none text-xs hover:-translate-y-0.5 cursor-pointer"
-                                    title="Злиття БнГ/НРК/Приданих у РОПах: УВІМКНЕНО (штабний вигляд). Клікніть, щоб перемкнути">
+                                    title="Злиття БнГ/НРК/ВО/Приданих у РОПах: УВІМКНЕНО (штабний вигляд). Клікніть, щоб перемкнути">
                                     <svg class="w-3.5 h-3.5 mr-1.5 text-cyan-500 dark:text-cyan-400 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                                     </svg>
@@ -1112,15 +1166,15 @@
                                     </div>
                                 </div>
 
-                                <!-- Опція: Автоматичне злиття БнГ/НРК у РОПах -->
+                                <!-- Опція: Автоматичне злиття БнГ/НРК/ВО у РОПах -->
                                 <div class="bg-blue-50/60 dark:bg-blue-950/30 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40 mb-3">
                                     <label class="font-bold text-gray-800 dark:text-gray-200 text-xs md:text-sm flex items-center gap-2 cursor-pointer select-none">
                                         <input type="checkbox" id="chk-merge-rop-units-settings" onchange="toggleMergeRopUnits(this.checked)" class="rounded text-blue-600 focus:ring-0 w-4 h-4">
-                                        <span>Автоматично об'єднувати БнГ та НРК з ротами у РОПах (Лист 2 Excel)</span>
+                                        <span>Автоматично об'єднувати БнГ, НРК та ВО з ротами у РОПах (Лист 2 Excel)</span>
                                     </label>
                                     <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed pl-6">
-                                        <b>Увімкнено (Штабний вигляд)</b>: бійці БнГ та НРК на позиціях конкретного РОПу роти (напр. <code>РОП 5мр</code>) автоматично зараховуються до чисельності роти у зведеному звіті для командування.<br>
-                                        <b>Вимкнено (Детальний вигляд)</b>: виводяться 100% реальні назви прикомандированих підрозділів окремо (напр. <code>5мр - 12</code>, <code>РЗ БнГ (БРО) - 1</code>, <code>нрк - 1</code>).
+                                        <b>Увімкнено (Штабний вигляд)</b>: бійці БнГ, НРК та взводу охорони (ВО) на позиціях конкретного РОПу роти (напр. <code>РОП 5мр</code>) автоматично зараховуються до чисельності роти у зведеному звіті для командування.<br>
+                                        <b>Вимкнено (Детальний вигляд)</b>: виводяться 100% реальні назви прикомандированих підрозділів окремо (напр. <code>5мр - 12</code>, <code>РЗ БнГ (БРО) - 1</code>, <code>нрк - 1</code>, <code>во - 2</code>).
                                     </p>
                                 </div>
 
@@ -1292,6 +1346,25 @@
                                 <div>
                                     <textarea id="docx-cfg-tech-notes" rows="6" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-mono text-xs resize-y"></textarea>
                                     <span class="text-[11px] text-gray-400">Примірники, ПСІ-2023, категорія ПЕОМ, номер комплекту, телефон</span>
+                                </div>
+                            </div>
+
+                            <!-- Блок 5: Метадані та автор файлу Word (.docx) -->
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-3">
+                                <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span>5. Властивості та автор файлу (Метадані docx)</span>
+                                </h5>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                        <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Автор та ким збережено (creator / lastModifiedBy):</label>
+                                        <input type="text" id="docx-cfg-author" placeholder="(Порожньо / Чисто, як в оригіналі)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-sans text-xs">
+                                        <span class="text-[11px] text-gray-400">Відображається у властивостях файлу Windows. За замовчуванням: <b>порожньо</b> (як у бойовому оригіналі).</span>
+                                    </div>
+                                    <div>
+                                        <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Назва / Тема документа (title):</label>
+                                        <input type="text" id="docx-cfg-meta-title" placeholder="(Порожньо / Чисто, як в оригіналі)" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700/50 dark:text-white font-sans text-xs">
+                                        <span class="text-[11px] text-gray-400">Внутрішній заголовок у метаданих документа. За замовчуванням: <b>порожньо</b> (як у бойовому оригіналі).</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1532,7 +1605,7 @@
                     <span
                         class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.9.3</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.9.4</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1563,9 +1636,24 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.9.4",
+                date: "09.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "⚡ Штабний Диспетчер (Auto-Ingest Agent) & Фоновий сервіс",
+                        color: "blue",
+                        items: [
+                            "<b>Інтеграція віджета Диспетчера</b>: додано віджет моніторингу локального фонового сервісу (<code>dispatcher_service.py</code>) з анімованим індикатором зв'язку та автопідвантаженням нових файлів підрозділів.",
+                            "<b>Автономний інжест</b>: автоматичний моніторинг вхідних папок підрозділів та миттєве оновлення зведених списків без ручного вибору файлів."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.9.3",
                 date: "05.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "📊 Зведена матриця та нормалізація підрозділів",
@@ -2053,7 +2141,7 @@
             updateMergeRopUnitsButtonUI(checked);
             const chkSettings = document.getElementById('chk-merge-rop-units-settings');
             if (chkSettings) chkSettings.checked = checked;
-            showToast(checked ? "⚡ Увімкнено злиття БнГ/НРК/Приданих з ротами на РОПах (Штабний вигляд)" : "⚪ Вимкнено злиття: у РОПах виводитимуться реальні підрозділи роздільно", "info");
+            showToast(checked ? "⚡ Увімкнено злиття БнГ/НРК/ВО/Приданих з ротами на РОПах (Штабний вигляд)" : "⚪ Вимкнено злиття: у РОПах виводитимуться реальні підрозділи роздільно", "info");
         }
 
         function updateMergeRopUnitsButtonUI(state) {
@@ -2066,12 +2154,12 @@
                 btn.className = "group flex items-center bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 font-mono font-bold py-1.5 px-3 rounded-md border border-cyan-300 dark:border-cyan-500/50 hover:border-cyan-400 transition-all shadow-sm hover:shadow-[0_0_12px_rgba(6,182,212,0.35)] focus:outline-none text-xs hover:-translate-y-0.5 cursor-pointer";
                 if (txt) txt.textContent = "MERGE: ON";
                 if (dot) dot.className = "ml-1.5 w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse";
-                btn.title = "Злиття БнГ/НРК/Приданих у РОПах: УВІМКНЕНО (штабний вигляд). Клікніть, щоб вимкнути";
+                btn.title = "Злиття БнГ/НРК/ВО/Приданих у РОПах: УВІМКНЕНО (штабний вигляд). Клікніть, щоб вимкнути";
             } else {
                 btn.className = "group flex items-center bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono font-bold py-1.5 px-3 rounded-md border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all shadow-sm focus:outline-none text-xs hover:-translate-y-0.5 cursor-pointer";
                 if (txt) txt.textContent = "MERGE: OFF";
                 if (dot) dot.className = "ml-1.5 w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-600";
-                btn.title = "Злиття БнГ/НРК/Приданих у РОПах: ВИМКНЕНО (деталізований реальний вигляд). Клікніть, щоб увімкнути";
+                btn.title = "Злиття БнГ/НРК/ВО/Приданих у РОПах: ВИМКНЕНО (деталізований реальний вигляд). Клікніть, щоб увімкнути";
             }
         }
 
@@ -2130,7 +2218,13 @@
 
         function getReplaceRules() {
             const defaultRules = 'помідор = ПВ "ПОМІДОР" (РОП)\nсп помідор = ПВ "ПОМІДОР" (РОП)\nогірок = ВОП "ОГІРОК"';
-            let raw = localStorage.getItem('replace_rules') !== null ? localStorage.getItem('replace_rules') : defaultRules;
+            let raw = '';
+            const textarea = document.getElementById('kw-replace-rules');
+            if (textarea && textarea.value !== undefined && textarea.value.trim() !== '') {
+                raw = textarea.value;
+            } else {
+                raw = localStorage.getItem('replace_rules') !== null ? localStorage.getItem('replace_rules') : defaultRules;
+            }
 
             let rules = [];
             raw.split('\n').forEach(line => {
@@ -2143,6 +2237,53 @@
                 }
             });
             return rules;
+        }
+
+        function getCompiledTaskRules() {
+            const rules = getReplaceRules();
+            if (!rules || rules.length === 0) return [];
+
+            function escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            // Сортуємо правила за спаданням довжини тригера (довші правила мають пріоритет)
+            const sorted = [...rules].sort((a, b) => (b.trigger || '').length - (a.trigger || '').length);
+
+            return sorted
+                .filter(r => r.trigger && r.trigger.trim() !== '')
+                .map(r => {
+                    const trig = r.trigger.trim();
+                    let escaped = escapeRegExp(trig);
+                    // Робимо крапки, лапки та пробіли гнучкими: 'заб. бд' знайде 'ЗАБ. БД', 'ЗАБ БД', 'заб.бд'
+                    escaped = escaped.replace(/\\\./g, '[\\.\\s]*');
+                    escaped = escaped.replace(/\s+/g, '[\\s\\._\\-]+');
+                    escaped = escaped.replace(/["«»“”„]/g, '["«»“”„]?');
+
+                    return {
+                        trigger: trig,
+                        regex: new RegExp(`(^|[^а-яіїєґa-z0-9_])(${escaped})([^а-яіїєґa-z0-9_]|$)`, 'i'),
+                        replaceWith: r.replaceWith
+                    };
+                });
+        }
+
+        function applyTaskAutoReplace(rawTask, compiledRules = null) {
+            if (!rawTask || typeof rawTask !== 'string') return rawTask || '';
+            const trimmed = rawTask.trim();
+            if (!trimmed || trimmed === '[НЕ ВКАЗАНО]') return trimmed;
+
+            const rules = compiledRules || getCompiledTaskRules();
+            if (!rules || rules.length === 0) return trimmed;
+
+            const lower = trimmed.toLowerCase();
+            for (let i = 0; i < rules.length; i++) {
+                const r = rules[i];
+                if (r.regex.test(lower)) {
+                    return r.replaceWith;
+                }
+            }
+            return trimmed;
         }
 
         // --- ВІЗУАЛЬНИЙ КОНСТРУКТОР ІЄРАРХІЇ РОПІВ ТА ВОПІВ ---
@@ -2313,6 +2454,7 @@
             closeSettings();
 
             if (vopData.length > 0 || btgrData.length > 0 || broData.length > 0 || zabData.length > 0) {
+                standardizeTasks(true);
                 reassignCategories();
                 checkInvalidTasks();
             }
@@ -2329,7 +2471,9 @@
             signerPost: "Начальник штабу – заступник командира батальйону",
             signerRank: "майор",
             signerName: "Ім'я ПРІЗВИЩЕ",
-            techNotes: "Надруковано один примірник\nПрим. №1 – ел.копія згідно розрахунку розсилки\nПрим. №2 – в справу військової частини\nПункт 1.2. Переліку відомостей ЗСУ, що становлять службову інформацію (ПСІ-2023)\nВик. та віддрук. на ПЕОМ 4 категорії\nКомплект №______\nТел. __-___"
+            techNotes: "Надруковано один примірник\nПрим. №1 – ел.копія згідно розрахунку розсилки\nПрим. №2 – в справу військової частини\nПункт 1.2. Переліку відомостей ЗСУ, що становлять службову інформацію (ПСІ-2023)\nВик. та віддрук. на ПЕОМ 4 категорії\nКомплект №______\nТел. __-___",
+            author: "",
+            metaTitle: ""
         };
 
         function getDocxConfig() {
@@ -2342,7 +2486,9 @@
                 signerPost: localStorage.getItem('docx_signer_post') !== null ? localStorage.getItem('docx_signer_post') : DOCX_CONFIG_DEFAULTS.signerPost,
                 signerRank: localStorage.getItem('docx_signer_rank') !== null ? localStorage.getItem('docx_signer_rank') : DOCX_CONFIG_DEFAULTS.signerRank,
                 signerName: localStorage.getItem('docx_signer_name') !== null ? localStorage.getItem('docx_signer_name') : DOCX_CONFIG_DEFAULTS.signerName,
-                techNotes: localStorage.getItem('docx_tech_notes') !== null ? localStorage.getItem('docx_tech_notes') : DOCX_CONFIG_DEFAULTS.techNotes
+                techNotes: localStorage.getItem('docx_tech_notes') !== null ? localStorage.getItem('docx_tech_notes') : DOCX_CONFIG_DEFAULTS.techNotes,
+                author: localStorage.getItem('docx_author') !== null ? localStorage.getItem('docx_author') : DOCX_CONFIG_DEFAULTS.author,
+                metaTitle: localStorage.getItem('docx_meta_title') !== null ? localStorage.getItem('docx_meta_title') : DOCX_CONFIG_DEFAULTS.metaTitle
             };
         }
 
@@ -2357,6 +2503,8 @@
             const elRank = document.getElementById('docx-cfg-signer-rank');
             const elName = document.getElementById('docx-cfg-signer-name');
             const elTech = document.getElementById('docx-cfg-tech-notes');
+            const elAuthor = document.getElementById('docx-cfg-author');
+            const elMetaTitle = document.getElementById('docx-cfg-meta-title');
 
             if (elHeader) elHeader.value = cfg.headerRight;
             if (elTitle) elTitle.value = cfg.title;
@@ -2367,6 +2515,8 @@
             if (elRank) elRank.value = cfg.signerRank;
             if (elName) elName.value = cfg.signerName;
             if (elTech) elTech.value = cfg.techNotes;
+            if (elAuthor) elAuthor.value = cfg.author;
+            if (elMetaTitle) elMetaTitle.value = cfg.metaTitle;
         }
 
         function saveDocxSettings() {
@@ -2379,6 +2529,8 @@
             const elRank = document.getElementById('docx-cfg-signer-rank');
             const elName = document.getElementById('docx-cfg-signer-name');
             const elTech = document.getElementById('docx-cfg-tech-notes');
+            const elAuthor = document.getElementById('docx-cfg-author');
+            const elMetaTitle = document.getElementById('docx-cfg-meta-title');
 
             if (elHeader) localStorage.setItem('docx_header_right', elHeader.value);
             if (elTitle) localStorage.setItem('docx_title', elTitle.value);
@@ -2389,6 +2541,8 @@
             if (elRank) localStorage.setItem('docx_signer_rank', elRank.value);
             if (elName) localStorage.setItem('docx_signer_name', elName.value);
             if (elTech) localStorage.setItem('docx_tech_notes', elTech.value);
+            if (elAuthor) localStorage.setItem('docx_author', elAuthor.value);
+            if (elMetaTitle) localStorage.setItem('docx_meta_title', elMetaTitle.value);
         }
 
         function resetDocxSettingsToDefault() {
@@ -2404,6 +2558,8 @@
             localStorage.removeItem('docx_signer_rank');
             localStorage.removeItem('docx_signer_name');
             localStorage.removeItem('docx_tech_notes');
+            localStorage.removeItem('docx_author');
+            localStorage.removeItem('docx_meta_title');
             loadDocxSettings();
             showToast("Налаштування шаблону Word відновлено до зразка!", "info");
         }
@@ -2691,6 +2847,11 @@
 
                 // Створення документа: Секція 1 (основна частина) + Секція 2 (технічні відмітки внизу наступного аркуша)
                 const docFile = new Document({
+                    creator: (cfg.author !== undefined && cfg.author !== null) ? cfg.author : "",
+                    lastModifiedBy: (cfg.author !== undefined && cfg.author !== null) ? cfg.author : "",
+                    title: (cfg.metaTitle !== undefined && cfg.metaTitle !== null) ? cfg.metaTitle : "",
+                    description: "",
+                    revision: 1,
                     sections: [
                         {
                             properties: {
@@ -3575,45 +3736,23 @@
             }
         }
 
-        function standardizeTasks() {
-            let rules = getReplaceRules();
-            if (rules.length === 0) {
-                alert("Немає жодного правила автозаміни в налаштуваннях!");
-                return;
+        function standardizeTasks(silent = false) {
+            const compiledRules = getCompiledTaskRules();
+            if (compiledRules.length === 0) {
+                if (!silent) alert("Немає жодного правила автозаміни в налаштуваннях!");
+                return 0;
             }
-
-            function escapeRegExp(string) {
-                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            }
-
-            // Сортуємо правила за довжиною (щоб "бамбук" перевірявся раніше за "бук")
-            rules.sort((a, b) => b.trigger.length - a.trigger.length);
-
-            // Компілюємо регулярні вирази 1 раз перед циклом для високої швидкодії
-            const compiledRules = rules
-                .filter(r => r.trigger && r.trigger.trim() !== '')
-                .map(r => {
-                    const triggerEscaped = escapeRegExp(r.trigger);
-                    return {
-                        regex: new RegExp(`(^|[^а-яіїєґa-z0-9_])(${triggerEscaped})([^а-яіїєґa-z0-9_]|$)`, 'i'),
-                        replaceWith: r.replaceWith
-                    };
-                });
 
             let replacedCount = 0;
             let allData = [...vopData, ...btgrData, ...broData, ...zabData];
 
             allData.forEach(p => {
                 if (!p.task) return;
-                let lowerTask = p.task.toLowerCase();
-
-                for (let i = 0; i < compiledRules.length; i++) {
-                    const r = compiledRules[i];
-                    if (r.regex.test(lowerTask)) {
-                        p.task = r.replaceWith;
-                        replacedCount++;
-                        break;
-                    }
+                const oldTask = p.task;
+                const newTask = applyTaskAutoReplace(oldTask, compiledRules);
+                if (newTask !== oldTask) {
+                    p.task = newTask;
+                    replacedCount++;
                 }
             });
 
@@ -3621,10 +3760,17 @@
                 reassignCategories();
                 checkInvalidTasks();
                 recalculateEmptyFields();
-                alert(`✨ Успіх! Було автоматично виправлено ${replacedCount} позицій згідно ваших правил.`);
+                renderTables();
+                filterTables();
+                if (!silent) {
+                    alert(`✨ Успіх! Було автоматично виправлено ${replacedCount} позицій згідно ваших правил.`);
+                }
             } else {
-                alert("Збігів для автозаміни не знайдено.");
+                if (!silent) {
+                    alert("Збігів для автозаміни не знайдено.");
+                }
             }
+            return replacedCount;
         }
 
         function normalizeMilitaryText(text, options = { toLower: true, replaceHomoglyphs: true }) {
@@ -3720,6 +3866,15 @@
             let norm = cleanBaseUnitName(s);
             if (norm === 'нрк' || norm.includes('нрк')) return true;
             if (norm === 'придані' || norm.includes('придан') || norm.includes('прид')) return true;
+            if (
+                !norm.includes('воп') && (
+                    norm === 'во' ||
+                    norm === 'в о' ||
+                    /(^|\s)(во|взвод\s*охорони|взв\s*охорони|взв\s*ох|вохорони)(\s|$)/i.test(norm) ||
+                    norm.includes('взвод охорони') ||
+                    norm.includes('взв охорони')
+                )
+            ) return true;
             return (
                 /\b(рз\s*[бв]нг|р[бв]нг|[бв]нг|[бв]гр|броне\s*група)\b/i.test(norm) ||
                 norm.includes('бнг') || norm.includes('внг') || norm.includes('бронегрупа') || norm.includes('бгр') ||
@@ -3737,6 +3892,16 @@
                     normName = 'нрк';
                 } else if (normName === 'придані' || normName.includes('придан') || normName.includes('прид')) {
                     normName = 'придані';
+                } else if (
+                    !normName.includes('воп') && (
+                        normName === 'во' ||
+                        normName === 'в о' ||
+                        /(^|\s)(во|взвод\s*охорони|взв\s*охорони|взв\s*ох|вохорони)(\s|$)/i.test(normName) ||
+                        normName.includes('взвод охорони') ||
+                        normName.includes('взв охорони')
+                    )
+                ) {
+                    normName = 'во';
                 } else {
                     normName = 'РЗ БнГ (БРО)';
                 }
@@ -3755,6 +3920,16 @@
                                 trigNorm = 'нрк';
                             } else if (trigNorm === 'придані' || trigNorm.includes('придан') || trigNorm.includes('прид')) {
                                 trigNorm = 'придані';
+                            } else if (
+                                !trigNorm.includes('воп') && (
+                                    trigNorm === 'во' ||
+                                    trigNorm === 'в о' ||
+                                    /(^|\s)(во|взвод\s*охорони|взв\s*охорони|взв\s*ох|вохорони)(\s|$)/i.test(trigNorm) ||
+                                    trigNorm.includes('взвод охорони') ||
+                                    trigNorm.includes('взв охорони')
+                                )
+                            ) {
+                                trigNorm = 'во';
                             } else {
                                 trigNorm = 'РЗ БнГ (БРО)';
                             }
@@ -3768,7 +3943,7 @@
                 console.error("Error applying unit replace rules:", err);
             }
 
-            if (normName === 'РЗ БнГ (БРО)' || normName === 'нрк' || normName === 'придані') {
+            if (normName === 'РЗ БнГ (БРО)' || normName === 'нрк' || normName === 'придані' || normName === 'во') {
                 return normName;
             }
 
@@ -4006,7 +4181,7 @@
                 // Перевіряємо контекст роти (напр. "РОП 5 мр 2 мб", "РОП 4 мр", "РОП 6 мр")
                 let contextCompany = '';
                 const fullContext = (contextRopName + ' ' + nameHint).toLowerCase();
-                const compMatch = fullContext.match(/(\d+)\s*мр/i);
+                const compMatch = fullContext.match(/(\d+)\s*(?:мр|мех(?:\.?\s*рота|\.?\s*р|ан[іі]зована\s*рота)?|рота)/i) || fullContext.match(/(\d+)\s*мр/i);
                 if (compMatch) {
                     contextCompany = `${compMatch[1]}мр`;
                 }
@@ -4016,7 +4191,7 @@
                     if (cnt > 0) {
                         let cUnit = cleanUnitName(unit);
                         const shouldMerge = getMergeRopUnitsState();
-                        // Якщо ми знаходимося в межах РОПу конкретної роти (4мр, 5мр, 6мр) та увімкнено тумблер - бронегрупа та НРК зливаються з цією ротою!
+                        // Якщо ми знаходимося в межах РОПу конкретної роти (4мр, 5мр, 6мр) та увімкнено тумблер - бронегрупа, НРК та ВО зливаються з цією ротою!
                         if (shouldMerge && isMergeableUnit(cUnit) && contextCompany) {
                             cUnit = contextCompany;
                         }
@@ -4453,6 +4628,22 @@
         }
 
         async function processFiles(files) {
+            // Перевірка на JSON пакет від Диспетчера
+            const jsonFile = Array.from(files).find(f => f.name.toLowerCase().endsWith('.json'));
+            if (jsonFile) {
+                try {
+                    const text = await jsonFile.text();
+                    const bundle = JSON.parse(text);
+                    if (bundle && bundle.active_files) {
+                        await loadDispatcherBundle(bundle);
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Помилка читання JSON пакету:", err);
+                    showToast("Некоректний JSON пакет: " + err.message, "error");
+                }
+            }
+
             const loadingStatus = document.getElementById('loadingStatus');
             const loadingStatusBar = document.getElementById('loadingStatusBar');
             const loadingStatusCount = document.getElementById('loadingStatusCount');
@@ -5302,6 +5493,7 @@
             const doc = parser.parseFromString(htmlString, 'text/html');
             const tables = doc.querySelectorAll('table');
             const kw = getKeywords();
+            const compiledRules = getCompiledTaskRules();
 
             tables.forEach(table => {
                 const rows = table.querySelectorAll('tr');
@@ -5355,7 +5547,8 @@
                     const rank = cells[colMap.rank] || '';
                     const name = cells[colMap.name] || '';
                     const pos = cells[colMap.pos] || '';
-                    const task = cells[colMap.task] || '';
+                    const rawTask = cells[colMap.task] || '';
+                    const task = applyTaskAutoReplace(rawTask, compiledRules);
 
                     if (!name || name.trim() === '') {
                         if (task && task.trim() !== '') {
@@ -6126,7 +6319,8 @@
             let rank = document.getElementById('edit-record-rank').value.trim();
             let name = document.getElementById('edit-record-name').value.trim();
             let pos = document.getElementById('edit-record-pos').value.trim();
-            let task = document.getElementById('edit-record-task').value.trim();
+            let rawTask = document.getElementById('edit-record-task').value.trim();
+            let task = applyTaskAutoReplace(rawTask);
 
             if (name === '') {
                 name = "[ВІДСУТНІЙ В/С]";
@@ -6603,10 +6797,498 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНЕ ВІКНО: ШТАБНИЙ ДИСПЕТЧЕР (ШАХОВКА ТА КОНТРОЛЬ ЗДАЧІ) -->
+    <div id="dispatcherModal"
+        class="fixed inset-0 bg-black/75 z-[200] hidden flex items-center justify-center p-3 sm:p-6 backdrop-blur-md transition-opacity">
+        <div class="bg-gray-900 border border-indigo-500/40 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden text-gray-100">
+            <!-- Шапка модалки -->
+            <div class="px-5 py-4 border-b border-gray-800 flex flex-wrap justify-between items-center bg-gray-950/80 shrink-0 gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-bold">
+                        ⚡
+                    </div>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+                            <span>ШТАБНИЙ ДИСПЕТЧЕР</span>
+                            <span class="text-indigo-400 font-mono">//</span>
+                            <span class="text-indigo-300 font-normal">Контроль здачі та шаховка підрозділів</span>
+                        </h3>
+                        <p class="text-xs text-gray-400">Автоматичний моніторинг щоденних файлів звітів ПБД</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Вибір дати -->
+                    <div class="flex items-center gap-1.5 bg-gray-800/80 px-2.5 py-1 rounded-lg border border-gray-700">
+                        <span class="text-[11px] text-gray-400 font-mono uppercase">Дата:</span>
+                        <select id="dispModalDateSelect" onchange="changeDispatcherDate(this.value)"
+                            class="bg-transparent text-indigo-300 text-xs font-mono font-bold focus:outline-none cursor-pointer">
+                            <option value="">Завантаження...</option>
+                        </select>
+                    </div>
+
+                    <button onclick="closeDispatcherModal()" class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Тіло модалки -->
+            <div class="p-5 space-y-5 overflow-y-auto custom-scrollbar flex-1">
+                <!-- Статистичні плашки -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-gray-800/50 border border-gray-700/60 rounded-xl p-3 text-center">
+                        <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider block">Здано підрозділів</span>
+                        <span id="dispModalStatsUnits" class="text-lg font-mono font-extrabold text-emerald-400">-- / --</span>
+                    </div>
+                    <div class="bg-gray-800/50 border border-gray-700/60 rounded-xl p-3 text-center">
+                        <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider block">Військовослужбовців</span>
+                        <span id="dispModalStatsSoldiers" class="text-lg font-mono font-extrabold text-cyan-400">--</span>
+                    </div>
+                    <div class="bg-gray-800/50 border border-gray-700/60 rounded-xl p-3 text-center">
+                        <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider block">Міжпідроздільні дублі</span>
+                        <span id="dispModalStatsDups" class="text-lg font-mono font-extrabold text-amber-400">0</span>
+                    </div>
+                    <div class="bg-gray-800/50 border border-gray-700/60 rounded-xl p-3 text-center">
+                        <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider block">Швидкість парсингу</span>
+                        <span id="dispModalStatsTime" class="text-lg font-mono font-extrabold text-indigo-300">--</span>
+                    </div>
+                </div>
+
+                <!-- Секція 1: Шаховка підрозділів -->
+                <div>
+                    <h4 class="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                        <span>📋 Шаховка здачі звітів (Штатна структура)</span>
+                        <span id="dispModalMissingSummary" class="text-xs font-normal text-amber-300"></span>
+                    </h4>
+                    <div id="dispModalUnitsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        <!-- Динамічні картки підрозділів -->
+                    </div>
+                </div>
+
+                <!-- Секція 2: Міжпідроздільні перетини / дублікати -->
+                <div id="dispModalDupsWrapper" class="hidden">
+                    <h4 class="text-xs font-mono font-bold text-amber-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <span>⚠️ Виявлені міжпідроздільні перетини (одна особа у кількох ротах)</span>
+                    </h4>
+                    <div id="dispModalDupsList" class="space-y-2">
+                        <!-- Динамічний перелік дублікатів -->
+                    </div>
+                </div>
+
+                <!-- Секція 3: Кореговані файли -->
+                <div id="dispModalSupersededWrapper" class="hidden">
+                    <h4 class="text-xs font-mono font-bold text-indigo-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <span>🔄 Кореговані та оновлені звіти (автоматична заміна старих)</span>
+                    </h4>
+                    <div id="dispModalSupersededList" class="space-y-1.5">
+                        <!-- Динамічний перелік замінених файлів -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Підвал модалки -->
+            <div class="px-5 py-3.5 border-t border-gray-800 bg-gray-950/80 flex flex-wrap justify-between items-center shrink-0 gap-3">
+                <div class="text-[11px] text-gray-400 font-mono">
+                    Папка: <span id="dispModalFolderText" class="text-gray-300 break-all select-all">--</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <button type="button" onclick="closeDispatcherModal()"
+                        class="px-3.5 py-1.5 text-xs font-mono rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors">
+                        Закрити
+                    </button>
+                    <button type="button" onclick="loadDispatcherReports()"
+                        class="px-4 py-1.5 text-xs font-mono font-bold rounded-lg bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] transition-all flex items-center gap-1.5 cursor-pointer">
+                        <span>⚡ ПРИЙНЯТИ У ДОДАТОК 6</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST CONTAINER -->
     <div id="toast-container" class="fixed top-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
+        // ==========================================
+        // ШТАБНИЙ ДИСПЕТЧЕР // AUTO-INGEST AGENT
+        // ==========================================
+        const DISPATCHER_API_BASE = 'http://127.0.0.1:8765';
+        let _dispatcherBundle = null;
+        let _dispatcherStatusData = null;
+        let _dispatcherHeartbeatTimer = null;
+
+        async function checkDispatcherStatus(showToasts = false) {
+            const dot = document.getElementById('dispPulseDot');
+            const dateBadge = document.getElementById('dispDateBadge');
+            const statusBadge = document.getElementById('dispStatusBadge');
+            const summaryText = document.getElementById('dispSummaryText');
+            const btnLoad = document.getElementById('btnDispLoad');
+
+            try {
+                const res = await fetch(`${DISPATCHER_API_BASE}/api/status`, { signal: AbortSignal.timeout(1500) });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                _dispatcherStatusData = data;
+
+                if (dot) {
+                    dot.className = "w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse";
+                }
+                if (dateBadge) {
+                    dateBadge.innerText = data.target_date || '--.--';
+                }
+                if (statusBadge) {
+                    statusBadge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1";
+                    statusBadge.innerHTML = `<span>🟢 ГОТОВО</span>`;
+                }
+                if (summaryText) {
+                    const dupsBadge = data.duplicates_count > 0 
+                        ? `<span class="text-amber-300 font-bold ml-1.5">⚠️ ${data.duplicates_count} дублів</span>` 
+                        : '';
+                    summaryText.innerHTML = `
+                        <span>Знайдено: <b class="text-white font-mono">${data.total_files}</b> звітів (<b class="text-white font-mono">${data.total_soldiers}</b> о/с)</span>
+                        <span class="text-gray-500">•</span>
+                        <span>Час: <span class="text-indigo-300 font-mono">${data.parse_duration_sec}с</span></span>
+                        ${dupsBadge}
+                    `;
+                }
+                if (btnLoad) {
+                    btnLoad.classList.remove('opacity-50', 'pointer-events-none');
+                    btnLoad.innerHTML = `
+                        <svg class="w-4 h-4 mr-1.5 text-yellow-300 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                        <span class="font-mono text-xs font-extrabold tracking-wide uppercase">⚡ ПРИЙНЯТИ ДЕНЬ (${data.total_files})</span>
+                    `;
+                }
+
+                const badge = document.getElementById('dispMissingBadge');
+                if (badge) {
+                    const missing = (data.missing_units || []).length;
+                    if (missing === 0) {
+                        badge.className = "ml-1.5 px-1.5 py-0.2 text-[10px] font-bold rounded bg-emerald-900 text-emerald-200 border border-emerald-700/50";
+                        badge.innerText = "20/20";
+                    } else {
+                        badge.className = "ml-1.5 px-1.5 py-0.2 text-[10px] font-bold rounded bg-amber-900 text-amber-200 border border-amber-700/50";
+                        badge.innerText = `${20 - missing}/20`;
+                    }
+                }
+
+                if (showToasts) showToast(`Диспетчер активний: ${data.target_date} (${data.total_files} файлів, ${data.total_soldiers} о/с)`, "info");
+            } catch (err) {
+                if (dot) {
+                    dot.className = "w-3 h-3 rounded-full bg-gray-500 shadow-none";
+                }
+                if (statusBadge) {
+                    statusBadge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700";
+                    statusBadge.innerHTML = `<span>⚪ ОФЛАЙН</span>`;
+                }
+                if (summaryText) {
+                    summaryText.innerHTML = `<span class="text-gray-400">Запустіть <code class="text-indigo-300 font-mono font-bold bg-gray-800 px-1.5 py-0.5 rounded">Запустити_Диспетчер.bat</code> для авто-прийому звітів з папки</span>`;
+                }
+                if (btnLoad) {
+                    btnLoad.classList.add('opacity-50');
+                }
+                if (showToasts) showToast("Штабний диспетчер офлайн. Запустіть Запустити_Диспетчер.bat", "warning");
+            }
+        }
+
+        async function loadDispatcherReports() {
+            const btn = document.getElementById('btnDispLoad');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="animate-spin mr-1.5">⏳</span><span>Завантаження...</span>`;
+            }
+
+            try {
+                const res = await fetch(`${DISPATCHER_API_BASE}/api/bundle`);
+                if (!res.ok) throw new Error('Помилка HTTP ' + res.status);
+                const bundle = await res.json();
+                await loadDispatcherBundle(bundle);
+            } catch (err) {
+                console.error("Помилка завантаження від диспетчера:", err);
+                showToast("Помилка підключення до диспетчера: " + err.message, "error");
+            } finally {
+                if (btn) btn.disabled = false;
+                checkDispatcherStatus();
+            }
+        }
+
+        async function loadDispatcherBundle(bundle) {
+            if (!bundle || !bundle.active_files || bundle.active_files.length === 0) {
+                showToast("Пакет порожній або файли не знайдено", "warning");
+                return;
+            }
+
+            _dispatcherBundle = bundle;
+            const kw = getKeywords();
+            const compiledRules = getCompiledTaskRules();
+            let totalImported = 0;
+            let autoStandardizedCount = 0;
+            const fileNamesList = document.getElementById('fileNames');
+
+            bundle.active_files.forEach(fileInfo => {
+                const fileName = fileInfo.fileName;
+                const records = fileInfo.records || [];
+
+                records.forEach(r => {
+                    const uniqueId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2);
+                    const standardizedTask = applyTaskAutoReplace(r.task || '', compiledRules);
+                    if (standardizedTask !== (r.task || '')) autoStandardizedCount++;
+                    const taskLower = (standardizedTask || '').toLowerCase();
+                    const isVop = kw.vop.some(k => taskLower.includes(k));
+                    const isBtgr = kw.btgr.some(k => taskLower.includes(k));
+                    const isZab = kw.zab.some(k => taskLower.includes(k));
+
+                    let type = 'bro';
+                    if (isVop) type = 'vop';
+                    else if (isBtgr) type = 'btgr';
+                    else if (isZab) type = 'zab';
+
+                    const entry = {
+                        id: uniqueId,
+                        rank: r.rank || '',
+                        name: r.name,
+                        normName: normalizeName(r.name),
+                        pos: r.pos || '',
+                        task: standardizedTask,
+                        fileName: fileName,
+                        type: type
+                    };
+
+                    if (type === 'vop') vopData.push(entry);
+                    else if (type === 'btgr') btgrData.push(entry);
+                    else if (type === 'zab') zabData.push(entry);
+                    else broData.push(entry);
+
+                    totalImported++;
+                });
+
+                processedDocsCount++;
+
+                if (fileNamesList) {
+                    const li = document.createElement('li');
+                    li.className = "group flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700/50 p-1.5 rounded transition-colors mb-0.5 border border-transparent hover:border-gray-200 dark:hover:border-gray-600";
+                    li.innerHTML = `
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span class="font-medium text-gray-700 dark:text-gray-300 truncate text-[11px]" title="${fileName}">${fileName}</span>
+                        </div>
+                        <button class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 p-1 rounded transition-all focus:outline-none flex-shrink-0" title="Видалити цей файл">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    `;
+                    const delBtn = li.querySelector('button');
+                    if (delBtn) delBtn.addEventListener('click', () => removeProcessedFile(fileName, li));
+                    fileNamesList.appendChild(li);
+                }
+            });
+
+            const docsCountEl = document.getElementById('docsCountDisplay');
+            if (docsCountEl) docsCountEl.innerText = processedDocsCount;
+
+            const procListEl = document.getElementById('processedFilesList');
+            if (procListEl) procListEl.classList.remove('hidden');
+
+            const resAreaEl = document.getElementById('resultsArea');
+            if (resAreaEl) resAreaEl.classList.remove('hidden');
+
+            checkDuplicates();
+            recalculateEmptyFields();
+            checkInvalidTasks();
+            if (typeof currentBlacklistRecords !== 'undefined' && currentBlacklistRecords.length > 0) checkBlacklist();
+            if (typeof currentMasterRecords !== 'undefined' && currentMasterRecords.length > 0) checkMissing();
+            checkMissingFiles();
+            renderTables();
+            filterTables();
+
+            closeDispatcherModal();
+            const toastMsg = autoStandardizedCount > 0
+                ? `⚡ Диспетчер: успішно завантажено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}! Автозамінено: ${autoStandardizedCount}.`
+                : `⚡ Диспетчер: успішно завантажено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}!`;
+            showToast(toastMsg, "success");
+        }
+
+        async function openDispatcherModal() {
+            const modal = document.getElementById('dispatcherModal');
+            if (!modal) return;
+
+            modal.classList.remove('hidden');
+
+            try {
+                const datesRes = await fetch(`${DISPATCHER_API_BASE}/api/dates`);
+                if (datesRes.ok) {
+                    const datesData = await datesRes.json();
+                    const sel = document.getElementById('dispModalDateSelect');
+                    if (sel && datesData.available_dates) {
+                        const autoOpt = `<option value="auto" ${datesData.is_auto_mode ? 'selected' : ''}>⚡ АВТО-РЕЖИМ (найновіша/сьогодні)</option>`;
+                        const dateOpts = datesData.available_dates.map(d => 
+                            `<option value="${d.date}" ${(!datesData.is_auto_mode && d.date === datesData.current_date) ? 'selected' : ''}>${d.date} (${d.file_count} файлів)</option>`
+                        ).join('');
+                        sel.innerHTML = autoOpt + dateOpts;
+                    }
+                }
+
+                const bundleRes = await fetch(`${DISPATCHER_API_BASE}/api/bundle`);
+                if (bundleRes.ok) {
+                    const bundle = await bundleRes.json();
+                    renderDispatcherModalContent(bundle);
+                }
+            } catch (e) {
+                console.warn("Не вдалося завантажити деталі диспетчера:", e);
+            }
+        }
+
+        function closeDispatcherModal() {
+            const modal = document.getElementById('dispatcherModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function renderDispatcherModalContent(bundle) {
+            _dispatcherBundle = bundle;
+
+            const uStats = document.getElementById('dispModalStatsUnits');
+            const sStats = document.getElementById('dispModalStatsSoldiers');
+            const dStats = document.getElementById('dispModalStatsDups');
+            const tStats = document.getElementById('dispModalStatsTime');
+            const fText = document.getElementById('dispModalFolderText');
+
+            if (uStats) {
+                const submitted = (bundle.units_status || []).filter(u => u.submitted).length;
+                uStats.innerText = `${submitted} / ${(bundle.units_status || []).length}`;
+            }
+            if (sStats) sStats.innerText = `${bundle.total_soldiers || 0} о/с`;
+            if (dStats) dStats.innerText = (bundle.cross_unit_duplicates || []).length;
+            if (tStats) tStats.innerText = `${bundle.parse_duration_sec || 0} с`;
+            if (fText) fText.innerText = bundle.target_folder || '—';
+
+            // Шаховка підрозділів
+            const grid = document.getElementById('dispModalUnitsGrid');
+            const missSum = document.getElementById('dispModalMissingSummary');
+            if (grid && bundle.units_status) {
+                grid.innerHTML = bundle.units_status.map(u => {
+                    const isOk = u.submitted;
+                    const bgClass = isOk 
+                        ? 'bg-emerald-950/40 border-emerald-500/40 hover:border-emerald-400' 
+                        : 'bg-red-950/30 border-red-500/30 hover:border-red-400';
+                    const badgeClass = isOk
+                        ? 'bg-emerald-900/80 text-emerald-300 border-emerald-600/50'
+                        : 'bg-red-900/80 text-red-300 border-red-600/50';
+                    const icon = isOk ? '✅' : '❌';
+                    const statusText = isOk ? 'ЗДАНО' : 'ОЧІКУЄТЬСЯ';
+                    const fnText = u.fileName ? `<span class="truncate block text-[11px] text-gray-400 font-mono mt-1" title="${u.fileName}">${u.fileName}</span>` : '';
+
+                    return `
+                        <div class="p-2.5 rounded-xl border ${bgClass} transition-all flex flex-col justify-between">
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="font-bold text-xs text-white">${u.name}</span>
+                                <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${badgeClass}">${icon} ${statusText}</span>
+                            </div>
+                            ${fnText}
+                        </div>
+                    `;
+                }).join('');
+
+                const missingList = bundle.units_status.filter(u => !u.submitted);
+                if (missSum) {
+                    missSum.innerText = missingList.length > 0 
+                        ? `(Не здали: ${missingList.map(m => m.name).join(', ')})`
+                        : 'Всі 20 підрозділів подали звіти!';
+                }
+            }
+
+            // Дублікати між підрозділами
+            const dupsWrap = document.getElementById('dispModalDupsWrapper');
+            const dupsList = document.getElementById('dispModalDupsList');
+            const dups = bundle.cross_unit_duplicates || [];
+            if (dupsWrap && dupsList) {
+                if (dups.length > 0) {
+                    dupsWrap.classList.remove('hidden');
+                    dupsList.innerHTML = dups.map(d => {
+                        const count = d.occurrencesCount || (d.files ? d.files.length : 2);
+                        const entries = d.entries || d.details || [];
+                        const detailsStr = entries.map(entry => 
+                            `<div class="flex flex-col bg-gray-900/90 border border-gray-700/60 rounded-lg p-2.5 text-xs">
+                                <div class="flex items-center justify-between gap-1 mb-1">
+                                    <span class="px-1.5 py-0.5 rounded bg-indigo-900/80 text-indigo-300 font-mono font-bold text-[10px] truncate max-w-[240px]" title="${entry.fileName}">${entry.fileName}</span>
+                                    <span class="text-emerald-400 font-medium">${entry.rank || '—'}</span>
+                                </div>
+                                <div class="text-gray-300 text-[11px] line-clamp-2">${entry.pos || 'Без посади'}</div>
+                                ${entry.task ? `<div class="text-gray-400 text-[11px] mt-1 pt-1 border-t border-gray-800">Позиція/завдання: <span class="text-cyan-300 font-mono">${entry.task}</span></div>` : ''}
+                            </div>`
+                        ).join('');
+
+                        return `
+                            <div class="p-3.5 bg-amber-950/40 border border-amber-500/40 rounded-xl space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"></span>
+                                        <span class="font-bold text-sm text-amber-200">${d.name}</span>
+                                    </div>
+                                    <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-amber-900 text-amber-100 border border-amber-600/50">у ${count} файлах</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${detailsStr}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    dupsWrap.classList.add('hidden');
+                }
+            }
+
+            // Кореговані файли
+            const supWrap = document.getElementById('dispModalSupersededWrapper');
+            const supList = document.getElementById('dispModalSupersededList');
+            const sups = bundle.superseded_files || [];
+            if (supWrap && supList) {
+                if (sups.length > 0) {
+                    supWrap.classList.remove('hidden');
+                    supList.innerHTML = sups.map(s => `
+                        <div class="p-2.5 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-xs flex items-center justify-between">
+                            <span class="text-gray-300">Файл <s class="text-red-400 font-mono">${s.fileName}</s> замінено на <b class="text-emerald-300 font-mono">${s.supersededBy}</b></span>
+                            <span class="text-[10px] font-mono text-indigo-300 px-2 py-0.5 rounded bg-indigo-900/60 border border-indigo-700/50">КОРЕГОВАНИЙ</span>
+                        </div>
+                    `).join('');
+                } else {
+                    supWrap.classList.add('hidden');
+                }
+            }
+        }
+
+        async function changeDispatcherDate(newDate) {
+            if (!newDate) return;
+            try {
+                const label = newDate === 'auto' ? 'Авто-режим' : newDate;
+                showToast(`Перемикання: ${label}...`, 'info');
+                const res = await fetch(`${DISPATCHER_API_BASE}/api/set_date`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: newDate })
+                });
+                if (res.ok) {
+                    const bundleRes = await fetch(`${DISPATCHER_API_BASE}/api/bundle`);
+                    if (bundleRes.ok) {
+                        const bundle = await bundleRes.json();
+                        renderDispatcherModalContent(bundle);
+                        checkDispatcherStatus();
+                        showToast(`Успішно активовано дату ${bundle.target_date || newDate}`, 'success');
+                    }
+                }
+            } catch (e) {
+                showToast('Помилка перемикання дати: ' + e.message, 'error');
+            }
+        }
+
+        // Авто-перевірка диспетчера при завантаженні сторінки
+        window.addEventListener('DOMContentLoaded', () => {
+            checkDispatcherStatus(false);
+            if (!_dispatcherHeartbeatTimer) {
+                _dispatcherHeartbeatTimer = setInterval(() => checkDispatcherStatus(false), 15000);
+            }
+        });
+
         // --- TOAST NOTIFICATIONS ---
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');

@@ -755,7 +755,7 @@
                 <span class="badge-tactical">PBD_REPORT</span>
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
-                    ⚡ v1.3.2
+                    ⚡ v1.3.3
                 </button>
             </h1>
         </div>
@@ -2651,6 +2651,73 @@
         }
 
         // --- 3.2.1 Піхота та 3.2.3 ОВгП ---
+        function parseAmmoDetails(usedRaw, detailsRaw) {
+            const used = (usedRaw !== undefined && usedRaw !== null) ? String(usedRaw).trim() : '';
+            const details = (detailsRaw !== undefined && detailsRaw !== null) ? String(detailsRaw).trim() : '';
+
+            if (!details || details.toLowerCase() === 'none') {
+                return used ? `${used} шт.` : '';
+            }
+
+            // Розбиваємо за крапкою з комою або перенесенням рядка
+            const parts = details.split(/[;\n]+/).map(p => p.trim()).filter(Boolean);
+            const results = [];
+
+            parts.forEach(part => {
+                // Нормалізація зірочок на 'х', ком у дробових калібрах на крапки
+                let cleanPart = part
+                    .replace(/\*/g, 'х')
+                    .replace(/[xX]/g, 'х')
+                    .replace(/(\d+),(\d+)/g, '$1.$2')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                // 1. Шаблон "Число спочатку": наприклад "206шт-7.62х51" або "3шт-Ф1" або "165шт - 5.45х39"
+                const m1 = cleanPart.match(/^(\d+)\s*(?:шт\.?|щт\.?|од\.?)?\s*[-–—:]\s*(.+)$/i);
+                // 2. Шаблон "Калібр/зброя спочатку": наприклад "7.62х51-140 шт" або "5.45х39 - 135 шт" або "ВОГ-25 -2 шт" або "граната РГО- 2 шт" або "5.56х45 -540"
+                const m2 = cleanPart.match(/^(.+?)\s*[-–—:]\s*(\d+)\s*(?:шт\.?|щт\.?|од\.?)?$/i);
+
+                if (m1 && !/^\d+\.\d+/.test(cleanPart)) {
+                    const count = m1[1].trim();
+                    let ammo = m1[2].replace(/\s*(?:шт\.?|щт\.?|од\.?)$/i, '').trim();
+                    results.push(`${ammo} - ${count} шт.`);
+                } else if (m2) {
+                    let ammo = m2[1].trim();
+                    const count = m2[2].trim();
+                    results.push(`${ammo} - ${count} шт.`);
+                } else {
+                    // 3. Якщо числа в цьому фрагменті немає, а лише калібр/назва (наприклад "шт 5.45х39" або "5.45х39")
+                    let ammo = cleanPart.replace(/^(?:шт\.?|щт\.?|од\.?)\s*/i, '').trim();
+                    ammo = ammo.replace(/\s*(?:шт\.?|щт\.?|од\.?)$/i, '').trim();
+                    if (used) {
+                        results.push(`${ammo} - ${used} шт.`);
+                    } else if (ammo) {
+                        results.push(ammo);
+                    }
+                }
+            });
+
+            return results.length > 0 ? results.join(', ') : (used ? `${used} шт.` : '');
+        }
+
+        function extractAmmoCount(str) {
+            if (!str) return 0;
+            const m1 = str.match(/^(\d+)\s*(?:шт\.?|щт\.?|од\.?)?\s*[-–—:]/i);
+            if (m1 && !/^\d+\.\d+/.test(str)) return parseInt(m1[1]) || 0;
+            const m2 = str.match(/[-–—:]\s*(\d+)\s*(?:шт\.?|щт\.?|од\.?)?$/i);
+            if (m2) return parseInt(m2[1]) || 0;
+            const m3 = str.match(/\b(\d+)\s*(?:шт\.?|щт\.?|од\.?)\b/i);
+            if (m3) return parseInt(m3[1]) || 0;
+            return 0;
+        }
+
+        function isSmallArmsAmmo(str) {
+            if (!str) return false;
+            const s = str.toLowerCase();
+            return ['5.45', '5,45', '5.56', '5,56', '7.62х39', '7,62х39', '12х70', '12х76', 'вог-25', '40х46', '40*46', 'ф1', 'ф-1', 'рго', 'ргн', 'ргд', 'm67']
+                .some(k => s.includes(k));
+        }
+
         function generateReport3_2_1_and_3() {
             let ovgpHtml = '';
             let genHtml = '';
@@ -2676,6 +2743,7 @@
                 const result = getCol(row, ['результат']);
                 const coords = getCol(row, ['кінцеві координати', 'початкові координати', 'квадрат']);
                 const used = getCol(row, ['використано (шт.)', 'витрата зарядів', 'витрата']);
+                const details = getCol(row, ['деталі', 'деталі витрати', 'деталі бк', 'деталі б/к']);
                 const reporter = superClean(getCol(row, ['позивний репортера', 'репортер']));
 
                 let posRaw = getCol(row, ['позиція']);
@@ -2708,11 +2776,36 @@
 
                 let text = "";
                 if (isOvgp) {
+                    let ovgpUsed = used;
+                    let infTransferredAmmo = '';
+
+                    if (details) {
+                        const parts = details.split(/[;\n]+/).map(p => p.trim()).filter(Boolean);
+                        const ovgpParts = [];
+                        const infParts = [];
+
+                        parts.forEach(p => {
+                            if (isSmallArmsAmmo(p)) {
+                                infParts.push(p);
+                            } else {
+                                ovgpParts.push(p);
+                            }
+                        });
+
+                        if (ovgpParts.length > 0 && infParts.length > 0) {
+                            const countOvgp = ovgpParts.reduce((sum, p) => sum + extractAmmoCount(p), 0);
+                            if (countOvgp > 0) {
+                                ovgpUsed = countOvgp.toString();
+                            }
+                            infTransferredAmmo = infParts.join('; ');
+                        }
+                    }
+
                     // Extract caliber from weapon name using robust extractor
                     let calNum = extractWeaponCaliber(finalWeaponName);
                     let caliber = calNum ? calNum + "мм" : "";
 
-                    const ammoNum = parseInt(used) || 0;
+                    const ammoNum = parseInt(ovgpUsed) || 0;
 
                     // Count ammo for 60mm, 81mm, 82mm and 120mm mortars
                     if (caliber === '60мм') {
@@ -2748,10 +2841,26 @@
                         finalWeaponName,
                         unitName,
                         caliber,
-                        used ? `(${used})` : ''
+                        ovgpUsed ? `(${ovgpUsed})` : ''
                     ].filter(Boolean).join(' ');
 
                     text = cleanReportText(`${ovgpHeader}, ціль: ${target} (${coords}), результат: ${result}${casText}`);
+
+                    // Якщо разом з ОВгП була стрілецька зброя (наприклад 5.45х39 біля Browning M2) - переносимо окремим записом у 3.2.1
+                    if (infTransferredAmmo) {
+                        const infTimeFormatted = formatTimeForUI(timeRaw);
+                        const infHeader = [
+                            infTimeFormatted,
+                            posFormatted,
+                            unitName ? `${unitName},` : '',
+                            'Стрілецька зброя'
+                        ].filter(Boolean).join(' ');
+
+                        const ammoFormatted = parseAmmoDetails('', infTransferredAmmo);
+                        const infText = cleanReportText(`${infHeader}, ціль: ${target} (${coords}), результат: ${result}${casText}, витрата Б/К: ${ammoFormatted}`);
+                        const infRecordDiv = `<div class="final-record"><textarea class="record-text" rows="2">${infText}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('report-4-gen');">✖</button></div>`;
+                        genHtml += infRecordDiv;
+                    }
                 } else {
                     // Формат для піхотної зброї: координати між ціллю та результатом
                     const infHeader = [
@@ -2761,7 +2870,8 @@
                         weaponName
                     ].filter(Boolean).join(' ');
 
-                    text = cleanReportText(`${infHeader}, ціль: ${target} (${coords}), результат: ${result}${casText}, витрата Б/К: ${used}`);
+                    const ammoFormatted = parseAmmoDetails(used, details);
+                    text = cleanReportText(`${infHeader}, ціль: ${target} (${coords}), результат: ${result}${casText}, витрата Б/К: ${ammoFormatted || used || '0'}`);
                 }
 
                 const recordDiv = `<div class="final-record"><textarea class="record-text" rows="2">${text}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${isOvgp ? 'report-4-ovgp' : 'report-4-gen'}');">✖</button></div>`;
@@ -3136,9 +3246,23 @@
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.3.3",
+                date: "09.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🎯 Розширений тактичний парсинг витрати БК (Розділи 3.2.1 Піхота & 3.2.3 ОВгП)",
+                        items: [
+                            "<b>Гнучкий синтаксис записів</b>: Підтримка як формату «Число спочатку» (<code>206шт-7.62х51</code>, <code>3шт-Ф1</code>), так і калібру на початку з суфіксами штук.",
+                            "<b>Автоматична нормалізація калібрів</b>: Автозаміна <code>*</code> та латинських <code>x/X</code> на уніфіковане <code>х</code>, нормалізація дробових калібрів (<code>7,62</code> ➔ <code>7.62</code>), парсинг складних переліків через <code>;</code>."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.3.2",
                 date: "25.08.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "⚔️ Розумний словник зброї ОВгП (Мульти-калібр на одній позиції)",
