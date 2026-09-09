@@ -1341,6 +1341,25 @@
                         setSettings(savedSettings);
                         setFilterCauses(allLoadedCauses);
                         setIsLoading(false);
+
+                        // Перевірка наявності локального бекапу на диску через службу диспетчера
+                        try {
+                            fetch('http://127.0.0.1:8765/api/backup/latest?app=med_tactical')
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data) {
+                                        setDiskServiceOnline(true);
+                                        if (data.exists) {
+                                            setDiskBackupInfo(data);
+                                            // Якщо локальна база браузера порожня, пропонуємо миттєве відновлення
+                                            if ((!savedSoldiers || savedSoldiers.length === 0) && (!cleanedEpisodes || cleanedEpisodes.length === 0)) {
+                                                setShowAutoRestoreModal(true);
+                                            }
+                                        }
+                                    }
+                                })
+                                .catch(() => setDiskServiceOnline(false));
+                        } catch (_) {}
                     } catch (e) {
                         console.error("Помилка завантаження бази", e);
                         setIsLoading(false);
@@ -1542,6 +1561,14 @@
             const [backupPassword, setBackupPassword] = useState("");
             const [importFile, setImportFile] = useState(null);
             const [importPassword, setImportPassword] = useState("");
+            const [diskServiceOnline, setDiskServiceOnline] = useState(false);
+            const [diskBackupInfo, setDiskBackupInfo] = useState(null);
+            const [lastDiskSaveTime, setLastDiskSaveTime] = useState("");
+            const [sessionPassword, setSessionPassword] = useState("");
+            const [showAutoRestoreModal, setShowAutoRestoreModal] = useState(false);
+            const [diskRestorePassword, setDiskRestorePassword] = useState("");
+            const [isSavingToDisk, setIsSavingToDisk] = useState(false);
+            const [isRestoringFromDisk, setIsRestoringFromDisk] = useState(false);
             const [notification, setNotification] = useState(null);
             const [newSettingItem, setNewSettingItem] = useState("");
             const [activeSettingsTab, setActiveSettingsTab] = useState("causes");
@@ -1563,6 +1590,53 @@
             useEffect(() => { if (!isLoading) localforage.setItem('med_episodes_v3', episodes); }, [episodes, isLoading]);
             useEffect(() => { if (!isLoading) localforage.setItem('med_logs_v3', logs); }, [logs, isLoading]);
             useEffect(() => { if (!isLoading) localforage.setItem('med_settings_v3', settings); }, [settings, isLoading]);
+
+            // Періодичний моніторинг служби локального бекапу
+            useEffect(() => {
+                const checkService = () => {
+                    fetch('http://127.0.0.1:8765/api/backup/latest?app=med_tactical')
+                        .then(res => res.json())
+                        .then(data => {
+                            setDiskServiceOnline(true);
+                            if (data && data.exists) setDiskBackupInfo(data);
+                        })
+                        .catch(() => setDiskServiceOnline(false));
+                };
+                checkService();
+                const interval = setInterval(checkService, 30000);
+                return () => clearInterval(interval);
+            }, []);
+
+            // Автоматичне фонове збереження бази на локальний диск (d:\ОЧ\Програми\_backups)
+            useEffect(() => {
+                if (isLoading) return;
+                if (soldiers.length === 0 && episodes.length === 0) return;
+                const pwd = sessionPassword || backupPassword;
+                if (!pwd) return;
+
+                const timer = setTimeout(async () => {
+                    try {
+                        const rawJson = JSON.stringify({ soldiers, episodes, logs, settings });
+                        const encrypted = CryptoJS.AES.encrypt(rawJson, pwd).toString();
+                        const res = await fetch('http://127.0.0.1:8765/api/backup/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                app: 'med_tactical',
+                                content: encrypted
+                            })
+                        });
+                        if (res.ok) {
+                            setDiskServiceOnline(true);
+                            setLastDiskSaveTime(new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+                        }
+                    } catch (_) {
+                        setDiskServiceOnline(false);
+                    }
+                }, 3000);
+
+                return () => clearTimeout(timer);
+            }, [soldiers, episodes, logs, settings, sessionPassword, backupPassword, isLoading]);
 
             useEffect(() => {
                 const handleKeyDown = (e) => {
@@ -3818,6 +3892,8 @@
                             setEpisodes(cleanedImportEpisodes);
                             if (parsed.logs) setLogs(parsed.logs.slice(0, 200));
                             if (parsed.settings) setSettings(parsed.settings);
+                            setSessionPassword(importPassword);
+                            setBackupPassword(importPassword);
                             addLog("Імпорт", "Базу успішно відновлено з файлу");
                             triggerNotification("Дані успішно імпортовано!");
                             setIsBackupOpen(false); setImportFile(null); setImportPassword("");
@@ -3825,6 +3901,101 @@
                     } catch (err) { triggerNotification("Помилка: " + (err.message || "Невірний пароль або файл"), "error"); }
                 };
                 reader.readAsText(importFile);
+            };
+
+            const handleRestoreFromDisk = async (customPwd = "") => {
+                const pwd = customPwd || diskRestorePassword || importPassword || sessionPassword;
+                if (!pwd) return triggerNotification("Введіть пароль для розшифрування!", "error");
+                setIsRestoringFromDisk(true);
+                try {
+                    let encContent = diskBackupInfo?.content;
+                    if (!encContent) {
+                        const res = await fetch('http://127.0.0.1:8765/api/backup/latest?app=med_tactical');
+                        const data = await res.json();
+                        if (!data || !data.exists) throw new Error("Бекап на диску не знайдено");
+                        encContent = data.content;
+                        setDiskBackupInfo(data);
+                    }
+
+                    const decrypted = CryptoJS.AES.decrypt(encContent.trim(), pwd).toString(CryptoJS.enc.Utf8);
+                    if (!decrypted) throw new Error("Невірний пароль розшифрування");
+                    const parsed = JSON.parse(decrypted);
+                    if (parsed.soldiers && parsed.episodes) {
+                        saveHistory();
+                        const cleanedImportEpisodes = (parsed.episodes || []).map(ep => {
+                            if (ep.lossType === "Бойове травмування (300)") {
+                                return { ...ep, lossType: "Поранення (300)" };
+                            }
+                            return ep;
+                        });
+                        setSoldiers(parsed.soldiers);
+                        setEpisodes(cleanedImportEpisodes);
+                        if (parsed.logs) setLogs(parsed.logs.slice(0, 200));
+                        if (parsed.settings) setSettings(parsed.settings);
+
+                        await localforage.setItem('med_soldiers_v3', parsed.soldiers);
+                        await localforage.setItem('med_episodes_v3', cleanedImportEpisodes);
+                        if (parsed.logs) await localforage.setItem('med_logs_v3', parsed.logs.slice(0, 200));
+                        if (parsed.settings) await localforage.setItem('med_settings_v3', parsed.settings);
+
+                        setSessionPassword(pwd);
+                        setBackupPassword(pwd);
+                        setDiskRestorePassword("");
+                        setShowAutoRestoreModal(false);
+                        setIsBackupOpen(false);
+                        addLog("Відновлення", `Базу відновлено з диска (${parsed.soldiers.length} о/с, ${cleanedImportEpisodes.length} епізодів)`);
+                        triggerNotification(`✅ Відновлено: ${parsed.soldiers.length} бійців, ${cleanedImportEpisodes.length} епізодів!`, "success");
+                    } else {
+                        throw new Error("Файл не містить коректних даних бійців чи епізодів");
+                    }
+                } catch (err) {
+                    triggerNotification("Помилка відновлення: " + (err.message || "Невірний пароль"), "error");
+                } finally {
+                    setIsRestoringFromDisk(false);
+                }
+            };
+
+            const handleSaveToDisk = async (customPwd = "") => {
+                const pwd = customPwd || sessionPassword || backupPassword;
+                if (!pwd) {
+                    triggerNotification("Введіть пароль для шифрування перед збереженням!", "error");
+                    setIsBackupOpen(true);
+                    return;
+                }
+                setIsSavingToDisk(true);
+                try {
+                    const rawJson = JSON.stringify({ soldiers, episodes, logs, settings });
+                    const encrypted = CryptoJS.AES.encrypt(rawJson, pwd).toString();
+                    const res = await fetch('http://127.0.0.1:8765/api/backup/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            app: 'med_tactical',
+                            content: encrypted
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        const timeStr = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        setLastDiskSaveTime(timeStr);
+                        setDiskServiceOnline(true);
+                        setSessionPassword(pwd);
+                        setBackupPassword(pwd);
+                        addLog("Автобекап", "Створено резервну копію на локальному диску");
+                        triggerNotification("✅ Базу надійно збережено на локальний диск!", "success");
+                        // Оновити інформацію про бекап
+                        fetch('http://127.0.0.1:8765/api/backup/latest?app=med_tactical')
+                            .then(r => r.json())
+                            .then(d => { if (d && d.exists) setDiskBackupInfo(d); })
+                            .catch(() => {});
+                    } else {
+                        throw new Error(result.error || "Не вдалося зберегти файл");
+                    }
+                } catch (err) {
+                    triggerNotification("Помилка збереження на диск: " + err.message, "error");
+                } finally {
+                    setIsSavingToDisk(false);
+                }
             };
 
             const addSettingItem = () => {
@@ -4312,7 +4483,19 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.5.2
+                                    ⚡ v3.6.0
+                                </button>
+                                <button
+                                    onClick={() => setIsBackupOpen(true)}
+                                    className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:scale-105 active:scale-95 ${
+                                        diskServiceOnline 
+                                            ? 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border-emerald-700/60' 
+                                            : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 border-slate-800'
+                                    }`}
+                                    title={diskServiceOnline ? `Служба бекапу активна на диску (_backups). ${lastDiskSaveTime ? 'Збережено: ' + lastDiskSaveTime : 'Готова'}` : 'Служба бекапу недоступна'}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${diskServiceOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}></span>
+                                    <span>{diskServiceOnline ? (lastDiskSaveTime ? `Диск: ${lastDiskSaveTime}` : 'Диск: OK') : 'Диск: Офлайн'}</span>
                                 </button>
                             </div>
                         </div>
@@ -6898,6 +7081,75 @@
                         </div>
                     )}
 
+                    {/* Модальне вікно авто-відновлення з диска при порожній локальній базі */}
+                    {showAutoRestoreModal && diskBackupInfo?.exists && (
+                        <div className="fixed inset-0 z-[210] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+                            <div className="bg-slate-900 border border-emerald-500/50 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl flex flex-col p-6 space-y-5 animate-in zoom-in-95 duration-150">
+                                <div className="flex items-center gap-3.5">
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                                        <Icon name="shield-check" className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-bold text-white tracking-tight">Відновлення бази з диска</h3>
+                                        <p className="text-xs text-slate-400">Пам'ять браузера порожня, але на ПК знайдено збережену базу.</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 text-xs space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-400">Файл на диску:</span>
+                                        <span className="font-mono text-emerald-400 font-bold">{diskBackupInfo.filename}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-400">Дата створення:</span>
+                                        <span className="font-mono text-amber-300 font-semibold">{diskBackupInfo.formatted_time || '08.09.2026'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-400">Розташування:</span>
+                                        <span className="font-mono text-slate-400 text-[11px]">d:\ОЧ\Програми\_backups</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-slate-200">Пароль для розшифрування бази:</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                                            <Icon name="key-round" className="w-4 h-4" />
+                                        </div>
+                                        <input 
+                                            type="password"
+                                            autoFocus
+                                            value={diskRestorePassword}
+                                            onChange={(e) => setDiskRestorePassword(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') handleRestoreFromDisk(); }}
+                                            placeholder="Введіть ваш пароль бекапу..."
+                                            className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 outline-none transition font-sans"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2.5 pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAutoRestoreModal(false)}
+                                        className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition cursor-pointer"
+                                    >
+                                        Пропустити
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRestoreFromDisk()}
+                                        disabled={isRestoringFromDisk}
+                                        className="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-emerald-950/40 cursor-pointer flex items-center justify-center gap-1.5"
+                                    >
+                                        <Icon name="refresh-cw" className={`w-3.5 h-3.5 ${isRestoringFromDisk ? 'animate-spin' : ''}`} />
+                                        <span>Відновити дані</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {isBackupOpen && (
                         <div onClick={(e) => { if (e.target === e.currentTarget) setIsBackupOpen(false); }} className="fixed inset-0 z-[200] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
                             <div className="bg-slate-900 border border-slate-700/80 w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-150">
@@ -6909,7 +7161,7 @@
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-white text-base tracking-tight">Резервні копії та база</h3>
-                                            <p className="text-[11px] text-slate-400">Шифрований експорт AES-256, відновлення та обслуговування</p>
+                                            <p className="text-[11px] text-slate-400">Шифрований експорт AES-256, локальний диск та автозахист</p>
                                         </div>
                                     </div>
                                     <button 
@@ -6922,6 +7174,86 @@
                                 </div>
 
                                 <div className="p-6 space-y-5 overflow-y-auto max-h-[80vh]">
+                                    {/* 0. Локальний диск (_backups) */}
+                                    <div className="bg-slate-950/80 border border-emerald-500/40 rounded-2xl p-4 space-y-3 transition-colors shadow-inner">
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                                                    <Icon name="hard-drive" className="w-4 h-4" />
+                                                </div>
+                                                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Локальний диск (Автозахист)</span>
+                                            </div>
+                                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold border flex items-center gap-1.5 ${
+                                                diskServiceOnline 
+                                                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800/80' 
+                                                    : 'bg-slate-900 text-slate-400 border-slate-800'
+                                            }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${diskServiceOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}></span>
+                                                {diskServiceOnline ? 'Служба активна' : 'Офлайн'}
+                                            </span>
+                                        </div>
+
+                                        <div className="text-xs text-slate-300 bg-slate-900/80 rounded-xl p-3 border border-slate-800 space-y-1.5">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-slate-400">Папка збереження:</span>
+                                                <span className="font-mono text-emerald-400 font-semibold text-[11px]">_backups/</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-slate-400">Файл на диску:</span>
+                                                <span className="font-mono text-slate-200">{diskBackupInfo?.filename || (diskBackupInfo?.exists ? 'med_tactical_latest.enc' : 'Не знайдено')}</span>
+                                            </div>
+                                            {diskBackupInfo?.formatted_time && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-slate-400">Дата створення:</span>
+                                                    <span className="font-mono text-amber-300">{diskBackupInfo.formatted_time}</span>
+                                                </div>
+                                            )}
+                                            {lastDiskSaveTime && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-slate-400">Останнє авто-збереження:</span>
+                                                    <span className="font-mono text-emerald-400">{lastDiskSaveTime}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {diskServiceOnline && diskBackupInfo?.exists && (
+                                            <div className="space-y-2 pt-1">
+                                                <div className="relative">
+                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                                        <Icon name="key-round" className="w-3.5 h-3.5" />
+                                                    </div>
+                                                    <input 
+                                                        type="password" 
+                                                        value={diskRestorePassword || sessionPassword} 
+                                                        onChange={(e) => setDiskRestorePassword(e.target.value)} 
+                                                        placeholder="Пароль для розшифрування з диска..." 
+                                                        className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 outline-none transition font-sans" 
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => handleRestoreFromDisk()} 
+                                                        disabled={isRestoringFromDisk}
+                                                        className="py-2 px-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                                                    >
+                                                        <Icon name="refresh-cw" className={`w-3.5 h-3.5 ${isRestoringFromDisk ? 'animate-spin' : ''}`} />
+                                                        <span>Відновити з диска</span>
+                                                    </button>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => handleSaveToDisk()} 
+                                                        disabled={isSavingToDisk}
+                                                        className="py-2 px-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 hover:text-white font-semibold rounded-xl text-xs border border-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                                                    >
+                                                        <Icon name="save" className="w-3.5 h-3.5 text-emerald-400" />
+                                                        <span>Зберегти на диск</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     {/* 1. Експорт */}
                                     <div className="bg-slate-950/60 border border-emerald-500/20 hover:border-emerald-500/40 rounded-2xl p-4 space-y-3 transition-colors">
                                         <div className="flex justify-between items-center">
@@ -7170,10 +7502,24 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                                    {/* 29.08.2026 */}
+                                    {/* 09.09.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.5.2 (Стандартизація позивних Title Case, синхронізація причин та цілісність бази)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.6.0 (Штабний Диспетчер, автозапуск та автономний фоновий захист бази)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">09.09.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Автономний бекап на локальний диск (_backups):</strong> Повна інтеграція зі службою диспетчера (порт 8765) — будь-яка зміна бійця чи епізоду автоматично та безшумно шифрується AES-256 і зберігається в захищений каталог на ПК.</li>
+                                            <li><strong className="text-white">Розумне 1-клік відновлення (Auto-Restore Modal):</strong> При порожній базі браузера (після очищення кешу) додаток миттєво знаходить останній бекап на диску та відкриває зручне вікно відновлення.</li>
+                                            <li><strong className="text-white">Індикатор статусу в шапці:</strong> Анімований статус «🟢 Диск: OK» (або час збереження) поруч з бейджем версії з можливістю швидкого переходу до панелі бекапів.</li>
+                                            <li><strong className="text-white">Пряме керування в модалці бекапів:</strong> Новий блок «Локальний диск (Автозахист)» для збереження та відновлення бази в 1 клік без діалогових вікон провідника.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 29.08.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">⚡ v3.5.2 (Стандартизація позивних Title Case, синхронізація причин та цілісність бази)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">29.08.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">

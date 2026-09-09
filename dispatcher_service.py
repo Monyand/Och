@@ -13,14 +13,23 @@ import re
 import zipfile
 import threading
 import datetime
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import xml.etree.ElementTree as ET
 from urllib.parse import urlparse, parse_qs
+
+# Safe stdout/stderr redirection for headless pythonw execution
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, 'w', encoding='utf-8')
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, 'w', encoding='utf-8')
 
 # Базовий шлях до сховища завантажених звітів
 BASE_DOWNLOADS_DIR = r"D:\ОЧ\гусь\Завантажені"
 SERVER_PORT = 8765
+BACKUP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_backups")
+os.makedirs(BACKUP_DIR, exist_ok=True)
 XML_NS = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+
 
 UKR_MONTHS = {
     1: "січень", 2: "лютий", 3: "березень", 4: "квітень",
@@ -565,6 +574,28 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
             bundle = dispatcher.build_bundle(force=True)
             self.send_json({"reloaded": True, "total_files": bundle.get("total_files", 0)})
 
+        elif path == '/api/backup/latest':
+            app_name = parse_qs(parsed.query).get('app', ['med_tactical'])[0]
+            latest_file = os.path.join(BACKUP_DIR, f"{app_name}_latest.enc")
+            if os.path.exists(latest_file):
+                mtime = os.path.getmtime(latest_file)
+                dt_str = datetime.datetime.fromtimestamp(mtime).strftime("%d.%m.%Y %H:%M:%S")
+                try:
+                    with open(latest_file, 'r', encoding='utf-8') as bf:
+                        content = bf.read()
+                    self.send_json({
+                        "exists": True,
+                        "filename": os.path.basename(latest_file),
+                        "mtime": mtime,
+                        "formatted_time": dt_str,
+                        "content": content
+                    })
+                    return
+                except Exception as e:
+                    self.send_json({"exists": False, "error": str(e)})
+                    return
+            self.send_json({"exists": False})
+
         else:
             self.send_response(404)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -573,7 +604,33 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
-        if parsed.path == '/api/set_date':
+        if parsed.path == '/api/backup/save':
+            length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(length).decode('utf-8') if length > 0 else "{}"
+            try:
+                data = json.loads(body)
+                app_name = data.get("app", "med_tactical")
+                content = data.get("content", "")
+                if content:
+                    latest_file = os.path.join(BACKUP_DIR, f"{app_name}_latest.enc")
+                    with open(latest_file, 'w', encoding='utf-8') as bf:
+                        bf.write(content)
+                    day_str = datetime.date.today().strftime("%Y-%m-%d")
+                    daily_file = os.path.join(BACKUP_DIR, f"{app_name}_{day_str}.enc")
+                    with open(daily_file, 'w', encoding='utf-8') as bf:
+                        bf.write(content)
+                    self.send_json({
+                        "success": True,
+                        "saved_to": os.path.basename(latest_file),
+                        "timestamp": datetime.datetime.now().strftime("%H:%M:%S")
+                    })
+                    return
+            except Exception as e:
+                self.send_json({"success": False, "error": str(e)}, code=500)
+                return
+            self.send_json({"success": False, "error": "Empty content"}, code=400)
+
+        elif parsed.path == '/api/set_date':
             length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(length).decode('utf-8') if length > 0 else "{}"
             try:
@@ -607,6 +664,7 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
             self.end_headers()
+
 
     def send_json(self, data, code=200):
         body = json.dumps(data, ensure_ascii=False).encode('utf-8')
@@ -697,7 +755,7 @@ def main():
 
     server_address = ('127.0.0.1', SERVER_PORT)
     try:
-        httpd = HTTPServer(server_address, DispatcherHTTPHandler)
+        httpd = ThreadingHTTPServer(server_address, DispatcherHTTPHandler)
         print(f"\n[🚀] Локальний API активний: http://127.0.0.1:{SERVER_PORT}")
         print(f"     Ендпоінти: /api/status  /api/bundle  /api/dates")
         print("[💡] Тепер відкрийте 'Додаток 6.html' або 'Звіт ПБД.html' у браузері.")
