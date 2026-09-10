@@ -15,18 +15,30 @@ import threading
 import datetime
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import xml.etree.ElementTree as ET
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, unquote
 
 # Safe stdout/stderr redirection for headless pythonw execution
-if sys.stdout is None:
+try:
+    if sys.stdout is None:
+        sys.stdout = open(os.devnull, 'w', encoding='utf-8')
+    else:
+        sys.stdout.write('')
+except Exception:
     sys.stdout = open(os.devnull, 'w', encoding='utf-8')
-if sys.stderr is None:
+
+try:
+    if sys.stderr is None:
+        sys.stderr = open(os.devnull, 'w', encoding='utf-8')
+    else:
+        sys.stderr.write('')
+except Exception:
     sys.stderr = open(os.devnull, 'w', encoding='utf-8')
 
 # Базовий шлях до сховища завантажених звітів
 BASE_DOWNLOADS_DIR = r"D:\ОЧ\гусь\Завантажені"
 SERVER_PORT = 8765
-BACKUP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_backups")
+PROG_DIR = os.path.dirname(os.path.abspath(__file__))
+BACKUP_DIR = os.path.join(PROG_DIR, "_backups")
 os.makedirs(BACKUP_DIR, exist_ok=True)
 XML_NS = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
 
@@ -530,6 +542,387 @@ class IngestDispatcher:
 
 dispatcher = IngestDispatcher()
 
+DASHBOARD_HTML = """<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Штабний Диспетчер Комплексу ПБД</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#060913] text-slate-200 antialiased min-h-screen p-4 sm:p-6 lg:p-8 flex flex-col justify-between selection:bg-emerald-500/30">
+    <div class="max-w-7xl w-full mx-auto space-y-6 flex-1">
+        <!-- Header -->
+        <header class="bg-[#0c1322]/90 backdrop-blur-md p-6 rounded-2xl border border-slate-800 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 shrink-0">
+                    <i data-lucide="radio" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 tracking-tight">
+                            Штабний Диспетчер Комплексу ПБД
+                        </h1>
+                        <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-bold">
+                            ⚡ v1.3.0
+                        </span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                        Локальний фоновий сервіс автоматичного прийому, аналізу щоденних звітів та безпечного шифрованого бекапу
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-semibold shadow-inner">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span>127.0.0.1:8765 • АКТИВНИЙ</span>
+                </div>
+                <button onclick="reloadDispatcher()" id="btnReload" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-2 transition-all">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span>Оновити</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Quick Launch Apps Grid -->
+        <div>
+            <h2 class="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 flex items-center gap-2">
+                <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+                <span>Швидкий запуск додатків комплексу</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1: HUB -->
+                <a href="/hub" class="group p-5 rounded-2xl bg-[#0c1322] border border-slate-800 hover:border-emerald-500/50 hover:bg-[#111b2e] transition-all flex flex-col justify-between gap-4 shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="home" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-[11px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">/hub &rarr;</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-white text-base">ХАБ Програм</div>
+                        <div class="text-xs text-slate-400 mt-1">Головний каталог усіх 10 модулів та інструментів комплексу</div>
+                    </div>
+                </a>
+
+                <!-- Card 2: Dodatok 6 -->
+                <a href="/d6" class="group p-5 rounded-2xl bg-[#0c1322] border border-slate-800 hover:border-teal-500/50 hover:bg-[#111b2e] transition-all flex flex-col justify-between gap-4 shadow-lg hover:shadow-teal-500/10 hover:-translate-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-[11px] font-mono text-slate-500 group-hover:text-teal-400 transition-colors">/d6 &rarr;</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-white text-base">Додаток 6</div>
+                        <div class="text-xs text-slate-400 mt-1">Зведення чисельності, авто-інжект звітів та контроль штату</div>
+                    </div>
+                </a>
+
+                <!-- Card 3: Losses -->
+                <a href="/vtraty" class="group p-5 rounded-2xl bg-[#0c1322] border border-slate-800 hover:border-rose-500/50 hover:bg-[#111b2e] transition-all flex flex-col justify-between gap-4 shadow-lg hover:shadow-rose-500/10 hover:-translate-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="shield-plus" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-[11px] font-mono text-slate-500 group-hover:text-rose-400 transition-colors">/vtraty &rarr;</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-white text-base">Облік Втрат</div>
+                        <div class="text-xs text-slate-400 mt-1">Медичний облік поранених, загиблих та авто-бекап на диск</div>
+                    </div>
+                </a>
+
+                <!-- Card 4: Chrome Cleaner -->
+                <a href="http://localhost:8766" target="_blank" class="group p-5 rounded-2xl bg-[#0c1322] border border-slate-800 hover:border-amber-500/50 hover:bg-[#111b2e] transition-all flex flex-col justify-between gap-4 shadow-lg hover:shadow-amber-500/10 hover:-translate-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-[11px] font-mono text-slate-500 group-hover:text-amber-400 transition-colors">:8766 &nearr;</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-200 group-hover:text-white text-base">Очищувач Браузерів</div>
+                        <div class="text-xs text-slate-400 mt-1">Таргетне очищення Chrome & Opera GX з миттєвим відновленням сесії</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Status & Monitoring Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Col 1 & 2: Reports Monitor -->
+            <div class="lg:col-span-2 bg-[#0c1322] border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
+                            <i data-lucide="folder-search" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-200">Моніторинг Звітів ПБД</h3>
+                            <div class="text-xs text-slate-400 font-mono">D:\\ОЧ\\гусь\\Завантажені</div>
+                        </div>
+                    </div>
+
+                    <!-- Date Picker Dropdown -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-400">Дата:</span>
+                        <select id="dateSelect" onchange="changeDate(this.value)" class="bg-[#060913] border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-1.5 font-mono focus:outline-none focus:border-teal-500 cursor-pointer">
+                            <option value="auto">Автовибір (найсвіжіша)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Metrics Strip -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
+                    <div class="p-3.5 rounded-xl bg-[#060913] border border-slate-800/80">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Цільова дата</div>
+                        <div id="statTargetDate" class="text-lg font-bold text-teal-400 mt-0.5">--</div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-[#060913] border border-slate-800/80">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Файлів звітів</div>
+                        <div id="statTotalFiles" class="text-lg font-bold text-slate-200 mt-0.5">0</div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-[#060913] border border-slate-800/80">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Особового складу</div>
+                        <div id="statTotalSoldiers" class="text-lg font-bold text-emerald-400 mt-0.5">0</div>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-[#060913] border border-slate-800/80">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Час обробки</div>
+                        <div id="statParseDuration" class="text-lg font-bold text-cyan-400 mt-0.5">0с</div>
+                    </div>
+                </div>
+
+                <!-- Units Submission Grid -->
+                <div>
+                    <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                        <span class="font-semibold uppercase tracking-wider">Контроль здачі звітів підрозділами:</span>
+                        <span id="unitsProgress" class="font-mono text-emerald-400">0 / 0</span>
+                    </div>
+                    <div id="unitsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                        <div class="p-3 text-center text-xs text-slate-500">Завантаження статусу підрозділів...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Col 3: Disk Backup Status -->
+            <div class="bg-[#0c1322] border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between gap-5">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3 border-b border-slate-800/80 pb-4">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                            <i data-lucide="hard-drive" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-200">Авто-Бекап на Диск</h3>
+                            <div class="text-xs text-slate-400 font-mono">_backups/</div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-[#060913] border border-slate-800 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-400">База:</span>
+                            <span class="text-xs font-semibold text-slate-200">Облік втрат (med_tactical)</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-400">Шифрування:</span>
+                            <span class="text-xs font-mono font-bold text-emerald-400">AES-256 (GCM/PBKDF2)</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-400">Останній знімок:</span>
+                            <span id="backupTime" class="text-xs font-mono text-teal-300">Перевірка...</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-400">Файл:</span>
+                            <span id="backupFile" class="text-[11px] font-mono text-slate-400 truncate max-w-[160px]">--</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 text-xs text-slate-400 space-y-1.5">
+                        <div class="flex items-center gap-2 font-semibold text-slate-300">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+                            <span>100% Локальна Автономність</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed">
+                            Кожна зміна бійця чи епізоду в «Обліку втрат» автоматично створює захищений бекап на фізичному диску ПК.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <a href="/vtraty" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                        <span>Перейти в «Облік втрат»</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl w-full mx-auto mt-8 pt-4 border-t border-slate-800/80 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 font-mono">
+        <div>Штабний комплекс ПБД • Фонова служба авто-прийому та бекапів</div>
+        <div class="flex items-center gap-4">
+            <a href="/hub" class="hover:text-emerald-400 transition-colors">ХАБ</a>
+            <a href="/d6" class="hover:text-teal-400 transition-colors">Додаток 6</a>
+            <a href="/vtraty" class="hover:text-rose-400 transition-colors">Облік втрат</a>
+            <a href="http://localhost:8766" target="_blank" class="hover:text-amber-400 transition-colors">Очищувач (8766)</a>
+        </div>
+    </footer>
+
+    <script>
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status');
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                document.getElementById('statTargetDate').textContent = data.target_date || '--';
+                document.getElementById('statTotalFiles').textContent = data.total_files || 0;
+                document.getElementById('statTotalSoldiers').textContent = data.total_soldiers || 0;
+                document.getElementById('statParseDuration').textContent = `${data.parse_duration_sec || 0}с`;
+
+                fetchBundle();
+            } catch (e) {
+                console.error('Error fetching status:', e);
+            }
+        }
+
+        async function fetchBundle() {
+            try {
+                const res = await fetch('/api/bundle');
+                if (!res.ok) return;
+                const bundle = await res.json();
+                const units = bundle.units_status || [];
+                const submittedCount = units.filter(u => u.submitted).length;
+                
+                document.getElementById('unitsProgress').textContent = `${submittedCount} / ${units.length} здано`;
+
+                const grid = document.getElementById('unitsGrid');
+                if (units.length === 0) {
+                    grid.innerHTML = '<div class="p-3 text-center text-xs text-slate-500">Немає зареєстрованих підрозділів</div>';
+                    return;
+                }
+
+                grid.innerHTML = units.map(u => `
+                    <div class="p-2.5 rounded-xl bg-[#060913] border ${u.submitted ? 'border-emerald-500/20 bg-emerald-950/10' : 'border-slate-800'} flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-2 h-2 rounded-full ${u.submitted ? 'bg-emerald-400' : 'bg-slate-600'}"></span>
+                            <span class="font-medium text-slate-300 truncate">${u.name}</span>
+                        </div>
+                        <span class="font-mono text-[11px] px-2 py-0.5 rounded-lg ${u.submitted ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'}">
+                            ${u.submitted ? 'Здано' : 'Очікується'}
+                        </span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error fetching bundle:', e);
+            }
+        }
+
+        async function fetchDates() {
+            try {
+                const res = await fetch('/api/dates');
+                if (!res.ok) return;
+                const data = await res.json();
+                const select = document.getElementById('dateSelect');
+                const current = data.current_date;
+                const isAuto = data.is_auto_mode;
+
+                let options = `<option value="auto" ${isAuto ? 'selected' : ''}>Автовибір (найсвіжіша)</option>`;
+                (data.available_dates || []).forEach(d => {
+                    const sel = (!isAuto && d.date === current) ? 'selected' : '';
+                    options += `<option value="${d.date}" ${sel}>${d.date} (${d.file_count} ф.)</option>`;
+                });
+                select.innerHTML = options;
+            } catch (e) {
+                console.error('Error fetching dates:', e);
+            }
+        }
+
+        async function changeDate(val) {
+            try {
+                const res = await fetch('/api/set_date', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: val })
+                });
+                if (res.ok) {
+                    await fetchStatus();
+                    await fetchDates();
+                }
+            } catch (e) {
+                console.error('Error changing date:', e);
+            }
+        }
+
+        async function fetchBackupStatus() {
+            try {
+                const res = await fetch('/api/backup/latest?app=med_tactical');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.exists) {
+                    document.getElementById('backupTime').textContent = data.formatted_time || 'Збережено';
+                    document.getElementById('backupFile').textContent = data.filename || 'med_tactical_latest.enc';
+                } else {
+                    document.getElementById('backupTime').textContent = 'Бекапів ще немає';
+                    document.getElementById('backupFile').textContent = '--';
+                }
+            } catch (e) {
+                console.error('Error fetching backup status:', e);
+            }
+        }
+
+        async function reloadDispatcher() {
+            const btn = document.getElementById('btnReload');
+            btn.classList.add('animate-spin');
+            try {
+                await fetch('/api/reload');
+                await fetchStatus();
+                await fetchDates();
+                await fetchBackupStatus();
+            } finally {
+                setTimeout(() => btn.classList.remove('animate-spin'), 600);
+            }
+        }
+
+        fetchStatus();
+        fetchDates();
+        fetchBackupStatus();
+        lucide.createIcons();
+
+        setInterval(() => {
+            fetchStatus();
+            fetchBackupStatus();
+        }, 6000);
+    </script>
+</body>
+</html>
+"""
+
 
 class DispatcherHTTPHandler(BaseHTTPRequestHandler):
     def end_headers(self):
@@ -542,11 +935,61 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
+    def send_dashboard_html(self):
+        body = DASHBOARD_HTML.encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def send_file_response(self, filepath, content_type='text/html; charset=utf-8'):
+        if not os.path.exists(filepath):
+            self.send_json({"error": "File not found", "path": filepath}, code=404)
+            return
+        try:
+            with open(filepath, 'rb') as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header('Content-Type', content_type)
+            self.send_header('Content-Length', str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
+        except Exception as e:
+            self.send_json({"error": str(e)}, code=500)
+
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
+        decoded_path = unquote(path)
 
-        if path == '/api/status':
+        if path in ['/', '/index.html', '/status', '/dashboard']:
+            self.send_dashboard_html()
+            return
+
+        elif path == '/hub':
+            self.send_file_response(os.path.join(PROG_DIR, 'index.html'))
+            return
+
+        elif path == '/d6':
+            self.send_file_response(os.path.join(PROG_DIR, 'Додаток 6.html'))
+            return
+
+        elif path == '/pbd':
+            self.send_file_response(os.path.join(PROG_DIR, 'Звіт ПБД.html'))
+            return
+
+        elif path == '/vtraty':
+            self.send_file_response(os.path.join(PROG_DIR, 'Облік втрат.html'))
+            return
+
+        elif path == '/cleaner':
+            self.send_response(302)
+            self.send_header('Location', 'http://localhost:8766')
+            self.end_headers()
+            return
+
+        elif path == '/api/status':
             bundle = dispatcher.build_bundle()
             resp = {
                 "status": bundle["status"],
@@ -596,11 +1039,33 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
                     return
             self.send_json({"exists": False})
 
-        else:
-            self.send_response(404)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Not Found"}).encode('utf-8'))
+        # Safe static file serving for suite files
+        clean_name = decoded_path.lstrip('/')
+        local_target = os.path.normpath(os.path.join(PROG_DIR, clean_name))
+        if local_target.startswith(PROG_DIR) and os.path.isfile(local_target):
+            ext = os.path.splitext(local_target)[1].lower()
+            mime_map = {
+                '.html': 'text/html; charset=utf-8',
+                '.css': 'text/css; charset=utf-8',
+                '.js': 'application/javascript; charset=utf-8',
+                '.json': 'application/json; charset=utf-8',
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.svg': 'image/svg+xml',
+                '.ico': 'image/x-icon',
+                '.woff2': 'font/woff2',
+                '.woff': 'font/woff',
+                '.ttf': 'font/ttf'
+            }
+            content_type = mime_map.get(ext, 'application/octet-stream')
+            self.send_file_response(local_target, content_type)
+            return
+
+        self.send_response(404)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.end_headers()
+        self.wfile.write(json.dumps({"error": "Not Found"}).encode('utf-8'))
 
     def do_POST(self):
         parsed = urlparse(self.path)
