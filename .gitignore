@@ -12,3 +12,10 @@ sys_utils/
 # Local IDE configuration
 .vscode/
 
+# Local Cyber Guard & Security Tools
+Кіберзахист.html
+Запустити_Кіберзахист.bat
+cyber_guard_service.py
+cyber_events.json
+cyber_config.json
+

@@ -15,6 +15,7 @@ import threading
 import datetime
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import xml.etree.ElementTree as ET
+import hashlib
 from urllib.parse import urlparse, parse_qs, unquote
 
 # Safe stdout/stderr redirection for headless pythonw execution
@@ -202,9 +203,30 @@ class IngestDispatcher:
         self.cached_bundle = None
         self.last_parsed_time = 0
         self.last_folder_mtime = 0
+        self.last_folder_signature = None
         self.manual_override = False
         self.lock = threading.Lock()
         self.auto_discover_latest_folder()
+
+    def get_folder_signature(self, folder=None):
+        """Розраховує швидкий цифровий відбиток (MD5) вмісту папки: імена, точний час зміни та розмір кожного файлу."""
+        target = folder or self.target_folder
+        if not target or not os.path.exists(target):
+            return ""
+        try:
+            files_meta = []
+            for fn in sorted(os.listdir(target)):
+                if fn.lower().endswith(('.docx', '.xlsx')) and not fn.startswith('~$'):
+                    fp = os.path.join(target, fn)
+                    try:
+                        st = os.stat(fp)
+                        files_meta.append(f"{fn}:{st.st_mtime_ns}:{st.st_size}")
+                    except Exception:
+                        pass
+            raw = f"{target}|" + "|".join(files_meta)
+            return hashlib.md5(raw.encode('utf-8')).hexdigest()
+        except Exception:
+            return ""
 
     def find_available_dates(self):
         """Знаходить усі доступні дати у папках місяців із гнучким пошуком підпапок та хронологічним сортуванням."""
@@ -418,8 +440,9 @@ class IngestDispatcher:
                     "duplicates": []
                 }
 
+            cur_sig = self.get_folder_signature(self.target_folder)
             folder_mtime = os.path.getmtime(self.target_folder)
-            if not force and self.cached_bundle and (folder_mtime == self.last_folder_mtime):
+            if not force and self.cached_bundle and (cur_sig == self.last_folder_signature):
                 return self.cached_bundle
 
             all_file_names = [f for f in os.listdir(self.target_folder) if f.lower().endswith(('.docx', '.xlsx')) and not f.startswith('~$')]
@@ -525,6 +548,7 @@ class IngestDispatcher:
                 "timestamp": datetime.datetime.now().isoformat(),
                 "target_date": self.target_date,
                 "target_folder": self.target_folder,
+                "folder_signature": cur_sig,
                 "parse_duration_sec": round(elapsed, 3),
                 "total_files": len(parsed_files),
                 "total_soldiers": total_soldiers,
@@ -535,6 +559,7 @@ class IngestDispatcher:
             }
 
             self.cached_bundle = bundle
+            self.last_folder_signature = cur_sig
             self.last_folder_mtime = folder_mtime
             self.last_parsed_time = time.time()
             return bundle
@@ -989,12 +1014,17 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
+        elif path == '/cyber':
+            self.send_file_response(os.path.join(PROG_DIR, 'Кіберзахист.html'))
+            return
+
         elif path == '/api/status':
             bundle = dispatcher.build_bundle()
             resp = {
                 "status": bundle["status"],
                 "target_date": bundle.get("target_date"),
                 "target_folder": bundle.get("target_folder"),
+                "folder_signature": bundle.get("folder_signature", ""),
                 "is_auto_mode": not dispatcher.manual_override,
                 "total_files": bundle.get("total_files", 0),
                 "total_soldiers": bundle.get("total_soldiers", 0),

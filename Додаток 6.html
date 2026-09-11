@@ -136,7 +136,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.9.4</span>
+                    <span>🚀 v1.9.5</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -207,6 +207,18 @@
 
                             <!-- Права частина: кнопки дій -->
                             <div class="flex flex-wrap items-center gap-2">
+                                <label class="flex items-center gap-1.5 cursor-pointer bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-2 rounded-lg border border-slate-700 hover:border-emerald-500/50 transition-all select-none text-xs font-mono font-bold" title="Автоматично синхронізувати Додаток 6 при закиданні, оновленні чи видаленні файлів у папці">
+                                    <input type="checkbox" id="chkDispAutoSync" onchange="toggleDispatcherAutoSync(this.checked)" class="w-3.5 h-3.5 rounded text-emerald-500 bg-slate-900 border-slate-600 focus:ring-emerald-500 focus:ring-offset-slate-900 cursor-pointer">
+                                    <span class="flex items-center gap-1.5 text-emerald-400">
+                                        <span class="relative flex h-2 w-2">
+                                            <span id="dispAutoSyncPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span id="dispAutoSyncDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                        </span>
+                                        <span class="hidden sm:inline">АВТО-СИНХРОНІЗАЦІЯ</span>
+                                        <span class="sm:hidden">АВТО</span>
+                                    </span>
+                                </label>
+
                                 <button type="button" id="btnDispLoad" onclick="loadDispatcherReports()"
                                     class="group relative flex items-center bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold py-2 px-4 rounded-lg border border-emerald-400/50 shadow-[0_0_16px_rgba(16,185,129,0.4)] hover:shadow-[0_0_24px_rgba(6,182,212,0.6)] transition-all duration-200 focus:outline-none hover:-translate-y-0.5 cursor-pointer">
                                     <svg class="w-4 h-4 mr-1.5 text-yellow-300 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
@@ -1636,9 +1648,25 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.9.5",
+                date: "11.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "⚡ Жива авто-синхронізація з Диспетчером (MD5 Signature & Live Sync)",
+                        color: "blue",
+                        items: [
+                            "<b>Цифровий відбиток папки (MD5 Signature)</b>: миттєве виявлення оновлень та нових звітів у папці за хешем метаданих файлів без зайвого навантаження.",
+                            "<b>Фоновий моніторинг (кожні 3.5 сек)</b>: живий пінг-індикатор зв'язку та тумблер авто-синхронізації в шапці віджета.",
+                            "<b>Безшовне оновлення бази</b>: коректна заміна застарілих файлів на оновлені без затирання ручних виправлень користувача."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.9.4",
                 date: "09.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "⚡ Штабний Диспетчер (Auto-Ingest Agent) & Фоновий сервіс",
@@ -6919,6 +6947,30 @@
         let _dispatcherBundle = null;
         let _dispatcherStatusData = null;
         let _dispatcherHeartbeatTimer = null;
+        let _lastLoadedSignature = null;
+        let _isAutoSyncEnabled = localStorage.getItem('dispatcher_auto_sync') !== 'false';
+        let _loadedDispatcherFileNames = new Set();
+        let _isSyncing = false;
+
+        function toggleDispatcherAutoSync(enabled) {
+            _isAutoSyncEnabled = enabled;
+            localStorage.setItem('dispatcher_auto_sync', enabled ? 'true' : 'false');
+            const ping = document.getElementById('dispAutoSyncPing');
+            const dot = document.getElementById('dispAutoSyncDot');
+            if (ping && dot) {
+                if (enabled) {
+                    ping.classList.remove('hidden');
+                    dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+                } else {
+                    ping.classList.add('hidden');
+                    dot.className = "relative inline-flex rounded-full h-2 w-2 bg-slate-500";
+                }
+            }
+            showToast(enabled ? "⚡ Авто-синхронізацію увімкнено (живий моніторинг папки)" : "⏸️ Авто-синхронізацію призупинено", "info");
+            if (enabled) {
+                checkDispatcherStatus(false);
+            }
+        }
 
         async function checkDispatcherStatus(showToasts = false) {
             const dot = document.getElementById('dispPulseDot');
@@ -6928,7 +6980,7 @@
             const btnLoad = document.getElementById('btnDispLoad');
 
             try {
-                const res = await fetch(`${DISPATCHER_API_BASE}/api/status`, { signal: AbortSignal.timeout(1500) });
+                const res = await fetch(`${DISPATCHER_API_BASE}/api/status`, { signal: AbortSignal.timeout(1800) });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 _dispatcherStatusData = data;
@@ -6939,7 +6991,7 @@
                 if (dateBadge) {
                     dateBadge.innerText = data.target_date || '--.--';
                 }
-                if (statusBadge) {
+                if (statusBadge && !_isSyncing) {
                     statusBadge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1";
                     statusBadge.innerHTML = `<span>🟢 ГОТОВО</span>`;
                 }
@@ -6954,7 +7006,7 @@
                         ${dupsBadge}
                     `;
                 }
-                if (btnLoad) {
+                if (btnLoad && !_isSyncing) {
                     btnLoad.classList.remove('opacity-50', 'pointer-events-none');
                     btnLoad.innerHTML = `
                         <svg class="w-4 h-4 mr-1.5 text-yellow-300 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
@@ -6977,6 +7029,19 @@
                 }
 
                 if (showToasts) showToast(`Диспетчер активний: ${data.target_date} (${data.total_files} файлів, ${data.total_soldiers} о/с)`, "info");
+
+                // --- РЕАКТИВНИЙ ЖИВИЙ МОНІТОРИНГ ПАПКИ (AUTO-SYNC) ---
+                if (_isAutoSyncEnabled && data.status === 'ready' && data.folder_signature && !_isSyncing) {
+                    const isEmptyTable = (vopData.length === 0 && btgrData.length === 0 && broData.length === 0 && zabData.length === 0);
+                    const isFirstRun = (_lastLoadedSignature === null);
+                    const isSignatureChanged = (_lastLoadedSignature !== null && _lastLoadedSignature !== data.folder_signature);
+
+                    if (isSignatureChanged || (isFirstRun && isEmptyTable)) {
+                        loadDispatcherReports(true);
+                    } else if (isFirstRun) {
+                        _lastLoadedSignature = data.folder_signature;
+                    }
+                }
             } catch (err) {
                 if (dot) {
                     dot.className = "w-3 h-3 rounded-full bg-gray-500 shadow-none";
@@ -6995,43 +7060,70 @@
             }
         }
 
-        async function loadDispatcherReports() {
+        async function loadDispatcherReports(isAutoSync = false) {
+            if (_isSyncing) return;
+            _isSyncing = true;
             const btn = document.getElementById('btnDispLoad');
-            if (btn) {
+            const statusBadge = document.getElementById('dispStatusBadge');
+            if (btn && !isAutoSync) {
                 btn.disabled = true;
                 btn.innerHTML = `<span class="animate-spin mr-1.5">⏳</span><span>Завантаження...</span>`;
+            }
+            if (statusBadge) {
+                statusBadge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-500/40 shadow-sm flex items-center gap-1";
+                statusBadge.innerHTML = `<span class="animate-pulse">🔄 СИНХРОНІЗАЦІЯ...</span>`;
             }
 
             try {
                 const res = await fetch(`${DISPATCHER_API_BASE}/api/bundle`);
                 if (!res.ok) throw new Error('Помилка HTTP ' + res.status);
                 const bundle = await res.json();
-                await loadDispatcherBundle(bundle);
+                _lastLoadedSignature = bundle.folder_signature || _lastLoadedSignature;
+                await loadDispatcherBundle(bundle, isAutoSync);
             } catch (err) {
                 console.error("Помилка завантаження від диспетчера:", err);
-                showToast("Помилка підключення до диспетчера: " + err.message, "error");
+                if (!isAutoSync) showToast("Помилка підключення до диспетчера: " + err.message, "error");
             } finally {
+                _isSyncing = false;
                 if (btn) btn.disabled = false;
-                checkDispatcherStatus();
+                checkDispatcherStatus(false);
             }
         }
 
-        async function loadDispatcherBundle(bundle) {
+        async function loadDispatcherBundle(bundle, isAutoSync = false) {
             if (!bundle || !bundle.active_files || bundle.active_files.length === 0) {
-                showToast("Пакет порожній або файли не знайдено", "warning");
+                if (!isAutoSync) showToast("Пакет порожній або файли не знайдено", "warning");
                 return;
             }
 
             _dispatcherBundle = bundle;
             const kw = getKeywords();
             const compiledRules = getCompiledTaskRules();
+            const currentActiveNames = new Set(bundle.active_files.map(f => f.fileName));
+
+            // 1. Атомарне очищення видалених/замінених файлів (крім рядків із ручними правками оператора)
+            _loadedDispatcherFileNames.forEach(oldFn => {
+                if (!currentActiveNames.has(oldFn)) {
+                    vopData = vopData.filter(r => r.fileName !== oldFn || r.isManualEdit);
+                    btgrData = btgrData.filter(r => r.fileName !== oldFn || r.isManualEdit);
+                    broData = broData.filter(r => r.fileName !== oldFn || r.isManualEdit);
+                    zabData = zabData.filter(r => r.fileName !== oldFn || r.isManualEdit);
+                }
+            });
+
             let totalImported = 0;
             let autoStandardizedCount = 0;
-            const fileNamesList = document.getElementById('fileNames');
 
+            // 2. Оновлення та імпорт активних файлів
             bundle.active_files.forEach(fileInfo => {
                 const fileName = fileInfo.fileName;
                 const records = fileInfo.records || [];
+
+                // Видаляємо попередню версію цього ж файлу (якщо він був змінений/перезаписаний), зберігаючи ручні правки
+                vopData = vopData.filter(r => r.fileName !== fileName || r.isManualEdit);
+                btgrData = btgrData.filter(r => r.fileName !== fileName || r.isManualEdit);
+                broData = broData.filter(r => r.fileName !== fileName || r.isManualEdit);
+                zabData = zabData.filter(r => r.fileName !== fileName || r.isManualEdit);
 
                 records.forEach(r => {
                     const uniqueId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -7055,7 +7147,8 @@
                         pos: r.pos || '',
                         task: standardizedTask,
                         fileName: fileName,
-                        type: type
+                        type: type,
+                        isDispatcher: true
                     };
 
                     if (type === 'vop') vopData.push(entry);
@@ -7065,36 +7158,50 @@
 
                     totalImported++;
                 });
+            });
 
-                processedDocsCount++;
+            // Оновлюємо реєстр завантажених файлів
+            _loadedDispatcherFileNames = currentActiveNames;
 
-                if (fileNamesList) {
+            // 3. Синхронізація списку файлів в інтерфейсі (fileNamesList)
+            const fileNamesList = document.getElementById('fileNames');
+            if (fileNamesList) {
+                fileNamesList.innerHTML = '';
+                const allActiveFiles = [...new Set([...vopData, ...btgrData, ...broData, ...zabData].map(p => p.fileName))].sort();
+                allActiveFiles.forEach(fn => {
+                    const isDisp = _loadedDispatcherFileNames.has(fn);
                     const li = document.createElement('li');
                     li.className = "group flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700/50 p-1.5 rounded transition-colors mb-0.5 border border-transparent hover:border-gray-200 dark:hover:border-gray-600";
                     li.innerHTML = `
                         <div class="flex items-center gap-2 overflow-hidden">
-                            <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="font-medium text-gray-700 dark:text-gray-300 truncate text-[11px]" title="${fileName}">${fileName}</span>
+                            <svg class="w-3.5 h-3.5 ${isDisp ? 'text-cyan-400' : 'text-emerald-500'} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span class="font-medium text-gray-700 dark:text-gray-300 truncate text-[11px]" title="${fn}">${fn}</span>
+                            ${isDisp ? '<span class="text-[9px] font-mono text-cyan-400 bg-cyan-950/80 px-1 py-0.2 rounded border border-cyan-700/50 shrink-0">диск</span>' : ''}
                         </div>
                         <button class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 p-1 rounded transition-all focus:outline-none flex-shrink-0" title="Видалити цей файл">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     `;
                     const delBtn = li.querySelector('button');
-                    if (delBtn) delBtn.addEventListener('click', () => removeProcessedFile(fileName, li));
+                    if (delBtn) delBtn.addEventListener('click', () => removeProcessedFile(fn, li));
                     fileNamesList.appendChild(li);
-                }
-            });
+                });
+            }
+
+            // 4. Оновлення лічильників та відображення областей результатів
+            const allFilesCount = new Set([...vopData, ...btgrData, ...broData, ...zabData].map(p => p.fileName)).size;
+            processedDocsCount = allFilesCount;
 
             const docsCountEl = document.getElementById('docsCountDisplay');
             if (docsCountEl) docsCountEl.innerText = processedDocsCount;
 
             const procListEl = document.getElementById('processedFilesList');
-            if (procListEl) procListEl.classList.remove('hidden');
+            if (procListEl) procListEl.classList.toggle('hidden', processedDocsCount <= 0);
 
             const resAreaEl = document.getElementById('resultsArea');
-            if (resAreaEl) resAreaEl.classList.remove('hidden');
+            if (resAreaEl) resAreaEl.classList.toggle('hidden', processedDocsCount <= 0);
 
+            // 5. Повний перерахунок та оновлення таблиць
             checkDuplicates();
             recalculateEmptyFields();
             checkInvalidTasks();
@@ -7105,10 +7212,15 @@
             filterTables();
 
             closeDispatcherModal();
-            const toastMsg = autoStandardizedCount > 0
-                ? `⚡ Диспетчер: успішно завантажено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}! Автозамінено: ${autoStandardizedCount}.`
-                : `⚡ Диспетчер: успішно завантажено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}!`;
-            showToast(toastMsg, "success");
+
+            if (isAutoSync) {
+                showToast(`🔄 Авто-синхронізація: оновлено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}`, "info");
+            } else {
+                const toastMsg = autoStandardizedCount > 0
+                    ? `⚡ Диспетчер: успішно завантажено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}! Автозамінено: ${autoStandardizedCount}.`
+                    : `⚡ Диспетчер: успішно завантажено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}!`;
+                showToast(toastMsg, "success");
+            }
         }
 
         async function openDispatcherModal() {
@@ -7283,9 +7395,23 @@
 
         // Авто-перевірка диспетчера при завантаженні сторінки
         window.addEventListener('DOMContentLoaded', () => {
+            const chk = document.getElementById('chkDispAutoSync');
+            if (chk) chk.checked = _isAutoSyncEnabled;
+            const ping = document.getElementById('dispAutoSyncPing');
+            const dot = document.getElementById('dispAutoSyncDot');
+            if (ping && dot) {
+                if (_isAutoSyncEnabled) {
+                    ping.classList.remove('hidden');
+                    dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+                } else {
+                    ping.classList.add('hidden');
+                    dot.className = "relative inline-flex rounded-full h-2 w-2 bg-slate-500";
+                }
+            }
+
             checkDispatcherStatus(false);
             if (!_dispatcherHeartbeatTimer) {
-                _dispatcherHeartbeatTimer = setInterval(() => checkDispatcherStatus(false), 15000);
+                _dispatcherHeartbeatTimer = setInterval(() => checkDispatcherStatus(false), 3500);
             }
         });
 
