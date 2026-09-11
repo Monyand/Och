@@ -65,7 +65,7 @@
                             AMMO_PARSER
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.2.1
+                            ⚡ v1.2.2
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -253,7 +253,18 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.1 (Розумне розбиття рядків & Покращений тактичний парсинг)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.2 (Підтримка РСП сигнальних патронів усіх вогнів)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">11.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Номенклатура РСП:</strong> Додано підтримку реактивних сигнальних патронів під єдину категорію <code>РСП (сигнальний патрон)</code> (зелений З.В., червоний Ч.В., білий Б.В., жовтий Ж.В., а також РСП-30).</li>
+                        <li><strong class="text-white">Стійкий парсинг:</strong> Розпізнавання записів виду <code>РСП З.В. - 1 шт.</code>, стійкість до заміни літери «З» на цифру «3», крапок, дужок та латинських омогліфів.</li>
+                        <li><strong class="text-white">Одиничний облік & спліт:</strong> Включено до списку автоматичного зарахування як 1 шт за згадкою та підтримано в кнопці «Розбити на рядки».</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.2.1 (Розумне розбиття рядків & Покращений тактичний парсинг)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">09.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -467,7 +478,10 @@ GHO - 2
             { id: 'RGO', name: 'Граната РГО', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgo|рго|rg0|рг0)[а-яіїєґ]*' },
             { id: 'RGD5', name: 'Граната РГД-5', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:ргд|rgd)[\\s\\-]*5?' },
             { id: 'RG42', name: 'Граната РГ-42', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rg|рг|pg|пг|рg|pг)[\\s\\-_]*42' },
-            { id: 'RGT27S', name: 'Граната РГТ-27С', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' }
+            { id: 'RGT27S', name: 'Граната РГТ-27С', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' },
+
+            // Сигнальні засоби: РСП (реактивні сигнальні патрони всіх вогнів)
+            { id: 'RSP', name: 'РСП (сигнальний патрон)', icon: '🚨', category: 'signal', idPattern: '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ])(?:[рp][сc][пn]|ракета\\s*сигнальн[а-яіїєґ]*|реактивн[а-яіїєґ]*\\s*сигнальн[а-яіїєґ]*\\s*патрон[а-яіїєґ]*)(?:[\\s\\-_]*30)?(?:[\\s\\-_]*\\(?(?:(?:[з3]|ч|б|ж)[\\s._/\\-]*(?:[вb]|в[оо]гн[а-яіїєґ]*)\\.?|(?:зелен|червон|біл|жовт)[а-яіїєґ]*(?:\\s*в[оо]гн[а-яіїєґ]*)?)\\)?)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ])' }
         ];
 
         // -------------------------------------------------------------------------
@@ -700,7 +714,8 @@ GHO - 2
                     const implicitConfigs = [
                         'GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'RGT27S', 
                         'VOG', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'RHEAT7MA', 'BULLSPIKE', 
-                        'RPV16', 'VPR20', 'AT4', 'RPG75', 'RPG18', 'RPG22', 'RPG26', 'RPG76'
+                        'RPV16', 'VPR20', 'AT4', 'RPG75', 'RPG18', 'RPG22', 'RPG26', 'RPG76',
+                        'RSP'
                     ];
                     implicitConfigs.forEach(id => {
                         const conf = ammoConfigs.find(c => c.id === id);

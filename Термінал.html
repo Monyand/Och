@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ШТАБ-ТЕРМІНАЛ — Єдине Вікно Управління</title>
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        tactical: {
+                            950: '#060a12',
+                            900: '#0a101d',
+                            850: '#0f172a',
+                            800: '#142036',
+                            700: '#1e2f4f',
+                            600: '#2b426f',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #060a12;
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+
+        /* Стилізований скролбар сайдбару */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a101d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e2f4f;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+
+        .active-module-btn {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.25) 0%, rgba(30, 41, 59, 0.5) 100%);
+            border-left: 3px solid #3b82f6;
+            color: #ffffff !important;
+        }
+
+        .active-tab {
+            background-color: #0f172a !important;
+            border-color: #3b82f6 !important;
+            color: #ffffff !important;
+        }
+
+        /* Анімація пульсації безпеки */
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.95); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen flex flex-col antialiased select-none">
+
+    <!-- ========================================================================= -->
+    <!-- ВЕРХНЯ КОМАНДНА ПАНЕЛЬ (TOP COMMAND BAR)                                   -->
+    <!-- ========================================================================= -->
+    <header class="h-12 bg-tactical-900 border-b border-slate-800 flex items-center justify-between px-3 shrink-0 z-30">
+        
+        <!-- Ліва частина: Бренд, кнопка згортання сайдбару та Версія -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button id="btn-toggle-sidebar" onclick="toggleSidebar()" title="Згорнути / Розгорнути панель (Ctrl+B)" 
+                class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-tactical-800 transition-colors cursor-pointer">
+                <i data-lucide="panel-left" class="w-4 h-4"></i>
+            </button>
+
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/20">
+                    <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
+                </div>
+                <h1 class="font-extrabold text-sm tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400 hidden sm:inline">
+                    ШТАБ-ТЕРМІНАЛ
+                </h1>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/30 cursor-pointer hover:bg-blue-500/20 transition-colors" onclick="openChangelogModal()" title="Історія змін">
+                    ⚡ v0.1.0-alpha
+                </span>
+            </div>
+        </div>
+
+        <!-- Центральна частина: Швидкий пошук / Командний палітра (Ctrl+K) -->
+        <div class="relative w-44 sm:w-64 md:w-80">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+            <input type="text" id="global-search" oninput="handleGlobalSearch()" placeholder="Пошук програми (Ctrl+K)..."
+                class="w-full bg-tactical-950 border border-slate-800 rounded-lg pl-8 pr-8 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors">
+            <span class="absolute right-2 top-2 text-[10px] font-mono text-slate-500 bg-slate-850 px-1 py-0.2 rounded border border-slate-800">⌘K</span>
+            
+            <!-- Випадаючий список швидкого пошуку -->
+            <div id="search-dropdown" class="absolute left-0 top-10 w-full bg-tactical-900 border border-slate-700 rounded-xl shadow-2xl p-1.5 hidden z-50 max-h-64 overflow-y-auto"></div>
+        </div>
+
+        <!-- Права частина: Годинник, Статус Кіберзахисту, Кнопки керування вікном -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            
+            <!-- Живий індикатор Кіберзахисту & DEFCON -->
+            <div id="cyber-status-badge" class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/60 text-emerald-400 text-xs font-mono" title="Кіберзахист & DLP Guard активний">
+                <span id="cyber-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow"></span>
+                <span class="hidden md:inline font-semibold text-[11px]" id="cyber-status-text">DEFCON-5 АКТИВНИЙ</span>
+            </div>
+
+            <!-- Годинник (Київ) -->
+            <div class="font-mono text-xs text-slate-300 font-semibold bg-tactical-950 px-2 py-1 rounded-lg border border-slate-800 flex items-center gap-1">
+                <i data-lucide="clock" class="w-3 h-3 text-sky-400"></i>
+                <span id="clock-kyiv">--:--:--</span>
+            </div>
+
+            <!-- Дії активного вікна -->
+            <div class="flex items-center border-l border-slate-800 pl-2 gap-1">
+                <button onclick="reloadCurrentModule()" title="Перезавантажити поточний модуль (Ctrl+R)" 
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-tactical-800 transition-colors cursor-pointer">
+                    <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="popoutCurrentModule()" title="Відкрити поточний модуль в окремій вкладці" 
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-tactical-800 transition-colors cursor-pointer">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="toggleFullscreen()" title="Повноекранний режим (F11)" 
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-tactical-800 transition-colors cursor-pointer">
+                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================================================= -->
+    <!-- ОСНОВНИЙ РОБОЧИЙ ПРОСТІР (САЙДБАР + ОБЛАСТЬ ТАБІВ ТА МОДУЛІВ)             -->
+    <!-- ========================================================================= -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- ===================================================================== -->
+        <!-- ТАКТИЧНИЙ БІЧНИЙ САЙДБАР (SIDEBAR)                                    -->
+        <!-- ===================================================================== -->
+        <aside id="sidebar" class="w-64 bg-tactical-900 border-r border-slate-800 flex flex-col shrink-0 transition-all duration-200 z-20 overflow-hidden">
+            
+            <!-- Меню модулів за категоріями -->
+            <div class="flex-1 overflow-y-auto p-2 space-y-4">
+
+                <!-- ГРУПА 1: ОСОБОВИЙ СКЛАД ТА ВИПЛАТИ -->
+                <div>
+                    <div class="sidebar-label px-2.5 mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 font-mono flex items-center justify-between">
+                        <span>👥 Особовий склад</span>
+                        <span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded">ОЧ</span>
+                    </div>
+                    <div class="space-y-0.5">
+                        <button onclick="switchModule('dod6')" id="nav-dod6" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-400 shrink-0"></i>
+                                <span class="nav-text truncate">Додаток 6 (Виплати)</span>
+                            </span>
+                            <span class="nav-badge text-[10px] font-mono text-slate-500 group-hover:text-blue-400">1.9.5</span>
+                        </button>
+                        <button onclick="switchModule('bchs')" id="nav-bchs" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="users" class="w-4 h-4 text-sky-400 shrink-0"></i>
+                                <span class="nav-text truncate">БЧС (Списки/Звіти)</span>
+                            </span>
+                            <span class="nav-badge text-[10px] font-mono text-slate-500 group-hover:text-sky-400">1.1.0</span>
+                        </button>
+                        <button onclick="switchModule('rotations')" id="nav-rotations" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="repeat" class="w-4 h-4 text-teal-400 shrink-0"></i>
+                                <span class="nav-text truncate">Ротації (дод6)</span>
+                            </span>
+                        </button>
+                        <button onclick="switchModule('moves')" id="nav-moves" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="arrow-left-right" class="w-4 h-4 text-indigo-400 shrink-0"></i>
+                                <span class="nav-text truncate">Переміщення (дод6)</span>
+                            </span>
+                        </button>
+                        <button onclick="switchModule('periods')" id="nav-periods" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="calendar-range" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+                                <span class="nav-text truncate">Облік періодів</span>
+                            </span>
+                        </button>
+                        <button onclick="switchModule('report-och')" id="nav-report-och" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="file-check" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                <span class="nav-text truncate">Звіт ОЧ</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ГРУПА 2: ОПЕРАТИВНА СЛУЖБА ТА КСП -->
+                <div>
+                    <div class="sidebar-label px-2.5 mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 font-mono flex items-center justify-between">
+                        <span>⚔️ Оперативна служба</span>
+                        <span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded">КСП</span>
+                    </div>
+                    <div class="space-y-0.5">
+                        <button onclick="switchModule('oper-journal')" id="nav-oper-journal" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="book-open" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                                <span class="nav-text truncate">Оперативний журнал</span>
+                            </span>
+                            <span class="nav-badge text-[10px] font-mono text-slate-500 group-hover:text-amber-400">1.6.0</span>
+                        </button>
+                        <button onclick="switchModule('report-pbd')" id="nav-report-pbd" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="file-text" class="w-4 h-4 text-orange-400 shrink-0"></i>
+                                <span class="nav-text truncate">Звіт ПБД</span>
+                            </span>
+                        </button>
+                        <button onclick="switchModule('losses')" id="nav-losses" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="heart-pulse" class="w-4 h-4 text-rose-400 shrink-0"></i>
+                                <span class="nav-text truncate">Облік втрат (200/300)</span>
+                            </span>
+                        </button>
+                        <button onclick="switchModule('inspectors')" id="nav-inspectors" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="user-check" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                <span class="nav-text truncate">Облік перевіряючих</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ГРУПА 3: ОЗБРОЄННЯ, БК ТА МАЙНО -->
+                <div>
+                    <div class="sidebar-label px-2.5 mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 font-mono flex items-center justify-between">
+                        <span>🎯 Озброєння та БК</span>
+                        <span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded">РАО</span>
+                    </div>
+                    <div class="space-y-0.5">
+                        <button onclick="switchModule('ammo-calc')" id="nav-ammo-calc" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="calculator" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                                <span class="nav-text truncate">Калькулятор БК (+РСП)</span>
+                            </span>
+                            <span class="nav-badge text-[10px] font-mono text-slate-500 group-hover:text-emerald-400">1.2.2</span>
+                        </button>
+                        <button onclick="switchModule('vgz-calc')" id="nav-vgz-calc" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="crosshair" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                                <span class="nav-text truncate">Калькулятор ВгЗ</span>
+                            </span>
+                        </button>
+                        <button onclick="switchModule('prop-formatter')" id="nav-prop-formatter" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="boxes" class="w-4 h-4 text-sky-400 shrink-0"></i>
+                                <span class="nav-text truncate">Форматер майна</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ГРУПА 4: БЕЗПЕКА ТА СИСТЕМА -->
+                <div>
+                    <div class="sidebar-label px-2.5 mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 font-mono flex items-center justify-between">
+                        <span>🛡️ Безпека & Система</span>
+                        <span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded">SEC</span>
+                    </div>
+                    <div class="space-y-0.5">
+                        <button onclick="switchModule('cyber-guard')" id="nav-cyber-guard" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="shield-alert" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+                                <span class="nav-text truncate">Кіберзахист & DLP</span>
+                            </span>
+                            <span class="nav-badge text-[10px] font-mono text-cyan-400">8767</span>
+                        </button>
+                        <button onclick="switchModule('audit-dashboard')" id="nav-audit-dashboard" class="module-nav-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-slate-300 hover:bg-tactical-800 hover:text-white transition-all text-left group">
+                            <span class="flex items-center gap-2 truncate">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                                <span class="nav-text truncate">Дашборд Цілісності</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Нижня смужка сайдбару: швидкі дії та повернення в класичний ХАБ -->
+            <div class="p-2 border-t border-slate-800/80 bg-tactical-950 flex items-center justify-between">
+                <a href="index.html" target="_blank" title="Відкрити класичний ХАБ (список карток)" 
+                    class="sidebar-hub-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-tactical-800 transition-colors w-full">
+                    <i data-lucide="grid" class="w-4 h-4 text-blue-400 shrink-0"></i>
+                    <span class="nav-text truncate font-medium">Класичний ХАБ</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- ===================================================================== -->
+        <!-- ГОЛОВНА РОБОЧА ЗОНА (MAIN WORKSPACE)                                  -->
+        <!-- ===================================================================== -->
+        <main class="flex-1 flex flex-col bg-tactical-950 overflow-hidden relative">
+
+            <!-- Смужка відкритих вкладок (Tabs Bar) -->
+            <div id="tabs-bar" class="h-9 bg-tactical-900 border-b border-slate-800 flex items-center px-2 gap-1 overflow-x-auto shrink-0 select-none">
+                <!-- Вкладки генеруються динамічно скриптом -->
+            </div>
+
+            <!-- Контейнер модулів (Active iframes / Components) -->
+            <div id="module-container" class="flex-1 w-full h-full relative bg-[#060a12] overflow-hidden">
+                <!-- Заставка початкового завантаження -->
+                <div id="terminal-splash" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-blue-600/30 mb-4 animate-bounce">
+                        <i data-lucide="layers" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-2">Єдиний Тактичний Термінал</h2>
+                    <p class="text-xs text-slate-400 max-w-md mb-6 leading-relaxed">
+                        Оберіть потрібний модуль у меню зліва для початку роботи. Дані між модулями зберігаються автоматично.
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-2">
+                        <button onclick="switchModule('ammo-calc')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer">
+                            <i data-lucide="calculator" class="w-4 h-4 text-emerald-400"></i>
+                            <span>Калькулятор БК</span>
+                        </button>
+                        <button onclick="switchModule('dod6')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-400"></i>
+                            <span>Додаток 6</span>
+                        </button>
+                        <button onclick="switchModule('bchs')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer">
+                            <i data-lucide="users" class="w-4 h-4 text-sky-400"></i>
+                            <span>БЧС</span>
+                        </button>
+                        <button onclick="switchModule('oper-journal')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer">
+                            <i data-lucide="book-open" class="w-4 h-4 text-amber-400"></i>
+                            <span>Оперативний журнал</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Тут створюються активні фрейми модулів -->
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- МОДАЛЬНЕ ВІКНО CHANGELOG (ІСТОРІЯ ЗМІН ТЕРМІНАЛУ)                         -->
+    <!-- ========================================================================= -->
+    <div id="changelog-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
+        <div class="bg-tactical-900 border border-slate-700 rounded-2xl max-w-xl w-full shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="history" class="w-5 h-5 text-blue-400"></i>
+                    <h3 class="text-base font-bold text-white">Історія змін: ШТАБ-ТЕРМІНАЛ</h3>
+                </div>
+                <button onclick="closeChangelogModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-tactical-800 transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-300">
+                <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v0.1.0-alpha (Прототип «Єдине Вікно»)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-tactical-950 px-2 py-0.5 rounded border border-slate-800">11.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 list-disc list-inside text-slate-400">
+                        <li><strong class="text-white">All-in-One оболонка:</strong> Запуск усіх 14 модулів військового комплексу в межах однієї вкладки без перезавантажень.</li>
+                        <li><strong class="text-white">Багатозадачність та збереження стану:</strong> Модулі залишаються активними у фоні (введені тексти, фільтри та файли не втрачаються при перемиканні).</li>
+                        <li><strong class="text-white">Живий монітор безпеки:</strong> Автоматичний пінґ демона Кіберзахисту (порт 8767) та відображення статусу DEFCON-5.</li>
+                        <li><strong class="text-white">Швидка командна панель:</strong> Пошук та миттєвий перехід до будь-якої програми за комбінацією <code class="text-blue-300 font-mono">Ctrl+K</code>.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-tactical-950 border-t border-slate-800 text-right">
+                <button onclick="closeChangelogModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-colors cursor-pointer">
+                    Закрити
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- СКРИПТИ КЕРУВАННЯ ТЕРМІНАЛОМ                                              -->
+    <!-- ========================================================================= -->
+    <script>
+        // Ініціалізація векторних іконок
+        lucide.createIcons();
+
+        // -------------------------------------------------------------------------
+        // 1. РЕЄСТР МОДУЛІВ КОМПЛЕКСУ
+        // -------------------------------------------------------------------------
+        const MODULES = {
+            'dod6': {
+                name: 'Додаток 6',
+                file: 'Додаток 6.html',
+                icon: 'file-spreadsheet',
+                color: 'text-blue-400',
+                category: 'Особовий склад'
+            },
+            'bchs': {
+                name: 'БЧС',
+                file: 'БЧС.html',
+                icon: 'users',
+                color: 'text-sky-400',
+                category: 'Особовий склад'
+            },
+            'rotations': {
+                name: 'Ротації (дод6)',
+                file: 'Ротації (дод6).html',
+                icon: 'repeat',
+                color: 'text-teal-400',
+                category: 'Особовий склад'
+            },
+            'moves': {
+                name: 'Переміщення (дод6)',
+                file: 'Переміщення (дод6).html',
+                icon: 'arrow-left-right',
+                color: 'text-indigo-400',
+                category: 'Особовий склад'
+            },
+            'periods': {
+                name: 'Облік періодів',
+                file: 'Облік періодів.html',
+                icon: 'calendar-range',
+                color: 'text-cyan-400',
+                category: 'Особовий склад'
+            },
+            'report-och': {
+                name: 'Звіт ОЧ',
+                file: 'Звіт ОЧ.html',
+                icon: 'file-check',
+                color: 'text-slate-400',
+                category: 'Особовий склад'
+            },
+            'oper-journal': {
+                name: 'Оперативний журнал',
+                file: 'Оперативний журнал.html',
+                icon: 'book-open',
+                color: 'text-amber-400',
+                category: 'Оперативна служба'
+            },
+            'report-pbd': {
+                name: 'Звіт ПБД',
+                file: 'Звіт ПБД.html',
+                icon: 'file-text',
+                color: 'text-orange-400',
+                category: 'Оперативна служба'
+            },
+            'losses': {
+                name: 'Облік втрат',
+                file: 'Облік втрат.html',
+                icon: 'heart-pulse',
+                color: 'text-rose-400',
+                category: 'Оперативна служба'
+            },
+            'inspectors': {
+                name: 'Облік перевіряючих',
+                file: 'Облік перевіряючих.html',
+                icon: 'user-check',
+                color: 'text-slate-400',
+                category: 'Оперативна служба'
+            },
+            'ammo-calc': {
+                name: 'Калькулятор БК',
+                file: 'Калькулятор БК.html',
+                icon: 'calculator',
+                color: 'text-emerald-400',
+                category: 'Озброєння та БК'
+            },
+            'vgz-calc': {
+                name: 'Калькулятор ВгЗ',
+                file: 'Калькулятор ВгЗ.html',
+                icon: 'crosshair',
+                color: 'text-amber-400',
+                category: 'Озброєння та БК'
+            },
+            'prop-formatter': {
+                name: 'Форматер майна',
+                file: 'Форматер майна.html',
+                icon: 'boxes',
+                color: 'text-sky-400',
+                category: 'Озброєння та БК'
+            },
+            'cyber-guard': {
+                name: 'Кіберзахист & DLP',
+                file: 'Кіберзахист.html',
+                icon: 'shield-alert',
+                color: 'text-cyan-400',
+                category: 'Безпека'
+            },
+            'audit-dashboard': {
+                name: 'Дашборд Цілісності',
+                file: 'audit_dashboard.html',
+                icon: 'shield-check',
+                color: 'text-emerald-400',
+                category: 'Безпека'
+            }
+        };
+
+        // -------------------------------------------------------------------------
+        // 2. СТАН ТЕРМІНАЛУ
+        // -------------------------------------------------------------------------
+        let activeModuleId = null;
+        const openTabs = []; // Масив id відкритих модулів
+        let isSidebarCollapsed = false;
+
+        const moduleContainer = document.getElementById('module-container');
+        const tabsBar = document.getElementById('tabs-bar');
+        const splashScreen = document.getElementById('terminal-splash');
+
+        // -------------------------------------------------------------------------
+        // 3. ПЕРЕМИКАННЯ ТА ЗАВАНТАЖЕННЯ МОДУЛІВ
+        // -------------------------------------------------------------------------
+        function switchModule(moduleId) {
+            const mod = MODULES[moduleId];
+            if (!mod) return;
+
+            // Приховуємо початковий сплеш-скрін
+            if (splashScreen) {
+                splashScreen.style.display = 'none';
+            }
+
+            // Додаємо вкладку в список, якщо вона ще не відкрита
+            if (!openTabs.includes(moduleId)) {
+                openTabs.push(moduleId);
+            }
+
+            activeModuleId = moduleId;
+
+            // Перевіряємо чи вже створений iframe для цього модуля
+            let frame = document.getElementById(`frame-${moduleId}`);
+            if (!frame) {
+                frame = document.createElement('iframe');
+                frame.id = `frame-${moduleId}`;
+                frame.src = mod.file;
+                frame.className = 'w-full h-full border-0 absolute inset-0';
+                moduleContainer.appendChild(frame);
+            }
+
+            // Показуємо активний фрейм і приховуємо решту (без перезавантаження!)
+            Object.keys(MODULES).forEach(id => {
+                const f = document.getElementById(`frame-${id}`);
+                if (f) {
+                    f.style.display = (id === moduleId) ? 'block' : 'none';
+                }
+            });
+
+            // Оновлюємо підсвічування в сайдбарі
+            document.querySelectorAll('.module-nav-btn').forEach(btn => {
+                btn.classList.remove('active-module-btn');
+            });
+            const activeNavBtn = document.getElementById(`nav-${moduleId}`);
+            if (activeNavBtn) {
+                activeNavBtn.classList.add('active-module-btn');
+            }
+
+            renderTabs();
+            closeSearchDropdown();
+        }
+
+        // -------------------------------------------------------------------------
+        // 4. УПРАВЛІННЯ ВКЛАДКАМИ (TABS)
+        // -------------------------------------------------------------------------
+        function renderTabs() {
+            if (openTabs.length === 0) {
+                tabsBar.innerHTML = `<span class="text-xs text-slate-500 font-mono italic px-2">Немає відкритих вкладок</span>`;
+                return;
+            }
+
+            let html = '';
+            openTabs.forEach(id => {
+                const mod = MODULES[id];
+                const isActive = (id === activeModuleId);
+                html += `
+                    <div onclick="switchModule('${id}')" 
+                        class="h-7 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all border shrink-0 ${isActive ? 'active-tab bg-tactical-850 text-white border-blue-500/60 shadow-sm' : 'bg-tactical-950 text-slate-400 border-slate-800 hover:text-slate-200 hover:bg-tactical-800'}">
+                        <i data-lucide="${mod.icon}" class="w-3.5 h-3.5 ${mod.color}"></i>
+                        <span class="truncate max-w-[130px]">${mod.name}</span>
+                        <button onclick="event.stopPropagation(); closeTab('${id}')" title="Закрити вкладку" class="p-0.5 hover:bg-slate-700/60 rounded text-slate-500 hover:text-white transition-colors ml-1">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            tabsBar.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function closeTab(moduleId) {
+            const index = openTabs.indexOf(moduleId);
+            if (index !== -1) {
+                openTabs.splice(index, 1);
+            }
+
+            // Видаляємо iframe з DOM для звільнення оперативної пам'яті
+            const frame = document.getElementById(`frame-${moduleId}`);
+            if (frame) {
+                frame.remove();
+            }
+
+            // Якщо закрили активну — перемикаємося на сусідню або сплеш
+            if (activeModuleId === moduleId) {
+                if (openTabs.length > 0) {
+                    const nextId = openTabs[Math.max(0, index - 1)];
+                    switchModule(nextId);
+                } else {
+                    activeModuleId = null;
+                    if (splashScreen) splashScreen.style.display = 'flex';
+                    renderTabs();
+                    document.querySelectorAll('.module-nav-btn').forEach(btn => btn.classList.remove('active-module-btn'));
+                }
+            } else {
+                renderTabs();
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // 5. ДІЇ ВЕРХНЬОЇ ПАНЕЛІ (RELOAD, POPOUT, FULLSCREEN, SIDEBAR)
+        // -------------------------------------------------------------------------
+        function reloadCurrentModule() {
+            if (!activeModuleId) return;
+            const frame = document.getElementById(`frame-${activeModuleId}`);
+            if (frame) {
+                frame.src = frame.src;
+            }
+        }
+
+        function popoutCurrentModule() {
+            if (!activeModuleId) return;
+            const mod = MODULES[activeModuleId];
+            if (mod) {
+                window.open(mod.file, '_blank');
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            isSidebarCollapsed = !isSidebarCollapsed;
+
+            if (isSidebarCollapsed) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-14');
+                document.querySelectorAll('.nav-text, .nav-badge, .sidebar-label').forEach(el => el.style.display = 'none');
+            } else {
+                sidebar.classList.remove('w-14');
+                sidebar.classList.add('w-64');
+                document.querySelectorAll('.nav-text, .nav-badge, .sidebar-label').forEach(el => el.style.display = '');
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // 6. ГЛОБАЛЬНИЙ ПОШУК ТА ШВИДКИЙ ПЕРЕХІД (COMMAND PALETTE)
+        // -------------------------------------------------------------------------
+        const searchInput = document.getElementById('global-search');
+        const searchDropdown = document.getElementById('search-dropdown');
+
+        function handleGlobalSearch() {
+            const query = searchInput.value.trim().toLowerCase();
+            if (!query) {
+                closeSearchDropdown();
+                return;
+            }
+
+            const matches = Object.entries(MODULES).filter(([id, m]) => {
+                return m.name.toLowerCase().includes(query) || 
+                       m.category.toLowerCase().includes(query) ||
+                       m.file.toLowerCase().includes(query);
+            });
+
+            if (matches.length === 0) {
+                searchDropdown.innerHTML = `<div class="p-3 text-xs text-slate-500 italic text-center">Програм не знайдено</div>`;
+                searchDropdown.classList.remove('hidden');
+                return;
+            }
+
+            let html = '';
+            matches.forEach(([id, m]) => {
+                html += `
+                    <div onclick="switchModule('${id}'); searchInput.value=''; closeSearchDropdown();" 
+                        class="px-3 py-2 rounded-lg hover:bg-tactical-800 cursor-pointer flex items-center justify-between transition-colors group">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="${m.icon}" class="w-4 h-4 ${m.color}"></i>
+                            <div>
+                                <div class="text-xs font-semibold text-white group-hover:text-blue-400">${m.name}</div>
+                                <div class="text-[10px] text-slate-500">${m.category}</div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-500 bg-tactical-950 px-1.5 py-0.5 rounded border border-slate-800">Відкрити</span>
+                    </div>
+                `;
+            });
+            searchDropdown.innerHTML = html;
+            searchDropdown.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeSearchDropdown() {
+            searchDropdown.classList.add('hidden');
+        }
+
+        // Гарячі клавіші: Ctrl+K (пошук), Ctrl+B (сайдбар), Alt+1..9 (перемикання)
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+                e.preventDefault();
+                toggleSidebar();
+            }
+            if (e.altKey && e.key >= '1' && e.key <= '9') {
+                const tabIdx = parseInt(e.key, 10) - 1;
+                if (tabIdx < openTabs.length) {
+                    e.preventDefault();
+                    switchModule(openTabs[tabIdx]);
+                }
+            }
+            if (e.key === 'Escape') {
+                closeSearchDropdown();
+                closeChangelogModal();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                closeSearchDropdown();
+            }
+        });
+
+        // -------------------------------------------------------------------------
+        // 7. ЖИВИЙ ГОДИННИК ТА ПІНГ КІБЕРЗАХИСТУ
+        // -------------------------------------------------------------------------
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('uk-UA', { hour12: false });
+            document.getElementById('clock-kyiv').textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Перевірка статусу демона Кіберзахисту (порт 8767)
+        async function checkCyberGuardDaemon() {
+            const badge = document.getElementById('cyber-status-badge');
+            const label = document.getElementById('cyber-status-text');
+            const dot = document.getElementById('cyber-status-dot');
+            try {
+                const res = await fetch('http://127.0.0.1:8767/api/cyber/status', { method: 'GET', mode: 'cors' });
+                if (res.ok) {
+                    const data = await res.json();
+                    const rawLevel = (data && data.state && data.state.threat_level) ? data.state.threat_level : 'DEFCON_5';
+                    const formattedLevel = rawLevel.replace('_', '-');
+                    badge.className = "flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/60 text-emerald-400 text-xs font-mono";
+                    if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow";
+                    label.textContent = `${formattedLevel} АКТИВНИЙ`;
+                } else {
+                    throw new Error('daemon offline');
+                }
+            } catch (err) {
+                // Якщо демон не відповідає
+                badge.className = "flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-950/40 border border-amber-800/60 text-amber-400 text-xs font-mono";
+                if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-400";
+                label.textContent = "ЩИТ В ОФЛАЙНІ";
+            }
+        }
+        setInterval(checkCyberGuardDaemon, 10000);
+        checkCyberGuardDaemon();
+
+        // -------------------------------------------------------------------------
+        // 8. CHANGELOG МОДАЛКА
+        // -------------------------------------------------------------------------
+        const changelogModal = document.getElementById('changelog-modal');
+        function openChangelogModal() {
+            changelogModal.classList.remove('hidden');
+            changelogModal.classList.add('flex');
+        }
+        function closeChangelogModal() {
+            changelogModal.classList.add('hidden');
+            changelogModal.classList.remove('flex');
+        }
+        changelogModal.addEventListener('click', (e) => {
+            if (e.target === changelogModal) closeChangelogModal();
+        });
+    </script>
+</body>
+
+</html>
