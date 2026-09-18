@@ -65,7 +65,7 @@
                             AMMO_PARSER
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.2.2
+                            ⚡ v1.2.3
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -226,9 +226,9 @@
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12х70</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12.7 (x99, x108)</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">14.5x114</span>
-            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">40х46</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">40х46 (NR338, M433, ВОГ)</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Гранати (Ф1, GHO, M67, РГД-5, РГН, РГО, РГТ-27С)</span>
-            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">РПГ / ВОГ / АТ4 / RHEW / RHEAT</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">РПГ / ВОГ / Bullspike (AT/TB) / АТ4 / RHEAT</span>
         </div>
 
     </div>
@@ -253,7 +253,19 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.2 (Підтримка РСП сигнальних патронів усіх вогнів)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.3 (Bullspike AT/TB, 40х46 NR338/M433 & М67 Hand Frag)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">18.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Bullspike (AT / TB):</strong> Розширено регулярні вирази для розпізнавання пострілів Bullspike у термобаричних (TB) та протитанкових (AT) версіях.</li>
+                        <li><strong class="text-white">Постріли 40х46 мм:</strong> Підтримка маркувань NR338, M433, RLV-HEFJ, HEDP та включення до списку автоматичного одиничного підрахунку.</li>
+                        <li><strong class="text-white">Ручні гранати М67:</strong> Стійке детектування армійських англомовних записів виду <code>grenade hand frag m67</code>.</li>
+                        <li><strong class="text-white">Стійкі префікси чисел:</strong> Захист від помилкового захоплення цифр всередині складних індексів калібрів завдяки покращеному zero-lookbehind.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.2.2 (Підтримка РСП сигнальних патронів усіх вогнів)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">11.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -457,7 +469,7 @@ GHO - 2
             { id: 'RHEAT7MA', name: 'Постріл RHEAT-7MA2', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:r[\\-_]?heat|р[\\-_]?хеат|р[\\-_]?хіт)[\\s\\-_]*0?7(?:[\\s\\-_]*(?:ma|ма)[\\s\\-_]*2?)?' },
             { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', icon: '🚀', category: 'rpg', idPattern: 'rhew[\\s\\-_]*0?9[\\s\\-_]*ma' },
             { id: 'PG9V', name: 'Постріл ПГ-9В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?9[\\s\\-_]*[vв]?' },
-            { id: 'BULLSPIKE', name: 'Bullspike AT', icon: '🚀', category: 'rpg', idPattern: 'bull?spike(?:[\\s\\-]*at)?' },
+            { id: 'BULLSPIKE', name: 'Bullspike (AT / TB)', icon: '🚀', category: 'rpg', idPattern: '(?:bull?spike|бул[ь]?спайк)(?:[\\s\\-_]*(?:at|ат|tb|тб|op|оп))?' },
             { id: 'RPV16', name: 'РПВ-16', icon: '🚀', category: 'rpg', idPattern: 'рпв(?:[\\s\\-]*16)?(?:[\\s\\-]*01)?' },
             { id: 'VPR20', name: 'ВПР-20', icon: '🚀', category: 'rpg', idPattern: '(?:впр|vpr)[\\s\\-_]*20' },
             { id: 'AT4', name: 'АТ-4', icon: '🚀', category: 'rpg', idPattern: '(?:(?:рпг|гранатомет)[\\s\\-_]*)?(?:ат|at)[\\s\\-]*4(?:[\\s\\-]*(?:cs|кс|сs|сз)[-_\\s]*(?:rs|рс))?' },
@@ -467,13 +479,13 @@ GHO - 2
             { id: 'RPG76', name: 'РПГ-76 (Комар)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*76' },
             
             // Гранатометні постріли 40х46 та ВОГ
-            { id: '40x46', name: '40х46 мм', icon: '💣', category: 'grenade', idPattern: '(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?[\\s\\-]*)?40[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*46(?:[\\s\\-]*\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?)?' },
+            { id: '40x46', name: '40х46 мм', icon: '💣', category: 'grenade', idPattern: '(?:(?:б[\\/\\.]?к|bk|постріл[а-яіїєґ]*|гранат[а-яіїєґ]*)[\\s\\-_]*)*(?:(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?[\\s\\-]*)?40[\\s\\-]*(?:[xх*\\\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*46(?:[\\s\\-_]*(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?|(?:nr|нр)[\\s\\-_]*338(?:[\\s\\-_]*(?:hefj|rlv))?|rlv(?:[\\s\\-_]*hefj)?|m[\\s\\-_]*433|м[\\s\\-_]*433|m[\\s\\-_]*406|м[\\s\\-_]*406|hedp|хедп))*|(?:nr|нр)[\\s\\-_]*338(?:[\\s\\-_]*(?:hefj|rlv))?|rlv[\\s\\-_]*hefj)' },
             { id: 'VOG', name: 'ВОГ (17/25)', icon: '💣', category: 'grenade', idPattern: '(?:вог|vog)[а-яіїєґa-z]*[- ]?(?:17|25)?' },
 
             // Ручні осколкові та термобаричні гранати
             { id: 'GHO', name: 'GHO', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:gho|goh|гхо|гох)[\\s\\-_]*1?\\.?' },
             { id: 'F1', name: 'Граната Ф-1', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:mle[\\s\\-]*)?(?:ф|f)[- ]?1[aа]?' },
-            { id: 'M67', name: 'Граната М67', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:m[- ]?67|м[- ]?67)' },
+            { id: 'M67', name: 'Граната М67', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*|grenade[\\s,:-]*)?(?:hand[\\s\\-_]*frag(?:mentation)?(?:[\\s\\-_]*(?:m|м)[- ]?67)?|m[- ]?67|м[- ]?67)' },
             { id: 'RGN', name: 'Граната РГН', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgn|ргн)[а-яіїєґ]*' },
             { id: 'RGO', name: 'Граната РГО', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgo|рго|rg0|рг0)[а-яіїєґ]*' },
             { id: 'RGD5', name: 'Граната РГД-5', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:ргд|rgd)[\\s\\-]*5?' },
@@ -552,7 +564,7 @@ GHO - 2
         // Загальні шаблони роздільників та одиниць виміру для детектора та парсера
         const sep = '[\\s\\-–—:=./;\\\\x5c]*';
         const unit = '(?:[\\s\\-]*[\\-\\\\/\\s]*шт\\.?|щт\\.?|штук[и]?|гранат[аи]?|грн)?';
-        const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ_])';
+        const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9_])';
 
         /**
          * Розумний детектор меж БК:
@@ -665,7 +677,7 @@ GHO - 2
             // Загальні шаблони роздільників та одиниць виміру
             const sep = '[\\s\\-–—:=./;\\\\x5c]*';
             const unit = '(?:[\\s\\-]*[\\-\\\\/\\s]*шт\\.?|щт\\.?|штук[и]?|гранат[аи]?|грн)?';
-            const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ_])'; // Запобігає захопленню цифр всередині слів
+            const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9_])'; // Запобігає захопленню цифр всередині слів та чисел
 
             // Порядкова обробка кожного рядка тексту
             lines.forEach((line, index) => {
@@ -713,7 +725,7 @@ GHO - 2
                 if (assumeOne) {
                     const implicitConfigs = [
                         'GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'RGT27S', 
-                        'VOG', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'RHEAT7MA', 'BULLSPIKE', 
+                        'VOG', '40x46', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'RHEAT7MA', 'BULLSPIKE', 
                         'RPV16', 'VPR20', 'AT4', 'RPG75', 'RPG18', 'RPG22', 'RPG26', 'RPG76',
                         'RSP'
                     ];

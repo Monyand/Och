@@ -19,3 +19,7 @@ cyber_guard_service.py
 cyber_events.json
 cyber_config.json
 
+# Military Suite (monolithic suite & encrypted backups)
+MilitarySuite.html
+*.mils.enc
+military_suite_backup_*.mils.enc
