@@ -79,7 +79,7 @@
                         <div class="flex items-center gap-2.5">
                             <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Облік перевіряючих</h1>
                             <button onclick="openModal('modal-changelog')" title="Історія оновлень" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm">
-                                ⚡ v1.2.0
+                                ⚡ v1.2.1
                             </button>
                         </div>
                         <p class="text-slate-400 text-xs md:text-sm mt-0.5">Автоматичний парсер бойових розпоряджень (БР) та генератор офіційного звіту .docx</p>
@@ -350,7 +350,14 @@
         }
 
         function letterToIndex(letter) {
-            let str = String(letter).toUpperCase().replace(/[^A-Z]/g, '');
+            let str = String(letter || "").toUpperCase().trim();
+            // Транслітерація кириличних літер-близнюків клавіатури в латиницю (А->A, В->B, С->C тощо)
+            const cyrToLat = {
+                'А': 'A', 'В': 'B', 'С': 'C', 'Д': 'D', 'Е': 'E', 'Н': 'H', 'І': 'I', 'К': 'K',
+                'М': 'M', 'О': 'O', 'Р': 'P', 'Т': 'T', 'Х': 'X', 'У': 'Y'
+            };
+            str = str.replace(/[А-ЯІЇЄҐ]/g, m => cyrToLat[m] || m);
+            str = str.replace(/[^A-Z]/g, '');
             if (!str) return 0;
             let index = 0;
             for (let i = 0; i < str.length; i++) {
@@ -399,10 +406,26 @@
 
         function getFormattedDate(targetDate) {
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const dayStr = String(targetDate).padStart(2, '0');
-            return `${dayStr}.${month}.${year}`;
+            let year = now.getFullYear();
+            let month = now.getMonth(); // 0-11
+            
+            // Якщо сьогодні початок місяця (наприклад, 1-5 число), а обрано дату > 25,
+            // формується звіт за кінець минулого місяця
+            if (now.getDate() <= 5 && targetDate >= 25) {
+                month -= 1;
+                if (month < 0) {
+                    month = 11;
+                    year -= 1;
+                }
+            }
+            
+            // Визначаємо кількість днів у місяці (28, 29, 30 або 31)
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const safeDay = Math.min(targetDate, daysInMonth);
+            
+            const monthStr = String(month + 1).padStart(2, '0');
+            const dayStr = String(safeDay).padStart(2, '0');
+            return `${dayStr}.${monthStr}.${year}`;
         }
 
         function cleanSpaces(str) {
@@ -429,7 +452,11 @@
                 return cleanSpaces(personText.replace(/[;,\s]+$/, ''));
             }).filter(t => t.length > 0);
 
-            return peopleParts.join('; ') + (peopleParts.length > 0 ? '.' : '');
+            let res = peopleParts.join('; ');
+            if (res.length > 0 && !res.endsWith('.')) {
+                res += '.';
+            }
+            return res;
         }
 
         async function processData(shouldDownload = false) {
@@ -476,8 +503,11 @@
                 let rawName = cleanSpaces(row[nameIdx]);
 
                 let isBR = false;
-                for (let c = dateStartIdx; c <= dateStartIdx + 35; c++) {
-                    if (String(row[c] || "").trim().toLowerCase() === "br") {
+                const maxCol = Math.min(row.length - 1, dateStartIdx + 35);
+                for (let c = dateStartIdx; c <= maxCol; c++) {
+                    const cellVal = String(row[c] || "").trim().toLowerCase();
+                    // Підтримка латиниці "br", "b/r" та кирилиці "бр", "б/р"
+                    if (cellVal === "br" || cellVal === "бр" || cellVal === "b/r" || cellVal === "б/р") {
                         isBR = true;
                         break;
                     }
@@ -485,7 +515,8 @@
 
                 if (isBR) {
                     let taskText = (rawPos || rawName);
-                    taskText = taskText.replace(/дд\.мм\.(рррр|202\d)/gi, dateStr);
+                    // Розширена заміна шаблонів дат: дд.мм.рррр, dd.mm.yyyy, дд/мм/рррр, дд.мм.рр
+                    taskText = taskText.replace(/(?:дд|dd)[\.\/\-](?:мм|mm)[\.\/\-](?:рррр|yyyy|202\d|рр|yy)/gi, dateStr);
                     currentTaskText = cleanSpaces(taskText);
                     memRank = "";
                     memPos = "";
@@ -500,7 +531,8 @@
                 if (!rawRank && !rawPos && !rawName) continue;
 
                 const mark = String(row[targetColIdx] || "").trim().toLowerCase();
-                if (mark && mark !== "0" && mark !== "-" && mark !== "br" && !mark.includes("202") && !mark.includes("/")) {
+                const isIgnoredMark = !mark || mark === "0" || mark === "-" || mark === "br" || mark === "бр" || mark === "b/r" || mark === "б/р" || mark.includes("202") || mark.includes("/");
+                if (!isIgnoredMark) {
                     if (!groupedData[currentTaskText]) groupedData[currentTaskText] = [];
                     groupedData[currentTaskText].push({ rank: rawRank, pos: rawPos, name: rawName });
                     totalPeopleCount++;
@@ -588,7 +620,7 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
+                setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 
                 setStatus(`✅ Успішно завантажено файл за ${dateStr}!`, "success");
             } catch (err) {
@@ -645,25 +677,32 @@
         function copyPreviewText() {
             if (!lastGeneratedText) return;
 
-            navigator.clipboard.writeText(lastGeneratedText).then(() => {
+            const onDone = () => {
                 const copyBtnText = document.getElementById('copy-text');
                 copyBtnText.innerText = "Скопійовано!";
                 setTimeout(() => {
                     copyBtnText.innerText = "Копіювати";
                 }, 2000);
-            }).catch(() => {
+            };
+
+            let copied = false;
+            try {
                 const ta = document.createElement("textarea");
                 ta.value = lastGeneratedText;
+                ta.style.position = "fixed";
+                ta.style.opacity = "0";
+                ta.style.left = "-9999px";
                 document.body.appendChild(ta);
                 ta.select();
-                try {
-                    document.execCommand('copy');
-                    const copyBtnText = document.getElementById('copy-text');
-                    copyBtnText.innerText = "Скопійовано!";
-                    setTimeout(() => copyBtnText.innerText = "Копіювати", 2000);
-                } catch (e) { }
+                copied = document.execCommand('copy');
                 document.body.removeChild(ta);
-            });
+            } catch (_) {}
+
+            if (copied) {
+                onDone();
+            } else if (navigator?.clipboard?.writeText) {
+                navigator.clipboard.writeText(lastGeneratedText).then(onDone).catch(() => {});
+            }
         }
 
         // Модальні вікна (Changelog)
@@ -697,7 +736,7 @@
     </script>
 
     <!-- Модальне вікно Changelog (Історія оновлень) -->
-    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
                 <div class="flex items-center gap-3">
@@ -714,15 +753,30 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.2.0 -->
+                <!-- v1.2.1 -->
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.0 (Поточна)</span>
-                        <span class="text-[11px] font-mono text-slate-500">17.08.2026</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.1 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">18.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Вимкнено автозавантаження файлів:</strong> Генерація Word-документа (.docx) тепер відбувається виключно за явної команди користувача (кнопка «Завантажити .docx»), а зміна дати оновлює лише Live Preview.</li>
-                        <li><strong class="text-white">Повна нормалізація пробілів:</strong> Автоматичне згортання подвійних/потрійних пробілів у ПІБ, званнях, посадах та вичищення зайвих відступів перед розділовими знаками.</li>
+                        <li><strong class="text-white">Повна підтримка кириличних маркерів:</strong> Розпізнавання розпоряджень за написами «бр» та «б/р» поряд із латинськими «br» / «b/r».</li>
+                        <li><strong class="text-white">Транслітерація омогліфів клавіатури:</strong> Автоматичне приведення кириличних літер (А, В, С, Е, Н, Т тощо) до латинських індексів стовпців Excel у letterToIndex.</li>
+                        <li><strong class="text-white">Календарний захист днів місяця:</strong> Функція getFormattedDate враховує точну кількість діб поточного місяця (28-31) та запобігає некоректним датам.</li>
+                        <li><strong class="text-white">Очищення пунктуації:</strong> Усунення подвійних крапок після скорочень ПІБ виду «Іванов І.І.»; розширення шаблонів підстановки дат (DD.MM.YYYY, дд/мм/рррр, дд.мм.рр).</li>
+                        <li><strong class="text-white">Безпечний буфер обміну:</strong> Надійне копіювання з синхронним фолбеком та затримка revokeObjectURL для стабільного завантаження .docx.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.2.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.2.0</span>
+                        <span class="text-[11px] font-mono text-slate-500">17.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li><strong class="text-slate-300">Вимкнено автозавантаження файлів:</strong> Генерація Word-документа (.docx) тепер відбувається виключно за явної команди користувача (кнопка «Завантажити .docx»), а зміна дати оновлює лише Live Preview.</li>
+                        <li><strong class="text-slate-300">Повна нормалізація пробілів:</strong> Автоматичне згортання подвійних/потрійних пробілів у ПІБ, званнях, посадах та вичищення зайвих відступів перед розділовими знаками.</li>
                     </ul>
                 </div>
 

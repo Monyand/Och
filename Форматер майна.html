@@ -51,24 +51,78 @@
     <div class="max-w-6xl mx-auto space-y-6">
 
         <!-- Шапка програми -->
-        <header class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <header class="mb-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-slate-800/80 pb-5">
             <div>
                 <div class="flex items-center gap-3">
-                    <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Форматер Майна</h1>
-                    <span class="text-xs bg-blue-600/80 text-white font-mono font-bold px-2.5 py-0.5 rounded-full shadow-sm">
-                        🚀 v1.3.0
-                    </span>
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
+                        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Форматер Майна</h1>
+                            <button onclick="openModal('modal-changelog')" title="Історія оновлень"
+                                class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1.5">
+                                <span class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                                <span>⚡ v1.4.0</span>
+                            </button>
+                        </div>
+                        <p class="text-slate-400 text-xs md:text-sm mt-0.5">Вставте будь-який сирий текст списків майна — отримайте ідеально чистий стандартизований шаблон.</p>
+                    </div>
                 </div>
-                <p class="text-slate-400 text-sm mt-1">Вставте будь-який сирий текст списків майна — отримайте ідеально чистий стандартизований шаблон.</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <button id="btn-demo"
-                    class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-all shadow-sm">
+                    class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-all shadow-sm cursor-pointer">
                     <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
                     <span>Вставити приклад</span>
                 </button>
+                <span class="text-[11px] font-mono text-slate-500 flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-400"></i>
+                    <span>OFFLINE ENGINE</span>
+                </span>
             </div>
         </header>
+
+        <!-- Панель інструментів та налаштувань форматування -->
+        <div class="bg-slate-900/90 rounded-xl border border-slate-800 p-3.5 shadow-lg flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <!-- Опція: Об'єднати дублікати -->
+                <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors">
+                    <input type="checkbox" id="chk-merge" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer">
+                    <span class="font-medium">Об'єднати дублікати (сумувати)</span>
+                </label>
+
+                <!-- Опція: Сортувати А-Я -->
+                <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors">
+                    <input type="checkbox" id="chk-sort" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer">
+                    <span class="font-medium">Сортувати А-Я</span>
+                </label>
+
+                <!-- Опція: Розділювач у кінці рядка -->
+                <div class="flex items-center gap-1.5 text-slate-400">
+                    <span>Розділювач:</span>
+                    <select id="sel-delimiter" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                        <option value=";" selected>; (крапка з комою)</option>
+                        <option value=".">. (крапка)</option>
+                        <option value="">без роздільника</option>
+                    </select>
+                </div>
+
+                <!-- Опція: Префікс рядка -->
+                <div class="flex items-center gap-1.5 text-slate-400">
+                    <span>Стиль списку:</span>
+                    <select id="sel-prefix" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                        <option value="none" selected>Без маркерів</option>
+                        <option value="dash">– Тире</option>
+                        <option value="bullet">• Булет</option>
+                        <option value="numbered">1. Нумерація</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="quick-status" class="text-[11px] font-mono text-slate-500">Автопарсинг активний</span>
+            </div>
+        </div>
 
         <!-- Основна робоча сітка -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -82,7 +136,7 @@
                             <h2 class="font-semibold text-slate-200 text-sm">Сирі дані (рапорти / списки)</h2>
                         </div>
                         <button id="btn-clear"
-                            class="text-slate-400 hover:text-red-400 transition-colors p-1 rounded hover:bg-slate-700/50"
+                            class="text-slate-400 hover:text-red-400 transition-colors p-1 rounded hover:bg-slate-700/50 cursor-pointer"
                             title="Очистити все">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
@@ -117,13 +171,13 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <button id="btn-download"
-                                class="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-800 border border-slate-700 text-blue-400 hover:bg-slate-700 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+                                class="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-800 border border-slate-700 text-blue-400 hover:bg-slate-700 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm cursor-pointer"
                                 disabled>
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                 <span class="hidden sm:inline">Завантажити .txt</span>
                             </button>
                             <button id="btn-copy"
-                                class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-sm active:scale-95"
+                                class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer"
                                 disabled>
                                 <i id="copy-icon" data-lucide="copy" class="w-3.5 h-3.5"></i>
                                 <span id="copy-text">Копіювати</span>
@@ -146,13 +200,14 @@
         <div class="bg-slate-900/60 rounded-xl border border-slate-800/80 p-4 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2">
                 <span class="font-bold text-slate-300 uppercase tracking-wider text-[10px]">Розпізнає:</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">шт. / щт.</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">шт. / щт. / од.</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пара / пари / пар</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">к-кт / комплект</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">од.</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">м / пог. м</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">рул. / бухта</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">уп. / ящ. / бан. / л / кг</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пач. / цинк / ящ. / уп.</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">рул. / бухта / мот. / кот.</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">м / пог. м / кв. м / куб. м</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">амп. / фл. / тюб. / бан.</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">л / кг / кан. / т</span>
             </div>
             <div class="flex items-center gap-1.5 text-slate-500">
                 <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
@@ -160,6 +215,72 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Модальне вікно Changelog (Історія оновлень) -->
+    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                        <i data-lucide="history" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Історія оновлень</h2>
+                        <p class="text-xs text-slate-400">Форматер військового майна та спорядження</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-changelog')" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
+                <!-- v1.4.0 -->
+                <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.4.0 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">18.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Розширений армійський каталог одиниць:</strong> додано розпізнавання пачок, цинків, котушок саперного/польового дроту, мотків, бухт, рулонів, погонних метрів (пог. м, п.м.), квадратних та кубічних метрів, медичних засобів (ампули, флакони, тюбики).</li>
+                        <li><strong class="text-white">Чітке розділення тонн і штук:</strong> усунуто помилкову заміну «10 т» на «10 шт.» — тонни для ПММ та будматеріалів зберігаються коректно.</li>
+                        <li><strong class="text-white">Гарантоване відсікання зайвих даних (End-of-line focus):</strong> прізвища закріплених бійців, коментарі обставин втрати та примітки в дужках відкидаються; кожен рядок чітко закінчується кількістю та одиницею виміру.</li>
+                        <li><strong class="text-white">Розумне об'єднання дублікатів (Merge):</strong> опція автоматичного сумування однакових позицій майна з граматичним відмінюванням одиниць виміру (наприклад: 1 цинк + 2 цинки = 3 цинки).</li>
+                        <li><strong class="text-white">Сортування А-Я та налаштування пунктуації:</strong> можливість алфавітного сортування в межах розділів, вибір стилю списку (без маркерів, тире, булети, нумерація) та кінцевого розділювача (; або .).</li>
+                        <li><strong class="text-white">Безпека LocalStorage та пам'яті:</strong> обробка переповнення квоти сховища та безпечне відкладене скасування URL-об'єктів для експорту .txt.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.3.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.3.0</span>
+                        <span class="text-[11px] font-mono text-slate-500">28.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li><strong class="text-slate-300">Розділи та служби:</strong> Автоматичне розпізнавання заголовків служб (ЗББР, ОВТ, медичний пункт тощо) із двокрапкою.</li>
+                        <li><strong class="text-slate-300">Двосторонній редактор:</strong> Синхронізована колонка з номерами рядків та прев'ю результату.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.2.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.2.0</span>
+                        <span class="text-[11px] font-mono text-slate-500">10.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li><strong class="text-slate-300">Базовий парсер кількостей:</strong> Розпізнавання штук, комплектів, пар та очищення базових списків.</li>
+                        <li><strong class="text-slate-300">Експорт:</strong> Можливість швидкого копіювання в буфер або збереження у файл .txt.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-950/60 border-t border-slate-800 text-right">
+                <button onclick="closeModal('modal-changelog')" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer">
+                    Закрити
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -173,11 +294,19 @@
         const btnDownload = document.getElementById('btn-download');
         const btnDemo = document.getElementById('btn-demo');
         const statsBadge = document.getElementById('stats-badge');
+        const chkMerge = document.getElementById('chk-merge');
+        const chkSort = document.getElementById('chk-sort');
+        const selDelimiter = document.getElementById('sel-delimiter');
+        const selPrefix = document.getElementById('sel-prefix');
+        const quickStatus = document.getElementById('quick-status');
 
         const demoText = `По Службі ЗББР:
 - Магазин під патрон 5,45х39 мм на 30 патронів – 4 шт.
+- Магазин під патрон 5,45х39 мм на 30 патронів – 2 шт.
 - Коліматорний приціл Bushnell TRS-25 - 1 к-кт
 - Пристрій метальний учбово-симуляційний – 1 шт.
+- Патрони 7.62х39 - 1 цинк
+- Патрони 7.62х39 - 2 цинки
 
 По Службі ОВТ та МСВ:
 - Бронежилет Корсар М3с - 2 шт (втрачено під час штурму)
@@ -186,10 +315,15 @@
 - Протигаз ПМК-2 – 1 шт.
 - Панчохи захисні – 1 пара
 - Спальний мішок зимовий -- 3 шт
+- Шолом кевларовий ТОР-Д - 2 шт. (сержант Петренко О.В.)
+- Дріт польовий П-274 - 500 пог. м
+- Дрова твердих порід - 5 т.
+- Дріт колючий - 3 бухти
 
 Майно медичного пункту:
 - Аптечка медична індивідуальна АМЗІ - 1 шт.
-- Джгут-турнікет CAT G7 – 3 шт.`;
+- Джгут-турнікет CAT G7 – 3 шт.
+- Знеболювальне в ампулах - 10 амп.`;
 
         // Оновлення номерів рядків
         function updateLineNumbers() {
@@ -206,10 +340,200 @@
             lineNumbersDiv.scrollTop = inputArea.scrollTop;
         });
 
-        // Головна функція форматування
+        // Нормалізація військового тексту (омогліфи, специфічні пробіли, апострофи)
+        function normalizeMilitaryText(str) {
+            if (!str) return '';
+            return str
+                .replace(/[\u00A0\u1680\u180e\u2000-\u200b\u202f\u205f\u3000\ufeff]/g, ' ')
+                .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015]/g, '–')
+                .replace(/[\u2018\u2019\u02bc\u0060\u00b4]/g, "'")
+                .replace(/[ \t]+/g, ' ')
+                .trim();
+        }
+
+        // Очищення початкових маркерів списків без пошкодження калібрів (5.45, 7.62 тощо)
+        function stripListMarkers(str) {
+            return str.replace(/^\s*(?:(?:\d+|[a-zA-Zа-яА-ЯіїєґІЇЄҐ])[\.\)]\s*|[-–—•*+▪▫►●·✔✓]\s*)+/, '').trim();
+        }
+
+        // Перевірка на заголовок розділу / служби
+        function isSectionHeader(text) {
+            if (text.endsWith(':')) return true;
+            return /^(?:по\s+служб[іе]|служб[ае]|майно|по\s+груп[іе]|груп[ае]|відділення|взвод|рота|батальйон|підрозділ|склад)\b/i.test(text);
+        }
+
+        // Базова категорія одиниці виміру для коректного об'єднання дублікатів
+        function getUnitBase(unit) {
+            if (!unit) return '';
+            const u = unit.toLowerCase().replace(/\./g, '').trim();
+            if (u.startsWith('пар')) return 'пара';
+            if (u.startsWith('цинк') || u === 'ц') return 'цинк';
+            if (u.startsWith('бухт')) return 'бухта';
+            if (u.startsWith('шт') || u === 'щт') return 'шт.';
+            if (u.startsWith('од') || u.startsWith('одиниц')) return 'од.';
+            if (u.startsWith('к-кт') || u.startsWith('компл') || u.startsWith('к-т')) return 'к-кт';
+            if (u.startsWith('пач')) return 'пач.';
+            if (u.startsWith('ящ')) return 'ящ.';
+            if (u.startsWith('уп') || u.startsWith('упак')) return 'уп.';
+            if (u.startsWith('пак')) return 'пак.';
+            if (u.startsWith('рул')) return 'рул.';
+            if (u.startsWith('мот')) return 'мот.';
+            if (u.startsWith('кот') || u.startsWith('котушк')) return 'кот.';
+            if (u.includes('пог') || u.includes('пм') || u.includes('п/м')) return 'пог. м';
+            if (u.includes('кв') || u === 'м2' || u === 'м²') return 'кв. м';
+            if (u.includes('куб') || u === 'м3' || u === 'м³') return 'куб. м';
+            if (u === 'м' || u.startsWith('метр')) return 'м';
+            if (u.startsWith('амп')) return 'амп.';
+            if (u.startsWith('фл')) return 'фл.';
+            if (u.startsWith('тюб')) return 'тюб.';
+            if (u.startsWith('бан')) return 'бан.';
+            if (u.startsWith('пляш')) return 'пляш.';
+            if (u.startsWith('кан')) return 'кан.';
+            if (u === 'л' || u.startsWith('літр')) return 'л';
+            if (u === 'кг' || u.startsWith('кілограм')) return 'кг';
+            if (u === 'г' || u.startsWith('грам')) return 'г';
+            if (u === 'т' || u.startsWith('тонн')) return 'т';
+            return u;
+        }
+
+        // Нормалізація та граматичне відмінювання одиниці виміру
+        function normalizeUnit(rawUnit, q) {
+            if (!rawUnit) return 'шт.';
+            const u = rawUnit.toLowerCase().replace(/\s+/g, ' ').trim();
+            const cleanU = u.replace(/\./g, '');
+
+            // Штучний облік
+            if (cleanU === 'шт' || cleanU === 'щт') return 'шт.';
+            if (cleanU === 'од' || u.startsWith('одиниц')) return 'од.';
+
+            // Комплекти
+            if (cleanU === 'к-кт' || cleanU === 'к-т' || cleanU === 'компл' || u.startsWith('комплект')) return 'к-кт';
+
+            // Пари
+            if (cleanU.startsWith('пар')) {
+                if (q === 1) return 'пара';
+                if (q >= 2 && q <= 4) return 'пари';
+                return 'пар';
+            }
+
+            // Пакування та боєприпаси
+            if (cleanU.startsWith('пач') || cleanU === 'пачка') return 'пач.';
+            if (cleanU.startsWith('цинк') || cleanU === 'ц') {
+                if (q === 1) return 'цинк';
+                if (q >= 2 && q <= 4) return 'цинки';
+                return 'цинків';
+            }
+            if (cleanU.startsWith('ящ') || cleanU.startsWith('ящик')) return 'ящ.';
+            if (cleanU.startsWith('уп') || cleanU.startsWith('упак')) return 'уп.';
+            if (cleanU.startsWith('пак') || cleanU.startsWith('пакет')) return 'пак.';
+
+            // Метри та бухти
+            if (u.includes('пог') || u.includes('п.м') || u.includes('п/м') || cleanU === 'пог м' || cleanU === 'п м') return 'пог. м';
+            if (u.includes('кв') || cleanU === 'м2' || cleanU === 'м²') return 'кв. м';
+            if (u.includes('куб') || cleanU === 'м3' || cleanU === 'м³') return 'куб. м';
+            if (cleanU === 'м' || cleanU.startsWith('метр')) return 'м';
+            if (cleanU.startsWith('бухт')) {
+                if (q === 1) return 'бухта';
+                if (q >= 2 && q <= 4) return 'бухти';
+                return 'бухт';
+            }
+            if (cleanU.startsWith('рул') || cleanU.startsWith('рулон')) return 'рул.';
+            if (cleanU.startsWith('мот')) return 'мот.';
+            if (cleanU.startsWith('кот') || cleanU.startsWith('котушк')) return 'кот.';
+
+            // Медичні засоби
+            if (cleanU.startsWith('амп')) return 'амп.';
+            if (cleanU.startsWith('фл') || cleanU.startsWith('флакон')) return 'фл.';
+            if (cleanU.startsWith('тюб')) return 'тюб.';
+            if (cleanU.startsWith('бан')) return 'бан.';
+            if (cleanU.startsWith('пляш')) return 'пляш.';
+
+            // Об'єм та вага
+            if (cleanU.startsWith('кан') || cleanU.startsWith('каністр')) return 'кан.';
+            if (cleanU === 'л' || cleanU.startsWith('літр')) return 'л';
+            if (cleanU === 'кг' || cleanU.startsWith('кілограм')) return 'кг';
+            if (cleanU === 'г' || cleanU.startsWith('грам')) return 'г';
+            if (cleanU === 'т' || cleanU.startsWith('тонн')) return 'т';
+
+            return u;
+        }
+
+        // Регулярний вираз для пошуку кількості та одиниці виміру
+        const qtyRegex = /(?:^|[-\s–—\t:])*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|од\.?|одиниц[яіь]|пара|пар|пари|к-кт|к-т|комплект(?:и|ів)?|компл\.?|пач(?:ок|ка|ки|\.)?|цинк(?:и|ів)?|ц\.?|ящик(?:и|ів)?|ящ\.?|упаков(?:ка|ки|ок)?|упак\.?|уп\.?|пакет(?:и|ів)?|пак\.?|рулон(?:и|ів)?|рул\.?|бухт(?:а|и|)?|бухт\.?|моток|мотків|мот\.?|котушк(?:а|и|ок)?|кот\.?|пог\.?\s*м\.?|п\.?\s*м\.?|п\/м|кв\.?\s*м\.?|м²|м2|куб\.?\s*м\.?|м³|м3|метр(?:и|ів)?|м\.?|ампул(?:а|и|)?|амп\.?|флакон(?:и|ів)?|фл\.?|тюбик(?:и|ів)?|тюб\.?|банк(?:а|и|ок)?|бан\.?|пляшк(?:а|и|ок)?|пляш\.?|каністр(?:а|и|)?|кан\.?|літр(?:и|ів)?|л\.?|кілограм(?:и|ів)?|кг\.?|грам(?:и|ів)?|г\.?|тонн(?:а|и|)?|т\.?)(?=[^\w\u0400-\u04FF]|$)/gi;
+
+        // Пошук явного числа в кінці рядка без одиниці (наприклад, "- 2" або "-- 3")
+        const bareQtyRegex = /[-\s–—\t:]+(\d+(?:[.,]\d+)?)(?:\s*(?:\([^\)]*\)|\[[^\]]*\]))?\s*$/;
+
+        // Розбір одного рядка
+        function parseLine(line) {
+            const norm = normalizeMilitaryText(line);
+            if (!norm) return null;
+
+            const clean = stripListMarkers(norm);
+            if (!clean) return null;
+
+            qtyRegex.lastIndex = 0;
+            let lastMatch = null;
+            let match;
+            while ((match = qtyRegex.exec(clean)) !== null) {
+                lastMatch = match;
+            }
+
+            if (isSectionHeader(clean) && !lastMatch) {
+                return { type: 'header', text: clean.replace(/[:.;,\s]+$/, '') + ':' };
+            }
+
+            if (lastMatch) {
+                const rawQty = lastMatch[1].replace(',', '.');
+                const q = parseFloat(rawQty);
+                const unit = normalizeUnit(lastMatch[2], q);
+                let name = clean.substring(0, lastMatch.index).trim();
+                name = name.replace(/\s+/g, ' ');
+                // Видалення приміток втрати або прізвищ наприкінці назви (якщо були перед кількістю)
+                name = name.replace(/\s*\((?:солдат|сержант|офіцер|втрачено|знищено|під час|в результаті|на позиції|без повернення|списано)[^)]*\)\s*$/i, '').trim();
+                name = name.replace(/(?:втрачено|знищено|під час|в результаті|на позиції).*$/i, '').trim();
+                name = name.replace(/[-–—\s:.,;]+$/, '').trim();
+                return { type: 'item', name, quantity: q, unit, unitBase: getUnitBase(unit) };
+            }
+
+            const bareMatch = bareQtyRegex.exec(clean);
+            if (bareMatch) {
+                const rawQty = bareMatch[1].replace(',', '.');
+                const q = parseFloat(rawQty);
+                let name = clean.substring(0, bareMatch.index).trim();
+                name = name.replace(/\s+/g, ' ');
+                name = name.replace(/\s*\((?:солдат|сержант|офіцер|втрачено|знищено|під час|в результаті|на позиції|без повернення|списано)[^)]*\)\s*$/i, '').trim();
+                name = name.replace(/(?:втрачено|знищено|під час|в результаті|на позиції).*$/i, '').trim();
+                name = name.replace(/[-–—\s:.,;]+$/, '').trim();
+                return { type: 'item', name, quantity: q, unit: 'шт.', unitBase: 'шт.' };
+            }
+
+            return {
+                type: 'item',
+                name: clean.replace(/[-–—\s:.,;]+$/, '').trim(),
+                quantity: null,
+                unit: null,
+                unitBase: ''
+            };
+        }
+
+        // Головна функція форматування даних
         function formatData() {
             const rawText = inputArea.value;
-            localStorage.setItem('formatterData', rawText);
+
+            // Безпечне збереження в LocalStorage з перехопленням QuotaExceededError
+            try {
+                localStorage.setItem('formatterData_v14', rawText);
+                localStorage.setItem('formatterSettings', JSON.stringify({
+                    merge: chkMerge.checked,
+                    sort: chkSort.checked,
+                    delimiter: selDelimiter.value,
+                    prefix: selPrefix.value
+                }));
+            } catch (err) {
+                console.warn("Попередження: LocalStorage недоступний або переповнений:", err);
+            }
+
             updateLineNumbers();
 
             if (!rawText.trim()) {
@@ -217,109 +541,99 @@
                 btnCopy.disabled = true;
                 btnDownload.disabled = true;
                 statsBadge.classList.add('hidden');
+                quickStatus.textContent = 'Очікування вхідних даних';
                 return;
             }
 
+            const shouldMerge = chkMerge.checked;
+            const shouldSort = chkSort.checked;
+            const delimiter = selDelimiter.value;
+            const prefixStyle = selPrefix.value;
+
             const lines = rawText.split('\n');
-            const resultLines = [];
-            let validCount = 0;
+            const sections = [];
+            let currentSection = { header: null, items: [] };
+            let rawValidCount = 0;
 
             lines.forEach(line => {
-                let text = line.trim();
-                if (!text) {
-                    if (resultLines.length > 0 && resultLines[resultLines.length - 1] !== '') {
-                        resultLines.push('');
+                const parsed = parseLine(line);
+                if (!parsed) {
+                    if (currentSection.items.length > 0 || currentSection.header) {
+                        sections.push(currentSection);
+                        currentSection = { header: null, items: [] };
                     }
                     return;
                 }
 
-                // Перевірка, чи рядок є заголовком служби / розділу
-                const isHeaderCandidate = text.endsWith(':') ||
-                    /^(?:по\s+служб[іе]|служб[ае]|майно|по\s+груп[іе]|груп[ае]|відділення|взвод|рота|батальйон|підрозділ)/i.test(text);
-
-                // 1. Прибираємо початкові маркери (1., 1), a., a), -, •, *, –, +) без пошкодження калібрів типу 5.45 чи 7.62
-                let cleanText = text.replace(/^\s*(?:(?:\d+|[a-zA-Zа-яА-ЯіїєґІЇЄҐ])[\.\)]\s*|[-•*–—+]\s*)+/, '').trim();
-
-                // 2. Шукаємо ОСТАННЄ входження кількості та одиниці виміру в рядку
-                const qtyRegex = /[-\s–—]*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|т\.?|пара|пар|пари|к-кт|к-т|комплект(?:и)?|компл\.?|од\.?|пог\.?\s*м\.?|м\.?|метр(?:и|ів)?|рулон(?:и|ів)?|рул\.?|бухт(?:а|и|)?|бухт\.?|упаков(?:ка|ки|ок)?|упак\.?|уп\.?|ящик(?:и|ів)?|ящ\.?|банк(?:а|и|ок)?|бан\.?|пляшк(?:а|и|ок)?|пляш\.?|каністр(?:а|и)?|кан\.?|літр(?:и|ів)?|л\.?|кг\.?|кілограм(?:и|ів)?)/gi;
-                let lastMatch = null;
-                let match;
-
-                while ((match = qtyRegex.exec(cleanText)) !== null) {
-                    lastMatch = match;
-                }
-
-                // Якщо це заголовок розділу (без кількості)
-                if (isHeaderCandidate && !lastMatch) {
-                    let headerName = cleanText.replace(/[:.;,\s]+$/, '').trim();
-                    resultLines.push(`${headerName}:`);
-                    return;
-                }
-
-                validCount++;
-
-                if (lastMatch) {
-                    const quantity = lastMatch[1].replace(',', '.');
-                    let rawUnit = lastMatch[2].toLowerCase().replace(/\s+/g, ' ').trim();
-                    let unit = rawUnit.replace(/\./g, '');
-                    const q = parseFloat(quantity);
-
-                    // Нормалізуємо одиниці виміру
-                    if (unit === 'шт' || unit === 'щт' || unit === 'т') {
-                        unit = 'шт.';
-                    } else if (unit === 'пара' || unit === 'пар' || unit === 'пари') {
-                        if (q === 1) unit = 'пара';
-                        else if (q >= 2 && q <= 4) unit = 'пари';
-                        else unit = 'пар';
-                    } else if (unit === 'к-кт' || unit === 'к-т' || unit === 'комплект' || unit === 'комплекти' || unit === 'компл') {
-                        unit = 'к-кт';
-                    } else if (unit === 'од') {
-                        unit = 'од.';
-                    } else if (rawUnit.includes('пог') || unit === 'пог м' || unit === 'погм') {
-                        unit = 'пог. м';
-                    } else if (unit === 'м' || unit.startsWith('метр')) {
-                        unit = 'м';
-                    } else if (unit === 'рул' || unit.startsWith('рулон')) {
-                        unit = 'рул.';
-                    } else if (unit === 'бухт' || unit.startsWith('бухт')) {
-                        if (q === 1) unit = 'бухта';
-                        else if (q >= 2 && q <= 4) unit = 'бухти';
-                        else unit = 'бухт';
-                    } else if (unit === 'уп' || unit === 'упак' || unit.startsWith('упаков')) {
-                        unit = 'уп.';
-                    } else if (unit === 'ящ' || unit.startsWith('ящик')) {
-                        unit = 'ящ.';
-                    } else if (unit === 'бан' || unit.startsWith('банк')) {
-                        unit = 'бан.';
-                    } else if (unit === 'пляш' || unit.startsWith('пляшк')) {
-                        unit = 'пляш.';
-                    } else if (unit === 'кан' || unit.startsWith('каністр')) {
-                        unit = 'кан.';
-                    } else if (unit === 'л' || unit.startsWith('літр')) {
-                        unit = 'л';
-                    } else if (unit === 'кг' || unit.startsWith('кілограм')) {
-                        unit = 'кг';
+                if (parsed.type === 'header') {
+                    if (currentSection.items.length > 0 || currentSection.header) {
+                        sections.push(currentSection);
                     }
-
-                    // Назва — це все, що було ДО знайденої кількості
-                    let name = cleanText.substring(0, lastMatch.index).trim();
-
-                    // Прибираємо зайві пробіли та табуляції всередині назви
-                    name = name.replace(/\s+/g, ' ');
-
-                    // Прибираємо зайві слова-сміття з кінця назви
-                    name = name.replace(/(?:втрачено|знищено|під час|в результаті|на позиції).*$/i, '').trim();
-
-                    // Прибираємо тире, коми, двокрапки в кінці назви
-                    name = name.replace(/[-–—\s:.,;]+$/, '');
-
-                    // Формуємо фінальний стандартизований рядок строго з початку рядка
-                    resultLines.push(`${name} – ${quantity} ${unit};`);
-                } else {
-                    // Якщо не знайдено одиниці виміру, очищаємо рядок від сміття та залишаємо
-                    cleanText = cleanText.replace(/\s+/g, ' ').replace(/[.;\s]+$/, '');
-                    resultLines.push(`${cleanText};`);
+                    currentSection = { header: parsed.text, items: [] };
+                } else if (parsed.type === 'item') {
+                    currentSection.items.push(parsed);
+                    rawValidCount++;
                 }
+            });
+
+            if (currentSection.items.length > 0 || currentSection.header) {
+                sections.push(currentSection);
+            }
+
+            const resultLines = [];
+            let processedItemsCount = 0;
+            let globalItemIndex = 1;
+
+            sections.forEach((sec, sIdx) => {
+                if (sIdx > 0 && resultLines.length > 0 && resultLines[resultLines.length - 1] !== '') {
+                    resultLines.push('');
+                }
+
+                if (sec.header) {
+                    resultLines.push(sec.header);
+                }
+
+                let items = sec.items;
+
+                // Об'єднання однакових найменувань майна
+                if (shouldMerge) {
+                    const mergedMap = new Map();
+                    items.forEach(it => {
+                        const key = `${it.name.toLowerCase()}___${it.unitBase}`;
+                        if (mergedMap.has(key)) {
+                            const existing = mergedMap.get(key);
+                            if (existing.quantity !== null && it.quantity !== null) {
+                                // Округлення для запобігання похибкам чисел із плаваючою крапкою (наприклад, 2.700000004)
+                                const total = Math.round((existing.quantity + it.quantity) * 1000) / 1000;
+                                existing.quantity = total;
+                                existing.unit = normalizeUnit(existing.unitBase, total);
+                            }
+                        } else {
+                            mergedMap.set(key, { ...it });
+                        }
+                    });
+                    items = Array.from(mergedMap.values());
+                }
+
+                // Сортування А-Я
+                if (shouldSort) {
+                    items.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+                }
+
+                items.forEach(it => {
+                    let pfx = '';
+                    if (prefixStyle === 'dash') pfx = '– ';
+                    else if (prefixStyle === 'bullet') pfx = '• ';
+                    else if (prefixStyle === 'numbered') pfx = `${globalItemIndex}. `;
+
+                    if (it.quantity !== null && it.unit) {
+                        resultLines.push(`${pfx}${it.name} – ${it.quantity} ${it.unit}${delimiter}`);
+                    } else {
+                        resultLines.push(`${pfx}${it.name}${delimiter}`);
+                    }
+                    processedItemsCount++;
+                    globalItemIndex++;
+                });
             });
 
             outputArea.value = resultLines.join('\n');
@@ -328,15 +642,25 @@
             btnDownload.disabled = !hasData;
 
             if (hasData) {
-                statsBadge.textContent = `${validCount} поз.`;
+                if (shouldMerge && processedItemsCount !== rawValidCount) {
+                    statsBadge.textContent = `${processedItemsCount} поз. (зведено з ${rawValidCount})`;
+                } else {
+                    statsBadge.textContent = `${processedItemsCount} поз.`;
+                }
                 statsBadge.classList.remove('hidden');
+                quickStatus.textContent = 'Оброблено успішно';
             } else {
                 statsBadge.classList.add('hidden');
+                quickStatus.textContent = 'Очікування вхідних даних';
             }
         }
 
-        // Слухачі подій
+        // Слухачі подій та інтерфейс
         inputArea.addEventListener('input', formatData);
+        chkMerge.addEventListener('change', formatData);
+        chkSort.addEventListener('change', formatData);
+        selDelimiter.addEventListener('change', formatData);
+        selPrefix.addEventListener('change', formatData);
 
         btnDemo.addEventListener('click', () => {
             inputArea.value = demoText;
@@ -344,16 +668,17 @@
         });
 
         btnClear.addEventListener('click', () => {
-            if (inputArea.value && confirm('Очистити всі дані?')) {
+            if (inputArea.value && confirm('Очистити всі вхідні дані?')) {
                 inputArea.value = '';
                 formatData();
             }
         });
 
+        // Безпечне копіювання в буфер обміну
         btnCopy.addEventListener('click', () => {
             if (!outputArea.value) return;
 
-            navigator.clipboard.writeText(outputArea.value).then(() => {
+            function onCopySuccess() {
                 copyText.textContent = "Скопійовано!";
                 btnCopy.classList.replace('bg-blue-600', 'bg-emerald-600');
                 btnCopy.classList.replace('hover:bg-blue-500', 'hover:bg-emerald-500');
@@ -362,16 +687,24 @@
                     btnCopy.classList.replace('bg-emerald-600', 'bg-blue-600');
                     btnCopy.classList.replace('hover:bg-emerald-500', 'hover:bg-blue-500');
                 }, 2000);
-            }).catch(() => {
+            }
+
+            if (navigator?.clipboard?.writeText) {
+                navigator.clipboard.writeText(outputArea.value)
+                    .then(onCopySuccess)
+                    .catch(() => {
+                        outputArea.select();
+                        document.execCommand('copy');
+                        onCopySuccess();
+                    });
+            } else {
                 outputArea.select();
                 document.execCommand('copy');
-                copyText.textContent = "Скопійовано!";
-                setTimeout(() => {
-                    copyText.textContent = "Копіювати";
-                }, 2000);
-            });
+                onCopySuccess();
+            }
         });
 
+        // Завантаження файлу .txt з відкладеним revokeObjectURL
         btnDownload.addEventListener('click', () => {
             if (!outputArea.value) return;
             const blob = new Blob([outputArea.value], { type: 'text/plain;charset=utf-8' });
@@ -382,12 +715,49 @@
             a.href = url;
             a.download = `Майно_${dateStr}.txt`;
             a.click();
-            URL.revokeObjectURL(url);
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+            }, 1000);
         });
 
-        // Ініціалізація іконок та завантаження збережених даних
+        // Модальне вікно Changelog
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal('modal-changelog');
+            }
+        });
+
+        // Відновлення збереженого стану
+        try {
+            const savedSettings = JSON.parse(localStorage.getItem('formatterSettings') || '{}');
+            if (savedSettings.merge !== undefined) chkMerge.checked = savedSettings.merge;
+            if (savedSettings.sort !== undefined) chkSort.checked = savedSettings.sort;
+            if (savedSettings.delimiter !== undefined) selDelimiter.value = savedSettings.delimiter;
+            if (savedSettings.prefix !== undefined) selPrefix.value = savedSettings.prefix;
+        } catch (e) {
+            console.warn(e);
+        }
+
+        const savedData = localStorage.getItem('formatterData_v14') || localStorage.getItem('formatterData') || '';
+        inputArea.value = savedData;
+
+        // Ініціалізація іконок
         lucide.createIcons();
-        inputArea.value = localStorage.getItem('formatterData') || '';
         formatData();
     </script>
 </body>

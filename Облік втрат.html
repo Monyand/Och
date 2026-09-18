@@ -328,9 +328,11 @@
                     const buffer = await workbook.xlsx.writeBuffer();
                     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                     const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
+                    const objUrl = URL.createObjectURL(blob);
+                    link.href = objUrl;
                     link.download = `${cleanTitle}.xlsx`;
                     link.click();
+                    setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
                 } catch(err) {
                     console.error("Excel export error:", err);
                 }
@@ -350,9 +352,14 @@
                 </div>
             );
         }, (prev, next) => {
+            if (prev.type !== next.type || prev.showLabels !== next.showLabels || prev.showPercentages !== next.showPercentages || prev.title !== next.title) {
+                return false;
+            }
+            if (prev.data === next.data && prev.options === next.options) {
+                return true;
+            }
             return JSON.stringify(prev.data) === JSON.stringify(next.data) &&
-                   JSON.stringify(prev.options) === JSON.stringify(next.options) &&
-                   prev.type === next.type && prev.showLabels === next.showLabels && prev.showPercentages === next.showPercentages;
+                   JSON.stringify(prev.options) === JSON.stringify(next.options);
         });
 
         // --- ДОПОМІЖНІ ФУНКЦІЇ ---
@@ -369,22 +376,27 @@
             // 3. Стандартизація дефісів та тире
             str = str.replace(/[—–−‒]/g, '-');
 
+            // Якщо увімкнено toLower, робимо його ПЕРЕД заміною омогліфів, щоб B і b давали однаковий результат
+            if (options && options.toLower) {
+                str = str.toLowerCase();
+            }
+
             // 4. Заміна латинських літер-близнюків на українські (омогліфи)
             if (options && options.replaceHomoglyphs) {
                 const homoglyphMap = {
-                    'a': 'а', 'A': 'А',
-                    'b': 'б', 'B': 'В',
-                    'c': 'с', 'C': 'С',
-                    'e': 'е', 'E': 'Е',
-                    'h': 'н', 'H': 'Н',
-                    'i': 'і', 'I': 'І',
-                    'k': 'к', 'K': 'К',
-                    'm': 'м', 'M': 'М',
-                    'o': 'о', 'O': 'О',
-                    'p': 'р', 'P': 'Р',
-                    't': 'т', 'T': 'Т',
-                    'x': 'х', 'X': 'Х',
-                    'y': 'у', 'Y': 'У'
+                    'a': 'а', 'A': 'а',
+                    'b': 'б', 'B': 'б',
+                    'c': 'с', 'C': 'с',
+                    'e': 'е', 'E': 'е',
+                    'h': 'н', 'H': 'н',
+                    'i': 'і', 'I': 'і',
+                    'k': 'к', 'K': 'к',
+                    'm': 'м', 'M': 'м',
+                    'o': 'о', 'O': 'о',
+                    'p': 'р', 'P': 'р',
+                    't': 'т', 'T': 'т',
+                    'x': 'х', 'X': 'х',
+                    'y': 'у', 'Y': 'у'
                 };
                 str = str.replace(/[a-zA-Z]/g, match => homoglyphMap[match] || match);
             }
@@ -398,9 +410,22 @@
         const parseSafeDate = (dStr) => {
             if (!dStr) return 0;
             if (dStr instanceof Date) return dStr.getTime();
-            if (typeof dStr === 'number') return dStr;
+            if (typeof dStr === 'number') {
+                if (dStr > 0 && dStr < 100000) {
+                    return Math.round((dStr - 25569) * 86400 * 1000);
+                }
+                return dStr;
+            }
             let s = String(dStr).trim();
             if (!s) return 0;
+
+            // Якщо передано число як рядок (серійний номер дати Excel, наприклад "45550" або "45550.5")
+            if (/^\d{4,5}(\.\d+)?$/.test(s)) {
+                const num = parseFloat(s);
+                if (num > 10000 && num < 100000) {
+                    return Math.round((num - 25569) * 86400 * 1000);
+                }
+            }
 
             // Розумне авто-виправлення одруківок року (наприклад, 62026-08-25 або 22026-08-25 -> 2026-08-25)
             s = s.replace(/^[0-9]*(20\d{2}[-\.\/]\d{2}[-\.\/]\d{2})/, '$1');
@@ -413,6 +438,10 @@
                 return new Date(y, m - 1, d, h || 0, min || 0, sec || 0).getTime();
             }
             if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+                if (/Z|[+-]\d{2}:\d{2}$/i.test(s)) {
+                    const t = new Date(s).getTime();
+                    if (!isNaN(t)) return t;
+                }
                 const parts = s.split(/[\sT]+/);
                 const [y, m, d] = parts[0].split('-').map(Number);
                 const timePart = parts[1] || "00:00:00";
@@ -428,8 +457,12 @@
             if (!startMs) return "Невідомо";
             const diffMs = Date.now() - startMs;
             if (diffMs < 0) return "Щойно";
-            const hours = Math.floor(diffMs / (1000 * 60 * 60));
-            return hours >= 24 ? `${Math.floor(hours / 24)}д ${hours % 24}г` : `${hours} год`;
+            const totalMins = Math.floor(diffMs / (1000 * 60));
+            if (totalMins < 60) return `${totalMins} хв`;
+            const hours = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+            if (hours < 24) return mins > 0 ? `${hours}г ${mins}хв` : `${hours} год`;
+            return `${Math.floor(hours / 24)}д ${hours % 24}г`;
         };
 
         const getBadgeColors = (lossType, severity) => {
@@ -598,6 +631,32 @@
             return `${day}.${month}.${year} ${hours}:${mins}`;
         };
 
+        const copyToClipboardSafe = (text, onSuccess) => {
+            let copied = false;
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                copied = document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch (_) {}
+
+            if (copied) {
+                if (onSuccess) onSuccess();
+            } else if (navigator?.clipboard?.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    if (onSuccess) onSuccess();
+                }).catch(() => {});
+            }
+        };
+
+        const EMPTY_EPISODES_ARR = [];
+
         const formatWeaponStatusUI = (status) => {
             if (!status) return '';
             if (status.includes('позиці')) return 'на позиції';
@@ -702,32 +761,11 @@
                 e.stopPropagation();
                 const epWithWait = { ...episode, waitStr: isWaitValid ? waitStr : '' };
                 const textToCopy = formatSoldierReportLine(epWithWait, soldier);
-                
-                const onDone = () => {
+                copyToClipboardSafe(textToCopy, () => {
                     setIsCopied(true);
                     setTimeout(() => setIsCopied(false), 2000);
                     if (onNotify) onNotify("Дані бійця скопійовано!", "success");
-                };
-
-                if (navigator?.clipboard?.writeText) {
-                    navigator.clipboard.writeText(textToCopy).then(onDone).catch(() => {
-                        copyFallback(textToCopy);
-                    });
-                } else {
-                    copyFallback(textToCopy);
-                }
-            };
-
-            const copyFallback = (str) => {
-                const ta = document.createElement('textarea');
-                ta.value = str;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                setIsCopied(true);
-                setTimeout(() => setIsCopied(false), 2000);
-                if (onNotify) onNotify("Дані бійця скопійовано!", "success");
+                });
             };
 
             const renderEvacBadge = (widthClass = "w-48 xl:w-[200px]") => {
@@ -1107,32 +1145,11 @@
                 e.stopPropagation();
                 const epWithWait = { ...ep, waitStr: waitStr !== 'Невідомо' ? waitStr : '' };
                 const textToCopy = formatSoldierReportLine(epWithWait, soldier);
-                
-                const onDone = () => {
+                copyToClipboardSafe(textToCopy, () => {
                     setIsCopied(true);
                     setTimeout(() => setIsCopied(false), 2000);
                     if (onNotify) onNotify("Дані бійця скопійовано!", "success");
-                };
-
-                if (navigator?.clipboard?.writeText) {
-                    navigator.clipboard.writeText(textToCopy).then(onDone).catch(() => {
-                        copyFallback(textToCopy);
-                    });
-                } else {
-                    copyFallback(textToCopy);
-                }
-            };
-
-            const copyFallback = (str) => {
-                const ta = document.createElement('textarea');
-                ta.value = str;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                setIsCopied(true);
-                setTimeout(() => setIsCopied(false), 2000);
-                if (onNotify) onNotify("Дані бійця скопійовано!", "success");
+                });
             };
             
             return (
@@ -1388,29 +1405,27 @@
             const undoAction = useCallback(() => {
                 setHistory(prev => {
                     if (prev.length === 0) {
-                        setTimeout(() => triggerNotification("Немає дій для скасування", "error"), 0);
+                        triggerNotification("Немає дій для скасування", "error");
                         return prev;
                     }
                     const lastState = prev[prev.length - 1];
-                    setTimeout(() => {
-                        setSoldiers(lastState.soldiers);
-                        setEpisodes(lastState.episodes);
-                        // Позначаємо закресленими всі логи, що були додані після снапшоту
-                        const topId = lastState.topLogId; // null = до будь-якого логу, undefined = стара запис
-                        setLogs(currentLogs => {
-                            if (topId === undefined) return currentLogs; // стара історія без topLogId
-                            let passedAnchor = (topId === null); // null = всі логи після снапшоту
-                            return currentLogs.map(log => {
-                                if (!passedAnchor) {
-                                    // логи що йдуть до topId (новішіці, бо logs в зворотному порядку) — це і є скасовані
-                                    if (log.id === topId) { passedAnchor = true; return log; }
-                                    return { ...log, undone: true };
-                                }
-                                return log;
-                            });
+                    setSoldiers(lastState.soldiers);
+                    setEpisodes(lastState.episodes);
+                    // Позначаємо закресленими всі логи, що були додані після снапшоту
+                    const topId = lastState.topLogId; // null = до будь-якого логу, undefined = стара запис
+                    setLogs(currentLogs => {
+                        if (topId === undefined) return currentLogs; // стара історія без topLogId
+                        let passedAnchor = (topId === null); // null = всі логи після снапшоту
+                        return currentLogs.map(log => {
+                            if (!passedAnchor) {
+                                // логи що йдуть до topId (новішіці, бо logs в зворотному порядку) — це і є скасовані
+                                if (log.id === topId) { passedAnchor = true; return log; }
+                                return { ...log, undone: true };
+                            }
+                            return log;
                         });
-                        triggerNotification("Останню дію скасовано (Ctrl+Z)", "success");
-                    }, 0);
+                    });
+                    triggerNotification("Останню дію скасовано (Ctrl+Z)", "success");
                     return prev.slice(0, -1);
                 });
             }, []);
@@ -1581,15 +1596,42 @@
                 'Дані відсутні': '#6b7280'
             };
 
-            const triggerNotification = (text, type = "success") => {
+            const triggerNotification = useCallback((text, type = "success") => {
                 setNotification({ text, type });
                 setTimeout(() => setNotification(null), 4000);
-            };
+            }, []);
 
-            useEffect(() => { if (!isLoading) localforage.setItem('med_soldiers_v3', soldiers); }, [soldiers, isLoading]);
-            useEffect(() => { if (!isLoading) localforage.setItem('med_episodes_v3', episodes); }, [episodes, isLoading]);
-            useEffect(() => { if (!isLoading) localforage.setItem('med_logs_v3', logs); }, [logs, isLoading]);
-            useEffect(() => { if (!isLoading) localforage.setItem('med_settings_v3', settings); }, [settings, isLoading]);
+            useEffect(() => { 
+                if (!isLoading) {
+                    localforage.setItem('med_soldiers_v3', soldiers).catch(err => console.warn('Помилка збереження бійців:', err)); 
+                }
+            }, [soldiers, isLoading]);
+
+            useEffect(() => { 
+                if (!isLoading) {
+                    localforage.setItem('med_episodes_v3', episodes).catch(err => console.warn('Помилка збереження епізодів:', err)); 
+                }
+            }, [episodes, isLoading]);
+
+            useEffect(() => { 
+                if (!isLoading) {
+                    localforage.setItem('med_logs_v3', logs).catch(err => console.warn('Помилка збереження логів:', err)); 
+                }
+            }, [logs, isLoading]);
+
+            useEffect(() => { 
+                if (!isLoading) {
+                    localforage.setItem('med_settings_v3', settings).catch(err => console.warn('Помилка збереження налаштувань:', err)); 
+                }
+            }, [settings, isLoading]);
+
+            // Періодичне оновлення для актуалізації таймерів у вкладці Тріажу (Triage)
+            const [, setTriageTick] = useState(0);
+            useEffect(() => {
+                if (activeTab !== "triage") return;
+                const interval = setInterval(() => setTriageTick(t => t + 1), 60000);
+                return () => clearInterval(interval);
+            }, [activeTab]);
 
             // Періодичний моніторинг служби локального бекапу
             useEffect(() => {
@@ -2167,21 +2209,7 @@
                     triggerNotification(`Скопійовано ${filteredList.length} записів для доповіді!`, "success");
                 };
 
-                const copyFallbackList = (str) => {
-                    const ta = document.createElement('textarea');
-                    ta.value = str;
-                    document.body.appendChild(ta);
-                    ta.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(ta);
-                    onDone();
-                };
-
-                if (navigator?.clipboard?.writeText) {
-                    navigator.clipboard.writeText(fullText).then(onDone).catch(() => copyFallbackList(fullText));
-                } else {
-                    copyFallbackList(fullText);
-                }
+                copyToClipboardSafe(fullText, onDone);
             };
 
             
@@ -3386,7 +3414,7 @@
                     let uVal = '';
                     if (u && chartData.units.data[u]) {
                         const d = chartData.units.data[u];
-                        uVal = d['200']+d['Неб. смерть']+d['Поранення']+d['Бойове']+d['Небойове']+d['ЗБВ']+d['СЗЧ']+d['Дезертирство'];
+                        uVal = (d['200'] || 0) + (d['Неб. смерть'] || 0) + (d['Поранення'] || 0) + (d['Бойове'] || 0) + (d['Небойове'] || 0) + (d['ЗБВ'] || 0) + (d['СЗЧ'] || 0) + (d['Дезертирство'] || 0);
                     }
                     sheet2.addRow({
                         tL: tL[i] || '', tC: tC[i] !== undefined ? tC[i] : '',
@@ -3417,7 +3445,7 @@
                 anFilteredEpisodes.forEach(ep => {
                     const s = soldiers.find(x => x.id === ep.soldierId) || {};
                     sheet3.addRow({
-                        date: ep.date.replace('T', ' '),
+                        date: ep.date ? String(ep.date).replace('T', ' ') : '',
                         rank: s.rank || '',
                         name: s.name || '',
                         callsign: s.callsign ? formatCallsignUI(s.callsign) : '',
@@ -3436,9 +3464,11 @@
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
+                const objUrl = URL.createObjectURL(blob);
+                link.href = objUrl;
                 link.download = `Analytics_Report_${new Date().toLocaleDateString('en-CA')}.xlsx`;
                 link.click();
+                setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
             };
 
             const toggleFilterItem = (list, setList, item) => {
@@ -3756,8 +3786,8 @@
                 triggerNotification("Запис успішно додано");
             };
 
-            const handleStartEdit = (episode) => {
-                const soldier = soldiers.find(s => s.id === episode.soldierId);
+            const handleStartEdit = useCallback((episode) => {
+                const soldier = soldiersMap.get(episode.soldierId);
                 setCurrentEpisode(episode);
                 setSelectedSoldierId(episode.soldierId);
                 setSoldierSearch(soldier ? `${soldier.name} «${soldier.callsign}»` : "");
@@ -3787,7 +3817,7 @@
                 setWeaponStatus(episode.weaponStatus || "");
                 setConfirmDelete(false);
                 setIsEditOpen(true);
-            };
+            }, [soldiersMap]);
 
             const handleUpdateWounded = (e) => {
                 e.preventDefault();
@@ -3860,10 +3890,13 @@
                 try {
                     const rawJson = JSON.stringify({ soldiers, episodes, logs, settings });
                     const encrypted = CryptoJS.AES.encrypt(rawJson, backupPassword).toString();
+                    const blob = new Blob([encrypted], { type: 'text/plain' });
+                    const objUrl = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.download = `med_backup_${new Date().toISOString().slice(0,10)}.enc`;
-                    link.href = URL.createObjectURL(new Blob([encrypted], { type: 'text/plain' }));
+                    link.href = objUrl;
                     link.click();
+                    setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
                     addLog("Експорт", "Створено шифрований бекап бази");
                     triggerNotification("Бекап скачано!");
                 } catch (e) { triggerNotification("Помилка: " + e.message, "error"); }
@@ -4483,7 +4516,7 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.6.0
+                                    ⚡ v3.6.1
                                 </button>
                                 <button
                                     onClick={() => setIsBackupOpen(true)}
@@ -5180,7 +5213,7 @@
                                                     key={episode.id} 
                                                     episode={episode} 
                                                     soldier={soldiersMap.get(episode.soldierId)} 
-                                                    soldierEpisodes={episodesBySoldier.get(episode.soldierId) || []}
+                                                    soldierEpisodes={episodesBySoldier.get(episode.soldierId) || EMPTY_EPISODES_ARR}
                                                     onEdit={handleStartEdit}
                                                     onNotify={triggerNotification}
                                                     viewMode="list"
@@ -7502,10 +7535,25 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                                    {/* 09.09.2026 */}
+                                    {/* 18.09.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.6.0 (Штабний Диспетчер, автозапуск та автономний фоновий захист бази)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.6.1 (Патч стабільності експорту, таймерів тріажу та дат Excel)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">18.09.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Захист експорту Excel:</strong> Безпечна обробка дат у звітах для запобігання падіння застосунку на методі .replace('T', ' ').</li>
+                                            <li><strong className="text-white">Підтримка числових дат Excel:</strong> Виправлено конвертацію серійних числових дат Excel (45xxx) у parseSafeDate без зсуву на 1970 рік.</li>
+                                            <li><strong className="text-white">Точний лічильник «золотої години» тріажу:</strong> Відображення часу очікування евакуації з хвилинною точністю (45 хв, 1г 30хв) та щохвилинним автооновленням живих таймерів.</li>
+                                            <li><strong className="text-white">Оптимізація рендерингу карток:</strong> Мемоізація обробників (useCallback) для активації React.memo та оптимізація оновлення графіків ChartComponent.</li>
+                                            <li><strong className="text-white">Безпека пам'яті:</strong> Додано безпечне відкладене звільнення тимчасових URL-об'єктів (setTimeout 1000мс) при вивантаженні Excel та бекапів.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 09.09.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">⚡ v3.6.0 (Штабний Диспетчер, автозапуск та автономний фоновий захист бази)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">09.09.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">

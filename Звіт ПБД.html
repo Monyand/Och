@@ -1368,11 +1368,16 @@
             // 3. Стандартизація дефісів та тире
             str = str.replace(/[—–−‒]/g, '-');
 
-            // 4. Заміна латинських літер-близнюків на українські (омогліфи)
+            // 4. Опціональний нижній регістр перед обробкою омогліфів для уникнення роздвоєння (B vs b)
+            if (options && options.toLower) {
+                str = str.toLowerCase();
+            }
+
+            // 5. Заміна латинських літер-близнюків на українські (омогліфи)
             if (options && options.replaceHomoglyphs) {
                 const homoglyphMap = {
                     'a': 'а', 'A': 'А',
-                    'b': 'б', 'B': 'В',
+                    'b': 'в', 'B': 'В',
                     'c': 'с', 'C': 'С',
                     'e': 'е', 'E': 'Е',
                     'h': 'н', 'H': 'Н',
@@ -1388,7 +1393,7 @@
                 str = str.replace(/[a-zA-Z]/g, match => homoglyphMap[match] || match);
             }
 
-            // 5. Очищення зайвих пробілів
+            // 6. Очищення зайвих пробілів
             str = str.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
 
             return (options && options.toLower) ? str.toLowerCase() : str;
@@ -1436,32 +1441,40 @@
 
         function getTimestamp(timeStr) {
             if (!timeStr) return 0;
-            let t = timeStr.replace(/\//g, '.');
-            let match = t.match(/(\d{2})\.(\d{2})\.(\d{4}),\s*(\d{2}):(\d{2})(?::(\d{2}))?/);
+            let t = String(timeStr).replace(/\//g, '.').trim();
+            // Підтримка форматів: "DD.MM.YYYY, HH:MM(:SS)" або "DD.MM.YYYY HH:MM(:SS)"
+            let match = t.match(/(\d{2})\.(\d{2})\.(\d{4})(?:,\s*|\s+)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
             if (match) {
                 return new Date(match[3], match[2] - 1, match[1], match[4], match[5], match[6] || 0).getTime();
             }
-            return 0;
+            // Підтримка ISO-форматів: "YYYY-MM-DD HH:MM(:SS)" або "YYYY.MM.DD HH:MM(:SS)"
+            let matchIso = t.match(/(\d{4})[-.](\d{2})[-.](\d{2})(?:[T,\s]+)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+            if (matchIso) {
+                return new Date(matchIso[1], matchIso[2] - 1, matchIso[3], matchIso[4], matchIso[5], matchIso[6] || 0).getTime();
+            }
+            let parsed = Date.parse(t);
+            return isNaN(parsed) ? 0 : parsed;
         }
 
         function formatTimeForUI(timeStr) {
             if (!timeStr) return "";
-            return timeStr.replace(/\//g, '.').trim();
+            return String(timeStr).replace(/\//g, '.').trim();
         }
 
         function formatTimeForReport(timeStr) {
             if (!timeStr) return "";
-            let t = timeStr.replace(/\//g, '.');
-            let match = t.match(/(\d{2}\.\d{2}\.\d{4}),\s*(\d{2}):(\d{2})(?::(\d{2}))?/);
+            let t = String(timeStr).replace(/\//g, '.').trim();
+            let match = t.match(/(\d{2}\.\d{2}\.\d{4})(?:,\s*|\s+)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
             if (match) {
-                let time = `${match[2]}.${match[3]}`; // HH.MM without seconds
+                let h = match[2].padStart(2, '0');
+                let m = match[3].padStart(2, '0');
                 let date = match[1]; // DD.MM.YYYY
-                return `${time} ${date}`;
+                return `${h}.${m} ${date}`;
             }
-            // Fallback: try to extract time and date separately
-            let parts = t.split(', ');
+            // Fallback: спроба розділити дату й час
+            let parts = t.split(/[,\s]+/);
             if (parts.length >= 2) {
-                let timePart = parts[1].replace(/:\d{2}$/, '').replace(/:/g, '.'); // Remove seconds, replace : with .
+                let timePart = parts[1].replace(/:\d{2}$/, '').replace(/:/g, '.');
                 return `${timePart} ${parts[0]}`;
             }
             return t;
@@ -1469,8 +1482,8 @@
 
         function dropSeconds(timeStr) {
             if (!timeStr) return "";
-            let t = timeStr.replace(/\//g, '.');
-            let match = t.match(/(\d{2}\.\d{2}\.\d{4}),\s*(\d{2}:\d{2})/);
+            let t = String(timeStr).replace(/\//g, '.').trim();
+            let match = t.match(/(\d{2}\.\d{2}\.\d{4})(?:,\s*|\s+)(\d{1,2}:\d{2})/);
             return match ? `${match[1]}, ${match[2]}` : t.replace(/:\d{2}$/, '').trim();
         }
 
@@ -1722,13 +1735,18 @@
 
         function parseExcelFile(file) {
             return new Promise((resolve, reject) => {
-                if (!file) resolve([]);
+                if (!file) { resolve([]); return; }
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const firstSheetName = workbook.SheetNames[0];
+                        if (!firstSheetName || !workbook.Sheets[firstSheetName]) {
+                            resolve([]);
+                            return;
+                        }
+                        const json = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { defval: "" });
                         resolve(json);
                     } catch (err) { reject(err); }
                 };
@@ -1737,7 +1755,6 @@
             });
         }
 
-        
         let dropEventsFile = null;
         let dropFireFile = null;
         let dropUavFile = null;
@@ -1776,18 +1793,27 @@
         function handleDroppedFiles(files) {
             Array.from(files).forEach(file => {
                 const name = file.name.toLowerCase();
-                if (name.includes('events')) {
+                if (name.includes('events') || name.includes('поді') || name.includes('под')) {
                     dropEventsFile = file;
-                    document.getElementById('badge-events').innerHTML = `✅ ${file.name}`;
-                    document.getElementById('badge-events').classList.add('success');
-                } else if (name.includes('fire')) {
+                    const b = document.getElementById('badge-events');
+                    if (b) {
+                        b.textContent = `✅ ${file.name}`;
+                        b.classList.add('success');
+                    }
+                } else if (name.includes('fire') || name.includes('вогн') || name.includes('вогонь') || name.includes('стрільб')) {
                     dropFireFile = file;
-                    document.getElementById('badge-fire').innerHTML = `✅ ${file.name}`;
-                    document.getElementById('badge-fire').classList.add('success');
-                } else if (name.includes('uav') || name.includes('бпла')) {
+                    const b = document.getElementById('badge-fire');
+                    if (b) {
+                        b.textContent = `✅ ${file.name}`;
+                        b.classList.add('success');
+                    }
+                } else if (name.includes('uav') || name.includes('бпла') || name.includes('бпс') || name.includes('дрон')) {
                     dropUavFile = file;
-                    document.getElementById('badge-uav').innerHTML = `✅ ${file.name}`;
-                    document.getElementById('badge-uav').classList.add('success');
+                    const b = document.getElementById('badge-uav');
+                    if (b) {
+                        b.textContent = `✅ ${file.name}`;
+                        b.classList.add('success');
+                    }
                 }
             });
         }
@@ -1800,43 +1826,53 @@
         
         // ─── MEMORY (АВТОЗБЕРЕЖЕННЯ) ─────────────────────────────────
         let autosaveTimer = null;
+        let autosaveDebounceTimer = null;
         let isClearingMemory = false;
+
+        function scheduleAppSave(delay = 1500) {
+            clearTimeout(autosaveDebounceTimer);
+            autosaveDebounceTimer = setTimeout(saveAppMemory, delay);
+        }
 
         function saveAppMemory() {
             if (isClearingMemory) return;
             const container = document.getElementById('reports-container');
             if (!container || container.style.display === 'none') return;
             
-            // Sync textareas and inputs to attributes so innerHTML captures their state
-            container.querySelectorAll('textarea').forEach(ta => {
-                ta.textContent = ta.value; 
-            });
-            container.querySelectorAll('input').forEach(inp => {
-                if (inp.type === 'checkbox' || inp.type === 'radio') {
-                    if (inp.checked) inp.setAttribute('checked', 'checked');
-                    else inp.removeAttribute('checked');
-                } else {
-                    inp.setAttribute('value', inp.value);
-                }
-            });
-            container.querySelectorAll('select').forEach(sel => {
-                sel.querySelectorAll('option').forEach(opt => {
-                    if (opt.value === sel.value) opt.setAttribute('selected', 'selected');
-                    else opt.removeAttribute('selected');
+            try {
+                // Sync textareas and inputs to attributes so innerHTML captures their state
+                container.querySelectorAll('textarea').forEach(ta => {
+                    ta.textContent = ta.value; 
                 });
-            });
+                container.querySelectorAll('input').forEach(inp => {
+                    if (inp.type === 'checkbox' || inp.type === 'radio') {
+                        if (inp.checked) inp.setAttribute('checked', 'checked');
+                        else inp.removeAttribute('checked');
+                    } else {
+                        inp.setAttribute('value', inp.value);
+                    }
+                });
+                container.querySelectorAll('select').forEach(sel => {
+                    sel.querySelectorAll('option').forEach(opt => {
+                        if (opt.value === sel.value) opt.setAttribute('selected', 'selected');
+                        else opt.removeAttribute('selected');
+                    });
+                });
 
-            localStorage.setItem('zvit_memory_html', container.innerHTML);
-            
-            // Save counters memory as well to restore sidebar
-            const counters = {};
-            document.querySelectorAll('.nav-count').forEach(el => counters[el.id] = el.innerText);
-            localStorage.setItem('zvit_memory_counters', JSON.stringify(counters));
-            
-            // Save docx generation visibility
-            const docxBtn = document.getElementById('fab-download-docx');
-            if (docxBtn) {
-                localStorage.setItem('zvit_memory_docx_btn', docxBtn.style.display);
+                localStorage.setItem('zvit_memory_html', container.innerHTML);
+                
+                // Save counters memory as well to restore sidebar
+                const counters = {};
+                document.querySelectorAll('.nav-count').forEach(el => counters[el.id] = el.innerText);
+                localStorage.setItem('zvit_memory_counters', JSON.stringify(counters));
+                
+                // Save docx generation visibility
+                const docxBtn = document.getElementById('fab-download-docx');
+                if (docxBtn) {
+                    localStorage.setItem('zvit_memory_docx_btn', docxBtn.style.display);
+                }
+            } catch (err) {
+                console.warn('Автозбереження стану пропущено (можливе перевищення ліміту localStorage):', err);
             }
         }
 
@@ -1844,6 +1880,7 @@
             if (!confirm("🗑 Ви дійсно хочете очистити звіт? Усі згенеровані та додані вручну записи будуть видалені!")) return;
             isClearingMemory = true;
             if (autosaveTimer) clearInterval(autosaveTimer);
+            clearTimeout(autosaveDebounceTimer);
             localStorage.removeItem('zvit_memory_html');
             localStorage.removeItem('zvit_memory_counters');
             localStorage.removeItem('zvit_memory_docx_btn');
@@ -1882,8 +1919,8 @@
                 }
             }
             
-            // Autosave every 2 seconds
-            autosaveTimer = setInterval(saveAppMemory, 2000);
+            // Періодичне резервне збереження кожні 15 секунд (основні збереження йдуть через debounced scheduleAppSave)
+            autosaveTimer = setInterval(saveAppMemory, 15000);
         });
         
         async function processFiles() {
@@ -2414,7 +2451,7 @@
             if (t.includes('крил') || t.includes('wing') || t.includes('літак')) return 'wing';
             if (t.includes('fpv') || t.includes('фпв') || t.includes('камікадзе')) return 'fpv';
             if (t.includes('легк')) return 'drop'; // "Легкий бомбер" відправляємо в звичайні скиди
-            if (t.includes('важк') || t.includes('бомбер') || t.includes('вампір') || t.includes('казжан')) return 'heavy';
+            if (t.includes('важк') || t.includes('бомбер') || t.includes('вампір') || t.includes('казжан') || t.includes('кажан')) return 'heavy';
             return 'drop';
         }
 
@@ -2476,7 +2513,7 @@
                     const itemHtml = `
                     <div class="constructor-item info r3-2-2-item ${highlightClass}" id="r3-item-${index}">
                         <div class="constructor-controls">
-                            <input type="hidden" id="r3-cat-${index}" value="${cat}">
+                            <input type="hidden" id="r3-cat-${index}" value="${cat === 'wing' ? 'fpv' : cat}">
                             <input type="hidden" id="r3-crew-${index}" value="${escapeHTML(crewRaw)}">
                             <label>Час:</label> <input type="text" id="r3-time-${index}" value="${escapeHTML(timeUI)}" style="width: 140px;">
                             <label>Поз.:</label> <input type="text" id="r3-pos-${index}" value='${escapeHTML(posFormatted)}' style="width: 150px;">
@@ -2641,7 +2678,8 @@
                 text = `${timeFormatted} ${pos} ${uName} ${weapon}, Б/Ч: ${ammo}, ціль: ${target} (${coords}), результат: ${result}${casText}`;
             }
 
-            addRecordToFinal(`report-3-${cat}`, text, crew);
+            const targetCat = (cat === 'wing' || cat === 'fpv') ? 'fpv' : cat;
+            addRecordToFinal(`report-3-${targetCat}`, text, crew);
             if (!isManual) document.getElementById(`r3-item-${i}`).style.opacity = '0.4';
         }
 
@@ -2672,10 +2710,10 @@
                     .replace(/\s+/g, ' ')
                     .trim();
 
-                // 1. Шаблон "Число спочатку": наприклад "206шт-7.62х51" або "3шт-Ф1" або "165шт - 5.45х39"
-                const m1 = cleanPart.match(/^(\d+)\s*(?:шт\.?|щт\.?|од\.?)?\s*[-–—:]\s*(.+)$/i);
-                // 2. Шаблон "Калібр/зброя спочатку": наприклад "7.62х51-140 шт" або "5.45х39 - 135 шт" або "ВОГ-25 -2 шт" або "граната РГО- 2 шт" або "5.56х45 -540"
-                const m2 = cleanPart.match(/^(.+?)\s*[-–—:]\s*(\d+)\s*(?:шт\.?|щт\.?|од\.?)?$/i);
+                // 1. Шаблон "Число спочатку": наприклад "206шт-7.62х51", "3шт-Ф1", "165шт - 5.45х39", "120 шт 5.45х39"
+                const m1 = cleanPart.match(/^(\d+)\s*(?:шт\.?|щт\.?|од\.?)?\s*(?:[-–—:]\s*|\s+)(.+)$/i);
+                // 2. Шаблон "Калібр/зброя спочатку": наприклад "7.62х51-140 шт", "5.45х39 - 135 шт", "ВОГ-25 -2 шт", "5.45х39 120 шт"
+                const m2 = cleanPart.match(/^(.+?)\s*(?:[-–—:]\s*|\s+)(\d+)\s*(?:шт\.?|щт\.?|од\.?)?$/i);
 
                 if (m1 && !/^\d+\.\d+/.test(cleanPart)) {
                     const count = m1[1].trim();
@@ -2702,9 +2740,9 @@
 
         function extractAmmoCount(str) {
             if (!str) return 0;
-            const m1 = str.match(/^(\d+)\s*(?:шт\.?|щт\.?|од\.?)?\s*[-–—:]/i);
+            const m1 = str.match(/^(\d+)\s*(?:шт\.?|щт\.?|од\.?)?\s*(?:[-–—:]|\s+)/i);
             if (m1 && !/^\d+\.\d+/.test(str)) return parseInt(m1[1]) || 0;
-            const m2 = str.match(/[-–—:]\s*(\d+)\s*(?:шт\.?|щт\.?|од\.?)?$/i);
+            const m2 = str.match(/(?:[-–—:]|\s+)\s*(\d+)\s*(?:шт\.?|щт\.?|од\.?)?$/i);
             if (m2) return parseInt(m2[1]) || 0;
             const m3 = str.match(/\b(\d+)\s*(?:шт\.?|щт\.?|од\.?)\b/i);
             if (m3) return parseInt(m3[1]) || 0;
@@ -2714,7 +2752,7 @@
         function isSmallArmsAmmo(str) {
             if (!str) return false;
             const s = str.toLowerCase();
-            return ['5.45', '5,45', '5.56', '5,56', '7.62х39', '7,62х39', '12х70', '12х76', 'вог-25', '40х46', '40*46', 'ф1', 'ф-1', 'рго', 'ргн', 'ргд', 'm67']
+            return ['5.45', '5,45', '5.56', '5,56', '7.62х39', '7,62х39', '7.62х54', '7,62х54', '7.62х51', '7,62х51', '12х70', '12/70', '12х76', '12 кал', 'вог-25', '40х46', '40*46', 'ф1', 'ф-1', 'рго', 'ргн', 'ргд', 'm67', 'gho']
                 .some(k => s.includes(k));
         }
 
@@ -2858,7 +2896,7 @@
 
                         const ammoFormatted = parseAmmoDetails('', infTransferredAmmo);
                         const infText = cleanReportText(`${infHeader}, ціль: ${target} (${coords}), результат: ${result}${casText}, витрата Б/К: ${ammoFormatted}`);
-                        const infRecordDiv = `<div class="final-record"><textarea class="record-text" rows="2">${infText}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('report-4-gen');">✖</button></div>`;
+                        const infRecordDiv = `<div class="final-record"><textarea class="record-text" rows="2" oninput="updateCount('report-4-gen'); scheduleAppSave();">${escapeHTML(infText)}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('report-4-gen'); scheduleAppSave();">✖</button></div>`;
                         genHtml += infRecordDiv;
                     }
                 } else {
@@ -2874,7 +2912,7 @@
                     text = cleanReportText(`${infHeader}, ціль: ${target} (${coords}), результат: ${result}${casText}, витрата Б/К: ${ammoFormatted || used || '0'}`);
                 }
 
-                const recordDiv = `<div class="final-record"><textarea class="record-text" rows="2">${text}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${isOvgp ? 'report-4-ovgp' : 'report-4-gen'}');">✖</button></div>`;
+                const recordDiv = `<div class="final-record"><textarea class="record-text" rows="2" oninput="updateCount('${isOvgp ? 'report-4-ovgp' : 'report-4-gen'}'); scheduleAppSave();">${escapeHTML(text)}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${isOvgp ? 'report-4-ovgp' : 'report-4-gen'}'); scheduleAppSave();">✖</button></div>`;
 
                 if (isOvgp) ovgpHtml += recordDiv;
                 else genHtml += recordDiv;
@@ -2912,9 +2950,13 @@
             const cleanText = cleanReportText(text);
             const d = document.createElement('div'); d.className = 'final-record';
             if (crew) d.setAttribute('data-crew', crew);
-            d.innerHTML = `<textarea class="record-text" rows="2" oninput="updateCount('${containerId}')">${cleanText}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${containerId}');">✖</button>`;
-            document.getElementById(containerId).appendChild(d);
-            updateCount(containerId);
+            d.innerHTML = `<textarea class="record-text" rows="2" oninput="updateCount('${containerId}'); scheduleAppSave();">${escapeHTML(cleanText)}</textarea><button class="btn-danger" onclick="this.parentElement.remove(); updateCount('${containerId}'); scheduleAppSave();">✖</button>`;
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.appendChild(d);
+                updateCount(containerId);
+                scheduleAppSave();
+            }
         }
 
         function updateShellingHeaderCounters() {
@@ -3224,13 +3266,14 @@
                 if (s['saved-pos-dict'] !== undefined) {
                     document.getElementById('pos-dict').value = s['saved-pos-dict'];
                     localStorage.setItem('saved-pos-dict', s['saved-pos-dict']);
-                    
                 }
                 if (s['saved-weapon-dict'] !== undefined) {
                     document.getElementById('weapon-dict').value = s['saved-weapon-dict'];
                     localStorage.setItem('saved-weapon-dict', s['saved-weapon-dict']);
-                    
                 }
+
+                buildPosMap();
+                buildWeaponMap();
 
                 closeSettingsImportModal();
                 alert('✅ Налаштування Звіту ПБД успішно розшифровано та застосовано!');
