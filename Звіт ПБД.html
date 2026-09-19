@@ -755,7 +755,7 @@
                 <span class="badge-tactical">PBD_REPORT</span>
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
-                    ⚡ v1.3.3
+                    ⚡ v1.3.4
                 </button>
             </h1>
         </div>
@@ -865,8 +865,8 @@
                     <h3 style="margin-top: 30px; color: var(--accent);">Додати вручну:</h3>
                     <div class="constructor-item manual-card">
                         <div class="constructor-controls">
-                            <label>Час:</label> <input type="text" id="m1-time" placeholder="12:00:00"
-                                style="width: 130px;">
+                            <label>Час:</label> <input type="text" id="m1-time" placeholder="12.00 18.09.2026"
+                                style="width: 160px;">
                             <label>Поз.:</label> <input type="text" id="m1-pos" list="saved-positions"
                                 placeholder="СП..." style="width: 130px;">
                             <label>Дія:</label>
@@ -1441,13 +1441,18 @@
 
         function getTimestamp(timeStr) {
             if (!timeStr) return 0;
-            let t = String(timeStr).replace(/\//g, '.').trim();
-            // Підтримка форматів: "DD.MM.YYYY, HH:MM(:SS)" або "DD.MM.YYYY HH:MM(:SS)"
-            let match = t.match(/(\d{2})\.(\d{2})\.(\d{4})(?:,\s*|\s+)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+            let t = String(timeStr).replace(/^[-–—•*оoОO\.]+\s*/i, '').replace(/\//g, '.').trim();
+            // 1. Формати з датою спочатку: "DD.MM.YYYY, HH:MM(:SS)" або "DD.MM.YYYY HH:MM(:SS)" або "DD.MM.YYYY - HH:MM"
+            let match = t.match(/(\d{2})\.(\d{2})\.(\d{4})(?:[,\s\-–—]+)(\d{1,2})[:.](\d{2})(?::(\d{2}))?/);
             if (match) {
                 return new Date(match[3], match[2] - 1, match[1], match[4], match[5], match[6] || 0).getTime();
             }
-            // Підтримка ISO-форматів: "YYYY-MM-DD HH:MM(:SS)" або "YYYY.MM.DD HH:MM(:SS)"
+            // 2. Формати з часом спочатку: "HH:MM(:SS) DD.MM.YYYY" або "HH.MM DD.MM.YYYY" або "HH.MM - DD.MM.YYYY"
+            let matchTFirst = t.match(/(\d{1,2})[:.](\d{2})(?::(\d{2}))?(?:[,\s\-–—]+)(\d{2})\.(\d{2})\.(\d{4})/);
+            if (matchTFirst) {
+                return new Date(matchTFirst[5], matchTFirst[4] - 1, matchTFirst[3], matchTFirst[1], matchTFirst[2], matchTFirst[6] || 0).getTime();
+            }
+            // 3. Підтримка ISO-форматів: "YYYY-MM-DD HH:MM(:SS)" або "YYYY.MM.DD HH:MM(:SS)"
             let matchIso = t.match(/(\d{4})[-.](\d{2})[-.](\d{2})(?:[T,\s]+)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
             if (matchIso) {
                 return new Date(matchIso[1], matchIso[2] - 1, matchIso[3], matchIso[4], matchIso[5], matchIso[6] || 0).getTime();
@@ -1456,28 +1461,96 @@
             return isNaN(parsed) ? 0 : parsed;
         }
 
+        function getReportDefaultDate() {
+            if (typeof eventsData !== 'undefined' && eventsData && eventsData.length > 0) {
+                for (let e of eventsData) {
+                    let dRaw = getCol(e, ['час події', 'час доповіді']);
+                    let match = dRaw.match(/(\d{2})[./](\d{2})[./](\d{4})/);
+                    if (match) return `${match[1]}.${match[2]}.${match[3]}`;
+                }
+            }
+            if (typeof fireMissionsData !== 'undefined' && fireMissionsData && fireMissionsData.length > 0) {
+                for (let r of fireMissionsData) {
+                    let dRaw = getCol(r, ['час доповіді', 'час події', 'дата']);
+                    let match = dRaw.match(/(\d{2})[./](\d{2})[./](\d{4})/);
+                    if (match) return `${match[1]}.${match[2]}.${match[3]}`;
+                }
+            }
+            const now = new Date();
+            const d = String(now.getDate()).padStart(2, '0');
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const y = now.getFullYear();
+            return `${d}.${m}.${y}`;
+        }
+
         function formatTimeForUI(timeStr) {
             if (!timeStr) return "";
             return String(timeStr).replace(/\//g, '.').trim();
         }
 
-        function formatTimeForReport(timeStr) {
+        function formatTimeForReport(timeStr, fallbackDate = "") {
             if (!timeStr) return "";
-            let t = String(timeStr).replace(/\//g, '.').trim();
-            let match = t.match(/(\d{2}\.\d{2}\.\d{4})(?:,\s*|\s+)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-            if (match) {
-                let h = match[2].padStart(2, '0');
-                let m = match[3].padStart(2, '0');
-                let date = match[1]; // DD.MM.YYYY
-                return `${h}.${m} ${date}`;
+            let str = String(timeStr).trim();
+            if (!fallbackDate) fallbackDate = getReportDefaultDate();
+
+            let cleanStr = str.replace(/^[-–—•*оoОO\.]+\s*/i, '').replace(/\//g, '.').trim();
+
+            // 1. Об'єкт дати або рядок ISO з часовим поясом (GMT або 2026-09-18T...)
+            if (cleanStr.includes('GMT') || /^\d{4}-\d{2}-\d{2}T/.test(cleanStr)) {
+                let dObj = new Date(cleanStr);
+                if (!isNaN(dObj.getTime())) {
+                    let h = String(dObj.getHours()).padStart(2, '0');
+                    let m = String(dObj.getMinutes()).padStart(2, '0');
+                    let d = String(dObj.getDate()).padStart(2, '0');
+                    let mo = String(dObj.getMonth() + 1).padStart(2, '0');
+                    let y = dObj.getFullYear();
+                    return `${h}.${m} ${d}.${mo}.${y}`;
+                }
             }
-            // Fallback: спроба розділити дату й час
-            let parts = t.split(/[,\s]+/);
-            if (parts.length >= 2) {
-                let timePart = parts[1].replace(/:\d{2}$/, '').replace(/:/g, '.');
-                return `${timePart} ${parts[0]}`;
+
+            // 2. ISO формат "YYYY-MM-DD HH:MM(:SS)" або "YYYY.MM.DD HH:MM"
+            let isoMatch = cleanStr.match(/^(\d{4})[-.](\d{2})[-.](\d{2})[,\sT]+(\d{1,2})[:.](\d{2})/);
+            if (isoMatch) {
+                let y = isoMatch[1];
+                let mo = isoMatch[2];
+                let d = isoMatch[3];
+                let h = isoMatch[4].padStart(2, '0');
+                let m = isoMatch[5].padStart(2, '0');
+                return `${h}.${m} ${d}.${mo}.${y}`;
             }
-            return t;
+
+            // 3. Формат з датою спочатку: "DD.MM.YYYY, HH:MM(:SS)" або "DD.MM.YYYY - HH:MM" або "DD.MM.YY HH:MM"
+            let dFirstMatch = cleanStr.match(/(\d{2})\.(\d{2})\.(\d{2,4})(?:[,\s\-–—]+)(\d{1,2})[:.](\d{2})/);
+            if (dFirstMatch) {
+                let d = dFirstMatch[1];
+                let mo = dFirstMatch[2];
+                let y = dFirstMatch[3].length === 2 ? '20' + dFirstMatch[3] : dFirstMatch[3];
+                let h = dFirstMatch[4].padStart(2, '0');
+                let m = dFirstMatch[5].padStart(2, '0');
+                return `${h}.${m} ${d}.${mo}.${y}`;
+            }
+
+            // 4. Формат з часом спочатку: "HH:MM(:SS) DD.MM.YYYY" або "HH.MM DD.MM.YYYY" або "HH.MM - DD.MM.YYYY"
+            let tFirstMatch = cleanStr.match(/(\d{1,2})[:.](\d{2})(?::\d{2})?(?:[,\s\-–—]+)(\d{2})\.(\d{2})\.(\d{2,4})/);
+            if (tFirstMatch) {
+                let h = tFirstMatch[1].padStart(2, '0');
+                let m = tFirstMatch[2].padStart(2, '0');
+                let d = tFirstMatch[3];
+                let mo = tFirstMatch[4];
+                let y = tFirstMatch[5].length === 2 ? '20' + tFirstMatch[5] : tFirstMatch[5];
+                return `${h}.${m} ${d}.${mo}.${y}`;
+            }
+
+            // 5. Тільки час: "HH:MM", "HH.MM", "HH:MM:SS" (без дати у вихідному рядку)
+            let timeOnlyMatch = cleanStr.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?$/);
+            if (timeOnlyMatch) {
+                let h = timeOnlyMatch[1].padStart(2, '0');
+                let m = timeOnlyMatch[2].padStart(2, '0');
+                let datePart = fallbackDate || getReportDefaultDate();
+                return `${h}.${m}${datePart ? ' ' + datePart : ''}`;
+            }
+
+            return cleanStr;
         }
 
         function dropSeconds(timeStr) {
@@ -2018,7 +2091,7 @@
                 <div class="constructor-item ${item.src === 'fire' ? 'success' : 'uav-item'} r1-2-item ${highlightClass}" id="r1-item-${index}">
                     <div style="margin-bottom: 8px;"><strong>Джерело: ${item.src === 'fire' ? 'Піхота' : 'БпЛА'}</strong> ${item.src === 'uav' ? '<span class="uav-warning">⚠️ Перевірте О/С!</span>' : ''}</div>
                     <div class="constructor-controls">
-                        <label>Час:</label> <input type="text" id="r1-time-${index}" value="${escapeHTML(timeUI)}" style="width: 140px;">
+                        <label>Час:</label> <input type="text" id="r1-time-${index}" value="${escapeHTML(timeUI)}" style="width: 160px;">
                         <label>Поз.:</label> <input type="text" id="r1-pos-${index}" value='${escapeHTML(posFormatted)}' style="width: 140px;">
                         <input type="hidden" id="r1-action-${index}" value="${item.src === 'fire' ? 'відкривав вогонь' : 'наносив ураження'}">
                         <label>Ціль(на по...):</label> <input type="text" id="r1-target-inf-${index}" value="${escapeHTML(stTarget.inf)}" style="width: 150px;">
@@ -3289,9 +3362,24 @@
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.3.4",
+                date: "19.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🕒 Надійний парсинг та форматування дати й часу (Розділ 1.2)",
+                        items: [
+                            "<b>Усунення обрізання дат і часу</b>: Виправлено алгоритм у <code>formatTimeForReport</code>, коли при введенні дефісів чи нестандартних розділювачів (наприклад, <code>17.10 - 18.09.2026</code>) втрачалася дата або відсікалися хвилини.",
+                            "<b>Автоматичне підтягування дати звіту</b>: Додано функцію <code>getReportDefaultDate()</code>, яка автоматично витягує актуальну дату з масиву подій (<code>eventsData</code>) або вогневих завдань (<code>fireMissionsData</code>), якщо у вхідних даних зазначено лише час.",
+                            "<b>Розширені поля введення</b>: Збільшено ширину полів часу в конструкторі (<code>#r1-time-*</code>) до 160px для запобігання візуального обрізання довгих рядків дати/часу на екрані."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.3.3",
                 date: "09.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🎯 Розширений тактичний парсинг витрати БК (Розділи 3.2.1 Піхота & 3.2.3 ОВгП)",
@@ -3492,7 +3580,7 @@
                 <h3 style="margin: 0; font-size: 18px; color: #34d399; display: flex; align-items: center; gap: 8px;">
                     📋 <span>Історія оновлень (Звіт ПБД)</span>
                     <span
-                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.2.2</span>
+                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.3.4</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">✕</button>
