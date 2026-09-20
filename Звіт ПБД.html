@@ -755,7 +755,7 @@
                 <span class="badge-tactical">PBD_REPORT</span>
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
-                    ⚡ v1.3.4
+                    ⚡ v1.3.5
                 </button>
             </h1>
         </div>
@@ -865,8 +865,8 @@
                     <h3 style="margin-top: 30px; color: var(--accent);">Додати вручну:</h3>
                     <div class="constructor-item manual-card">
                         <div class="constructor-controls">
-                            <label>Час:</label> <input type="text" id="m1-time" placeholder="12.00 18.09.2026"
-                                style="width: 160px;">
+                            <label>Час:</label> <input type="text" id="m1-time" placeholder="11.55 - 14.00 20.09.2026"
+                                style="width: 180px;">
                             <label>Поз.:</label> <input type="text" id="m1-pos" list="saved-positions"
                                 placeholder="СП..." style="width: 130px;">
                             <label>Дія:</label>
@@ -1442,6 +1442,11 @@
         function getTimestamp(timeStr) {
             if (!timeStr) return 0;
             let t = String(timeStr).replace(/^[-–—•*оoОO\.]+\s*/i, '').replace(/\//g, '.').trim();
+            // 0. Інтервал часу з датою в кінці: "HH:MM - HH:MM DD.MM.YYYY" (сортування за часом початку)
+            let matchInterval = t.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?\s*[-–—]\s*(?:\d{1,2}[:.]\d{2}(?::\d{2})?)(?:[,\s]+)(\d{2})\.(\d{2})\.(\d{4})/);
+            if (matchInterval) {
+                return new Date(matchInterval[5], matchInterval[4] - 1, matchInterval[3], matchInterval[1], matchInterval[2], 0).getTime();
+            }
             // 1. Формати з датою спочатку: "DD.MM.YYYY, HH:MM(:SS)" або "DD.MM.YYYY HH:MM(:SS)" або "DD.MM.YYYY - HH:MM"
             let match = t.match(/(\d{2})\.(\d{2})\.(\d{4})(?:[,\s\-–—]+)(\d{1,2})[:.](\d{2})(?::(\d{2}))?/);
             if (match) {
@@ -1519,8 +1524,67 @@
                 return `${h}.${m} ${d}.${mo}.${y}`;
             }
 
-            // 3. Формат з датою спочатку: "DD.MM.YYYY, HH:MM(:SS)" або "DD.MM.YYYY - HH:MM" або "DD.MM.YY HH:MM"
-            let dFirstMatch = cleanStr.match(/(\d{2})\.(\d{2})\.(\d{2,4})(?:[,\s\-–—]+)(\d{1,2})[:.](\d{2})/);
+            // 3. Подвійний інтервал з повною датою для обох частин: "HH:MM DD.MM.YYYY - HH:MM DD.MM.YYYY"
+            let doubleFullMatch = cleanStr.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?\s+(\d{2})\.(\d{2})\.(\d{2,4})\s*[-–—]\s*(\d{1,2})[:.](\d{2})(?::\d{2})?\s+(\d{2})\.(\d{2})\.(\d{2,4})$/);
+            if (doubleFullMatch) {
+                let h1 = doubleFullMatch[1].padStart(2, '0');
+                let m1 = doubleFullMatch[2].padStart(2, '0');
+                let d1 = doubleFullMatch[3];
+                let mo1 = doubleFullMatch[4];
+                let y1 = doubleFullMatch[5].length === 2 ? '20' + doubleFullMatch[5] : doubleFullMatch[5];
+
+                let h2 = doubleFullMatch[6].padStart(2, '0');
+                let m2 = doubleFullMatch[7].padStart(2, '0');
+                let d2 = doubleFullMatch[8];
+                let mo2 = doubleFullMatch[9];
+                let y2 = doubleFullMatch[10].length === 2 ? '20' + doubleFullMatch[10] : doubleFullMatch[10];
+
+                if (`${d1}.${mo1}.${y1}` === `${d2}.${mo2}.${y2}`) {
+                    return `${h1}.${m1} - ${h2}.${m2} ${d1}.${mo1}.${y1}`;
+                } else {
+                    return `${h1}.${m1} ${d1}.${mo1}.${y1} - ${h2}.${m2} ${d2}.${mo2}.${y2}`;
+                }
+            }
+
+            // 4. Інтервал часу з датою в кінці: "HH:MM - HH:MM DD.MM.YYYY" або "HH.MM - HH.MM DD.MM.YYYY"
+            let intervalTrailingDate = cleanStr.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?\s*[-–—]\s*(\d{1,2})[:.](\d{2})(?::\d{2})?(?:[,\s]+)(\d{2})\.(\d{2})\.(\d{2,4})$/);
+            if (intervalTrailingDate) {
+                let h1 = intervalTrailingDate[1].padStart(2, '0');
+                let m1 = intervalTrailingDate[2].padStart(2, '0');
+                let h2 = intervalTrailingDate[3].padStart(2, '0');
+                let m2 = intervalTrailingDate[4].padStart(2, '0');
+                let d = intervalTrailingDate[5];
+                let mo = intervalTrailingDate[6];
+                let y = intervalTrailingDate[7].length === 2 ? '20' + intervalTrailingDate[7] : intervalTrailingDate[7];
+                return `${h1}.${m1} - ${h2}.${m2} ${d}.${mo}.${y}`;
+            }
+
+            // 5. Інтервал часу з датою на початку: "DD.MM.YYYY HH:MM - HH:MM" або "DD.MM.YYYY, HH:MM - HH:MM"
+            let intervalLeadingDate = cleanStr.match(/^(\d{2})\.(\d{2})\.(\d{2,4})(?:[,\s]+)(\d{1,2})[:.](\d{2})(?::\d{2})?\s*[-–—]\s*(\d{1,2})[:.](\d{2})(?::\d{2})?$/);
+            if (intervalLeadingDate) {
+                let d = intervalLeadingDate[1];
+                let mo = intervalLeadingDate[2];
+                let y = intervalLeadingDate[3].length === 2 ? '20' + intervalLeadingDate[3] : intervalLeadingDate[3];
+                let h1 = intervalLeadingDate[4].padStart(2, '0');
+                let m1 = intervalLeadingDate[5].padStart(2, '0');
+                let h2 = intervalLeadingDate[6].padStart(2, '0');
+                let m2 = intervalLeadingDate[7].padStart(2, '0');
+                return `${h1}.${m1} - ${h2}.${m2} ${d}.${mo}.${y}`;
+            }
+
+            // 6. Тільки інтервал часу без дати: "HH:MM - HH:MM" або "HH.MM - HH.MM"
+            let intervalNoDate = cleanStr.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?\s*[-–—]\s*(\d{1,2})[:.](\d{2})(?::\d{2})?$/);
+            if (intervalNoDate) {
+                let h1 = intervalNoDate[1].padStart(2, '0');
+                let m1 = intervalNoDate[2].padStart(2, '0');
+                let h2 = intervalNoDate[3].padStart(2, '0');
+                let m2 = intervalNoDate[4].padStart(2, '0');
+                let datePart = fallbackDate || getReportDefaultDate();
+                return `${h1}.${m1} - ${h2}.${m2}${datePart ? ' ' + datePart : ''}`;
+            }
+
+            // 7. Одинарна дата спочатку: "DD.MM.YYYY, HH:MM(:SS)" або "DD.MM.YYYY - HH:MM" або "DD.MM.YY HH:MM"
+            let dFirstMatch = cleanStr.match(/^(\d{2})\.(\d{2})\.(\d{2,4})(?:[,\s\-–—]+)(\d{1,2})[:.](\d{2})(?::\d{2})?$/);
             if (dFirstMatch) {
                 let d = dFirstMatch[1];
                 let mo = dFirstMatch[2];
@@ -1530,8 +1594,8 @@
                 return `${h}.${m} ${d}.${mo}.${y}`;
             }
 
-            // 4. Формат з часом спочатку: "HH:MM(:SS) DD.MM.YYYY" або "HH.MM DD.MM.YYYY" або "HH.MM - DD.MM.YYYY"
-            let tFirstMatch = cleanStr.match(/(\d{1,2})[:.](\d{2})(?::\d{2})?(?:[,\s\-–—]+)(\d{2})\.(\d{2})\.(\d{2,4})/);
+            // 8. Одинарний час спочатку: "HH:MM(:SS) DD.MM.YYYY" або "HH.MM DD.MM.YYYY" або "HH.MM - DD.MM.YYYY"
+            let tFirstMatch = cleanStr.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?(?:[,\s\-–—]+)(\d{2})\.(\d{2})\.(\d{2,4})$/);
             if (tFirstMatch) {
                 let h = tFirstMatch[1].padStart(2, '0');
                 let m = tFirstMatch[2].padStart(2, '0');
@@ -1541,7 +1605,7 @@
                 return `${h}.${m} ${d}.${mo}.${y}`;
             }
 
-            // 5. Тільки час: "HH:MM", "HH.MM", "HH:MM:SS" (без дати у вихідному рядку)
+            // 9. Тільки один час: "HH:MM", "HH.MM", "HH:MM:SS" (без дати у вихідному рядку)
             let timeOnlyMatch = cleanStr.match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?$/);
             if (timeOnlyMatch) {
                 let h = timeOnlyMatch[1].padStart(2, '0');
@@ -2091,7 +2155,7 @@
                 <div class="constructor-item ${item.src === 'fire' ? 'success' : 'uav-item'} r1-2-item ${highlightClass}" id="r1-item-${index}">
                     <div style="margin-bottom: 8px;"><strong>Джерело: ${item.src === 'fire' ? 'Піхота' : 'БпЛА'}</strong> ${item.src === 'uav' ? '<span class="uav-warning">⚠️ Перевірте О/С!</span>' : ''}</div>
                     <div class="constructor-controls">
-                        <label>Час:</label> <input type="text" id="r1-time-${index}" value="${escapeHTML(timeUI)}" style="width: 160px;">
+                        <label>Час:</label> <input type="text" id="r1-time-${index}" value="${escapeHTML(timeUI)}" style="width: 180px;">
                         <label>Поз.:</label> <input type="text" id="r1-pos-${index}" value='${escapeHTML(posFormatted)}' style="width: 140px;">
                         <input type="hidden" id="r1-action-${index}" value="${item.src === 'fire' ? 'відкривав вогонь' : 'наносив ураження'}">
                         <label>Ціль(на по...):</label> <input type="text" id="r1-target-inf-${index}" value="${escapeHTML(stTarget.inf)}" style="width: 150px;">
@@ -3362,9 +3426,25 @@
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.3.5",
+                date: "20.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "⏱️ Підтримка часових інтервалів у Розділі 1.2 (О/С та ФПВ)",
+                        items: [
+                            "<b>Збереження повних інтервалів</b>: Додано підтримку запису інтервалів часу (наприклад, <code>11.55 - 14.00 20.09.2026</code>) без відсікання часу початку події.",
+                            "<b>Розумна нормалізація дати</b>: Автоматичне доповнення датою звіту для інтервалів без дати (<code>11.55 - 14.00</code>), підтримка дати на початку та компактне зведення однакових дат.",
+                            "<b>Сортування за часом початку</b>: У функції <code>getTimestamp</code> реалізовано хронологічне позиціювання подій за першим часом інтервалу.",
+                            "<b>Розширені поля введення</b>: Збільшено ширину полів часу (<code>#m1-time</code> та <code>#r1-time-*</code>) до 180px для комфортного відображення інтервалів."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.3.4",
                 date: "19.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🕒 Надійний парсинг та форматування дати й часу (Розділ 1.2)",
@@ -3580,7 +3660,7 @@
                 <h3 style="margin: 0; font-size: 18px; color: #34d399; display: flex; align-items: center; gap: 8px;">
                     📋 <span>Історія оновлень (Звіт ПБД)</span>
                     <span
-                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.3.4</span>
+                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.3.5</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">✕</button>
