@@ -65,7 +65,7 @@
                             AMMO_PARSER
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.2.3
+                            ⚡ v1.2.4
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -253,7 +253,18 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.3 (Bullspike AT/TB, 40х46 NR338/M433 & М67 Hand Frag)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.4 (Розпізнавання префіксних калібрів РСП / РОП)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">20.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Префіксний калібр РСП:</strong> Додано підтримку злитого та роздільного запису калібру перед номенклатурою (<code>30ммРСП - 1</code>, <code>30 мм РСП - 2</code>, <code>30-мм РСП</code>).</li>
+                        <li><strong class="text-white">Повне поглинання індексу:</strong> Забезпечено поглинання префіксу калібру, що усунуло конфлікти з детекцією магазинів АК (30 патронів) та відкидання рядків у нерозпізнані.</li>
+                        <li><strong class="text-white">Розширення номенклатури:</strong> Підтримка освітлювальних патронів <code>РОП</code>, колірних індексів (<code>БВ</code>, <code>ЧВ</code>, <code>ЗВ</code>, <code>ЖВ</code>) та зворотного порядку запису (<code>1 шт 30ммРСП</code>).</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.2.3 (Bullspike AT/TB, 40х46 NR338/M433 & М67 Hand Frag)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">18.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -496,8 +507,8 @@ GHO - 2
             { id: 'RG42', name: 'Граната РГ-42', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rg|рг|pg|пг|рg|pг)[\\s\\-_]*42' },
             { id: 'RGT27S', name: 'Граната РГТ-27С', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' },
 
-            // Сигнальні засоби: РСП (реактивні сигнальні патрони всіх вогнів)
-            { id: 'RSP', name: 'РСП (сигнальний патрон)', icon: '🚨', category: 'signal', idPattern: '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ])(?:[рp][сc][пn]|ракета\\s*сигнальн[а-яіїєґ]*|реактивн[а-яіїєґ]*\\s*сигнальн[а-яіїєґ]*\\s*патрон[а-яіїєґ]*)(?:[\\s\\-_]*30)?(?:[\\s\\-_]*\\(?(?:(?:[з3]|ч|б|ж)[\\s._/\\-]*(?:[вb]|в[оо]гн[а-яіїєґ]*)\\.?|(?:зелен|червон|біл|жовт)[а-яіїєґ]*(?:\\s*в[оо]гн[а-яіїєґ]*)?)\\)?)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ])' }
+            // Сигнальні засоби: РСП (реактивні сигнальні патрони всіх вогнів, 30мм/40мм/50мм, РСП-30, РОП)
+            { id: 'RSP', name: 'РСП (сигнальний патрон)', icon: '🚨', category: 'signal', idPattern: '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])(?:(?:30|40|50)[\\s\\-_]*(?:мм|mm)[\\s\\-_]*)?(?:[рp][сc][пn]|[рp][оo][пn]|ракета\\s*сигнальн[а-яіїєґ]*|реактивн[а-яіїєґ]*\\s*(?:сигнальн[а-яіїєґ]*|освітлювальн[а-яіїєґ]*)\\s*патрон[а-яіїєґ]*)(?:[\\s\\-_]*(?:бв|чв|зв|жв|дв))?(?:[\\s\\-_]*(?:30|40|50)(?:[\\s\\-_]*(?:мм|mm))?)?(?:[\\s\\-_]*(?:бв|чв|зв|жв|дв))?(?:[\\s\\-_]*\\(?(?:(?:[з3]|ч|б|ж)[\\s._/\\-]*(?:[вb]|в[оо]г[ое]?[на-яіїєґ]*)\\.?|(?:зелен|червон|біл|жовт|освітлювальн)[а-яіїєґ]*(?:\\s*в[оо]г[ое]?[на-яіїєґ]*)?)\\)?)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ])' }
         ];
 
         // Прекомпільовані регулярні вирази для високої швидкодії O(1) (без перекомпіляції на кожен рядок)
