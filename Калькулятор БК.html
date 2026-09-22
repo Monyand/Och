@@ -65,7 +65,7 @@
                             AMMO_PARSER
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.2.5
+                            ⚡ v1.2.6
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -253,7 +253,18 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.5 (Підтримка калібру 40 мм для ВОГ/ГП)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.6 (Кульові модифікатори МДЗ, Б-32, БЗТ для 14.5 та 12.7 мм)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">22.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Індекси куль 14.5 мм (КПВТ):</strong> Додано розпізнавання донесень з бойовими типами куль (<code>14.5 МДЗ -600 шт</code>, <code>14.5 Б-32</code>, <code>14.5 БЗТ</code>, <code>14.5 КПВТ</code>) з автоматичним зарахуванням до категорії <code>14.5х114 мм (КПВТ)</code>.</li>
+                        <li><strong class="text-white">Великокаліберні кулемети 12.7 мм:</strong> Підтримка модифікаторів куль <code>МДЗ</code>, <code>Б-32</code>, <code>БЗТ</code>, <code>BMG</code>, <code>ДШК</code>, <code>Утьос</code> для калібрів 12.7х108 та 12.7х99 мм.</li>
+                        <li><strong class="text-white">Гнучкий розділювач калібрів:</strong> Універсальний розділювач тепер коректно обробляє суфікс <code>мм / mm</code> перед дефісом або кількістю (<code>14.5 мм - 600 шт</code>).</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.2.5 (Підтримка калібру 40 мм для ВОГ/ГП)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">21.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -261,6 +272,7 @@
                         <li><strong class="text-white">Захист від колізій із 40х46 мм:</strong> Впроваджено перевірку <code>(?![\\s\\-_]*46)</code>, що гарантує збереження натовських пострілів <code>40х46 мм</code> без перехоплення калібром 40.</li>
                     </ul>
                 </div>
+
                 <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-slate-300 font-mono text-sm">v1.2.4 (Розпізнавання префіксних калібрів РСП / РОП)</span>
@@ -462,30 +474,31 @@ GHO - 2
         // idPattern підтримує омогліфи (кирилиця/латиниця), дефіси, пробіли та ведучі нулі
         // -------------------------------------------------------------------------
         const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9_])'; // Запобігає захопленню цифр всередині слів та чисел
-        const sep = '[\\s\\-–—:=./;\\x5c]*';
+        const sep = '(?:[\\s\\-_]*(?:мм|mm))?[\\s\\-–—:=./;\\x5c]*';
         const unit = '(?:[\\s\\-]*[\\-\\x5c/\\s]*(?:шт|щт|штук[и]?|гранат[аи]?|грн)\\.?)?';
 
         const ammoConfigs = [
             // Стрілецька зброя: 5.45 мм
-            { id: '5.45', name: '5.45х39 мм', icon: '🎯', category: 'small', idPattern: '5[.,/]45(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39)?' },
+            { id: '5.45', name: '5.45х39 мм', icon: '🎯', category: 'small', idPattern: '5[.,/]45(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39)?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:пс|ps|пп|pp|бп|bp|т|трасер|трасуюч[а-яіїєґ]*|ак|ак[- ]?74))*' },
             
             // Стрілецька зброя: 7.62 мм (з розбивкою за гільзою)
-            { id: '7.62x54', name: '7.62х54 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*54(?:[\\s\\-_]*r)?' },
-            { id: '7.62x51', name: '7.62х51 мм (NATO)', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:51|52)(?:[\\s\\-_]*(?:uar|уар)(?:\\-?10)?)?(?:[\\s\\-_]*(?:nato|нато|win|\\.308))?' },
-            { id: '7.62x39', name: '7.62х39 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39' },
-            { id: '7.62', name: '7.62 мм (неуточнений)', icon: '🎯', category: 'small', idPattern: '7[.,/]62' },
+            { id: '7.62x54', name: '7.62х54 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*54(?:[\\s\\-_]*r)?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:лпс|lps|б[- ]?32|b[- ]?32|бзт|bzt|т[- ]?46|t[- ]?46|снайперськ[а-яіїєґ]*|свд|пкм))*' },
+            { id: '7.62x51', name: '7.62х51 мм (NATO)', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:51|52)(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:uar|уар)(?:\\-?10)?)?(?:[\\s\\-_]*(?:nato|нато|win|\\.308|ball))*' },
+            { id: '7.62x39', name: '7.62х39 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:пс|ps|бз|bz|т[- ]?45|t[- ]?45|акм?|akm?))*' },
+            { id: '7.62', name: '7.62 мм (неуточнений)', icon: '🎯', category: 'small', idPattern: '7[.,/]62(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:лпс|lps|б[- ]?32|b[- ]?32|бзт|bzt|пс|ps|т[- ]?4[56]|t[- ]?4[56]))*' },
             
             // Стрілецька зброя: 5.56 мм (NATO)
-            { id: '5.56', name: '5.56х45 мм (NATO)', icon: '🎯', category: 'small', idPattern: '5[.,/]56(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?(?:[\\s\\-_]*(?:uar|уар)(?:\\-?15)?)?(?:[\\s\\-_]*(?:nato|нато))?' },
+            { id: '5.56', name: '5.56х45 мм (NATO)', icon: '🎯', category: 'small', idPattern: '5[.,/]56(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:uar|уар)(?:\\-?15)?)?(?:[\\s\\-_]*(?:nato|нато|ss109|m855|ball))*' },
 
             // Гладкоствольна зброя: 12 калібр
             { id: '12x70', name: '12 калібр (12х70)', icon: '🎯', category: 'small', idPattern: '12[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*70|12[\\s\\-/]+7(?![0-9])|12[\\s\\-]*кал(?:ібр)?' },
 
             // Великокаліберні кулемети: 12.7 та 14.5 мм
-            { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99' },
-            { id: '12.7x108', name: '12.7х108 мм (ДШК/Утьос)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*108' },
-            { id: '12.7', name: '12.7 мм (неуточнений)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7' },
-            { id: '14.5', name: '14.5х114 мм (КПВТ)', icon: '⚡', category: 'heavy_mg', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?' },
+            { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:bmg|бмг|браунінг|browning|м2|m2|ap|api|апі|б[- ]?32|b[- ]?32|бзт|bzt|мдз|mdz))*' },
+            { id: '12.7x108', name: '12.7х108 мм (ДШК/Утьос)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*108(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:дшк|dshk|утьос|утес|нсв|нсвт|б[- ]?32|b[- ]?32|бзт(?:[- ]?44)?|bzt|мдз|mdz))*' },
+            { id: '12.7', name: '12.7 мм (неуточнений)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:мдз|mdz|мд[- ]?з|мд|б[- ]?32|b[- ]?32|бзт(?:[- ]?44)?|bzt|бз|дшк|dshk|утьос|утес|нсв|нсвт|bmg|бмг|браунінг|browning|м2|m2))*' },
+            { id: '14.5', name: '14.5х114 мм (КПВТ)', icon: '⚡', category: 'heavy_mg', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:мдз|mdz|мд[- ]?з|мд|б[- ]?32|b[- ]?32|бзт(?:[- ]?44)?|bzt|бз|зп|бс(?:[- ]?41)?|кпвт|kpvt))*(?:[\\s\\-_]*(?:мм|mm))?' },
+
 
             // Гранатомети, постріли РПГ та СПГ
             { id: 'RPG75', name: 'РПГ-75М', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*75(?:[\\s\\-_]*[мm])?' },
