@@ -35,7 +35,30 @@ object DeepLinkHelper {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(context, "Відкрийте налаштування камери вручну", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Відкрийте налаштування вручну", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun openAppSettings(context: Context, packageName: String) {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Не вдалося відкрити налаштування додатка", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun openAccessibilitySettings(context: Context) {
+        try {
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Не вдалося відкрити Спеціальні можливості", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -51,3 +74,4 @@ object DeepLinkHelper {
         }
     }
 }
+

@@ -21,4 +21,8 @@
     <string name="threat_bg_location">📍 Постійна фонова геолокація (злив координат)</string>
     <string name="threat_sideloaded">📦 Встановлено з невідомого джерела (з чату або браузера)</string>
     <string name="btn_delete">Видалити</string>
+    <string name="btn_manage_perms">⚙️ Дозволи</string>
+    <string name="btn_accessibility">🚫 Спецдоступ</string>
 </resources>
+
+

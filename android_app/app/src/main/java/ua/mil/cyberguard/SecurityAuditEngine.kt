@@ -15,18 +15,54 @@ class SecurityAuditEngine(private val context: Context) {
 
     private val pm: PackageManager = context.packageManager
 
-    // Довірені пакети (офіційні месенджери та штабне військове ПЗ)
+    // Довірені пакети (офіційні месенджери, навігація та штабне військове ПЗ)
     private val trustedPackages = setOf(
         "org.telegram.messenger",
         "org.telegram.plus",
         "org.thoughtcrime.securesms", // Signal
         "com.whatsapp",
+        "com.viber.voip",
         "com.google.android.apps.maps",
         "com.mapswithme.maps.pro",
         "ua.gov.army.app", // Армія+
+        "ua.mil.delta", // Дельта
+        "ua.kropyva", // Кропива
         "com.android.vending", // Play Store
         "com.google.android.gms",
         "ua.mil.cyberguard"
+    )
+
+    // Префікси системних компонентів та фабричних вендорів смартфонів (OnePlus, Samsung, Xiaomi тощо)
+    private val vendorPrefixes = listOf(
+        "com.oneplus.",
+        "com.coloros.",
+        "com.oppo.",
+        "com.oplus.",
+        "com.heytap.",
+        "com.samsung.",
+        "com.sec.android.",
+        "com.miui.",
+        "com.xiaomi.",
+        "com.huawei.",
+        "com.google.android.",
+        "com.android.",
+        "com.qualcomm.",
+        "com.mediatek.",
+        "com.lge."
+    )
+
+    // Офіційні магазини додатків (додатки з них не є sideloaded з чатів/apk)
+    private val officialStorePrefixes = listOf(
+        "com.android.vending",
+        "com.google.android.feedback",
+        "com.heytap.market",
+        "com.oppo.market",
+        "com.oneplus.market",
+        "com.sec.android.app.samsungapps",
+        "com.xiaomi.market",
+        "com.miui.market",
+        "com.huawei.appmarket",
+        "com.amazon.venezia"
     )
 
     fun performAudit(): AuditReport {
@@ -36,40 +72,53 @@ class SecurityAuditEngine(private val context: Context) {
         var totalScanned = 0
 
         for (pkg in installedPackages) {
-            // Пропускаємо системні додатки вендора, якщо вони не оновлювалися користувачем
-            val isSystem = (pkg.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-            val isUpdatedSystem = (pkg.applicationInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
-            
-            if (isSystem && !isUpdatedSystem) {
+            val pkgName = pkg.packageName
+
+            // 1. Пропускаємо штатно довірені додатки
+            if (trustedPackages.contains(pkgName)) {
                 continue
             }
 
-            val pkgName = pkg.packageName
-            if (trustedPackages.contains(pkgName)) {
+            val appInfo = pkg.applicationInfo ?: continue
+            val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+            val isUpdatedSystem = (appInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
+            val isVendor = isVendorPackage(pkgName)
+
+            // Служба доступності (Accessibility)
+            val hasAccessibility = hasAccessibilityService(pkg)
+
+            // Якщо це системний або фабричний вендорський додаток без сторонньої служби доступності — пропускаємо
+            if ((isSystem || isUpdatedSystem || isVendor) && !hasAccessibility) {
                 continue
             }
 
             totalScanned++
 
-            val appName = pkg.applicationInfo.loadLabel(pm).toString()
-            val icon = pkg.applicationInfo.loadIcon(pm)
-            val isSideloaded = checkIsSideloaded(pkgName)
+            val appName = appInfo.loadLabel(pm).toString()
+            val icon = appInfo.loadIcon(pm)
+            val installer = getInstallerPackage(pkgName)
+            val isFromOfficialStore = isFromOfficialStore(installer)
+
+            // Якщо системний/вендорський або з офіційного маркету — це НЕ sideload
+            val isSideloaded = if (isSystem || isUpdatedSystem || isVendor || isFromOfficialStore) {
+                false
+            } else {
+                checkIsSideloaded(installer)
+            }
+
             if (isSideloaded) {
                 sideloadedCount++
             }
 
             val requestedPerms = pkg.requestedPermissions ?: emptyArray()
 
-            // 1. Служба доступності (Accessibility) — критичний маркер RAT
-            val hasAccessibility = hasAccessibilityService(pkg)
-            
-            // 2. Фонова геолокація (Background Location)
+            // Фонова геолокація
             val hasBgLocation = requestedPerms.contains("android.permission.ACCESS_BACKGROUND_LOCATION")
-            
-            // 3. Інші чутливі дозволи
+
+            // Інші чутливі дозволи
             val hasAlertWindow = requestedPerms.contains("android.permission.SYSTEM_ALERT_WINDOW")
             val hasAudio = requestedPerms.contains("android.permission.RECORD_AUDIO")
-            val hasSms = requestedPerms.contains("android.permission.READ_SMS") or requestedPerms.contains("android.permission.RECEIVE_SMS")
+            val hasSms = requestedPerms.contains("android.permission.READ_SMS") || requestedPerms.contains("android.permission.RECEIVE_SMS")
 
             val reasons = mutableListOf<String>()
 
@@ -80,7 +129,7 @@ class SecurityAuditEngine(private val context: Context) {
                 reasons.add("📍 Фоновий GPS (збір координат при вимкненому екрані)")
             }
             if (isSideloaded) {
-                reasons.add("📦 Встановлено з невідомого джерела (чат/браузер)")
+                reasons.add("📦 Встановлено не з Play Store (з чату або браузера)")
             }
             if (hasAlertWindow && isSideloaded) {
                 reasons.add("⚠️ Малювання вікон поверх інших програм (фішинг)")
@@ -89,27 +138,56 @@ class SecurityAuditEngine(private val context: Context) {
                 reasons.add("🎙️ Доступ до мікрофону / перехоплення SMS")
             }
 
-            // Визначаємо рівень загрози
-            if (hasAccessibility || (hasBgLocation && isSideloaded)) {
+            // Класифікація загрози
+            if (hasAccessibility && isSideloaded) {
+                // Найнебезпечніше: сторонній APK з доступом до Accessibility
                 threats.add(
                     SuspiciousApp(
                         appName = appName,
                         packageName = pkgName,
                         icon = icon,
-                        isSideloaded = isSideloaded,
-                        hasAccessibility = hasAccessibility,
+                        isSideloaded = true,
+                        hasAccessibility = true,
                         hasBackgroundLocation = hasBgLocation,
                         reasons = reasons,
                         severity = ThreatSeverity.CRITICAL
                     )
                 )
-            } else if (reasons.size >= 2 || (isSideloaded && (hasAudio || hasSms))) {
+            } else if (hasAccessibility) {
+                // Додаток з маркету (наприклад ChatGPT, LG ThinQ), що зареєстрував Accessibility
                 threats.add(
                     SuspiciousApp(
                         appName = appName,
                         packageName = pkgName,
                         icon = icon,
-                        isSideloaded = isSideloaded,
+                        isSideloaded = false,
+                        hasAccessibility = true,
+                        hasBackgroundLocation = hasBgLocation,
+                        reasons = reasons,
+                        severity = ThreatSeverity.WARNING
+                    )
+                )
+            } else if (isSideloaded && (hasBgLocation || hasAlertWindow || hasAudio || hasSms)) {
+                // Sideloaded APK з небезпечними дозволами
+                threats.add(
+                    SuspiciousApp(
+                        appName = appName,
+                        packageName = pkgName,
+                        icon = icon,
+                        isSideloaded = true,
+                        hasAccessibility = false,
+                        hasBackgroundLocation = hasBgLocation,
+                        reasons = reasons,
+                        severity = ThreatSeverity.CRITICAL
+                    )
+                )
+            } else if (isSideloaded && reasons.size >= 2) {
+                threats.add(
+                    SuspiciousApp(
+                        appName = appName,
+                        packageName = pkgName,
+                        icon = icon,
+                        isSideloaded = true,
                         hasAccessibility = false,
                         hasBackgroundLocation = hasBgLocation,
                         reasons = reasons,
@@ -137,20 +215,32 @@ class SecurityAuditEngine(private val context: Context) {
         )
     }
 
-    private fun checkIsSideloaded(packageName: String): Boolean {
+    private fun isVendorPackage(packageName: String): Boolean {
+        return vendorPrefixes.any { packageName.startsWith(it) }
+    }
+
+    private fun isFromOfficialStore(installer: String?): Boolean {
+        if (installer == null) return false
+        return officialStorePrefixes.any { installer.startsWith(it) }
+    }
+
+    private fun getInstallerPackage(packageName: String): String? {
         return try {
-            val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 pm.getInstallSourceInfo(packageName).installingPackageName
             } else {
                 @Suppress("DEPRECATION")
                 pm.getInstallerPackageName(packageName)
             }
-            // Якщо інсталятор порожній або це браузер/телеграм — це sideload
-            installer == null || installer.contains("telegram") || installer.contains("chrome") || 
-                    installer.contains("browser") || installer.contains("download") || installer.contains("whatsapp")
         } catch (e: Exception) {
-            false
+            null
         }
+    }
+
+    private fun checkIsSideloaded(installer: String?): Boolean {
+        if (installer == null) return true
+        val suspiciousSources = listOf("telegram", "chrome", "browser", "download", "whatsapp", "packageinstaller")
+        return suspiciousSources.any { installer.contains(it, ignoreCase = true) }
     }
 
     private fun hasAccessibilityService(pkg: PackageInfo): Boolean {

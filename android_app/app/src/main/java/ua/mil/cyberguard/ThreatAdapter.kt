@@ -18,6 +18,8 @@ class ThreatAdapter(
         val tvAppName: TextView = itemView.findViewById(R.id.tv_app_name)
         val tvPackageName: TextView = itemView.findViewById(R.id.tv_package_name)
         val tvReasons: TextView = itemView.findViewById(R.id.tv_threat_reasons)
+        val btnManagePerms: MaterialButton = itemView.findViewById(R.id.btn_manage_perms)
+        val btnDisableAccessibility: MaterialButton = itemView.findViewById(R.id.btn_disable_accessibility)
         val btnUninstall: MaterialButton = itemView.findViewById(R.id.btn_uninstall)
     }
 
@@ -38,6 +40,22 @@ class ThreatAdapter(
 
         holder.tvReasons.text = item.reasons.joinToString("\n")
 
+        // 1. Керування дозволами через App Settings (мікрофон, камера, геолокація, сповіщення)
+        holder.btnManagePerms.setOnClickListener {
+            DeepLinkHelper.openAppSettings(it.context, item.packageName)
+        }
+
+        // 2. Спецдоступ (Служба доступності) - показуємо тільки якщо додаток зареєстрував AccessibilityService
+        if (item.hasAccessibility) {
+            holder.btnDisableAccessibility.visibility = View.VISIBLE
+            holder.btnDisableAccessibility.setOnClickListener {
+                DeepLinkHelper.openAccessibilitySettings(it.context)
+            }
+        } else {
+            holder.btnDisableAccessibility.visibility = View.GONE
+        }
+
+        // 3. Видалення додатка
         holder.btnUninstall.setOnClickListener {
             DeepLinkHelper.uninstallPackage(it.context, item.packageName)
         }
