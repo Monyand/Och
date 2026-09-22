@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Кібер-Аудит ЗСУ</string>
+    <string name="app_subtitle">Штабний сканер безпеки смартфона</string>
+    <string name="btn_scan">Перевірити телефон</string>
+    <string name="btn_scanning">Триває аналіз загроз…</string>
+    <string name="status_safe_title">БЕЗПЕЧНО</string>
+    <string name="status_safe_desc">Критичних шпигунських дозволів або сторонніх троянів не виявлено.</string>
+    <string name="status_threat_title">ЗНАЙДЕНО ЗАГРОЗИ!</string>
+    <string name="status_threat_desc">Виявлено підозрілі додатки з доступом до екрану, клавіатури або фонового GPS.</string>
+    
+    <!-- Quick Actions -->
+    <string name="action_tg_title">Перевірити Telegram</string>
+    <string name="action_tg_desc">Відкрити екран активних сесій (Devices)</string>
+    <string name="action_camera_title">Вимкнути GPS у Камері</string>
+    <string name="action_camera_desc">Заборонити запис координат у фотографії</string>
+    <string name="action_copy_report">Скопіювати звіт для командира</string>
+    <string name="report_copied">Звіт перевірки скопійовано в буфер обміну</string>
+    
+    <!-- Threat details -->
+    <string name="threat_accessibility">⚠️ Має доступ до Спеціальних можливостей (читає екран та клавіші)</string>
+    <string name="threat_bg_location">📍 Постійна фонова геолокація (злив координат)</string>
+    <string name="threat_sideloaded">📦 Встановлено з невідомого джерела (з чату або браузера)</string>
+    <string name="btn_delete">Видалити</string>
+</resources>

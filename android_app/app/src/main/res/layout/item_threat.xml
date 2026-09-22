@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@color/cyber_panel"
+    app:strokeColor="@color/cyber_red"
+    app:strokeWidth="1dp"
+    app:cardCornerRadius="12dp"
+    android:layout_marginBottom="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/iv_app_icon"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:src="@mipmap/ic_launcher"
+                android:layout_marginEnd="12dp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_app_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Підозрілий Додаток"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_package_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="com.example.spy"
+                    android:textColor="@color/text_muted"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_uninstall"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:text="@string/btn_delete"
+                android:textColor="@color/text_primary"
+                android:textSize="11sp"
+                app:backgroundTint="@color/cyber_red"
+                app:cornerRadius="8dp" />
+        </LinearLayout>
+
+        <!-- Threat Reasons -->
+        <TextView
+            android:id="@+id/tv_threat_reasons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/cyber_amber"
+            android:textSize="12sp"
+            android:layout_marginTop="8dp"
+            tools:text="⚠️ Має доступ до Спеціальних можливостей\n📍 Постійна фонова геолокація" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

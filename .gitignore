@@ -18,6 +18,10 @@ sys_utils/
 cyber_guard_service.py
 cyber_events.json
 cyber_config.json
+Перевірка_ПК.bat
+check_pc.ps1
+Звіт_Кіберперевірки_*.txt
+
 
 # Military Suite (monolithic suite & encrypted backups)
 MilitarySuite.html

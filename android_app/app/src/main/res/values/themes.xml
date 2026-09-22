@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MilitaryCyberAudit" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/cyber_cyan</item>
+        <item name="colorPrimaryVariant">@color/cyber_cyan_dark</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        
+        <item name="colorSecondary">@color/cyber_green</item>
+        <item name="colorSecondaryVariant">@color/cyber_green_glow</item>
+        <item name="colorOnSecondary">@color/text_primary</item>
+        
+        <item name="android:statusBarColor">@color/cyber_bg</item>
+        <item name="android:navigationBarColor">@color/cyber_bg</item>
+        <item name="android:windowBackground">@color/cyber_bg</item>
+    </style>
+</resources>

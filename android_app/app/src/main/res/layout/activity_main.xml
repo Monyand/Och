@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cyber_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- HEADER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛡️ КІБЕР-АУДИТ ЗСУ"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Штабний сканер безпеки смартфона"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="v1.0.0"
+                android:textColor="@color/cyber_cyan"
+                android:textSize="11sp"
+                android:background="@color/cyber_card"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp" />
+        </LinearLayout>
+
+        <!-- MAIN STATUS CARD -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/cyber_panel"
+            app:strokeColor="@color/cyber_border"
+            app:strokeWidth="1dp"
+            app:cardCornerRadius="16dp"
+            android:layout_marginBottom="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="24dp">
+
+                <!-- STATUS ICON -->
+                <TextView
+                    android:id="@+id/tv_status_icon"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:text="🛡️"
+                    android:textSize="40sp"
+                    android:gravity="center"
+                    android:background="@color/cyber_card"
+                    android:layout_marginBottom="16dp" />
+
+                <TextView
+                    android:id="@+id/tv_status_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ГОТОВИЙ ДО СКАНУВАННЯ"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textAlignment="center" />
+
+                <TextView
+                    android:id="@+id/tv_status_desc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Натисніть кнопку нижче для перевірки наявності прихованих шпигунів та витоку координат."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:textAlignment="center"
+                    android:layout_marginTop="6dp" />
+
+                <!-- PROGRESS BAR -->
+                <ProgressBar
+                    android:id="@+id/progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="16dp"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:indeterminate="true"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- SCAN BUTTON -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_scan"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/btn_scan"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/cyber_cyan_dark"
+            app:cornerRadius="12dp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- STATS COUNTERS (Visible after scan) -->
+        <LinearLayout
+            android:id="@+id/layout_stats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@color/cyber_panel"
+                android:padding="12dp"
+                android:gravity="center"
+                android:layout_marginEnd="6dp">
+
+                <TextView
+                    android:id="@+id/tv_stat_total"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/cyber_cyan"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Перевірено"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@color/cyber_panel"
+                android:padding="12dp"
+                android:gravity="center"
+                android:layout_marginHorizontal="3dp">
+
+                <TextView
+                    android:id="@+id/tv_stat_sideloaded"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/cyber_amber"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Не з Play Store"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="@color/cyber_panel"
+                android:padding="12dp"
+                android:gravity="center"
+                android:layout_marginStart="6dp">
+
+                <TextView
+                    android:id="@+id/tv_stat_threats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/cyber_red"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Загроз"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- THREATS LIST -->
+        <TextView
+            android:id="@+id/tv_threats_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🚨 ВИЯВЛЕНІ ПІДОЗРІЛІ ПРОГРАМИ"
+            android:textColor="@color/cyber_red"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_threats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone" />
+
+        <!-- QUICK ACTIONS CARD -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚡ ОБОВ'ЯЗКОВІ ШТАБНІ ДІЇ"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/cyber_panel"
+            app:strokeColor="@color/cyber_border"
+            app:strokeWidth="1dp"
+            app:cardCornerRadius="14dp"
+            android:layout_marginBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Telegram Check Button -->
+                <LinearLayout
+                    android:id="@+id/btn_action_tg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="10dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💬"
+                        android:textSize="24sp"
+                        android:layout_marginEnd="14dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/action_tg_title"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/action_tg_desc"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="➔"
+                        android:textColor="@color/cyber_cyan"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/cyber_border"
+                    android:layout_marginVertical="8dp" />
+
+                <!-- Camera GPS Button -->
+                <LinearLayout
+                    android:id="@+id/btn_action_camera"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="10dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📷"
+                        android:textSize="24sp"
+                        android:layout_marginEnd="14dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/action_camera_title"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/action_camera_desc"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="➔"
+                        android:textColor="@color/cyber_cyan"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- COPY REPORT BUTTON -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_copy_report"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="@string/action_copy_report"
+            android:textColor="@color/text_primary"
+            android:textSize="13sp"
+            app:backgroundTint="@color/cyber_card"
+            app:strokeColor="@color/cyber_border"
+            app:strokeWidth="1dp"
+            app:cornerRadius="12dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

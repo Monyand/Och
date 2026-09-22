@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cyber_bg">#030712</color>
+    <color name="cyber_panel">#0f172a</color>
+    <color name="cyber_card">#1e293b</color>
+    <color name="cyber_border">#334155</color>
+    
+    <color name="cyber_cyan">#06b6d4</color>
+    <color name="cyber_cyan_dark">#0891b2</color>
+    
+    <color name="cyber_green">#10b981</color>
+    <color name="cyber_green_glow">#059669</color>
+    
+    <color name="cyber_red">#ef4444</color>
+    <color name="cyber_red_glow">#dc2626</color>
+    
+    <color name="cyber_amber">#f59e0b</color>
+    
+    <color name="text_primary">#f8fafc</color>
+    <color name="text_secondary">#94a3b8</color>
+    <color name="text_muted">#64748b</color>
+</resources>
