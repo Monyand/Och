@@ -21,9 +21,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
-      - name: Налаштування Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Прийняття ліцензій Android SDK
+        run: |
+          yes | sdkmanager --licenses || true
 
       - name: Надання прав на запуск Gradle Wrapper
         run: |
