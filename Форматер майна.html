@@ -63,7 +63,7 @@
                             <button onclick="openModal('modal-changelog')" title="Історія оновлень"
                                 class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1.5">
                                 <span class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                                <span>⚡ v1.4.0</span>
+                                <span>⚡ v1.5.0</span>
                             </button>
                         </div>
                         <p class="text-slate-400 text-xs md:text-sm mt-0.5">Вставте будь-який сирий текст списків майна — отримайте ідеально чистий стандартизований шаблон.</p>
@@ -135,11 +135,19 @@
                             <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
                             <h2 class="font-semibold text-slate-200 text-sm">Сирі дані (рапорти / списки)</h2>
                         </div>
-                        <button id="btn-clear"
-                            class="text-slate-400 hover:text-red-400 transition-colors p-1 rounded hover:bg-slate-700/50 cursor-pointer"
-                            title="Очистити все">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <button id="btn-split-lines"
+                                class="text-slate-400 hover:text-blue-400 transition-colors px-2 py-1 rounded hover:bg-slate-700/50 cursor-pointer flex items-center gap-1 text-xs font-medium"
+                                title="Розбити переліки з крапкою з комою (;) на окремі рядки">
+                                <i data-lucide="scissors" class="w-3.5 h-3.5 text-blue-400"></i>
+                                <span class="hidden sm:inline">Розбити рядки</span>
+                            </button>
+                            <button id="btn-clear"
+                                class="text-slate-400 hover:text-red-400 transition-colors p-1.5 rounded hover:bg-slate-700/50 cursor-pointer"
+                                title="Очистити все">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Редактор із номерами рядків -->
@@ -200,14 +208,13 @@
         <div class="bg-slate-900/60 rounded-xl border border-slate-800/80 p-4 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2">
                 <span class="font-bold text-slate-300 uppercase tracking-wider text-[10px]">Розпізнає:</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">шт. / щт. / од.</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пара / пари / пар</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">к-кт / комплект</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">шт. / од. / секц. / лист.</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пара / к-кт / набір / блок</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пач. / цинк / ящ. / уп.</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">рул. / бухта / мот. / кот.</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">м / пог. м / кв. м / куб. м</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">амп. / фл. / тюб. / бан.</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">л / кг / кан. / т</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">амп. / фл. / туб / доз / балон</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">л / кг / кан. / т / картридж</span>
             </div>
             <div class="flex items-center gap-1.5 text-slate-500">
                 <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
@@ -235,19 +242,34 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.4.0 -->
+                <!-- v1.5.0 -->
                 <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.4.0 (Поточна)</span>
-                        <span class="text-[11px] font-mono text-slate-500">18.09.2026</span>
+                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.5.0 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">23.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Розширений армійський каталог одиниць:</strong> додано розпізнавання пачок, цинків, котушок саперного/польового дроту, мотків, бухт, рулонів, погонних метрів (пог. м, п.м.), квадратних та кубічних метрів, медичних засобів (ампули, флакони, тюбики).</li>
-                        <li><strong class="text-white">Чітке розділення тонн і штук:</strong> усунуто помилкову заміну «10 т» на «10 шт.» — тонни для ПММ та будматеріалів зберігаються коректно.</li>
-                        <li><strong class="text-white">Гарантоване відсікання зайвих даних (End-of-line focus):</strong> прізвища закріплених бійців, коментарі обставин втрати та примітки в дужках відкидаються; кожен рядок чітко закінчується кількістю та одиницею виміру.</li>
-                        <li><strong class="text-white">Розумне об'єднання дублікатів (Merge):</strong> опція автоматичного сумування однакових позицій майна з граматичним відмінюванням одиниць виміру (наприклад: 1 цинк + 2 цинки = 3 цинки).</li>
-                        <li><strong class="text-white">Сортування А-Я та налаштування пунктуації:</strong> можливість алфавітного сортування в межах розділів, вибір стилю списку (без маркерів, тире, булети, нумерація) та кінцевого розділювача (; або .).</li>
-                        <li><strong class="text-white">Безпека LocalStorage та пам'яті:</strong> обробка переповнення квоти сховища та безпечне відкладене скасування URL-об'єктів для експорту .txt.</li>
+                        <li><strong class="text-white">Очищення PUA-маркерів MS Word та чекбоксів:</strong> усунуто появу артефактних прямокутників (tofu) при вставці списків із Microsoft Word чи PDF; повне відсікання символів Private Use Area (<code>\uE000-\uF8FF</code>) та діапазонів геометричних фігур і чекбоксів.</li>
+                        <li><strong class="text-white">Двосторонній парсинг (Two-way Extraction):</strong> повноцінна підтримка записів із кількістю на початку рядка (наприклад: <code>5 шт. Лопата саперна</code>, <code>2 пари Берці Талан</code>, <code>500 м Дріт польовий</code>, <code>10 - Бронежилет Корсар</code>) без втрати назви майна.</li>
+                        <li><strong class="text-white">Мультипозиційні списки та розбиття рядків:</strong> автоматична обробка рядків із крапкою з комою (<code>;</code>) та нова кнопка <code>[✂️ Розбити рядки]</code> в панелі редактора для миттєвого розбиття склеєних переліків на окремі позиції.</li>
+                        <li><strong class="text-white">Нові армійські одиниці виміру:</strong> додано розпізнавання доз (доз/дози), туб (туб/туба), картриджів (картридж/картр.), фільтрів, секцій (сект./секцій), листів/аркушів (лист/арк.), блоків (блок/блоків), балонів (балон/балонів).</li>
+                        <li><strong class="text-white">Покращене розпізнавання розділів:</strong> оптимізовано автовизначення служб та підрозділів (ПММ, РАО, Зв'язок, Розділ, Блок тощо) навіть за відсутності двокрапки в кінці.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.4.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.4.0</span>
+                        <span class="text-[11px] font-mono text-slate-500">18.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li><strong class="text-slate-300">Розширений армійський каталог одиниць:</strong> додано розпізнавання пачок, цинків, котушок саперного/польового дроту, мотків, бухт, рулонів, погонних метрів (пог. м, п.м.), квадратних та кубічних метрів, медичних засобів (ампули, флакони, тюбики).</li>
+                        <li><strong class="text-slate-300">Чітке розділення тонн і штук:</strong> усунуто помилкову заміну «10 т» на «10 шт.» — тонни для ПММ та будматеріалів зберігаються коректно.</li>
+                        <li><strong class="text-slate-300">Гарантоване відсікання зайвих даних (End-of-line focus):</strong> прізвища закріплених бійців, коментарі обставин втрати та примітки в дужках відкидаються; кожен рядок чітко закінчується кількістю та одиницею виміру.</li>
+                        <li><strong class="text-slate-300">Розумне об'єднання дублікатів (Merge):</strong> опція автоматичного сумування однакових позицій майна з граматичним відмінюванням одиниць виміру (наприклад: 1 цинк + 2 цинки = 3 цинки).</li>
+                        <li><strong class="text-slate-300">Сортування А-Я та налаштування пунктуації:</strong> можливість алфавітного сортування в межах розділів, вибір стилю списку (без маркерів, тире, булети, нумерація) та кінцевого розділювача (; або .).</li>
+                        <li><strong class="text-slate-300">Безпека LocalStorage та пам'яті:</strong> обробка переповнення квоти сховища та безпечне відкладене скасування URL-об'єктів для експорту .txt.</li>
                     </ul>
                 </div>
 
@@ -291,6 +313,7 @@
         const copyText = document.getElementById('copy-text');
         const copyIcon = document.getElementById('copy-icon');
         const btnClear = document.getElementById('btn-clear');
+        const btnSplitLines = document.getElementById('btn-split-lines');
         const btnDownload = document.getElementById('btn-download');
         const btnDemo = document.getElementById('btn-demo');
         const statsBadge = document.getElementById('stats-badge');
@@ -301,29 +324,35 @@
         const quickStatus = document.getElementById('quick-status');
 
         const demoText = `По Службі ЗББР:
-- Магазин під патрон 5,45х39 мм на 30 патронів – 4 шт.
+- 4 шт. Магазин під патрон 5,45х39 мм на 30 патронів
 - Магазин під патрон 5,45х39 мм на 30 патронів – 2 шт.
 - Коліматорний приціл Bushnell TRS-25 - 1 к-кт
 - Пристрій метальний учбово-симуляційний – 1 шт.
-- Патрони 7.62х39 - 1 цинк
+- 1 цинк Патрони 7.62х39
 - Патрони 7.62х39 - 2 цинки
+- 10 - Бронежилет Корсар М3с
 
 По Службі ОВТ та МСВ:
-- Бронежилет Корсар М3с - 2 шт (втрачено під час штурму)
+- 2 шт Бронежилет Корсар М3с (втрачено під час штурму)
 * Шолом кевларовий ТОР-Д	- 1 шт.	(солдат Іванов І.І.)
-• Навушники активні Earmor M32 - 1 пара
-- Протигаз ПМК-2 – 1 шт.
+• 1 пара Навушники активні Earmor M32
+- Протигаз ПМК-2 – 1 шт.; Фільтр комбінований до ПМК - 2 шт.
 - Панчохи захисні – 1 пара
 - Спальний мішок зимовий -- 3 шт
+- 2 пари Берці Талан 43 р.
 - Шолом кевларовий ТОР-Д - 2 шт. (сержант Петренко О.В.)
-- Дріт польовий П-274 - 500 пог. м
+- 500 пог. м Дріт польовий П-274
 - Дрова твердих порід - 5 т.
-- Дріт колючий - 3 бухти
+- Дріт колючий - 3 бухти; Сітка маскувальна 3х6 - 2 шт.
+- Картридж для фільтра води - 4 шт.
+- Газовий балон 220г - 8 балонів
 
 Майно медичного пункту:
 - Аптечка медична індивідуальна АМЗІ - 1 шт.
-- Джгут-турнікет CAT G7 – 3 шт.
-- Знеболювальне в ампулах - 10 амп.`;
+- 3 шт. Джгут-турнікет CAT G7
+- Знеболювальне в ампулах - 10 амп.
+- Антибіотик у таблетках - 20 доз
+- Мазь протиопікова - 5 туб`;
 
         // Оновлення номерів рядків
         function updateLineNumbers() {
@@ -340,10 +369,11 @@
             lineNumbersDiv.scrollTop = inputArea.scrollTop;
         });
 
-        // Нормалізація військового тексту (омогліфи, специфічні пробіли, апострофи)
+        // Нормалізація військового тексту (омогліфи, специфічні пробіли, апострофи, PUA-символи з MS Word)
         function normalizeMilitaryText(str) {
             if (!str) return '';
             return str
+                .replace(/[\uE000-\uF8FF\uFFF0-\uFFFF]/g, '') // Вирізання Private Use Area (водівські спецсимволи, маркери Wingdings)
                 .replace(/[\u00A0\u1680\u180e\u2000-\u200b\u202f\u205f\u3000\ufeff]/g, ' ')
                 .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015]/g, '–')
                 .replace(/[\u2018\u2019\u02bc\u0060\u00b4]/g, "'")
@@ -351,15 +381,18 @@
                 .trim();
         }
 
-        // Очищення початкових маркерів списків без пошкодження калібрів (5.45, 7.62 тощо)
+        // Очищення початкових маркерів списків, чекбоксів та фігур без пошкодження калібрів (5.45, 7.62 тощо)
         function stripListMarkers(str) {
-            return str.replace(/^\s*(?:(?:\d+|[a-zA-Zа-яА-ЯіїєґІЇЄҐ])[\.\)]\s*|[-–—•*+▪▫►●·✔✓]\s*)+/, '').trim();
+            return str.replace(/^\s*(?:(?:\d+|[a-zA-Zа-яА-ЯіїєґІЇЄҐ])[\.\)]\s*|[-–—•*+▪▫►▶▷▸▹▼▽◀◁◄◅◆◇◈◉◊○◌◍◎●◦·✔✓✕✖✗✘\u25A0-\u25FF\u2600-\u26FF\u2700-\u27BF\uE000-\uF8FF\u2022\u2023\u2043\u204C\u204D\u2219]\s*)+/u, '').trim();
         }
 
         // Перевірка на заголовок розділу / служби
         function isSectionHeader(text) {
+            if (!text) return false;
             if (text.endsWith(':')) return true;
-            return /^(?:по\s+служб[іе]|служб[ае]|майно|по\s+груп[іе]|груп[ае]|відділення|взвод|рота|батальйон|підрозділ|склад)\b/i.test(text);
+            if (/^(?:по\s+служб[іе]|служб[ае]|майно|по\s+груп[іе]|груп[ае]|відділення|взвод|рота|батальйон|підрозділ|склад|розділ|блок|частина)\b/i.test(text)) return true;
+            if (/^(?:ЗББР|ОВТ|МСВ|ПММ|РАО|ЗВ'ЯЗОК|БПЛА|РЕР|РЕБ|МЕДПУНКТ)\b/i.test(text) && text.length < 35) return true;
+            return false;
         }
 
         // Базова категорія одиниці виміру для коректного об'єднання дублікатів
@@ -386,9 +419,17 @@
             if (u.startsWith('амп')) return 'амп.';
             if (u.startsWith('фл')) return 'фл.';
             if (u.startsWith('тюб')) return 'тюб.';
+            if (u.startsWith('туб')) return 'туб.';
+            if (u.startsWith('доз')) return 'доз.';
             if (u.startsWith('бан')) return 'бан.';
             if (u.startsWith('пляш')) return 'пляш.';
             if (u.startsWith('кан')) return 'кан.';
+            if (u.startsWith('картр')) return 'картр.';
+            if (u.startsWith('фільтр')) return 'фільтр';
+            if (u.startsWith('сект') || u.startsWith('секц')) return 'сект.';
+            if (u.startsWith('лист') || u.startsWith('арк')) return 'лист.';
+            if (u.startsWith('блок')) return 'блок';
+            if (u.startsWith('балон')) return 'балон';
             if (u === 'л' || u.startsWith('літр')) return 'л';
             if (u === 'кг' || u.startsWith('кілограм')) return 'кг';
             if (u === 'г' || u.startsWith('грам')) return 'г';
@@ -445,8 +486,50 @@
             if (cleanU.startsWith('амп')) return 'амп.';
             if (cleanU.startsWith('фл') || cleanU.startsWith('флакон')) return 'фл.';
             if (cleanU.startsWith('тюб')) return 'тюб.';
+            if (cleanU.startsWith('туб')) {
+                if (q === 1) return 'туба';
+                if (q >= 2 && q <= 4) return 'туби';
+                return 'туб';
+            }
+            if (cleanU.startsWith('доз')) {
+                if (q === 1) return 'доза';
+                if (q >= 2 && q <= 4) return 'дози';
+                return 'доз';
+            }
             if (cleanU.startsWith('бан')) return 'бан.';
             if (cleanU.startsWith('пляш')) return 'пляш.';
+
+            // Технічні витратні матеріали
+            if (cleanU.startsWith('картр')) {
+                if (q === 1) return 'картридж';
+                if (q >= 2 && q <= 4) return 'картриджі';
+                return 'картриджів';
+            }
+            if (cleanU.startsWith('фільтр')) {
+                if (q === 1) return 'фільтр';
+                if (q >= 2 && q <= 4) return 'фільтри';
+                return 'фільтрів';
+            }
+            if (cleanU.startsWith('сект') || cleanU.startsWith('секц')) {
+                if (q === 1) return 'секція';
+                if (q >= 2 && q <= 4) return 'секції';
+                return 'секцій';
+            }
+            if (cleanU.startsWith('лист') || cleanU.startsWith('арк')) {
+                if (q === 1) return 'лист';
+                if (q >= 2 && q <= 4) return 'листи';
+                return 'листів';
+            }
+            if (cleanU.startsWith('блок')) {
+                if (q === 1) return 'блок';
+                if (q >= 2 && q <= 4) return 'блоки';
+                return 'блоків';
+            }
+            if (cleanU.startsWith('балон')) {
+                if (q === 1) return 'балон';
+                if (q >= 2 && q <= 4) return 'балони';
+                return 'балонів';
+            }
 
             // Об'єм та вага
             if (cleanU.startsWith('кан') || cleanU.startsWith('каністр')) return 'кан.';
@@ -459,18 +542,43 @@
         }
 
         // Регулярний вираз для пошуку кількості та одиниці виміру
-        const qtyRegex = /(?:^|[-\s–—\t:])*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|од\.?|одиниц[яіь]|пара|пар|пари|к-кт|к-т|комплект(?:и|ів)?|компл\.?|пач(?:ок|ка|ки|\.)?|цинк(?:и|ів)?|ц\.?|ящик(?:и|ів)?|ящ\.?|упаков(?:ка|ки|ок)?|упак\.?|уп\.?|пакет(?:и|ів)?|пак\.?|рулон(?:и|ів)?|рул\.?|бухт(?:а|и|)?|бухт\.?|моток|мотків|мот\.?|котушк(?:а|и|ок)?|кот\.?|пог\.?\s*м\.?|п\.?\s*м\.?|п\/м|кв\.?\s*м\.?|м²|м2|куб\.?\s*м\.?|м³|м3|метр(?:и|ів)?|м\.?|ампул(?:а|и|)?|амп\.?|флакон(?:и|ів)?|фл\.?|тюбик(?:и|ів)?|тюб\.?|банк(?:а|и|ок)?|бан\.?|пляшк(?:а|и|ок)?|пляш\.?|каністр(?:а|и|)?|кан\.?|літр(?:и|ів)?|л\.?|кілограм(?:и|ів)?|кг\.?|грам(?:и|ів)?|г\.?|тонн(?:а|и|)?|т\.?)(?=[^\w\u0400-\u04FF]|$)/gi;
+        const qtyRegex = /(?:^|[-\s–—\t:])*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|од\.?|одиниц[яіь]|пара|пар|пари|к-кт|к-т|комплект(?:и|ів)?|компл\.?|пач(?:ок|ка|ки|\.)?|цинк(?:и|ів)?|ц\.?|ящик(?:и|ів)?|ящ\.?|упаков(?:ка|ки|ок)?|упак\.?|уп\.?|пакет(?:и|ів)?|пак\.?|рулон(?:и|ів)?|рул\.?|бухт(?:а|и|)?|бухт\.?|моток|мотків|мот\.?|котушк(?:а|и|ок)?|кот\.?|пог\.?\s*м\.?|п\.?\s*м\.?|п\/м|кв\.?\s*м\.?|м²|м2|куб\.?\s*м\.?|м³|м3|метр(?:и|ів)?|м\.?|ампул(?:а|и|)?|амп\.?|флакон(?:и|ів)?|фл\.?|тюбик(?:и|ів)?|тюб\.?|туб(?:а|и|)?|туб\.?|доз(?:а|и|)?|доз\.?|банк(?:а|и|ок)?|бан\.?|пляшк(?:а|и|ок)?|пляш\.?|каністр(?:а|и|)?|кан\.?|картридж(?:і|ів)?|картр\.?|фільтр(?:и|ів)?|секці(?:я|ї|й)?|сект\.?|лист(?:и|ів)?|аркуш(?:і|ів)?|арк\.?|блок(?:и|ів)?|балон(?:и|ів)?|літр(?:и|ів)?|л\.?|кілограм(?:и|ів)?|кг\.?|грам(?:и|ів)?|г\.?|тонн(?:а|и|)?|т\.?)(?=[^\w\u0400-\u04FF]|$)/gi;
 
         // Пошук явного числа в кінці рядка без одиниці (наприклад, "- 2" або "-- 3")
         const bareQtyRegex = /[-\s–—\t:]+(\d+(?:[.,]\d+)?)(?:\s*(?:\([^\)]*\)|\[[^\]]*\]))?\s*$/;
 
-        // Розбір одного рядка
+        // Пошук явного числа на початку рядка без одиниці (наприклад, "10 - Бронежилет Корсар")
+        const bareStartRegex = /^\s*(\d+(?:[.,]\d+)?)\s*[-–—:]+\s*([a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9].+)$/;
+
+        // Очищення назви майна від зайвих символів, приміток та статусів втрати
+        function cleanItemName(str) {
+            if (!str) return '';
+            let name = str.trim().replace(/\s+/g, ' ');
+            name = name.replace(/\s*\((?:солдат|сержант|офіцер|втрачено|знищено|під час|в результаті|на позиції|без повернення|списано)[^)]*\)\s*$/i, '').trim();
+            name = name.replace(/(?:втрачено|знищено|під час|в результаті|на позиції).*$/i, '').trim();
+            name = name.replace(/^[-–—\s:.,;▪▫►▶▷▸▹▼▽◀◁◄◅◆◇◈◉◊○◌◍◎●◦·✔✓✕✖✗✘\u25A0-\u25FF\u2600-\u26FF\u2700-\u27BF\uE000-\uF8FF\[\]\(\)]+/, '').trim();
+            name = name.replace(/[-–—\s:.,;]+$/, '').trim();
+            return name;
+        }
+
+        // Розбір одного рядка (підтримка як традиційного, так і двостороннього парсингу)
         function parseLine(line) {
             const norm = normalizeMilitaryText(line);
             if (!norm) return null;
 
             const clean = stripListMarkers(norm);
             if (!clean) return null;
+
+            // 1. Перевірка на число на початку без одиниці, наприклад: "10 - Бронежилет Корсар" або "5: Лопата"
+            const bareStartMatch = bareStartRegex.exec(clean);
+            if (bareStartMatch) {
+                const rawQty = bareStartMatch[1].replace(',', '.');
+                const q = parseFloat(rawQty);
+                const name = cleanItemName(bareStartMatch[2]);
+                if (name) {
+                    return { type: 'item', name, quantity: q, unit: 'шт.', unitBase: 'шт.' };
+                }
+            }
 
             qtyRegex.lastIndex = 0;
             let lastMatch = null;
@@ -479,42 +587,75 @@
                 lastMatch = match;
             }
 
+            // 2. Перевірка на заголовок розділу
             if (isSectionHeader(clean) && !lastMatch) {
                 return { type: 'header', text: clean.replace(/[:.;,\s]+$/, '') + ':' };
             }
 
+            // 3. Двостороннє вилучення за наявності одиниці виміру
             if (lastMatch) {
                 const rawQty = lastMatch[1].replace(',', '.');
                 const q = parseFloat(rawQty);
                 const unit = normalizeUnit(lastMatch[2], q);
-                let name = clean.substring(0, lastMatch.index).trim();
-                name = name.replace(/\s+/g, ' ');
-                // Видалення приміток втрати або прізвищ наприкінці назви (якщо були перед кількістю)
-                name = name.replace(/\s*\((?:солдат|сержант|офіцер|втрачено|знищено|під час|в результаті|на позиції|без повернення|списано)[^)]*\)\s*$/i, '').trim();
-                name = name.replace(/(?:втрачено|знищено|під час|в результаті|на позиції).*$/i, '').trim();
-                name = name.replace(/[-–—\s:.,;]+$/, '').trim();
-                return { type: 'item', name, quantity: q, unit, unitBase: getUnitBase(unit) };
+
+                // Формат А: Назва майна перед кількістю ("Магазин АК – 4 шт.")
+                const nameBefore = cleanItemName(clean.substring(0, lastMatch.index));
+                if (nameBefore.length > 0) {
+                    return { type: 'item', name: nameBefore, quantity: q, unit, unitBase: getUnitBase(unit) };
+                }
+
+                // Формат Б: Кількість перед назвою майна ("4 шт. Магазин АК" або "2 пари Берці")
+                const nameAfter = cleanItemName(clean.substring(lastMatch.index + lastMatch[0].length));
+                if (nameAfter.length > 0) {
+                    return { type: 'item', name: nameAfter, quantity: q, unit, unitBase: getUnitBase(unit) };
+                }
             }
 
+            // 4. Пошук числа в кінці без одиниці ("Бронежилет Корсар - 2")
             const bareMatch = bareQtyRegex.exec(clean);
             if (bareMatch) {
                 const rawQty = bareMatch[1].replace(',', '.');
                 const q = parseFloat(rawQty);
-                let name = clean.substring(0, bareMatch.index).trim();
-                name = name.replace(/\s+/g, ' ');
-                name = name.replace(/\s*\((?:солдат|сержант|офіцер|втрачено|знищено|під час|в результаті|на позиції|без повернення|списано)[^)]*\)\s*$/i, '').trim();
-                name = name.replace(/(?:втрачено|знищено|під час|в результаті|на позиції).*$/i, '').trim();
-                name = name.replace(/[-–—\s:.,;]+$/, '').trim();
-                return { type: 'item', name, quantity: q, unit: 'шт.', unitBase: 'шт.' };
+                const name = cleanItemName(clean.substring(0, bareMatch.index));
+                if (name) {
+                    return { type: 'item', name, quantity: q, unit: 'шт.', unitBase: 'шт.' };
+                }
             }
 
+            // 5. Рядок без кількості (залишаємо назву)
             return {
                 type: 'item',
-                name: clean.replace(/[-–—\s:.,;]+$/, '').trim(),
+                name: cleanItemName(clean),
                 quantity: null,
                 unit: null,
                 unitBase: ''
             };
+        }
+
+        // Ручне розбиття тексту на окремі рядки за розділювачем ';'
+        function splitInputIntoLines() {
+            const text = inputArea.value;
+            if (!text.trim()) return;
+
+            const lines = text.split('\n');
+            const newLines = [];
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed) {
+                    newLines.push('');
+                    return;
+                }
+                if (isSectionHeader(trimmed) || !trimmed.includes(';')) {
+                    newLines.push(trimmed);
+                    return;
+                }
+                const parts = trimmed.split(';').map(p => p.trim()).filter(Boolean);
+                newLines.push(...parts);
+            });
+
+            inputArea.value = newLines.join('\n');
+            formatData();
         }
 
         // Головна функція форматування даних
@@ -523,7 +664,7 @@
 
             // Безпечне збереження в LocalStorage з перехопленням QuotaExceededError
             try {
-                localStorage.setItem('formatterData_v14', rawText);
+                localStorage.setItem('formatterData_v15', rawText);
                 localStorage.setItem('formatterSettings', JSON.stringify({
                     merge: chkMerge.checked,
                     sort: chkSort.checked,
@@ -550,7 +691,18 @@
             const delimiter = selDelimiter.value;
             const prefixStyle = selPrefix.value;
 
-            const lines = rawText.split('\n');
+            // Автоматична підтримка мультипозиційних рядків із ';'
+            const rawLines = rawText.split('\n');
+            const lines = [];
+            rawLines.forEach(l => {
+                const trimmed = l.trim();
+                if (!trimmed || isSectionHeader(trimmed) || !trimmed.includes(';')) {
+                    lines.push(l);
+                } else {
+                    const parts = trimmed.split(';').map(p => p.trim()).filter(Boolean);
+                    lines.push(...parts);
+                }
+            });
             const sections = [];
             let currentSection = { header: null, items: [] };
             let rawValidCount = 0;
@@ -667,6 +819,8 @@
             formatData();
         });
 
+        btnSplitLines.addEventListener('click', splitInputIntoLines);
+
         btnClear.addEventListener('click', () => {
             if (inputArea.value && confirm('Очистити всі вхідні дані?')) {
                 inputArea.value = '';
@@ -753,7 +907,7 @@
             console.warn(e);
         }
 
-        const savedData = localStorage.getItem('formatterData_v14') || localStorage.getItem('formatterData') || '';
+        const savedData = localStorage.getItem('formatterData_v15') || localStorage.getItem('formatterData_v14') || localStorage.getItem('formatterData') || '';
         inputArea.value = savedData;
 
         // Ініціалізація іконок

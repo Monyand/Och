@@ -57,184 +57,339 @@
 
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.45); }
         }
         .pulse-gold {
             animation: pulse-glow 3s infinite ease-in-out;
         }
+
+        .tactical-grid {
+            background-image: radial-gradient(rgba(245, 158, 11, 0.07) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
     </style>
 </head>
 
-<body class="min-h-screen bg-slate-950 text-slate-300 p-4 md:p-8 font-sans selection:bg-amber-500/30">
+<body class="min-h-screen bg-[#090d16] text-slate-300 p-4 md:p-8 font-sans selection:bg-amber-500/30 selection:text-white relative tactical-grid">
+    <!-- Верхній фоновий градієнтний акцент -->
+    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-64 bg-gradient-to-b from-amber-500/10 via-slate-900/0 to-transparent pointer-events-none -z-10"></div>
+
     <div class="max-w-6xl mx-auto space-y-6">
 
         <!-- Шапка програми -->
-        <header class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-slate-800/80 pb-5">
+        <header class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-slate-800/80 pb-5">
             <div>
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-inner">
+                    <a href="index.html" title="Повернутися до Єдиного Центру Управління (HUB)"
+                        class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-semibold transition-all shadow-sm group">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-amber-400 group-hover:-translate-x-0.5 transition-transform"></i>
+                        <span>HUB</span>
+                    </a>
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
                         <i data-lucide="shield-alert" class="w-5 h-5"></i>
                     </div>
                     <div>
                         <div class="flex items-center gap-2.5">
-                            <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Облік перевіряючих</h1>
-                            <button onclick="openModal('modal-changelog')" title="Історія оновлень" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm">
-                                ⚡ v1.2.1
+                            <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Облік перевіряючих</h1>
+                            <button onclick="openModal('modal-changelog')" title="Історія оновлень" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm pulse-gold">
+                                ⚡ v1.3.0
                             </button>
                         </div>
                         <p class="text-slate-400 text-xs md:text-sm mt-0.5">Автоматичний парсер бойових розпоряджень (БР) та генератор офіційного звіту .docx</p>
                     </div>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="text-[11px] font-mono text-slate-500 flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-                    <i data-lucide="cpu" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <div class="flex items-center gap-2.5">
+                <button id="btn-demo" onclick="loadDemoData()" title="Вставити тестову таблицю з БР та перевіряючими"
+                    class="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:text-white transition-all shadow-sm cursor-pointer active:scale-95">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Вставити приклад</span>
+                </button>
+                <span class="text-[11px] font-mono text-slate-400 flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>OFFLINE ENGINE</span>
                 </span>
             </div>
         </header>
 
         <!-- Робоча сітка (2 колонки) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
             <!-- Ліва колонка: Параметри, Файл та Налаштування -->
             <div class="lg:col-span-6 flex flex-col space-y-5">
 
-                <!-- Картка 1: Вибір числа місяця -->
-                <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 shadow-lg relative overflow-hidden">
+                <!-- Картка 1: Вибір числа, місяця та року -->
+                <div class="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-5 shadow-xl relative overflow-hidden">
                     <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600"></div>
-                    <div class="flex items-center justify-between mb-4">
+                    
+                    <div class="flex items-center justify-between mb-3.5">
                         <div class="flex items-center gap-2">
                             <i data-lucide="calendar" class="w-4 h-4 text-amber-400"></i>
-                            <h2 class="font-semibold text-slate-200 text-sm">Дата звіту (Число місяця)</h2>
+                            <h2 class="font-bold text-slate-200 text-sm tracking-wide">Дата звіту (День / Місяць / Рік)</h2>
                         </div>
-                        <span id="date-preview-badge" class="font-mono text-xs font-bold px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                            16.08.2026
+                        <span id="date-preview-badge" class="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                            22.09.2026
                         </span>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <button type="button" onclick="stepDate(-1)" class="w-11 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 flex items-center justify-center font-bold text-lg transition-all cursor-pointer">
-                            -
+                    <!-- Швидкі тактичні пресети -->
+                    <div class="grid grid-cols-3 gap-2 mb-3.5">
+                        <button type="button" onclick="setPresetDate('yesterday')"
+                            class="py-1.5 px-2 rounded-lg bg-slate-950/70 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-[11px] font-semibold transition-all cursor-pointer">
+                            ⏪ Вчора
                         </button>
-                        <div class="flex-1 relative">
-                            <input type="number" id="targetDate" value="16" min="1" max="31"
-                                class="w-full text-center py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono font-bold text-2xl tracking-widest outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all">
-                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-500 uppercase pointer-events-none">число</span>
+                        <button type="button" onclick="setPresetDate('today')"
+                            class="py-1.5 px-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-[11px] font-bold transition-all cursor-pointer shadow-sm">
+                            🎯 Сьогодні
+                        </button>
+                        <button type="button" onclick="setPresetDate('tomorrow')"
+                            class="py-1.5 px-2 rounded-lg bg-slate-950/70 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-[11px] font-semibold transition-all cursor-pointer">
+                            ⏩ Завтра
+                        </button>
+                    </div>
+
+                    <div class="space-y-3.5">
+                        <!-- Степпер числа -->
+                        <div class="flex items-center gap-3">
+                            <button type="button" onclick="stepDate(-1)" title="Попереднє число"
+                                class="w-12 h-12 rounded-xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 flex items-center justify-center font-bold text-xl transition-all cursor-pointer shadow-sm">
+                                <i data-lucide="minus" class="w-4 h-4"></i>
+                            </button>
+                            <div class="flex-1 relative">
+                                <input type="number" id="targetDate" value="22" min="1" max="31"
+                                    class="w-full text-center py-2 bg-slate-950 border border-slate-700/90 rounded-xl text-white font-mono font-bold text-2xl tracking-widest outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all shadow-inner">
+                                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-500 uppercase tracking-wider bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 pointer-events-none">число</span>
+                            </div>
+                            <button type="button" onclick="stepDate(1)" title="Наступне число"
+                                class="w-12 h-12 rounded-xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 flex items-center justify-center font-bold text-xl transition-all cursor-pointer shadow-sm">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
                         </div>
-                        <button type="button" onclick="stepDate(1)" class="w-11 h-11 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 flex items-center justify-center font-bold text-lg transition-all cursor-pointer">
-                            +
-                        </button>
+
+                        <!-- Місяць та Рік -->
+                        <div class="grid grid-cols-2 gap-3 pt-1">
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-[11px] font-semibold text-slate-400">Місяць</label>
+                                <select id="targetMonth" onchange="onDateConfigChange()"
+                                    class="w-full py-2 px-3 bg-slate-950 border border-slate-700/80 rounded-xl text-slate-200 font-semibold text-xs outline-none focus:border-amber-500 transition-all cursor-pointer">
+                                    <option value="0">01 - Січень</option>
+                                    <option value="1">02 - Лютий</option>
+                                    <option value="2">03 - Березень</option>
+                                    <option value="3">04 - Квітень</option>
+                                    <option value="4">05 - Травень</option>
+                                    <option value="5">06 - Червень</option>
+                                    <option value="6">07 - Липень</option>
+                                    <option value="7">08 - Серпень</option>
+                                    <option value="8" selected>09 - Вересень</option>
+                                    <option value="9">10 - Жовтень</option>
+                                    <option value="10">11 - Листопад</option>
+                                    <option value="11">12 - Грудень</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-[11px] font-semibold text-slate-400">Рік</label>
+                                <input type="number" id="targetYear" value="2026" min="2022" max="2035" onchange="onDateConfigChange()"
+                                    class="w-full text-center py-2 bg-slate-950 border border-slate-700/80 rounded-xl text-slate-200 font-mono font-bold text-xs outline-none focus:border-amber-500 transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Вербальний індикатор дати -->
+                        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                            <span class="text-slate-400 flex items-center gap-1.5">
+                                <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-amber-400"></i>
+                                <span>Звітний день:</span>
+                            </span>
+                            <span id="date-verbal-badge" class="font-semibold text-amber-300 font-sans text-[11px] sm:text-xs">
+                                22 вересня 2026 р.
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Картка 2: Завантаження файлу таблиці (Drag & Drop) -->
-                <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 shadow-lg flex flex-col">
-                    <div class="flex items-center justify-between mb-3">
+                <!-- Картка 2: Завантаження файлу таблиці (Drag & Drop та Активний файл) -->
+                <div class="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between mb-3.5">
                         <div class="flex items-center gap-2">
                             <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
-                            <h2 class="font-semibold text-slate-200 text-sm">Таблиця БЧС (Excel)</h2>
+                            <h2 class="font-bold text-slate-200 text-sm tracking-wide">Таблиця БЧС (Excel)</h2>
                         </div>
                         <span id="file-status-badge" class="text-[11px] font-mono text-slate-500">Файл не обрано</span>
                     </div>
 
-                    <div id="drop-zone"
-                        class="border-2 border-dashed border-slate-700 hover:border-amber-500/80 hover:bg-slate-800/40 transition-all rounded-xl p-6 text-center cursor-pointer flex flex-col items-center justify-center group">
-                        <input type="file" id="upload" accept=".xlsx, .xls, .csv, .ods" class="hidden">
-                        <div class="w-12 h-12 rounded-full bg-slate-800 group-hover:bg-amber-500/20 text-slate-400 group-hover:text-amber-400 flex items-center justify-center mb-3 transition-colors">
+                    <!-- Схований системний інпут -->
+                    <input type="file" id="upload" accept=".xlsx, .xls, .csv, .ods" class="hidden">
+
+                    <!-- Стан 1: Порожній Dropzone -->
+                    <div id="drop-zone-empty"
+                        class="border-2 border-dashed border-slate-700/80 hover:border-amber-500/80 hover:bg-slate-800/40 transition-all rounded-xl p-6 text-center cursor-pointer flex flex-col items-center justify-center group">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-800/80 group-hover:bg-amber-500/20 text-slate-400 group-hover:text-amber-400 flex items-center justify-center mb-3 transition-colors shadow-inner">
                             <i data-lucide="upload-cloud" class="w-6 h-6"></i>
                         </div>
                         <p class="text-sm font-semibold text-slate-200 group-hover:text-amber-300 transition-colors">
                             Натисніть або перетягніть файл сюди
                         </p>
                         <p class="text-xs text-slate-500 mt-1">Підтримуються формати: .xlsx, .xls, .csv, .ods</p>
-                        <div id="file-info" class="mt-3 hidden items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-emerald-300 text-xs font-mono">
-                            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
-                            <span id="file-name" class="truncate max-w-[280px]">file.xlsx</span>
+                    </div>
+
+                    <!-- Стан 2: Активна картка завантаженого файлу (прихована за замовчуванням) -->
+                    <div id="file-card-active" class="hidden flex-col gap-3 p-4 rounded-xl bg-emerald-950/20 border border-emerald-800/40">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 flex-shrink-0 shadow-sm">
+                                    <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p id="file-card-name" class="font-mono font-bold text-emerald-300 text-xs truncate max-w-[260px] sm:max-w-xs">file.xlsx</p>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span id="file-card-size" class="text-[10px] font-mono text-slate-400">0 KB</span>
+                                        <span class="text-slate-600">•</span>
+                                        <span class="text-[10px] text-emerald-400 font-semibold">Готово до обробки</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <button type="button" onclick="document.getElementById('upload').click()" title="Замінити файл"
+                                    class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs transition-all cursor-pointer">
+                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button type="button" onclick="clearLoadedFile()" title="Очистити"
+                                    class="p-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-rose-100 border border-rose-800/50 text-xs transition-all cursor-pointer">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Вибір аркуша (при наявності > 1 вкладки) -->
+                    <div id="sheet-selector-container" class="mt-3.5 hidden flex-col gap-1.5 pt-3.5 border-t border-slate-800/80">
+                        <div class="flex items-center justify-between text-[11px] text-slate-400">
+                            <span class="flex items-center gap-1.5 font-semibold text-slate-300">
+                                <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-400"></i>
+                                <span>Активний аркуш книги Excel:</span>
+                            </span>
+                            <span id="sheet-count-badge" class="font-mono text-slate-400 text-[10px] bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">1 аркуш</span>
+                        </div>
+                        <select id="sheetSelect" onchange="if(loadedWorkbook) processData(false);"
+                            class="w-full py-2 px-3 bg-slate-950 border border-slate-700/80 rounded-xl text-slate-200 font-mono text-xs outline-none focus:border-blue-500 cursor-pointer transition-all">
+                        </select>
                     </div>
                 </div>
 
-                <!-- Картка 3: Налаштування колонок Excel -->
-                <div class="bg-slate-900 rounded-xl border border-slate-800 p-5 shadow-lg">
-                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+                <!-- Картка 3: Налаштування структури колонок Excel -->
+                <div class="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-5 shadow-xl">
+                    <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-800/80">
                         <div class="flex items-center gap-2">
                             <i data-lucide="sliders" class="w-4 h-4 text-blue-400"></i>
-                            <h2 class="font-semibold text-slate-200 text-sm">Колонки таблиці (Букви)</h2>
+                            <h2 class="font-bold text-slate-200 text-sm tracking-wide">Колонки таблиці</h2>
                         </div>
-                        <button type="button" onclick="resetDefaultColumns()" class="text-[11px] font-mono text-slate-500 hover:text-slate-300 transition-colors cursor-pointer">
-                            За замовчуванням
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="resetDefaultColumns()" class="text-[11px] font-mono text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
+                                За замовчуванням
+                            </button>
+                            <button type="button" onclick="toggleColumnsConfig()" title="Згорнути / розгорнути налаштування колонок"
+                                class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-all cursor-pointer">
+                                <i id="columns-toggle-icon" data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                        <div class="flex flex-col space-y-1">
-                            <label class="text-[11px] font-semibold text-slate-400">Звання</label>
-                            <input type="text" id="colRank" value="B" maxlength="2"
-                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-md text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
+                    <!-- Сітка колонок (згортається за потреби) -->
+                    <div id="columns-config-grid" class="space-y-3.5">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-[11px] font-semibold text-slate-400">Звання</label>
+                                <input type="text" id="colRank" value="B" maxlength="4" onchange="saveColumnSettings()"
+                                    class="w-full text-center py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-[11px] font-semibold text-slate-400">Посада / Текст БР</label>
+                                <input type="text" id="colPos" value="A" maxlength="4" onchange="saveColumnSettings()"
+                                    class="w-full text-center py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-[11px] font-semibold text-slate-400">ПІБ</label>
+                                <input type="text" id="colName" value="C" maxlength="4" onchange="saveColumnSettings()"
+                                    class="w-full text-center py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-[11px] font-semibold text-slate-400">Колонка 1-го числа</label>
+                                <input type="text" id="colDateStart" value="D" maxlength="4" onchange="saveColumnSettings()"
+                                    class="w-full text-center py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-emerald-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <label class="text-[11px] font-semibold text-slate-400">Початок даних (Рядок)</label>
+                                <input type="number" id="rowDataStart" value="2" min="1" max="20" onchange="saveColumnSettings()"
+                                    class="w-full text-center py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-slate-200 font-mono font-bold text-sm outline-none focus:border-blue-500">
+                            </div>
                         </div>
-                        <div class="flex flex-col space-y-1">
-                            <label class="text-[11px] font-semibold text-slate-400">Посада / Текст БР</label>
-                            <input type="text" id="colPos" value="A" maxlength="2"
-                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-md text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
-                        </div>
-                        <div class="flex flex-col space-y-1">
-                            <label class="text-[11px] font-semibold text-slate-400">ПІБ</label>
-                            <input type="text" id="colName" value="C" maxlength="2"
-                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-md text-amber-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
-                        </div>
-                        <div class="flex flex-col space-y-1">
-                            <label class="text-[11px] font-semibold text-slate-400">Колонка 1-го числа</label>
-                            <input type="text" id="colDateStart" value="D" maxlength="2"
-                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-md text-emerald-400 font-mono font-bold text-sm uppercase outline-none focus:border-blue-500">
-                        </div>
-                        <div class="flex flex-col space-y-1">
-                            <label class="text-[11px] font-semibold text-slate-400">Початок даних (Рядок)</label>
-                            <input type="number" id="rowDataStart" value="2" min="1" max="20"
-                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-md text-slate-200 font-mono font-bold text-sm outline-none focus:border-blue-500">
-                        </div>
-                        <div class="flex flex-col space-y-1">
-                            <label class="text-[11px] font-semibold text-slate-400">Формат звіту</label>
-                            <select id="outputFormat" onchange="if(loadedWorkbook) processData(false);"
-                                class="w-full text-center py-1.5 bg-slate-950 border border-slate-700 rounded-md text-slate-200 font-semibold text-xs outline-none focus:border-blue-500">
-                                <option value="text" selected>Простий текст (абзац)</option>
-                                <option value="table">Таблиця Word</option>
-                            </select>
+
+                        <!-- Перемикач формату виводу Word (Сегментовані таби) -->
+                        <div class="flex flex-col space-y-1.5 pt-2 border-t border-slate-800/80">
+                            <label class="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
+                                <i data-lucide="file-type" class="w-3.5 h-3.5 text-blue-400"></i>
+                                <span>Формат експорту Word:</span>
+                            </label>
+                            <div class="grid grid-cols-2 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-semibold">
+                                <button type="button" id="tab-format-text" onclick="setOutputFormat('text')"
+                                    class="py-1.5 px-3 rounded-lg text-center transition-all bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer">
+                                    📝 Простий текст (абзац)
+                                </button>
+                                <button type="button" id="tab-format-table" onclick="setOutputFormat('table')"
+                                    class="py-1.5 px-3 rounded-lg text-center transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer">
+                                    📊 Таблиця Word
+                                </button>
+                            </div>
+                            <input type="hidden" id="outputFormat" value="text">
                         </div>
                     </div>
                 </div>
 
-                <!-- Головна кнопка генерації -->
-                <button id="btn-generate" onclick="processData(true)"
-                    class="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-base tracking-wider uppercase flex items-center justify-center gap-2.5 shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all pulse-gold cursor-pointer">
-                    <i data-lucide="file-check-2" class="w-5 h-5"></i>
-                    <span>Опрацювати та Завантажити .docx</span>
-                </button>
+                <!-- Блок подвійних кнопок дій (Опрацювати + Експорт) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <button id="btn-parse-preview" onclick="processData(false)"
+                        class="py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 hover:text-white font-bold text-sm tracking-wide border border-amber-500/30 hover:border-amber-500/60 flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] cursor-pointer">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span>Опрацювати перегляд</span>
+                    </button>
+                    <button id="btn-generate-docx" onclick="processData(true)"
+                        class="py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all pulse-gold cursor-pointer">
+                        <i data-lucide="file-down" class="w-4 h-4"></i>
+                        <span>Завантажити .docx</span>
+                    </button>
+                </div>
 
                 <div id="status"></div>
             </div>
 
             <!-- Права колонка: Живий попередній перегляд результатів -->
             <div class="lg:col-span-6 flex flex-col space-y-3">
-                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden flex flex-col h-full min-h-[580px]">
-                    <div class="bg-slate-800/80 px-4 py-3 border-b border-slate-700/50 flex flex-wrap gap-2 justify-between items-center z-10 backdrop-blur-sm">
+                <div class="bg-slate-900/80 backdrop-blur-md rounded-2xl shadow-xl border border-slate-800 overflow-hidden flex flex-col h-full min-h-[580px]">
+                    <div class="bg-slate-800/80 px-4 py-3.5 border-b border-slate-700/60 flex flex-wrap gap-2.5 justify-between items-center z-10 backdrop-blur-sm">
                         <div class="flex items-center gap-2">
                             <i data-lucide="eye" class="w-4 h-4 text-amber-400"></i>
-                            <h2 class="font-semibold text-slate-200 text-sm">Попередній перегляд БР</h2>
+                            <h2 class="font-bold text-slate-200 text-sm">Попередній перегляд БР</h2>
                             <span id="preview-stats-badge"
-                                class="hidden font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                class="hidden font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
                                 0 БР • 0 осіб
                             </span>
                         </div>
                         <div class="flex items-center space-x-2">
+                            <!-- Пошук з можливістю очищення -->
+                            <div class="relative hidden sm:block">
+                                <input type="text" id="preview-search" placeholder="Пошук особи/БР..." oninput="filterPreview()"
+                                    class="w-40 py-1 px-2.5 pl-7 pr-6 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 text-xs font-mono outline-none focus:border-amber-500 transition-all">
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2 top-1/2 -translate-y-1/2"></i>
+                                <button type="button" onclick="clearPreviewSearch()" title="Очистити пошук"
+                                    class="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs font-mono">×</button>
+                            </div>
                             <button id="btn-copy-preview" onclick="copyPreviewText()"
-                                class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-sm cursor-pointer"
+                                class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-sm cursor-pointer"
                                 disabled>
                                 <i id="copy-icon" data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                <span id="copy-text">Копіювати</span>
+                                <span id="copy-text">Копіювати все</span>
                             </button>
                             <button id="btn-download-docx" onclick="processData(true)"
-                                class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm font-bold cursor-pointer"
+                                class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm cursor-pointer"
                                 disabled>
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                 <span>.docx</span>
@@ -242,14 +397,26 @@
                         </div>
                     </div>
 
-                    <!-- Текстова зона перегляду -->
-                    <div class="flex-1 p-4 overflow-y-auto relative bg-slate-900/40 font-mono text-[13px] leading-relaxed select-text" id="preview-container">
-                        <div id="preview-empty" class="h-full flex flex-col items-center justify-center text-slate-600 p-8 text-center">
-                            <i data-lucide="file-text" class="w-12 h-12 mb-3 opacity-20"></i>
-                            <p class="text-sm font-medium text-slate-500">Тут з'явиться сформований список БР</p>
-                            <p class="text-xs text-slate-600 mt-1 max-w-xs">Оберіть число місяця, завантажте таблицю БЧС та натисніть кнопку опрацювання.</p>
+                    <!-- Зона перегляду -->
+                    <div class="flex-1 p-4 overflow-y-auto relative bg-slate-950/40 font-mono text-[13px] leading-relaxed select-text" id="preview-container">
+                        <!-- Порожній стан -->
+                        <div id="preview-empty" class="h-full min-h-[460px] flex flex-col items-center justify-center text-slate-500 p-8 text-center space-y-3">
+                            <div class="w-16 h-16 rounded-2xl bg-slate-800/40 border border-slate-800 flex items-center justify-center text-slate-600 mb-1">
+                                <i data-lucide="file-search" class="w-8 h-8 opacity-60"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-slate-300">Очікування таблиці БЧС</h3>
+                            <p class="text-xs text-slate-500 max-w-sm leading-normal">
+                                Оберіть дату, завантажте відомість БЧС або миттєво ознайомтесь із форматом звіту на демонстраційному зразку:
+                            </p>
+                            <button type="button" onclick="loadDemoData()"
+                                class="mt-2 px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                                <span>Завантажити приклад для ознайомлення</span>
+                            </button>
                         </div>
-                        <div id="preview-content" class="hidden space-y-4 text-slate-200"></div>
+
+                        <!-- Заповнений стан -->
+                        <div id="preview-content" class="hidden space-y-3.5 text-slate-200"></div>
                     </div>
                 </div>
             </div>
@@ -257,39 +424,101 @@
         </div>
 
         <!-- Футер -->
-        <footer class="pt-4 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>🛡️ Офлайн-модуль обліку перевіряючих та бойових розпоряджень</span>
+        <footer class="pt-4 border-t border-slate-800/80 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span class="flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Офлайн-модуль обліку перевіряючих та бойових розпоряджень</span>
+            </span>
             <span class="font-mono text-slate-600">Шрифт: Inter / JetBrains Mono • Word: Times New Roman 13pt</span>
         </footer>
 
     </div>
 
     <script>
-        // Ініціалізація Lucide icons
-        lucide.createIcons();
+        // Безпечна ініціалізація іконок
+        if (window.lucide) {
+            lucide.createIcons();
+        }
 
         let loadedWorkbook = null;
         let lastGeneratedText = '';
+        let currentGroupedData = {};
 
-        function stepDate(delta) {
-            const input = document.getElementById('targetDate');
-            let val = parseInt(input.value) || 1;
-            val = Math.max(1, Math.min(31, val + delta));
-            input.value = val;
-            updateDateBadge();
-            if (loadedWorkbook) processData(false);
+        // Оновлення дати
+        function getFormattedDate(customDay = null, customMonth = null, customYear = null) {
+            const d = customDay !== null ? customDay : (parseInt(document.getElementById('targetDate').value) || 1);
+            const m = customMonth !== null ? customMonth : (parseInt(document.getElementById('targetMonth').value) || 0);
+            const y = customYear !== null ? customYear : (parseInt(document.getElementById('targetYear').value) || 2026);
+
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const safeDay = Math.max(1, Math.min(d, daysInMonth));
+
+            const dayStr = String(safeDay).padStart(2, '0');
+            const monthStr = String(m + 1).padStart(2, '0');
+            return `${dayStr}.${monthStr}.${y}`;
         }
 
         function updateDateBadge() {
-            const val = parseInt(document.getElementById('targetDate').value) || 1;
             const badge = document.getElementById('date-preview-badge');
-            badge.innerText = getFormattedDate(val);
+            if (badge) badge.innerText = getFormattedDate();
+            updateVerbalDate();
         }
 
-        document.getElementById('targetDate').addEventListener('input', () => {
+        function updateVerbalDate() {
+            const verbalEl = document.getElementById('date-verbal-badge');
+            if (!verbalEl) return;
+            const d = parseInt(document.getElementById('targetDate').value) || 1;
+            const m = parseInt(document.getElementById('targetMonth').value) || 0;
+            const y = parseInt(document.getElementById('targetYear').value) || 2026;
+            const dateObj = new Date(y, m, d);
+            const monthsGen = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
+            const daysWeek = ['неділя', 'понеділок', 'вівторок', 'середа', 'четвер', 'п’ятниця', 'субота'];
+            verbalEl.innerText = `${d} ${monthsGen[m]} ${y} р. (${daysWeek[dateObj.getDay()]})`;
+        }
+
+        function setPresetDate(type) {
+            const now = new Date();
+            let target = new Date();
+            if (type === 'yesterday') {
+                target.setDate(now.getDate() - 1);
+            } else if (type === 'tomorrow') {
+                target.setDate(now.getDate() + 1);
+            }
+            document.getElementById('targetDate').value = target.getDate();
+            document.getElementById('targetMonth').value = target.getMonth();
+            document.getElementById('targetYear').value = target.getFullYear();
+            onDateConfigChange();
+        }
+
+        function onDateConfigChange() {
+            const input = document.getElementById('targetDate');
+            const m = parseInt(document.getElementById('targetMonth').value) || 0;
+            const y = parseInt(document.getElementById('targetYear').value) || 2026;
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+            let val = parseInt(input.value) || 1;
+            if (val > daysInMonth) {
+                val = daysInMonth;
+                input.value = val;
+            }
             updateDateBadge();
             if (loadedWorkbook) processData(false);
-        });
+        }
+
+        function stepDate(delta) {
+            const input = document.getElementById('targetDate');
+            const m = parseInt(document.getElementById('targetMonth').value) || 0;
+            const y = parseInt(document.getElementById('targetYear').value) || 2026;
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+            let val = (parseInt(input.value) || 1) + delta;
+            if (val < 1) val = 1;
+            if (val > daysInMonth) val = daysInMonth;
+            input.value = val;
+            onDateConfigChange();
+        }
+
+        document.getElementById('targetDate').addEventListener('input', onDateConfigChange);
 
         function resetDefaultColumns() {
             document.getElementById('colRank').value = 'B';
@@ -297,32 +526,99 @@
             document.getElementById('colName').value = 'C';
             document.getElementById('colDateStart').value = 'D';
             document.getElementById('rowDataStart').value = 2;
-            document.getElementById('outputFormat').value = 'text';
+            setOutputFormat('text');
+            saveColumnSettings();
             if (loadedWorkbook) processData(false);
         }
 
+        function setOutputFormat(fmt) {
+            const hiddenInput = document.getElementById('outputFormat');
+            if (hiddenInput) hiddenInput.value = fmt;
+
+            const tabText = document.getElementById('tab-format-text');
+            const tabTable = document.getElementById('tab-format-table');
+            if (tabText && tabTable) {
+                if (fmt === 'table') {
+                    tabTable.className = "py-1.5 px-3 rounded-lg text-center transition-all bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer";
+                    tabText.className = "py-1.5 px-3 rounded-lg text-center transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer";
+                } else {
+                    tabText.className = "py-1.5 px-3 rounded-lg text-center transition-all bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer";
+                    tabTable.className = "py-1.5 px-3 rounded-lg text-center transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer";
+                }
+            }
+            saveColumnSettings();
+            if (loadedWorkbook) processData(false);
+        }
+
+        function toggleColumnsConfig() {
+            const panel = document.getElementById('columns-config-grid');
+            const icon = document.getElementById('columns-toggle-icon');
+            if (!panel) return;
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                if (icon) icon.setAttribute('data-lucide', 'chevron-up');
+            } else {
+                panel.classList.add('hidden');
+                if (icon) icon.setAttribute('data-lucide', 'chevron-down');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function saveColumnSettings() {
+            try {
+                const settings = {
+                    colRank: document.getElementById('colRank').value,
+                    colPos: document.getElementById('colPos').value,
+                    colName: document.getElementById('colName').value,
+                    colDateStart: document.getElementById('colDateStart').value,
+                    rowDataStart: document.getElementById('rowDataStart').value,
+                    outputFormat: document.getElementById('outputFormat').value
+                };
+                localStorage.setItem('verifierSettings_v13', JSON.stringify(settings));
+            } catch (e) {
+                console.warn("LocalStorage save error:", e);
+            }
+        }
+
+        function loadColumnSettings() {
+            try {
+                const saved = localStorage.getItem('verifierSettings_v13') || localStorage.getItem('verifierSettings');
+                if (!saved) return;
+                const s = JSON.parse(saved);
+                if (s.colRank) document.getElementById('colRank').value = s.colRank;
+                if (s.colPos) document.getElementById('colPos').value = s.colPos;
+                if (s.colName) document.getElementById('colName').value = s.colName;
+                if (s.colDateStart) document.getElementById('colDateStart').value = s.colDateStart;
+                if (s.rowDataStart) document.getElementById('rowDataStart').value = s.rowDataStart;
+                if (s.outputFormat) {
+                    setOutputFormat(s.outputFormat);
+                }
+            } catch (e) {
+                console.warn("LocalStorage load error:", e);
+            }
+        }
+
         // Drag & Drop
-        const dropZone = document.getElementById('drop-zone');
+        const dropZoneEmpty = document.getElementById('drop-zone-empty');
         const fileInput = document.getElementById('upload');
 
-        dropZone.addEventListener('click', () => fileInput.click());
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-amber-500', 'bg-slate-800/60');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-amber-500', 'bg-slate-800/60');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-amber-500', 'bg-slate-800/60');
-            if (e.dataTransfer.files.length > 0) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
+        if (dropZoneEmpty) {
+            dropZoneEmpty.addEventListener('click', () => fileInput.click());
+            dropZoneEmpty.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZoneEmpty.classList.add('border-amber-500', 'bg-slate-800/60');
+            });
+            dropZoneEmpty.addEventListener('dragleave', () => {
+                dropZoneEmpty.classList.remove('border-amber-500', 'bg-slate-800/60');
+            });
+            dropZoneEmpty.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZoneEmpty.classList.remove('border-amber-500', 'bg-slate-800/60');
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
@@ -332,25 +628,97 @@
 
         async function handleFile(file) {
             if (!file) return;
-            document.getElementById('file-name').innerText = file.name;
-            document.getElementById('file-info').classList.remove('hidden');
-            document.getElementById('file-info').classList.add('flex');
+            const emptyZone = document.getElementById('drop-zone-empty');
+            const activeCard = document.getElementById('file-card-active');
+            if (emptyZone) emptyZone.classList.add('hidden');
+            if (activeCard) {
+                activeCard.classList.remove('hidden');
+                activeCard.classList.add('flex');
+            }
+            const nameEl = document.getElementById('file-card-name');
+            if (nameEl) nameEl.innerText = file.name;
+            const sizeEl = document.getElementById('file-card-size');
+            if (sizeEl) sizeEl.innerText = `${(file.size / 1024).toFixed(1)} KB`;
             document.getElementById('file-status-badge').innerText = `Готово (${(file.size / 1024).toFixed(1)} KB)`;
-            document.getElementById('file-status-badge').classList.add('text-emerald-400');
+            document.getElementById('file-status-badge').className = 'text-[11px] font-mono text-emerald-400 font-bold';
 
             setStatus("Зчитування таблиці...", "loading");
             try {
                 const data = await readFileAsync(file);
                 loadedWorkbook = XLSX.read(data, { type: 'array' });
+                updateSheetSelector();
                 processData(false);
             } catch (err) {
                 console.error(err);
                 setStatus("Помилка читання файлу Excel!", "error");
             }
+            if (window.lucide) lucide.createIcons();
         }
 
-        function letterToIndex(letter) {
-            let str = String(letter || "").toUpperCase().trim();
+        function clearLoadedFile() {
+            loadedWorkbook = null;
+            document.getElementById('upload').value = '';
+            const emptyZone = document.getElementById('drop-zone-empty');
+            const activeCard = document.getElementById('file-card-active');
+            if (emptyZone) emptyZone.classList.remove('hidden');
+            if (activeCard) {
+                activeCard.classList.add('hidden');
+                activeCard.classList.remove('flex');
+            }
+            document.getElementById('file-status-badge').innerText = 'Файл не обрано';
+            document.getElementById('file-status-badge').className = 'text-[11px] font-mono text-slate-500';
+            const sheetContainer = document.getElementById('sheet-selector-container');
+            if (sheetContainer) {
+                sheetContainer.classList.add('hidden');
+                sheetContainer.classList.remove('flex');
+            }
+            document.getElementById('preview-empty').classList.remove('hidden');
+            document.getElementById('preview-content').classList.add('hidden');
+            document.getElementById('preview-content').innerHTML = '';
+            document.getElementById('preview-stats-badge').classList.add('hidden');
+            document.getElementById('btn-copy-preview').disabled = true;
+            document.getElementById('btn-download-docx').disabled = true;
+            document.getElementById('status').innerHTML = '';
+            currentGroupedData = {};
+            lastGeneratedText = '';
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function updateSheetSelector() {
+            const container = document.getElementById('sheet-selector-container');
+            const select = document.getElementById('sheetSelect');
+            const badge = document.getElementById('sheet-count-badge');
+            if (!loadedWorkbook || !loadedWorkbook.SheetNames || loadedWorkbook.SheetNames.length === 0) {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+                return;
+            }
+            select.innerHTML = '';
+            loadedWorkbook.SheetNames.forEach((name, idx) => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = `${idx + 1}. ${name}`;
+                select.appendChild(opt);
+            });
+            badge.textContent = `${loadedWorkbook.SheetNames.length} арк.`;
+            if (loadedWorkbook.SheetNames.length > 1) {
+                container.classList.remove('hidden');
+                container.classList.add('flex');
+            } else {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Перетворення позначення стовпця (букви або числа) на 0-based індекс
+        function letterToIndex(val) {
+            let str = String(val || "").trim();
+            // Підтримка чисел: "1" -> 0, "4" -> 3 тощо
+            if (/^\d+$/.test(str)) {
+                return Math.max(0, parseInt(str, 10) - 1);
+            }
+            str = str.toUpperCase();
             // Транслітерація кириличних літер-близнюків клавіатури в латиницю (А->A, В->B, С->C тощо)
             const cyrToLat = {
                 'А': 'A', 'В': 'B', 'С': 'C', 'Д': 'D', 'Е': 'E', 'Н': 'H', 'І': 'I', 'К': 'K',
@@ -404,30 +772,6 @@
             }
         }
 
-        function getFormattedDate(targetDate) {
-            const now = new Date();
-            let year = now.getFullYear();
-            let month = now.getMonth(); // 0-11
-            
-            // Якщо сьогодні початок місяця (наприклад, 1-5 число), а обрано дату > 25,
-            // формується звіт за кінець минулого місяця
-            if (now.getDate() <= 5 && targetDate >= 25) {
-                month -= 1;
-                if (month < 0) {
-                    month = 11;
-                    year -= 1;
-                }
-            }
-            
-            // Визначаємо кількість днів у місяці (28, 29, 30 або 31)
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const safeDay = Math.min(targetDate, daysInMonth);
-            
-            const monthStr = String(month + 1).padStart(2, '0');
-            const dayStr = String(safeDay).padStart(2, '0');
-            return `${dayStr}.${monthStr}.${year}`;
-        }
-
         function cleanSpaces(str) {
             if (str === undefined || str === null) return "";
             return String(str)
@@ -436,10 +780,67 @@
                 .trim();
         }
 
+        // Перевірка наявності військового звання
+        function hasMilitaryRank(str) {
+            if (!str) return false;
+            return /\b(?:солдат|солдата|матрос|матроса|старший\s+матрос|сержант|сержанта|старшина|старшини|прапорщик|прапорщика|лейтенант|лейтенанта|капітан|капітана|майор|майора|підполковник|підполковника|полковник|полковника|генерал|старший\s+солдат|молодший\s+сержант|головний\s+сержант|штаб-сержант|майстер-сержант|головний\s+майстер-сержант|молодший\s+лейтенант|старший\s+лейтенант)\b/i.test(str);
+        }
+
+        // Очищення та дедуплікація звання і ПІБ
+        function cleanSoldierRankAndName(rawRank, rawName) {
+            let rank = cleanSpaces(rawRank);
+            let name = cleanSpaces(rawName);
+
+            if (rank && name) {
+                const rankRegex = new RegExp(`^${rank.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s+`, 'i');
+                name = name.replace(rankRegex, '').trim();
+            } else if (!rank && name) {
+                const rankMatch = name.match(/^(старший\s+солдат|молодший\s+сержант|головний\s+сержант|штаб-сержант|майстер-сержант|молодший\s+лейтенант|старший\s+лейтенант|солдат|матрос|сержант|старшина|лейтенант|капітан|майор|підполковник|полковник)\s+(.+)$/i);
+                if (rankMatch) {
+                    rank = rankMatch[1];
+                    name = rankMatch[2];
+                }
+            }
+            return { rank, name };
+        }
+
+        // Інтелектуальне визначення заголовка БР
+        function isBRHeaderRow(rawPos, rawName, rawRank, row, dateStartIdx, maxCol) {
+            const combined = `${rawPos} ${rawName}`.trim();
+
+            // 1. Явні ключові слова БР у колонках тексту
+            if (/\b(?:б[\.\/]?р\.?|б\/р|бойове\s+розпорядження|розпорядження\s+командира|перевірка\s+несення\s+служби|наказ)\b/i.test(combined)) {
+                if (!hasMilitaryRank(rawRank) && !hasMilitaryRank(rawName)) {
+                    return true;
+                }
+            }
+
+            // 2. Якщо це порожній щодо звання рядок, а в клітинках календаря вписано "БР"
+            if (!rawRank && !hasMilitaryRank(rawName)) {
+                let brCellsCount = 0;
+                for (let c = dateStartIdx; c <= maxCol; c++) {
+                    const cellVal = String(row[c] || "").trim().toLowerCase();
+                    if (cellVal === "br" || cellVal === "бр" || cellVal === "b/r" || cellVal === "б/р") {
+                        brCellsCount++;
+                        if (brCellsCount >= 1) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // Перевірка активної позначки несення служби на цільову дату
+        function isActiveMark(mark) {
+            if (!mark) return false;
+            const m = mark.toLowerCase().trim();
+            if (m === "0" || m === "-" || m === "—" || m === "–" || m === "н" || m === "ні" || m === "відсутній") return false;
+            if (m.includes("202") || m.includes("2025") || m.includes("2026")) return false; // захист від випадкових дат
+            return true;
+        }
+
         function formatPeopleLine(people) {
             const peopleParts = people.map(p => {
-                const rank = cleanSpaces(p.rank);
-                const name = cleanSpaces(p.name);
+                const { rank, name } = cleanSoldierRankAndName(p.rank, p.name);
                 const pos = cleanSpaces(p.pos);
 
                 let parts = [];
@@ -467,7 +868,7 @@
                 return;
             }
             if (!loadedWorkbook) {
-                setStatus("Спочатку завантажте файл таблиці!", "error");
+                setStatus("Спочатку завантажте файл таблиці або натисніть «Вставити приклад»!", "error");
                 return;
             }
 
@@ -475,9 +876,13 @@
                 setStatus("Генерація Word-документа...", "loading");
             }
 
-            const worksheet = loadedWorkbook.Sheets[loadedWorkbook.SheetNames[0]];
+            // Вибір активного аркуша
+            const sheetSelect = document.getElementById('sheetSelect');
+            const activeSheetName = (sheetSelect && sheetSelect.value) ? sheetSelect.value : loadedWorkbook.SheetNames[0];
+            const worksheet = loadedWorkbook.Sheets[activeSheetName] || loadedWorkbook.Sheets[loadedWorkbook.SheetNames[0]];
+
             const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
-            const dateStr = getFormattedDate(targetDate);
+            const dateStr = getFormattedDate();
 
             const rankIdx = letterToIndex(document.getElementById('colRank').value);
             const posIdx = letterToIndex(document.getElementById('colPos').value);
@@ -502,20 +907,12 @@
                 let rawRank = cleanSpaces(row[rankIdx]);
                 let rawName = cleanSpaces(row[nameIdx]);
 
-                let isBR = false;
                 const maxCol = Math.min(row.length - 1, dateStartIdx + 35);
-                for (let c = dateStartIdx; c <= maxCol; c++) {
-                    const cellVal = String(row[c] || "").trim().toLowerCase();
-                    // Підтримка латиниці "br", "b/r" та кирилиці "бр", "б/р"
-                    if (cellVal === "br" || cellVal === "бр" || cellVal === "b/r" || cellVal === "б/р") {
-                        isBR = true;
-                        break;
-                    }
-                }
+                const isBR = isBRHeaderRow(rawPos, rawName, rawRank, row, dateStartIdx, maxCol);
 
                 if (isBR) {
                     let taskText = (rawPos || rawName);
-                    // Розширена заміна шаблонів дат: дд.мм.рррр, dd.mm.yyyy, дд/мм/рррр, дд.мм.рр
+                    // Підстановка актуальної дати у шаблон
                     taskText = taskText.replace(/(?:дд|dd)[\.\/\-](?:мм|mm)[\.\/\-](?:рррр|yyyy|202\d|рр|yy)/gi, dateStr);
                     currentTaskText = cleanSpaces(taskText);
                     memRank = "";
@@ -530,9 +927,8 @@
 
                 if (!rawRank && !rawPos && !rawName) continue;
 
-                const mark = String(row[targetColIdx] || "").trim().toLowerCase();
-                const isIgnoredMark = !mark || mark === "0" || mark === "-" || mark === "br" || mark === "бр" || mark === "b/r" || mark === "б/р" || mark.includes("202") || mark.includes("/");
-                if (!isIgnoredMark) {
+                const mark = String(row[targetColIdx] || "").trim();
+                if (isActiveMark(mark)) {
                     if (!groupedData[currentTaskText]) groupedData[currentTaskText] = [];
                     groupedData[currentTaskText].push({ rank: rawRank, pos: rawPos, name: rawName });
                     totalPeopleCount++;
@@ -562,8 +958,12 @@
                 return;
             }
 
-            // Побудова та скачування DOCX (лише якщо shouldDownload === true)
+            // Побудова та завантаження DOCX
             try {
+                if (!window.docx) {
+                    throw new Error("Бібліотека Docx.js недоступна");
+                }
+
                 const docChildren = [];
                 for (const [taskName, people] of Object.entries(groupedData)) {
                     if (outputFormat === 'table') {
@@ -581,14 +981,17 @@
                             ]
                         })];
 
-                        people.forEach((p, i) => tableRows.push(new docx.TableRow({
-                            children: [
-                                createDocxCell(i + 1, false, 5),
-                                createDocxCell(cleanSpaces(p.rank), false, 20),
-                                createDocxCell(cleanSpaces(p.name), false, 30),
-                                createDocxCell(cleanSpaces(p.pos), false, 45)
-                            ]
-                        })));
+                        people.forEach((p, i) => {
+                            const { rank, name } = cleanSoldierRankAndName(p.rank, p.name);
+                            tableRows.push(new docx.TableRow({
+                                children: [
+                                    createDocxCell(i + 1, false, 5),
+                                    createDocxCell(rank, false, 20),
+                                    createDocxCell(name, false, 30),
+                                    createDocxCell(cleanSpaces(p.pos), false, 45)
+                                ]
+                            }));
+                        });
 
                         docChildren.push(new docx.Table({
                             rows: tableRows,
@@ -604,7 +1007,7 @@
                                 new docx.TextRun({ text: cleanTaskName, bold: true, size: 26, font: "Times New Roman" }),
                                 new docx.TextRun({ text: peopleText, bold: false, size: 26, font: "Times New Roman" })
                             ],
-                            indent: { firstLine: 720 },
+                            indent: { firstLine: 709 }, // 1.25 см
                             spacing: { before: 0, after: 0, line: 240 },
                             alignment: docx.AlignmentType.BOTH
                         }));
@@ -616,7 +1019,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = `БР_Список_за_${targetDate}_число.docx`;
+                a.download = `БР_Список_за_${dateStr}.docx`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -625,18 +1028,90 @@
                 setStatus(`✅ Успішно завантажено файл за ${dateStr}!`, "success");
             } catch (err) {
                 console.error(err);
-                setStatus("Помилка генерації Word-документа!", "error");
+                setStatus("Помилка генерації Word-документа: " + err.message, "error");
+            }
+        }
+
+        // Швидкий пошук у списку Live Preview
+        function filterPreview() {
+            renderLivePreview(currentGroupedData, document.getElementById('outputFormat').value);
+        }
+
+        function clearPreviewSearch() {
+            const searchInput = document.getElementById('preview-search');
+            if (searchInput) {
+                searchInput.value = '';
+                filterPreview();
+            }
+        }
+
+        // Копіювання окремого блоку розпорядження
+        function copySingleBR(btn, brText) {
+            let copied = false;
+            try {
+                const ta = document.createElement("textarea");
+                ta.value = brText;
+                ta.style.position = "fixed";
+                ta.style.opacity = "0";
+                ta.style.left = "-9999px";
+                document.body.appendChild(ta);
+                ta.select();
+                copied = document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch (_) {}
+
+            if (copied || navigator?.clipboard?.writeText) {
+                if (!copied) navigator.clipboard.writeText(brText);
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-300">Скопійовано!</span>`;
+                if (window.lucide) lucide.createIcons();
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    if (window.lucide) lucide.createIcons();
+                }, 1800);
             }
         }
 
         function renderLivePreview(groupedData, format) {
+            currentGroupedData = groupedData;
             const emptyState = document.getElementById('preview-empty');
             const container = document.getElementById('preview-content');
+            const query = (document.getElementById('preview-search')?.value || "").trim().toLowerCase();
 
-            if (Object.keys(groupedData).length === 0) {
+            if (!groupedData || Object.keys(groupedData).length === 0) {
                 emptyState.classList.remove('hidden');
                 container.classList.add('hidden');
                 container.innerHTML = '';
+                lastGeneratedText = '';
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            // Фільтрація за пошуковим запитом
+            let filteredData = {};
+            for (const [taskName, people] of Object.entries(groupedData)) {
+                if (!query) {
+                    filteredData[taskName] = people;
+                } else {
+                    const taskMatches = taskName.toLowerCase().includes(query);
+                    const matchingPeople = people.filter(p => {
+                        const { rank, name } = cleanSoldierRankAndName(p.rank, p.name);
+                        return (rank && rank.toLowerCase().includes(query)) ||
+                            (name && name.toLowerCase().includes(query)) ||
+                            (p.pos && p.pos.toLowerCase().includes(query));
+                    });
+                    if (taskMatches) {
+                        filteredData[taskName] = people;
+                    } else if (matchingPeople.length > 0) {
+                        filteredData[taskName] = matchingPeople;
+                    }
+                }
+            }
+
+            if (Object.keys(filteredData).length === 0) {
+                emptyState.classList.add('hidden');
+                container.classList.remove('hidden');
+                container.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs font-mono">Осіб або БР за запитом «${escapeHtml(query)}» не знайдено</div>`;
                 lastGeneratedText = '';
                 return;
             }
@@ -647,22 +1122,95 @@
             let html = '';
             let plainTextLines = [];
 
-            for (const [taskName, people] of Object.entries(groupedData)) {
-                let cleanTaskName = cleanSpaces(taskName).replace(/[:\s]+$/, '') + ': ';
-                const peopleText = formatPeopleLine(people);
+            if (format === 'table') {
+                for (const [taskName, people] of Object.entries(filteredData)) {
+                    let cleanTaskName = cleanSpaces(taskName).replace(/[:\s]+$/, '');
+                    const singleBrText = `${cleanTaskName}:\n` + people.map((p, i) => {
+                        const { rank, name } = cleanSoldierRankAndName(p.rank, p.name);
+                        return `${i + 1}. ${rank} ${name} - ${cleanSpaces(p.pos)}`;
+                    }).join('\n');
 
-                html += `
-                    <div class="p-3.5 rounded-lg bg-slate-950 border border-slate-800 text-[13px]">
-                        <span class="font-bold text-amber-300 font-sans">${escapeHtml(cleanTaskName)}</span>
-                        <span class="text-slate-300 font-sans">${escapeHtml(peopleText)}</span>
-                    </div>
-                `;
+                    html += `
+                        <div class="p-4 rounded-xl bg-slate-950/90 border border-slate-800 shadow-md space-y-3">
+                            <div class="flex items-center justify-between pb-2.5 border-b border-slate-800/80">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"></div>
+                                    <h3 class="font-bold text-amber-300 font-sans text-xs sm:text-sm truncate">${escapeHtml(cleanTaskName)}</h3>
+                                </div>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">${people.length} ос.</span>
+                                    <button type="button" onclick="copySingleBR(this, \`${escapeHtml(singleBrText).replace(/`/g, '\\`')}\`)"
+                                        class="p-1 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[10px] font-mono flex items-center gap-1 transition-all cursor-pointer">
+                                        <i data-lucide="copy" class="w-3 h-3"></i>
+                                        <span>Копіювати</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto rounded-lg border border-slate-800/60">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-800 text-slate-400 font-mono text-[11px] bg-slate-900/70">
+                                            <th class="py-2 px-2.5 w-8 text-center">№</th>
+                                            <th class="py-2 px-3 w-32">Звання</th>
+                                            <th class="py-2 px-3">ПІБ</th>
+                                            <th class="py-2 px-3">Посада</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/60 font-sans text-slate-300">
+                    `;
+                    people.forEach((p, idx) => {
+                        const { rank, name } = cleanSoldierRankAndName(p.rank, p.name);
+                        html += `
+                            <tr class="hover:bg-slate-900/50 transition-colors">
+                                <td class="py-2 px-2.5 text-center font-mono text-slate-500">${idx + 1}</td>
+                                <td class="py-2 px-3 font-medium text-amber-400/90">${escapeHtml(rank || '—')}</td>
+                                <td class="py-2 px-3 font-semibold text-slate-100">${escapeHtml(name || '—')}</td>
+                                <td class="py-2 px-3 text-slate-400 text-[11px]">${escapeHtml(cleanSpaces(p.pos) || '—')}</td>
+                            </tr>
+                        `;
+                    });
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    plainTextLines.push(singleBrText);
+                }
+            } else {
+                for (const [taskName, people] of Object.entries(filteredData)) {
+                    let cleanTaskName = cleanSpaces(taskName).replace(/[:\s]+$/, '') + ': ';
+                    const peopleText = formatPeopleLine(people);
+                    const fullBRText = `${cleanTaskName}${peopleText}`;
 
-                plainTextLines.push(`${cleanTaskName}${peopleText}`);
+                    html += `
+                        <div class="p-4 rounded-xl bg-slate-950/90 border-l-4 border-amber-500 border-t border-r border-b border-slate-800/80 text-[13px] shadow-md space-y-2 relative group hover:border-amber-500/50 transition-all">
+                            <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-800/60">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i data-lucide="file-check" class="w-4 h-4 text-amber-400 flex-shrink-0"></i>
+                                    <h4 class="font-bold text-amber-300 font-sans text-xs sm:text-sm truncate">${escapeHtml(cleanSpaces(taskName))}</h4>
+                                </div>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">${people.length} ос.</span>
+                                    <button type="button" onclick="copySingleBR(this, \`${escapeHtml(fullBRText).replace(/`/g, '\\`')}\`)" title="Скопіювати цей БР"
+                                        class="p-1 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[10px] font-mono flex items-center gap-1 transition-all cursor-pointer">
+                                        <i data-lucide="copy" class="w-3 h-3"></i>
+                                        <span>Копіювати</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="pt-1 font-sans text-slate-200 leading-relaxed">
+                                ${escapeHtml(peopleText)}
+                            </div>
+                        </div>
+                    `;
+                    plainTextLines.push(fullBRText);
+                }
             }
 
             container.innerHTML = html;
             lastGeneratedText = plainTextLines.join('\n\n');
+            if (window.lucide) lucide.createIcons();
         }
 
         function escapeHtml(text) {
@@ -681,7 +1229,7 @@
                 const copyBtnText = document.getElementById('copy-text');
                 copyBtnText.innerText = "Скопійовано!";
                 setTimeout(() => {
-                    copyBtnText.innerText = "Копіювати";
+                    copyBtnText.innerText = "Копіювати все";
                 }, 2000);
             };
 
@@ -705,13 +1253,77 @@
             }
         }
 
+        // Генератор вбудованих демонстраційних даних (Demo)
+        function loadDemoData() {
+            if (!window.XLSX) {
+                setStatus("Бібліотека SheetJS (XLSX) недоступна!", "error");
+                return;
+            }
+
+            const targetDate = parseInt(document.getElementById('targetDate').value) || 22;
+            const daysHeader = [];
+            for (let d = 1; d <= 31; d++) daysHeader.push(d);
+
+            function makeDemoMarks(activeDays) {
+                const arr = Array(31).fill("");
+                activeDays.forEach(d => {
+                    if (d >= 1 && d <= 31) arr[d - 1] = "+";
+                });
+                return arr;
+            }
+
+            const aoa = [
+                ["Посада / Підрозділ", "Звання", "ПІБ", ...daysHeader],
+                ["БР № 45/26 від дд.мм.рррр (Перевірка несення служби на ВОП «Скеля» та «Дніпро»)", "", "", ...Array(31).fill("БР")],
+                ["Начальник зв'язку батальйону", "майор", "Ковальчук Сергій Петрович", ...makeDemoMarks([targetDate, targetDate - 2, targetDate + 3])],
+                ["Офіцер відділення розвідки", "капітан", "Ткаченко Андрій Миколайович", ...makeDemoMarks([targetDate, targetDate + 1])],
+                ["Головний сержант взводу зв'язку", "штаб-сержант", "Мельник Олег Васильович", ...makeDemoMarks([targetDate])],
+                ["Командир відділення РЕБ", "старший сержант", "Бондаренко Денис Ігорович", ...makeDemoMarks([targetDate - 1, targetDate + 2])],
+                ["", "", "", ...Array(31).fill("")],
+                ["БР № 52/18 від дд.мм.рррр (Контроль інженерного обладнання РОП «Схід»)", "", "", ...Array(31).fill("БР")],
+                ["Заступник командира батальйону", "підполковник", "Шевченко Віктор Олександрович", ...makeDemoMarks([targetDate, targetDate - 1])],
+                ["Начальник медичного пункту", "капітан м/с", "Гриценко Юлія Борисівна", ...makeDemoMarks([targetDate])],
+                ["Старший технік роти", "старший сержант", "Кравченко Руслан Михайлович", ...makeDemoMarks([targetDate])],
+                ["Санітарний інструктор", "молодший сержант", "Поліщук Артем Володимирович", ...makeDemoMarks([targetDate + 4])]
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "БР Основний");
+
+            // Додаємо другий аркуш для перевірки мультиаркушевості
+            const ws2 = XLSX.utils.aoa_to_sheet([["Посада", "Звання", "ПІБ"], ["Резервний список БР", "", ""]]);
+            XLSX.utils.book_append_sheet(wb, ws2, "Резервні дані");
+
+            loadedWorkbook = wb;
+
+            const emptyZone = document.getElementById('drop-zone-empty');
+            const activeCard = document.getElementById('file-card-active');
+            if (emptyZone) emptyZone.classList.add('hidden');
+            if (activeCard) {
+                activeCard.classList.remove('hidden');
+                activeCard.classList.add('flex');
+            }
+            const nameEl = document.getElementById('file-card-name');
+            if (nameEl) nameEl.innerText = "Зразок_БЧС_БР.xlsx";
+            const sizeEl = document.getElementById('file-card-size');
+            if (sizeEl) sizeEl.innerText = "Демо-дані";
+            document.getElementById('file-status-badge').innerText = "Зразок активний";
+            document.getElementById('file-status-badge').className = "text-[11px] font-mono text-amber-400 font-bold";
+
+            updateSheetSelector();
+            processData(false);
+            setStatus("✅ Успішно завантажено демонстраційні дані БР!", "success");
+            if (window.lucide) lucide.createIcons();
+        }
+
         // Модальні вікна (Changelog)
         function openModal(id) {
             const modal = document.getElementById(id);
             if (!modal) return;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
 
         function closeModal(id) {
@@ -727,11 +1339,16 @@
             }
         });
 
-        // Встановлення поточної дати при завантаженні
+        // Ініціалізація дати та налаштувань при завантаженні
         window.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().getDate();
-            document.getElementById('targetDate').value = today;
+            const now = new Date();
+            document.getElementById('targetDate').value = now.getDate();
+            document.getElementById('targetMonth').value = now.getMonth();
+            document.getElementById('targetYear').value = now.getFullYear();
+
+            loadColumnSettings();
             updateDateBadge();
+            if (window.lucide) lucide.createIcons();
         });
     </script>
 
@@ -753,18 +1370,36 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.2.1 -->
+                <!-- v1.3.0 -->
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.1 (Поточна)</span>
-                        <span class="text-[11px] font-mono text-slate-500">18.09.2026</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.3.0 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">22.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Повна підтримка кириличних маркерів:</strong> Розпізнавання розпоряджень за написами «бр» та «б/р» поряд із латинськими «br» / «b/r».</li>
-                        <li><strong class="text-white">Транслітерація омогліфів клавіатури:</strong> Автоматичне приведення кириличних літер (А, В, С, Е, Н, Т тощо) до латинських індексів стовпців Excel у letterToIndex.</li>
-                        <li><strong class="text-white">Календарний захист днів місяця:</strong> Функція getFormattedDate враховує точну кількість діб поточного місяця (28-31) та запобігає некоректним датам.</li>
-                        <li><strong class="text-white">Очищення пунктуації:</strong> Усунення подвійних крапок після скорочень ПІБ виду «Іванов І.І.»; розширення шаблонів підстановки дат (DD.MM.YYYY, дд/мм/рррр, дд.мм.рр).</li>
-                        <li><strong class="text-white">Безпечний буфер обміну:</strong> Надійне копіювання з синхронним фолбеком та затримка revokeObjectURL для стабільного завантаження .docx.</li>
+                        <li><strong class="text-white">Інтелектуальне виявлення заголовків БР:</strong> Усунуто критичний дефект хибного спрацьовування <code>isBR</code> при наявності позначок «бр» у календарі окремих офіцерів; реалізовано автоматичне розпізнавання наказів і розпоряджень без календарних відміток.</li>
+                        <li><strong class="text-white">Підтримка мультиаркушевих таблиць:</strong> Динамічний селектор активного аркуша Excel для роботи з багатосторінковими журналами БЧС без ручного копіювання.</li>
+                        <li><strong class="text-white">Гнучкий календар (День / Місяць / Рік):</strong> Додано швидкий вибір місяця та року для ретроспективного формування звітів за будь-який період.</li>
+                        <li><strong class="text-white">Табличний режим у Live Preview:</strong> При виборі формату «Таблиця Word» попередній перегляд автоматично трансформується у наочну тактичну таблицю.</li>
+                        <li><strong class="text-white">Швидкий пошук та фільтрація:</strong> Інтерактивне поле пошуку для миттєвої перевірки присутності конкретної особи або розпорядження у списку.</li>
+                        <li><strong class="text-white">Дедуплікація військових звань:</strong> Автоматичне запобігання подвоєнню звань («майор майор Іванов») та підтримка числових індексів стовпців.</li>
+                        <li><strong class="text-white">Демо-генератор та автозбереження:</strong> Кнопка <code>[⚡ Вставити приклад]</code> для швидкого тестування та запам'ятовування конфігурації колонок у LocalStorage.</li>
+                        <li><strong class="text-white">Тактичний редизайн (Tactical Glassmorphism):</strong> Преміальне оформлення в стилістиці Military Tech, швидкі пресети («Вчора / Сьогодні / Завтра»), вербальна дата, активна картка Excel-файлу та індивідуальні тактичні картки для кожного БР з окремими кнопками копіювання.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.2.1 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.2.1</span>
+                        <span class="text-[11px] font-mono text-slate-500">18.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li><strong class="text-slate-300">Повна підтримка кириличних маркерів:</strong> Розпізнавання розпоряджень за написами «бр» та «б/р» поряд із латинськими «br» / «b/r».</li>
+                        <li><strong class="text-slate-300">Транслітерація омогліфів клавіатури:</strong> Автоматичне приведення кириличних літер (А, В, С, Е, Н, Т тощо) до латинських індексів стовпців Excel у letterToIndex.</li>
+                        <li><strong class="text-slate-300">Календарний захист днів місяця:</strong> Функція getFormattedDate враховує точну кількість діб поточного місяця (28-31) та запобігає некоректним датам.</li>
+                        <li><strong class="text-slate-300">Очищення пунктуації:</strong> Усунення подвійних крапок після скорочень ПІБ виду «Іванов І.І.»; розширення шаблонів підстановки дат (DD.MM.YYYY, дд/мм/рррр, дд.мм.рр).</li>
+                        <li><strong class="text-slate-300">Безпечний буфер обміну:</strong> Надійне копіювання з синхронним фолбеком та затримка revokeObjectURL для стабільного завантаження .docx.</li>
                     </ul>
                 </div>
 
