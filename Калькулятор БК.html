@@ -76,7 +76,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> OFFLINE ENGINE
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.2.7
+                            ⚡ v1.2.8
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-1">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -304,7 +304,18 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.7 (Усунення хибних помилок & Категоризація)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.8 (Стійке розпізнавання гранат GHO, РГН, РГО, РГД-5 & Омогліфи)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">25.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Стійке розпізнавання гранат GHO (Arsenal):</strong> Впроваджено універсальний шаблон <code>(?:[gг][hх][oо0]|[gг][oо0][hх])</code>, який безпомилково обробляє змішані латинсько-кириличні розкладки клавіатури (зокрема <code>GHО- 2 шт</code>, <code>GHО- 3 шт</code>), цифру «0» замість «О» та перестановки букв.</li>
+                        <li><strong class="text-white">Підтримка модифікацій GHO:</strong> Додано розпізнавання моделей <code>GHO-1</code>, <code>GHO-2</code> та маркування вибухової речовини <code>RDX</code> (<code>GHO-1 RDX</code>).</li>
+                        <li><strong class="text-white">Захист від омогліфів для РГО, РГН та РГД-5:</strong> Додано багаторозкладкові регулярні вирази (<code>[rр][gг][oо0]</code>, <code>[rр][gг][nн]</code>, <code>[rр][gг][dд]</code>) для запобігання відкидання рядків при випадковому перемиканні мови введення.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.2.7 (Усунення хибних помилок & Категоризація)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">22.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -452,7 +463,7 @@
     <script>
         /**
          * =========================================================================
-         * КАЛЬКУЛЯТОР БК (AMMO_PARSER) v1.2.7
+         * КАЛЬКУЛЯТОР БК (AMMO_PARSER) v1.2.8
          * Призначення: Швидкий аналіз, нормалізація, розпізнавання та підсумовування
          * витрати боєприпасів за сирими текстовими донесеннями підрозділів.
          * =========================================================================
@@ -585,12 +596,12 @@ GHO - 2
             { id: 'VOG', name: 'ВОГ (17/25)', icon: '💣', category: 'grenade', idPattern: '(?:(?:40[\\s\\-_]*(?:мм|mm)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])[\\s\\-_]*)?(?:вог|vog|гп|gp)[а-яіїєґa-z]*(?:[\\s\\-_]*(?:17|25|30)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]))?|40[\\s\\-_]*(?:мм|mm)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])(?![\\s\\-_]*46))' },
 
             // Ручні осколкові та термобаричні гранати
-            { id: 'GHO', name: 'GHO', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:gho|goh|гхо|гох)[\\s\\-_]*1?\\.?' },
+            { id: 'GHO', name: 'GHO', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[gг][hх][oо0]|[gг][oо0][hх])(?:[\\s\\-_]*[12])?(?:[\\s\\-_]*(?:rdx|рдеікс|рдекс))?\\.?' },
             { id: 'F1', name: 'Граната Ф-1', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:mle[\\s\\-]*)?(?:ф|f)[- ]?1[aа]?' },
             { id: 'M67', name: 'Граната М67', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*|grenade[\\s,:-]*)?(?:hand[\\s\\-_]*frag(?:mentation)?(?:[\\s\\-_]*(?:m|м)[- ]?67)?|m[- ]?67|м[- ]?67)' },
-            { id: 'RGN', name: 'Граната РГН', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgn|ргн)[а-яіїєґ]*' },
-            { id: 'RGO', name: 'Граната РГО', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rgo|рго|rg0|рг0)[а-яіїєґ]*' },
-            { id: 'RGD5', name: 'Граната РГД-5', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:ргд|rgd)[\\s\\-]*5?' },
+            { id: 'RGN', name: 'Граната РГН', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[rр][gг][nн])[а-яіїєґ]*' },
+            { id: 'RGO', name: 'Граната РГО', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[rр][gг][oо0])[а-яіїєґ]*' },
+            { id: 'RGD5', name: 'Граната РГД-5', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[rр][gг][dд])[\\s\\-]*5?' },
             { id: 'RG42', name: 'Граната РГ-42', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rg|рг|pg|пг|рg|pг)[\\s\\-_]*42' },
             { id: 'RGT27S', name: 'Граната РГТ-27С', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' },
 

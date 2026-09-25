@@ -27,3 +27,13 @@ check_pc.ps1
 MilitarySuite.html
 *.mils.enc
 military_suite_backup_*.mils.enc
+
+# Personal notes (local only)
+WARDROBE.md
+
+# Local confidential agent rules (never commit)
+.agents/rules/
+
+# Android build cache
+.gradle/
+android_app/.gradle/

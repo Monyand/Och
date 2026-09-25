@@ -114,24 +114,39 @@
         }
 
         .btn-settings {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border);
-            color: #ccc;
+            color: #cbd5e1;
             padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .btn-settings:hover {
             background: rgba(255, 255, 255, 0.08);
             color: #fff;
+            border-color: rgba(255, 255, 255, 0.15);
             transform: translateY(-1px);
+        }
+
+        .btn-settings.active {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border-color: #38bdf8;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.35);
+        }
+
+        #btn-tab-settings.active {
+            background: linear-gradient(135deg, #4f46e5, #4338ca);
+            border-color: #818cf8;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
         }
 
         .side-nav {
@@ -389,19 +404,22 @@
         }
 
         .constructor-item {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid #1e293b;
             border-left: 4px solid var(--info);
-            padding: 16px;
+            padding: 18px 20px;
             margin-bottom: 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             position: relative;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
         }
         
         .constructor-item:hover {
-            background: rgba(255, 255, 255, 0.03);
-            border-color: rgba(255,255,255,0.1);
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
         .constructor-item.warning {
@@ -414,22 +432,23 @@
 
         .constructor-item.danger {
             border-left-color: var(--danger);
-            background: linear-gradient(to right, rgba(239, 68, 68, 0.05), transparent);
+            background: linear-gradient(to right, rgba(239, 68, 68, 0.08), rgba(15, 23, 42, 0.65));
         }
 
         .constructor-item.uav-item {
             border-left-color: var(--purple);
-            background: linear-gradient(to right, rgba(139, 92, 246, 0.05), transparent);
+            background: linear-gradient(to right, rgba(139, 92, 246, 0.08), rgba(15, 23, 42, 0.65));
         }
 
         .constructor-item.manual-card {
-            border-left-style: dashed;
-            border-left-color: #64748b;
+            border: 1px dashed rgba(56, 189, 248, 0.35);
+            border-left: 4px solid #38bdf8;
+            background: rgba(15, 23, 42, 0.5);
         }
 
         .constructor-item.has-enemy-cas {
             border-left-color: var(--danger) !important;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.15) inset;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.15) inset, 0 4px 14px rgba(0, 0, 0, 0.2);
         }
 
         .constructor-controls {
@@ -441,8 +460,31 @@
         }
 
         .constructor-controls label {
-            margin-right: -5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-right: -4px;
+        }
+
+        .constructor-controls input,
+        .constructor-controls select {
+            background-color: #090d16;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 7px 10px;
             font-size: 13px;
+            color: #f8fafc;
+            transition: all 0.2s ease;
+        }
+
+        .constructor-controls input:focus,
+        .constructor-controls select:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+            background-color: #0c1220;
+            outline: none;
         }
 
         .input-wrap {
@@ -453,9 +495,9 @@
 
         .cat-badge {
             background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             padding: 3px 10px;
-            border-radius: 12px;
+            border-radius: 9999px;
             font-size: 11px;
             font-weight: 600;
             margin-left: 10px;
@@ -468,9 +510,22 @@
             font-size: 12px;
             font-weight: 600;
             margin-left: 10px;
-            background: rgba(239, 68, 68, 0.1);
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
             padding: 2px 8px;
-            border-radius: 12px;
+            border-radius: 9999px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25) !important;
+            color: #fff !important;
+            border: none !important;
+        }
+        .btn-add:hover {
+            background: linear-gradient(135deg, #059669, #047857) !important;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+            transform: translateY(-1px);
         }
 
         .final-record {
@@ -478,39 +533,73 @@
             align-items: flex-start;
             gap: 12px;
             margin-bottom: 12px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #1e293b;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .final-record:hover {
+            border-color: rgba(255, 255, 255, 0.12);
         }
 
         .record-text {
             flex-grow: 1;
-            background: transparent;
+            background: #090d16;
             color: #f8fafc;
-            border: 1px dashed #475569;
-            padding: 10px 12px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            border-radius: 6px;
-            line-height: 1.5;
-            min-height: 40px;
+            border: 1px solid #1e293b;
+            padding: 10px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            border-radius: 8px;
+            line-height: 1.6;
+            min-height: 48px;
             white-space: pre-wrap;
-            transition: border-color 0.2s;
+            transition: all 0.2s ease;
         }
         
         .record-text:focus {
-            border-color: var(--accent);
-            border-style: solid;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+            background: #0c1220;
+            outline: none;
+        }
+
+        .final-record button.btn-danger {
+            padding: 8px 12px;
+            min-width: 38px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+            box-shadow: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .final-record button.btn-danger:hover {
+            background: #ef4444;
+            color: #fff;
+            border-color: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+            transform: scale(1.05);
         }
 
         .loss-cb-group {
             display: flex;
             gap: 20px;
-            background: rgba(255,255,255,0.02);
+            background: rgba(2, 6, 23, 0.5);
             padding: 10px 16px;
             border-radius: 8px;
-            border: 1px solid var(--border);
+            border: 1px solid #1e293b;
         }
 
         .loss-cb-group label {
@@ -740,6 +829,226 @@
             color: #6ee7b7;
             border-color: rgba(16, 185, 129, 0.3);
         }
+
+        /* ─── Сучасна панель налаштувань (Tactical Settings Dashboard) ─── */
+        .settings-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .settings-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .settings-status-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 900px) {
+            .settings-grid-split {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+        }
+
+        .settings-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .settings-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .settings-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .dict-counter-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .dict-textarea {
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 13px !important;
+            line-height: 1.6 !important;
+            background: #090d16 !important;
+            color: #e2e8f0 !important;
+            border: 1px solid #1e293b !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            tab-size: 4 !important;
+        }
+
+        .dict-textarea:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        }
+
+        .dict-tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .dict-tip code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+
+        /* ─── Захищені модальні вікна (z-[2000] Tactical Glassmorphism) ─── */
+        .tactical-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .tactical-modal-box {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .tactical-modal-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .tactical-modal-body {
+            padding: 22px;
+        }
+
+        .tactical-modal-footer {
+            padding: 14px 22px;
+            border-top: 1px solid #1e293b;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: rgba(2, 6, 23, 0.5);
+        }
+
+        .password-field-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .password-field-wrap input {
+            font-family: 'JetBrains Mono', monospace !important;
+            padding-right: 42px !important;
+            background: #090d16 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            box-shadow: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .password-toggle-btn:hover {
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.05);
+            transform: none;
+            box-shadow: none;
+        }
     
         </style>
 </head>
@@ -761,8 +1070,8 @@
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
             <button class="btn-settings" onclick="clearAppMemory()" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" title="Очистити всі поточні звіти та видалити пам'ять">🗑 Очистити звіт</button>
-            <button class="btn-settings" onclick="toggleTab('files-panel')" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2); color: #fff;">📂 Файли</button>
-            <button class="btn-settings" onclick="toggleTab('settings-panel')">⚙ Налаштування</button>
+            <button id="btn-tab-files" class="btn-settings active" onclick="toggleTab('files-panel')">📂 Файли</button>
+            <button id="btn-tab-settings" class="btn-settings" onclick="toggleTab('settings-panel')">⚙ Налаштування</button>
         </div>
     </div>
 
@@ -788,14 +1097,27 @@
 
         <!-- FILES TAB -->
         <div id="files-panel" class="settings-panel active">
-            <h2>📄 Завантаження файлів</h2>
-            <div class="file-inputs" style="display: block;">
+            <div class="settings-header-bar">
+                <div class="settings-title-group">
+                    <h2 style="margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                        <span>📄 Завантаження та парсинг файлів</span>
+                        <span class="badge-tactical" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">EXCEL / CSV</span>
+                    </h2>
+                </div>
+                <div>
+                    <span class="settings-status-badge">
+                        <span class="dot"></span>
+                        <span>Готовий до обробки</span>
+                    </span>
+                </div>
+            </div>
+            <div class="file-inputs" style="display: block; margin-top: 18px;">
                 <div class="drop-zone" id="drop-zone">
                     <input type="file" id="file-all" accept=".xlsx, .xls, .csv" multiple style="display: none;">
-                    <div style="font-size: 32px; margin-bottom: 10px;">📥</div>
-                    <div style="font-size: 15px; margin-bottom: 5px; color: #fff; font-weight: 500;">Перетягніть файли сюди або натисніть</div>
-                    <div style="font-size: 12px; color: #94a3b8;">Потрібні: Події (events), Вогневі (fire), БпЛА (uav)</div>
-                    <div id="drop-badges" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <div style="font-size: 36px; margin-bottom: 12px;">📥</div>
+                    <div style="font-size: 15px; margin-bottom: 6px; color: #fff; font-weight: 600;">Перетягніть файли сюди або клікніть для вибору</div>
+                    <div style="font-size: 12px; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">Потрібні: Події (events), Вогневі (fire), БпЛА (uav)</div>
+                    <div id="drop-badges" style="margin-top: 18px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                         <span class="file-badge" id="badge-events">❌ Події не знайдено</span>
                         <span class="file-badge" id="badge-fire">❌ Вогневі не знайдено</span>
                         <span class="file-badge" id="badge-uav">❌ БпЛА не знайдено</span>
@@ -803,41 +1125,107 @@
                 </div>
             </div>
             
-            <button onclick="processFiles()" style="width: 100%; font-size: 16px; padding: 15px; letter-spacing: 1px; margin-top: 10px;">
+            <button onclick="processFiles()" style="width: 100%; font-size: 15px; font-weight: 700; padding: 14px; letter-spacing: 0.5px; margin-top: 12px; border-radius: 10px; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);">
                 🔄 Згенерувати всі звіти
             </button>
         </div>
 
         <!-- SETTINGS TAB -->
         <div id="settings-panel" class="settings-panel">
-            <h2>⚙️ Налаштування</h2>
-            <div class="file-group" style="margin-bottom: 15px;">
-                <label>🏢 Назва підрозділу (для шаблонів)</label>
-                <input type="text" id="unit-name" value="1 мб 111 овмбр" style="width: 100%; box-sizing: border-box;">
+            <div class="settings-header-bar">
+                <div class="settings-title-group">
+                    <h2 style="margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                        <span>⚙️ Налаштування комплексу</span>
+                        <span class="badge-tactical" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">PBD CONFIG</span>
+                    </h2>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="settings-status-badge">
+                        <span class="dot"></span>
+                        <span>Автозбереження активне</span>
+                    </span>
+                </div>
             </div>
 
-            <div class="file-group"  style="margin-bottom: 15px;">
-                <label>📖 Словник позицій <span style="font-size: 11px; color: #64748b; font-weight: normal; margin-left: 5px;">(Формат: Шукана назва = Як виводити)</span></label>
-                <textarea id="pos-dict" rows="6"
-                    placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;" style="width: 100%; box-sizing: border-box;"></textarea>
-                <small style="color:#64748b; display: flex; align-items: center; gap: 5px; margin-top: 5px;"><i>💡 Програма ігнорує регістр і лапки при пошуку. Зберігається автоматично.</i></small>
-            </div>
+            <div class="settings-grid">
+                <!-- Картка 1: Підрозділ -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <div class="settings-card-title">
+                            <span>🏢 Назва підрозділу</span>
+                        </div>
+                        <span class="dict-counter-badge" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3);">
+                            Шапка звітів
+                        </span>
+                    </div>
+                    <div class="file-group">
+                        <input type="text" id="unit-name" value="1 мб 111 овмбр" placeholder="Вкажіть підрозділ (напр: 1 мб 111 овмбр)..." style="width: 100%; box-sizing: border-box; font-weight: 500;">
+                        <div class="dict-tip">
+                            <span>💡 Використовується у зведених назвах файлів та формуванні офіційних таблиць донесень.</span>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="file-group" style="margin-bottom: 15px;">
-                <label>⚔️ Словник зброї ОВгП за позиціями <span style="font-size: 11px; color: #64748b; font-weight: normal; margin-left: 5px;">(Формат: Назва позиції = Зброя)</span></label>
-                <textarea id="weapon-dict" rows="6"
-                    placeholder="ОМЕГА = КБА-222 (120мм)&#10;ОМЕГА = МВ81/024 (81 мм)&#10;СОКІЛ = УПІК 82 (82мм)" style="width: 100%; box-sizing: border-box;"></textarea>
-                <small style="color:#64748b; display: flex; align-items: center; gap: 5px; margin-top: 5px;"><i>💡 Дозволяє вказувати конкретні системи озброєння. Якщо на позиції кілька калібрів (наприклад, 120мм і 81мм) — вкажіть кожен окремим рядком, програма співставить їх автоматично!</i></small>
-            </div>
+                <!-- Двоколонкова сітка словників -->
+                <div class="settings-grid-split">
+                    <!-- Картка 2: Словник позицій -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-title">
+                                <span>📖 Словник позицій</span>
+                            </div>
+                            <span id="pos-count-badge" class="dict-counter-badge">
+                                0 позицій
+                            </span>
+                        </div>
+                        <textarea id="pos-dict" class="dict-textarea" rows="7"
+                            placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;"></textarea>
+                        <div class="dict-tip">
+                            <span>💡 Формат: <code>Шукана назва = Як виводити</code>. Програма ігнорує регістр і лапки при автопошуку.</span>
+                        </div>
+                    </div>
 
-            <div class="settings-btn-row">
-                <button type="button" onclick="openSettingsExportModal()" class="btn-export" title="Зберегти налаштування у файл для перенесення на інший ПК">
-                    💾 Експорт налаштувань (.enc)
-                </button>
-                <button type="button" onclick="triggerSettingsImport()" class="btn-import" title="Завантажити раніше збережені налаштування з файлу">
-                    📂 Імпорт налаштувань (.enc)
-                </button>
-                <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
+                    <!-- Картка 3: Словник зброї ОВгП -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <div class="settings-card-title">
+                                <span>⚔️ Словник зброї ОВгП</span>
+                            </div>
+                            <span id="weapon-count-badge" class="dict-counter-badge" style="background: rgba(245, 158, 11, 0.15); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3);">
+                                0 зв'язок
+                            </span>
+                        </div>
+                        <textarea id="weapon-dict" class="dict-textarea" rows="7"
+                            placeholder="ОМЕГА = КБА-222 (120мм)&#10;ОМЕГА = МВ81/024 (81 мм)&#10;СОКІЛ = УПІК 82 (82мм)"></textarea>
+                        <div class="dict-tip">
+                            <span>💡 Формат: <code>Назва позиції = Зброя</code>. Якщо кілька калібрів на позиції — вкажіть кожен окремим рядком!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Картка 4: Безпека та синхронізація -->
+                <div class="settings-card" style="border-color: rgba(14, 165, 233, 0.3); background: rgba(14, 165, 233, 0.03);">
+                    <div class="settings-card-header">
+                        <div class="settings-card-title">
+                            <span style="color: #38bdf8;">🛡️ Безпека та синхронізація налаштувань</span>
+                        </div>
+                        <span class="dict-counter-badge" style="background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border-color: rgba(14, 165, 233, 0.4);">
+                            AES-256 GCM
+                        </span>
+                    </div>
+                    <p style="font-size: 12px; color: #94a3b8; margin: 0 0 16px 0; line-height: 1.5;">
+                        Експортуйте зашифрований файл конфігурації для безпечного перенесення словників позицій та зброї на інші автономні штабні ноутбуки без ризику витоку даних.
+                    </p>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button type="button" onclick="openSettingsExportModal()" class="btn-export" style="display: flex; align-items: center; gap: 8px;" title="Зберегти налаштування у файл для перенесення на інший ПК">
+                            <span>💾 Експорт налаштувань (.enc)</span>
+                        </button>
+                        <button type="button" onclick="triggerSettingsImport()" class="btn-import" style="display: flex; align-items: center; gap: 8px;" title="Завантажити раніше збережені налаштування з файлу">
+                            <span>📂 Імпорт налаштувань (.enc)</span>
+                        </button>
+                        <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1333,20 +1721,30 @@
         function toggleTab(tabId) {
             const filesPanel = document.getElementById('files-panel');
             const settingsPanel = document.getElementById('settings-panel');
+            const btnFiles = document.getElementById('btn-tab-files');
+            const btnSettings = document.getElementById('btn-tab-settings');
             
             if (tabId === 'files-panel') {
                 if (filesPanel.classList.contains('active')) {
                     filesPanel.classList.remove('active');
+                    if (btnFiles) btnFiles.classList.remove('active');
                 } else {
                     filesPanel.classList.add('active');
                     settingsPanel.classList.remove('active');
+                    if (btnFiles) btnFiles.classList.add('active');
+                    if (btnSettings) btnSettings.classList.remove('active');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             } else {
                 if (settingsPanel.classList.contains('active')) {
                     settingsPanel.classList.remove('active');
+                    if (btnSettings) btnSettings.classList.remove('active');
                 } else {
                     settingsPanel.classList.add('active');
                     filesPanel.classList.remove('active');
+                    if (btnSettings) btnSettings.classList.add('active');
+                    if (btnFiles) btnFiles.classList.remove('active');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }
         }
@@ -2078,6 +2476,10 @@
                 buildWeaponMap();
                 document.getElementById('files-panel').classList.remove('active');
                 document.getElementById('settings-panel').classList.remove('active');
+                const btnFiles = document.getElementById('btn-tab-files');
+                const btnSettings = document.getElementById('btn-tab-settings');
+                if (btnFiles) btnFiles.classList.remove('active');
+                if (btnSettings) btnSettings.classList.remove('active');
 
                 ['report-1-list', 'report-3-1-1', 'report-2-fpv', 'report-2-drop', 'report-2-mortar', 'report-2-art', 'report-2-other', 'report-3-fpv', 'report-3-drop', 'report-3-heavy', 'report-3-delivery', 'report-4-ovgp', 'report-4-gen'].forEach(id => {
                     document.getElementById(id).innerHTML = '';
@@ -3215,6 +3617,34 @@
             }
         };
 
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        }
+
+        function updateDictCounters() {
+            const posInput = document.getElementById('pos-dict');
+            const weaponInput = document.getElementById('weapon-dict');
+            const posBadge = document.getElementById('pos-count-badge');
+            const weaponBadge = document.getElementById('weapon-count-badge');
+
+            if (posInput && posBadge) {
+                const count = posInput.value.split('\n').filter(l => l.trim().length > 0 && !l.trim().startsWith('#')).length;
+                posBadge.textContent = `${count} позицій`;
+            }
+            if (weaponInput && weaponBadge) {
+                const count = weaponInput.value.split('\n').filter(l => l.trim().length > 0 && !l.trim().startsWith('#')).length;
+                weaponBadge.textContent = `${count} зв'язок`;
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             const uNameInput = document.getElementById('unit-name');
             const posDictInput = document.getElementById('pos-dict');
@@ -3224,9 +3654,17 @@
             if (localStorage.getItem('saved-pos-dict')) posDictInput.value = localStorage.getItem('saved-pos-dict');
             if (localStorage.getItem('saved-weapon-dict')) weaponDictInput.value = localStorage.getItem('saved-weapon-dict');
 
+            updateDictCounters();
+
             uNameInput.addEventListener('input', function () { localStorage.setItem('saved-unit-name', this.value); });
-            posDictInput.addEventListener('input', function () { localStorage.setItem('saved-pos-dict', this.value); });
-            weaponDictInput.addEventListener('input', function () { localStorage.setItem('saved-weapon-dict', this.value); });
+            posDictInput.addEventListener('input', function () { 
+                localStorage.setItem('saved-pos-dict', this.value); 
+                updateDictCounters();
+            });
+            weaponDictInput.addEventListener('input', function () { 
+                localStorage.setItem('saved-weapon-dict', this.value); 
+                updateDictCounters();
+            });
             
             
 
@@ -3411,6 +3849,7 @@
 
                 buildPosMap();
                 buildWeaponMap();
+                updateDictCounters();
 
                 closeSettingsImportModal();
                 alert('✅ Налаштування Звіту ПБД успішно розшифровано та застосовано!');
@@ -3651,69 +4090,86 @@
     </script>
 
     <!-- МОДАЛЬНЕ ВІКНО CHANGELOG ЗВІТУ ПБД -->
-    <div id="modal-changelog"
-        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div
-            style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 550px; overflow: hidden; padding: 20px; color: #fff; max-height: 80vh; display: flex; flex-direction: column;">
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
-                <h3 style="margin: 0; font-size: 18px; color: #34d399; display: flex; align-items: center; gap: 8px;">
-                    📋 <span>Історія оновлень (Звіт ПБД)</span>
-                    <span
-                        style="font-size: 11px; background: #059669; color: white; padding: 2px 8px; border-radius: 10px;">v1.3.5</span>
+    <div id="modal-changelog" class="tactical-modal-overlay" style="display: none;">
+        <div class="tactical-modal-box" style="max-width: 580px; max-height: 85vh;">
+            <div class="tactical-modal-header">
+                <h3 style="margin: 0; font-size: 16px; color: #34d399; display: flex; align-items: center; gap: 8px;">
+                    <span>📋 Історія оновлень (Звіт ПБД)</span>
+                    <span style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 9999px;">v1.3.5</span>
                 </h3>
-                <button onclick="closeChangelogModal()"
-                    style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">✕</button>
+                <button type="button" onclick="closeChangelogModal()" class="password-toggle-btn" title="Закрити">✕</button>
             </div>
-            <div id="changelogModalList" style="overflow-y: auto; flex: 1; padding-right: 5px;"></div>
-            <div
-                style="border-top: 1px solid #333; padding-top: 10px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #888;">
-                <span>📄 Офлайн-система Звіт ПБД</span>
-                <button onclick="closeChangelogModal()"
-                    style="padding: 6px 14px; background: #059669; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Зрозуміло</button>
+            <div id="changelogModalList" style="overflow-y: auto; flex: 1; padding: 20px;"></div>
+            <div class="tactical-modal-footer" style="justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; color: #64748b;">📄 Офлайн-система Звіт ПБД</span>
+                <button type="button" onclick="closeChangelogModal()" style="padding: 6px 16px; font-size: 13px;">Зрозуміло</button>
             </div>
         </div>
     </div>
 
     <!-- МОДАЛКА: Експорт налаштувань Звіт ПБД -->
-    <div id="modal-settings-export-pwd"
-        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div
-            style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; padding: 20px; color: #fff;">
-            <h3 style="margin-top: 0; font-size: 18px; color: #60a5fa;">🔒 Експорт налаштувань Звіту ПБД (.enc)</h3>
-            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Введіть пароль для шифрування словника
-                позицій, словника зброї та назви підрозділу. Без пароля відкрити файл буде неможливо!</p>
+    <div id="modal-settings-export-pwd" class="tactical-modal-overlay" style="display: none;">
+        <div class="tactical-modal-box">
+            <div class="tactical-modal-header">
+                <h3 style="margin: 0; font-size: 16px; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+                    <span>🔒 Експорт налаштувань (.enc)</span>
+                </h3>
+                <button type="button" onclick="closeSettingsExportModal()" class="password-toggle-btn" title="Закрити">✕</button>
+            </div>
             <form onsubmit="executeSettingsExport(event)">
-                <input required type="password" id="settings-export-pwd" placeholder="Пароль шифрування..."
-                    style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 15px; font-size: 14px;" />
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <div class="tactical-modal-body">
+                    <p style="font-size: 13px; color: #94a3b8; margin: 0 0 16px 0; line-height: 1.5;">
+                        Введіть пароль для 256-бітного шифрування словника позицій, зброї та назви підрозділу. Без пароля відкрити файл буде неможливо!
+                    </p>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #cbd5e1;">Пароль шифрування:</label>
+                    <div class="password-field-wrap">
+                        <input required type="password" id="settings-export-pwd" placeholder="Введіть надійний пароль..." />
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('settings-export-pwd', this)" title="Показати/приховати пароль">👁️</button>
+                    </div>
+                    <div style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                        <span>🛡️ Алгоритм: AES-GCM 256-bit (PBKDF2 100 000 ітерацій)</span>
+                    </div>
+                </div>
+                <div class="tactical-modal-footer">
                     <button type="button" onclick="closeSettingsExportModal()"
-                        style="padding: 8px 14px; background: #333; color: #ccc; border: none; border-radius: 6px; cursor: pointer;">Скасувати</button>
-                    <button type="submit"
-                        style="padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🔒
-                        Завантажити .enc</button>
+                        style="background: #1e293b; color: #94a3b8; box-shadow: none;">Скасувати</button>
+                    <button type="submit" class="btn-export">
+                        🔒 Завантажити .enc
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- МОДАЛКА: Імпорт налаштувань Звіт ПБД -->
-    <div id="modal-settings-import-pwd"
-        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div
-            style="background: #1e1e1e; border: 1px solid #333; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; padding: 20px; color: #fff;">
-            <h3 style="margin-top: 0; font-size: 18px; color: #34d399;">🔓 Розшифровка та імпорт (.enc)</h3>
-            <p style="font-size: 12px; color: #aaa; margin-bottom: 15px;">Файл розпізнано як налаштування Звіту ПБД.
-                Введіть пароль для розшифрування та застосування словників.</p>
+    <div id="modal-settings-import-pwd" class="tactical-modal-overlay" style="display: none;">
+        <div class="tactical-modal-box">
+            <div class="tactical-modal-header">
+                <h3 style="margin: 0; font-size: 16px; color: #34d399; display: flex; align-items: center; gap: 8px;">
+                    <span>🔓 Розшифровка та імпорт (.enc)</span>
+                </h3>
+                <button type="button" onclick="closeSettingsImportModal()" class="password-toggle-btn" title="Закрити">✕</button>
+            </div>
             <form onsubmit="executeSettingsImport(event)">
-                <input required type="password" id="settings-import-pwd" placeholder="Пароль розшифрування..."
-                    style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #111; color: #fff; margin-bottom: 15px; font-size: 14px;" />
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <div class="tactical-modal-body">
+                    <p style="font-size: 13px; color: #94a3b8; margin: 0 0 16px 0; line-height: 1.5;">
+                        Файл розпізнано як зашифровані налаштування Звіту ПБД. Введіть пароль для розшифрування та застосування словників.
+                    </p>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #cbd5e1;">Пароль розшифрування:</label>
+                    <div class="password-field-wrap">
+                        <input required type="password" id="settings-import-pwd" placeholder="Введіть пароль до файлу..." />
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('settings-import-pwd', this)" title="Показати/приховати пароль">👁️</button>
+                    </div>
+                    <div style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                        <span>⚠️ Словники у пам'яті програми будуть автоматично оновлені</span>
+                    </div>
+                </div>
+                <div class="tactical-modal-footer">
                     <button type="button" onclick="closeSettingsImportModal()"
-                        style="padding: 8px 14px; background: #333; color: #ccc; border: none; border-radius: 6px; cursor: pointer;">Скасувати</button>
-                    <button type="submit"
-                        style="padding: 8px 16px; background: #059669; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🔓
-                        Застосувати</button>
+                        style="background: #1e293b; color: #94a3b8; box-shadow: none;">Скасувати</button>
+                    <button type="submit" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        🔓 Застосувати
+                    </button>
                 </div>
             </form>
         </div>
