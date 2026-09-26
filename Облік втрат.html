@@ -1121,6 +1121,22 @@
             );
         });
 
+        function formatRankShortUI(rank) {
+            if (!rank || rank === 'Не вказано' || rank === 'Невідомо') return 'В/сл';
+            const r = rank.trim();
+            const map = {
+                'Старший солдат': 'Ст. солдат',
+                'Молодший сержант': 'Мол. сержант',
+                'Старший сержант': 'Ст. сержант',
+                'Головний сержант': 'Гол. сержант',
+                'Штаб-сержант': 'Шт.-серж.',
+                'Майстер-сержант': 'Майстер-серж.',
+                'Молодший лейтенант': 'Мол. лейтенант',
+                'Старший лейтенант': 'Ст. лейтенант'
+            };
+            return map[r] || r;
+        }
+
         const TriageCard = React.memo(({ ep, soldier, soldierEpisodes = [], onQuickEvac, onEdit, onAlertMIA, onNotify }) => {
             const [isCopied, setIsCopied] = React.useState(false);
             const waitStr = calculateWaitTimeUI(ep.date);
@@ -1131,7 +1147,7 @@
             const sCallsign = soldier?.callsign || '';
 
             const isRankMissing = !displayRank || displayRank === 'Не вказано' || displayRank === 'Невідомо';
-            const cleanRank = isRankMissing ? 'В/сл' : displayRank;
+            const cleanRank = isRankMissing ? 'В/сл' : formatRankShortUI(displayRank);
 
             // Форматування короткого ПІБ для диспетчерської консолі (Прізвище І. Б.)
             const shortName = React.useMemo(() => {
@@ -1213,16 +1229,15 @@
                                     «{formatCallsignUI(sCallsign)}»
                                 </span>
                             ) : null}
-                            <span className="text-sm font-bold text-white group-hover:text-amber-300 truncate min-w-0 transition-colors" title={sName}>
+                            <span className="text-sm font-bold text-white group-hover:text-amber-300 truncate min-w-[70px] shrink transition-colors" title={sName}>
                                 {shortName}
                             </span>
-                            <span className="text-slate-400 text-[10px] font-semibold bg-slate-950 border border-slate-800/80 px-1.5 py-0.2 rounded shrink-0">
+                            <span className="text-slate-400 text-[10px] font-semibold bg-slate-950 border border-slate-800/80 px-1.5 py-0.2 rounded shrink-0" title={displayRank}>
                                 {cleanRank}
                             </span>
-                            <span className="text-slate-400 text-xs shrink-0 max-w-[90px] truncate" title={displayUnit}>
+                            <span className="text-slate-400 text-xs shrink-0 max-w-[80px] truncate" title={displayUnit}>
                                 {displayUnit || 'Не вказано'}
                             </span>
-                            {statusHistoryBadge}
                         </div>
 
                         {/* Таймер очікування */}
@@ -1232,23 +1247,26 @@
                         </div>
                     </div>
 
-                    {/* Рядок 2: Травми або Характер втрати на ВСЮ ширину картки */}
-                    <div className="pl-1.5 flex items-center gap-1.5 min-w-0">
-                        {isAny300(ep.lossType) ? (
-                            injStr ? (
-                                <span className="text-red-300 font-medium text-[11px] truncate flex items-center gap-1 min-w-0" title={injStr}>
-                                    <Icon name="activity" className="w-3 h-3 text-red-400 shrink-0" />
-                                    <span className="truncate">{injStr}</span>
-                                </span>
+                    {/* Рядок 2: Травми або Характер втрати + Ланцюжок статусів */}
+                    <div className="pl-1.5 flex items-center justify-between gap-1.5 min-w-0">
+                        <div className="min-w-0 flex-1 truncate flex items-center gap-1">
+                            {isAny300(ep.lossType) ? (
+                                injStr ? (
+                                    <span className="text-red-300 font-medium text-[11px] truncate flex items-center gap-1 min-w-0" title={injStr}>
+                                        <Icon name="activity" className="w-3 h-3 text-red-400 shrink-0" />
+                                        <span className="truncate">{injStr}</span>
+                                    </span>
+                                ) : (
+                                    <span className="text-slate-400 text-[11px] truncate">{ep.lossType}</span>
+                                )
                             ) : (
-                                <span className="text-slate-400 text-[11px] truncate">{ep.lossType}</span>
-                            )
-                        ) : (
-                            <span className="text-zinc-300 font-semibold text-[11px] truncate flex items-center gap-1 min-w-0">
-                                <Icon name="shield-alert" className="w-3 h-3 text-zinc-400 shrink-0" />
-                                <span className="truncate">{ep.lossType}</span>
-                            </span>
-                        )}
+                                <span className="text-zinc-300 font-semibold text-[11px] truncate flex items-center gap-1 min-w-0">
+                                    <Icon name="shield-alert" className="w-3 h-3 text-zinc-400 shrink-0" />
+                                    <span className="truncate">{ep.lossType}</span>
+                                </span>
+                            )}
+                        </div>
+                        {statusHistoryBadge}
                     </div>
 
                     {/* Рядок 3: Локація + Кнопки дій */}
@@ -8511,7 +8529,7 @@
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">26.09.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
-                                            <li><strong className="text-white">Новий просторий 3-рядковий формат карток тріажу (~92px):</strong> Повний огляд даних бійця. Рядок 1: позивний, звання, підрозділ, скорочене ПІБ («ПРІЗВИЩЕ І. Б.» з повним у підказці), ланцюжок статусів та таймер очікування. Рядок 2: повноширинний детальний опис поранень без скорочень трьома крапками. Рядок 3: локація, УПД та кнопки швидких дій.</li>
+                                            <li><strong className="text-white">Новий просторий 3-рядковий формат карток тріажу (~92px):</strong> Повний огляд даних бійця без обрізань. Рядок 1: позивний, скорочене військове звання (Ст. солдат, Мол. сержант), підрозділ, скорочене ПІБ («ПРІЗВИЩЕ І. Б.» з гарантованою мінімальною шириною від витіснення) та живий таймер. Рядок 2: повноширинний детальний опис поранень та ланцюжок статусів (Поранення ➔ Загибель) праворуч. Рядок 3: локація, УПД та кнопки дій.</li>
                                             <li><strong className="text-white">Повне відображення специфічних уражень:</strong> Виправлено розпізнавання та показ травм ока («Травма ока»), синдрому роздавлювання (краш-синдром), ЧМТ, ампутацій, баротравм, гемо/пневмотораксу в деталях картки, фільтрах та статистиці.</li>
                                             <li><strong className="text-white">Оптимізація інтерфейсу тріажу:</strong> Прибрано надлишкові діаграми для забезпечення максимальної чистоти інтерфейсу та миттєвого рендерингу на планшетах.</li>
                                         </ul>
