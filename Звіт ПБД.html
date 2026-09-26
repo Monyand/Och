@@ -1064,7 +1064,7 @@
                 <span class="badge-tactical">PBD_REPORT</span>
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
-                    ⚡ v1.3.5
+                    ⚡ v1.3.6
                 </button>
             </h1>
         </div>
@@ -1415,11 +1415,13 @@
                             <select id="m2-weapon" style="width: 240px;" onchange="checkCustomWeapon(this)">
                                 <option value="Удар FPV">Удар FPV</option>
                                 <option value="Удар FPV (оптоволокно)">Удар FPV (оптоволокно)</option>
+                                <option value="Удар FPV (крило)">Удар FPV (крило)</option>
                                 <option value="Скид з БПЛА">Скид з БПЛА</option>
                                 <option value="Скид горючої суміші з дрона">Скид горючої суміші з дрона</option>
                                 <option value="Обстріл з міномета, 82мм">Обстріл з міномета, 82мм</option>
                                 <option value="Обстріл з міномета, 120мм">Обстріл з міномета, 120мм</option>
                                 <option value="Обстріл з ствольної артилерії">Обстріл з ствольної артилерії</option>
+                                <option value="Обстріл з РСЗВ">Обстріл з РСЗВ</option>
                                 <option value="Стрілецька зброя">Стрілецька зброя</option>
                                 <option value="Підрив на ворожому мінуванні">Підрив на ворожому мінуванні</option>
                                 <option value="Уточнення події">Уточнення події</option>
@@ -2734,6 +2736,7 @@
             if (t.includes('82') || (t.includes('міномет') && t.includes('82'))) return { id: 3, name: 'Обстріл з міномета, 82мм' };
             if (t.includes('120') || (t.includes('міномет') && t.includes('120'))) return { id: 3, name: 'Обстріл з міномета, 120мм' };
             if (t.includes('міномет')) return { id: 3, name: 'Обстріл з міномета (калібр уточнюється)' };
+            if (t.includes('рсзв') || t.includes('град') || t.includes('ураган') || t.includes('смерч')) return { id: 4, name: 'Обстріл з РСЗВ' };
             if (t.includes('арт') || t.includes('сау') || t.includes('152') || t.includes('122') || t.includes('ствольн')) return { id: 4, name: 'Обстріл з ствольної артилерії' };
             if (t.includes('мін') && t.includes('уван')) return { id: 5, name: 'Підрив на ворожому мінуванні' };
             if (t.includes('стрілецьк')) return { id: 6, name: 'Стрілецька зброя' };
@@ -2897,14 +2900,14 @@
                 wFormatted = (sel === 'CUSTOM') ? document.getElementById('m2-weapon-custom').value.trim() : sel;
                 count = parseInt(document.getElementById('m2-count').value) || 1;
 
-                let low = sel.toLowerCase();
+                let low = (sel === 'CUSTOM' ? wFormatted : sel).toLowerCase();
                 if (low.includes('fpv')) catId = 1;
                 else if (low.includes('скид')) catId = 2;
                 else if (low.includes('міномет')) catId = 3;
-                else if (low.includes('артилері')) catId = 4;
+                else if (low.includes('артилері') || low.includes('рсзв')) catId = 4;
                 else if (low.includes('мін') && low.includes('уван')) catId = 5;
                 else if (low.includes('стрілецьк')) catId = 6;
-                else catId = 5;
+                else catId = 6;
             } else {
                 wFormatted = document.getElementById(`r2-weapon-${id}`).value.trim();
                 catId = parseInt(document.getElementById(`r2-cat-${id}`).value);
@@ -2959,8 +2962,15 @@
             if (catId === 3) targetList = 'report-2-mortar';
             if (catId === 4) targetList = 'report-2-art';
 
+            const isMining = !wFormatted.toLowerCase().includes('міномет') && (wFormatted.toLowerCase().includes('мінуван') || wFormatted.toLowerCase().includes('підрив') || wFormatted.toLowerCase().includes('розтяжк') || (catId === 5 && wFormatted.toLowerCase().includes('мін')));
+            let posClean = (pos || '').trim();
+            posClean = posClean.replace(/^(по|в районі|в р-ні|р-н|р-ні)\s+/i, '');
+            const posPrefix = isMining ? 'в районі ' : 'по ';
+            const posFormatted = posClean ? `${posPrefix}${posClean}` : '';
+            const posPart = posFormatted ? `, ${posFormatted}` : '';
+
             const countText = count > 1 ? ` (${count})` : '';
-            addRecordToFinal(targetList, `${timeFormatted} ${wFormatted}${countText}, по ${pos}, ${lParts.join(', ')}.`);
+            addRecordToFinal(targetList, `${timeFormatted} ${wFormatted}${countText}${posPart}, ${lParts.join(', ')}.`);
             if (!isManual) document.getElementById(`r2-item-${id}`).style.opacity = '0.4';
         }
 
@@ -3865,9 +3875,24 @@
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.3.6",
+                date: "26.09.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "💥 Оновлення обліку обстрілів (Розділ 3.1.5)",
+                        items: [
+                            "<b>Нові види зброї у формі ручного додавання</b>: Додано швидкий вибір «Удар FPV (крило)» (категорія FPV) та «Обстріл з РСЗВ» (категорія Артилерія).",
+                            "<b>Розпізнавання РСЗВ у загальному парсері</b>: Додано підтримку обстрілів з систем залпового вогню (<code>рсзв</code>, <code>град</code>, <code>ураган</code>, <code>смерч</code>) з автокласифікацією в артилерію.",
+                            "<b>Військова точність формулювання позицій для мінування</b>: Для підривів на ворожому мінуванні та розтяжках формується формулювання <code>в районі {Позиція}</code> замість <code>по {Позиція}</code> з захистом від дублювання префіксів."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.3.5",
                 date: "20.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "⏱️ Підтримка часових інтервалів у Розділі 1.2 (О/С та ФПВ)",
@@ -4095,7 +4120,7 @@
             <div class="tactical-modal-header">
                 <h3 style="margin: 0; font-size: 16px; color: #34d399; display: flex; align-items: center; gap: 8px;">
                     <span>📋 Історія оновлень (Звіт ПБД)</span>
-                    <span style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 9999px;">v1.3.5</span>
+                    <span style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 9999px;">v1.3.6</span>
                 </h3>
                 <button type="button" onclick="closeChangelogModal()" class="password-toggle-btn" title="Закрити">✕</button>
             </div>

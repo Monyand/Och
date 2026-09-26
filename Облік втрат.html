@@ -340,7 +340,7 @@
 
             return (
                 <div className={`relative group ${className}`}>
-                    <canvas ref={chartRef}></canvas>
+                    <canvas ref={chartRef} data-chart-title={title || ''}></canvas>
                     <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition z-10">
                         <button onClick={downloadExcel} className="p-1.5 bg-emerald-800 hover:bg-emerald-600 text-emerald-100 rounded border border-emerald-700 shadow-lg" title="Завантажити звіт в Excel (сирі дані + діаграма)">
                             <Icon name="table" className="w-4 h-4" />
@@ -495,10 +495,19 @@
         
         const getInjStrUI = (inj) => {
             if(!inj) return "";
-            const d = {amputation:'Амп.', rupture:'Розрив', shrapnel:'Уламк.', bullet:'Кульове', fracture:'Перелом', burn:'Опік', akbt:'АКБТ', contusion:'Забій'};
+            const d = {
+                shrapnel: 'Уламк.', bullet: 'Кульове', amputation: 'Амп.',
+                amp_hand: 'Амп. кисті', amp_foot: 'Амп. стопи', amp_fingers: 'Амп. пальців',
+                fracture: 'Перелом', rupture: 'Розрив', burn: 'Опік',
+                laceration: 'Рвана рана', contusion: 'Забій', crush: 'Краш',
+                tbi: 'ЧМТ', eye: 'Травма ока', akbt: 'АКБТ',
+                barotrauma: 'Баротравма', pneumothorax: 'Пневмоторакс'
+            };
             let p = [];
             Object.entries(inj).forEach(([rId, a]) => {
-                let str = Object.keys(a).filter(k=>a[k]).map(k=>d[k]).join(', ');
+                if (!a) return;
+                let activeKeys = Object.keys(a).filter(k => a[k]);
+                let str = activeKeys.map(k => d[k] || k).filter(Boolean).join(', ');
                 if(str) p.push(`${BODY_REGIONS.find(r=>r.id===rId)?.name||rId}: ${str}`);
             });
             return p.join(' | ');
@@ -1120,10 +1129,46 @@
             const displayUnit = ep.unit || soldier?.unit || '';
             const sName = soldier?.name || 'Невідомо';
             const sCallsign = soldier?.callsign || '';
-            const dateDisplay = formatEpisodeDateUI(ep.date);
 
             const isRankMissing = !displayRank || displayRank === 'Не вказано' || displayRank === 'Невідомо';
             const cleanRank = isRankMissing ? 'В/сл' : displayRank;
+
+            // Форматування короткого ПІБ для диспетчерської консолі (Прізвище І. Б.)
+            const shortName = React.useMemo(() => {
+                if (!sName || sName === 'Невідомо') return sName;
+                const parts = sName.trim().split(/\s+/);
+                if (parts.length >= 2) {
+                    const surname = parts[0];
+                    const initials = parts.slice(1).map(p => p[0].toUpperCase() + '.').join(' ');
+                    return `${surname} ${initials}`;
+                }
+                return sName;
+            }, [sName]);
+
+            // Ланцюжок статусів зі згортанням повторів (наприклад: Поранення (2) ➔ Загибель)
+            const statusHistoryBadge = React.useMemo(() => {
+                const rawTypes = (soldierEpisodes || []).map(e => (e.lossType || '').split(' ')[0]).filter(Boolean);
+                if (rawTypes.length <= 1) return null;
+                const collapsed = [];
+                rawTypes.forEach(t => {
+                    if (collapsed.length === 0 || collapsed[collapsed.length - 1].type !== t) {
+                        collapsed.push({ type: t, count: 1 });
+                    } else {
+                        collapsed[collapsed.length - 1].count++;
+                    }
+                });
+                if (collapsed.length <= 1) return null;
+                const historyText = collapsed.map(c => c.count > 1 ? `${c.type} (${c.count})` : c.type).join(' ➔ ');
+                return (
+                    <span 
+                        className="text-[9px] font-mono font-bold bg-amber-950/70 border border-amber-500/40 text-amber-300 px-1 py-0.2 rounded flex items-center gap-1 shrink-0 shadow-sm" 
+                        title={`Ланцюжок статусів бійця (${soldierEpisodes.length} епізоди): ${historyText}`}
+                    >
+                        <Icon name="history" className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                        <span>{historyText}</span>
+                    </span>
+                );
+            }, [soldierEpisodes]);
 
             const leftAccentColor = 
                 isAny200(ep.lossType) ? 'bg-zinc-500' :
@@ -1155,136 +1200,132 @@
             return (
                 <div 
                     onClick={() => onEdit(ep)}
-                    className="bg-slate-900/95 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-900 p-3.5 rounded-2xl shadow-md hover:shadow-xl hover:shadow-black/40 flex flex-col gap-2.5 relative overflow-hidden group transition-all cursor-pointer"
+                    className="bg-slate-900/95 border border-slate-800/90 hover:border-amber-500/60 hover:bg-slate-900 p-2.5 rounded-xl shadow-sm hover:shadow-md flex flex-col gap-1.5 relative overflow-hidden group transition-all cursor-pointer"
                     title="Клікніть для редагування запису"
                 >
-                    <div className={`absolute top-0 left-0 w-1.5 h-full ${leftAccentColor}`}></div>
+                    <div className={`absolute top-0 left-0 w-1 h-full ${leftAccentColor}`}></div>
                     
-                    {/* Верхній рядок: Звання, Позивний, ПІБ + Таймер очікування */}
-                    <div className="pl-2 flex justify-between items-start gap-2">
-                        <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-slate-300 text-[10px] font-semibold bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded tracking-wide uppercase">
-                                    {cleanRank}
+                    {/* Рядок 1: Позивний, ПІБ (скорочено), Звання, Підрозділ + Таймер */}
+                    <div className="pl-1.5 flex justify-between items-center gap-2 min-w-0">
+                        <div className="min-w-0 flex-1 flex items-center gap-1.5 overflow-hidden">
+                            {sCallsign ? (
+                                <span className="text-amber-400 text-xs font-mono font-extrabold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm shrink-0">
+                                    «{formatCallsignUI(sCallsign)}»
                                 </span>
-                                {sCallsign && (
-                                    <span className="text-amber-400 text-xs font-mono font-bold bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded shadow-sm">
-                                        «{formatCallsignUI(sCallsign)}»
-                                    </span>
-                                )}
-                                <span className="text-slate-300 font-medium text-xs truncate max-w-[120px]" title={displayUnit}>
-                                    {displayUnit || 'Не вказано'}
-                                </span>
-                                {soldierEpisodes && soldierEpisodes.length > 1 && (
-                                    <span 
-                                        className="text-[9px] font-mono font-bold bg-amber-950/70 border border-amber-500/40 text-amber-300 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0 shadow-sm" 
-                                        title={`Ланцюжок статусів бійця (${soldierEpisodes.length} епізоди): ${soldierEpisodes.map(e => e.lossType.split(' ')[0]).join(' ➔ ')}`}
-                                    >
-                                        <Icon name="history" className="w-2.5 h-2.5 text-amber-400 shrink-0" />
-                                        <span>{soldierEpisodes.map(e => e.lossType.split(' ')[0]).join(' ➔ ')}</span>
-                                    </span>
-                                )}
-                            </div>
-                            <div className="text-sm font-bold text-white group-hover:text-amber-300 tracking-tight leading-tight truncate transition-colors" title={sName}>
-                                {sName}
-                            </div>
+                            ) : null}
+                            <span className="text-sm font-bold text-white group-hover:text-amber-300 truncate min-w-0 transition-colors" title={sName}>
+                                {shortName}
+                            </span>
+                            <span className="text-slate-400 text-[10px] font-semibold bg-slate-950 border border-slate-800/80 px-1.5 py-0.2 rounded shrink-0">
+                                {cleanRank}
+                            </span>
+                            <span className="text-slate-400 text-xs shrink-0 max-w-[90px] truncate" title={displayUnit}>
+                                {displayUnit || 'Не вказано'}
+                            </span>
+                            {statusHistoryBadge}
                         </div>
 
                         {/* Таймер очікування */}
-                        <div className={`text-[11px] font-bold font-mono px-2 py-1 rounded-xl border shadow-inner flex items-center gap-1 shrink-0 ${timerBadgeColor}`}>
-                            <Icon name="clock" className="w-3 h-3 text-amber-400 shrink-0" />
+                        <div className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-lg border shadow-inner flex items-center gap-1 shrink-0 ${timerBadgeColor}`}>
+                            <Icon name="clock" className="w-2.5 h-2.5 text-amber-400 shrink-0" />
                             <span>{waitStr}</span>
                         </div>
                     </div>
 
-                    {/* Модульні плашки: Локація, Травми, Док */}
-                    <div className="pl-2 space-y-1.5">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2 py-0.5 rounded-lg text-xs text-slate-300 shadow-inner">
-                                <Icon name="map-pin" className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                <span className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">Факт:</span>
-                                <span className="text-amber-200 font-medium truncate max-w-[130px]" title={ep.actualLoc}>{ep.actualLoc || "-"}</span>
-                            </div>
-                            {ep.docLoc && (
-                                <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2 py-0.5 rounded-lg text-xs text-slate-300 shadow-inner">
-                                    <Icon name="file-text" className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                    <span className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">Док:</span>
-                                    <span className="text-slate-300 font-medium truncate max-w-[100px]" title={ep.docLoc}>{ep.docLoc}</span>
-                                </div>
-                            )}
-                        </div>
-
+                    {/* Рядок 2: Травми або Характер втрати на ВСЮ ширину картки */}
+                    <div className="pl-1.5 flex items-center gap-1.5 min-w-0">
                         {isAny300(ep.lossType) ? (
-                            injStr && (
-                                <div className="w-fit inline-flex items-center gap-1.5 bg-red-950/30 border border-red-900/50 px-2 py-0.5 rounded-lg text-xs text-red-300 shadow-inner">
+                            injStr ? (
+                                <span className="text-red-300 font-medium text-[11px] truncate flex items-center gap-1 min-w-0" title={injStr}>
                                     <Icon name="activity" className="w-3 h-3 text-red-400 shrink-0" />
-                                    <span className="font-bold text-red-400 text-[10px] uppercase tracking-wider shrink-0">Травми:</span>
-                                    <span className="text-red-200 font-medium text-[11px] truncate max-w-[190px]" title={injStr}>{injStr}</span>
-                                </div>
+                                    <span className="truncate">{injStr}</span>
+                                </span>
+                            ) : (
+                                <span className="text-slate-400 text-[11px] truncate">{ep.lossType}</span>
                             )
                         ) : (
-                            <div className="w-fit inline-flex items-center gap-1.5 bg-zinc-950/80 border border-zinc-800 px-2 py-0.5 rounded-lg text-xs font-bold text-zinc-300 uppercase tracking-wide shadow-inner">
+                            <span className="text-zinc-300 font-semibold text-[11px] truncate flex items-center gap-1 min-w-0">
                                 <Icon name="shield-alert" className="w-3 h-3 text-zinc-400 shrink-0" />
-                                <span>{ep.lossType}</span>
-                            </div>
-                        )}
-
-                        {ep.inUdp && (
-                            <div className="pt-0.5">
-                                <span className="text-[10px] bg-red-950/70 text-red-300 border border-red-800/70 px-2 py-0.5 rounded-md font-semibold tracking-wide inline-flex items-center gap-1">
-                                    <Icon name="zap" className="w-2.5 h-2.5 text-red-400" /> Під час УПД
-                                </span>
-                            </div>
+                                <span className="truncate">{ep.lossType}</span>
+                            </span>
                         )}
                     </div>
 
-                    {/* Нижня панель дій */}
-                    <div className="pl-2 pt-1 border-t border-slate-800/70 flex items-center gap-1.5">
-                        {ep.lossType === 'Зниклий безвісті (ЗБВ)' ? (
-                            <button 
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); onAlertMIA(); }} 
-                                className="flex-1 py-1.5 px-2.5 bg-slate-950 hover:bg-red-950/80 hover:border-red-700/80 text-slate-300 hover:text-red-200 text-xs font-semibold rounded-xl border border-slate-800 transition-all flex justify-center items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
-                            >
-                                <Icon name="alert-triangle" className="w-3.5 h-3.5 text-red-400" /> 
-                                <span>Статус ЗБВ</span>
-                            </button>
-                        ) : (
-                            <button 
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); onQuickEvac(ep); }} 
-                                className="flex-1 py-1.5 px-2.5 bg-slate-950 hover:bg-emerald-600 hover:border-emerald-500 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-800 transition-all flex justify-center items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 group/btn"
-                            >
-                                <Icon name="check-circle" className="w-3.5 h-3.5 text-emerald-400 group-hover/btn:text-white transition-colors" /> 
-                                <span>Евакуйовано</span>
-                            </button>
-                        )}
-                        
-                        <button 
-                            type="button" 
-                            onClick={handleCopySummary}
-                            className={`w-8 h-8 rounded-xl border flex items-center justify-center transition shadow-sm cursor-pointer shrink-0 ${
-                                isCopied 
-                                    ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' 
-                                    : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-400 hover:text-slate-200'
-                            }`}
-                            title={isCopied ? "Скопійовано в буфер!" : "Скопіювати звіт по бійцю"}
-                        >
-                            <Icon name={isCopied ? "check" : "copy"} className="w-3.5 h-3.5" />
-                        </button>
+                    {/* Рядок 3: Локація + Кнопки дій */}
+                    <div className="pl-1.5 flex justify-between items-center gap-2 pt-1 border-t border-slate-800/60 min-w-0">
+                        <div className="min-w-0 flex-1 flex items-center gap-1.5 text-xs overflow-hidden">
+                            <span className="text-amber-200 text-[11px] truncate flex items-center gap-1 shrink-0 max-w-[140px]" title={ep.actualLoc ? `Локація: ${ep.actualLoc}` : "Локація не вказана"}>
+                                <Icon name="map-pin" className="w-3 h-3 text-amber-400 shrink-0" />
+                                <span className="truncate">{ep.actualLoc || "-"}</span>
+                            </span>
 
-                        <button 
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); onEdit(ep); }} 
-                            className="w-8 h-8 rounded-xl bg-slate-950 hover:bg-amber-500/20 text-slate-400 hover:text-amber-400 border border-slate-800 hover:border-amber-500/50 flex items-center justify-center transition shadow-sm cursor-pointer shrink-0" 
-                            title="Редагувати запис"
-                        >
-                            <Icon name="edit-3" className="w-3.5 h-3.5" />
-                        </button>
+                            {ep.inUdp && (
+                                <span className="text-[9px] bg-red-950/70 text-red-300 border border-red-800/70 px-1 py-0.2 rounded font-semibold tracking-wide shrink-0">
+                                    УПД
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Кнопки дій */}
+                        <div className="flex items-center gap-1 shrink-0">
+                            {ep.lossType === 'Зниклий безвісті (ЗБВ)' ? (
+                                <button 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); onAlertMIA(); }} 
+                                    className="py-1 px-2 bg-slate-950 hover:bg-blue-950/80 hover:border-blue-700/80 text-blue-300 hover:text-white text-[11px] font-semibold rounded-lg border border-slate-800 transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95"
+                                >
+                                    <Icon name="alert-triangle" className="w-3 h-3 text-blue-400" /> 
+                                    <span>ЗБВ</span>
+                                </button>
+                            ) : isAny200(ep.lossType) ? (
+                                <button 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); onQuickEvac(ep); }} 
+                                    className="py-1 px-2 bg-slate-950 hover:bg-zinc-700 hover:border-zinc-500 text-slate-300 hover:text-white text-[11px] font-semibold rounded-lg border border-slate-800 transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 group/btn"
+                                    title="Позначити тіло евакуйованим"
+                                >
+                                    <Icon name="check-circle" className="w-3 h-3 text-zinc-400 group-hover/btn:text-white transition-colors" /> 
+                                    <span>Тіло</span>
+                                </button>
+                            ) : (
+                                <button 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); onQuickEvac(ep); }} 
+                                    className="py-1 px-2.5 bg-emerald-950/60 hover:bg-emerald-600 hover:border-emerald-500 text-emerald-300 hover:text-white text-[11px] font-bold rounded-lg border border-emerald-800/80 transition-all flex items-center gap-1 cursor-pointer shadow-sm active:scale-95 group/btn"
+                                    title="Позначити бійця евакуйованим"
+                                >
+                                    <Icon name="check-circle" className="w-3 h-3 text-emerald-400 group-hover/btn:text-white transition-colors" /> 
+                                    <span>Евакуювати</span>
+                                </button>
+                            )}
+
+                            <button 
+                                type="button" 
+                                onClick={handleCopySummary}
+                                className={`w-7 h-7 rounded-lg border flex items-center justify-center transition shadow-sm cursor-pointer shrink-0 ${
+                                    isCopied 
+                                        ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' 
+                                        : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-400 hover:text-slate-200'
+                                }`}
+                                title={isCopied ? "Скопійовано в буфер!" : "Скопіювати звіт"}
+                            >
+                                <Icon name={isCopied ? "check" : "copy"} className="w-3 h-3" />
+                            </button>
+
+                            <button 
+                                type="button" 
+                                onClick={(e) => { e.stopPropagation(); onEdit(ep); }} 
+                                className="w-7 h-7 rounded-lg bg-slate-950 hover:bg-amber-500/20 text-slate-400 hover:text-amber-400 border border-slate-800 hover:border-amber-500/50 flex items-center justify-center transition shadow-sm cursor-pointer shrink-0" 
+                                title="Редагувати запис"
+                            >
+                                <Icon name="edit-3" className="w-3 h-3" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
         });
+
 
         function App() {
             const [isLoading, setIsLoading] = useState(true);
@@ -1986,7 +2027,7 @@
                 const aLocCauseCounts = {}; 
                 const activeCausesSet = new Set();
                 
-                const injuryStats = { 'Ампутація':0, 'Розрив':0, 'Уламкове':0, 'Кульове':0, 'Перелом':0, 'Опік':0, 'АКБТ':0, 'Забій':0 };
+                const injuryStats = { 'Уламкове':0, 'Кульове':0, 'Ампутація':0, 'Перелом':0, 'Розрив':0, 'Опік':0, 'Рвана рана':0, 'Забій':0, 'Краш-синдром':0, 'ЧМТ':0, 'Травма ока':0, 'АКБТ':0, 'Баротравма':0, 'Пневмоторакс':0 };
 
                 const evacDaysSum = { 'Критичний': 0, 'Важкий': 0, 'Середній': 0, 'Легкий': 0, '200 (Тіла)': 0 };
                 const evacDaysCount = { 'Критичний': 0, 'Важкий': 0, 'Середній': 0, 'Легкий': 0, '200 (Тіла)': 0 };
@@ -2071,18 +2112,25 @@
                     aLocCauseCounts[loc][causeStr]++;
 
                     if (d.injuries) {
-                        let epInjs = { 'Ампутація':false, 'Розрив':false, 'Уламкове':false, 'Кульове':false, 'Перелом':false, 'Опік':false, 'АКБТ':false, 'Забій':false };
+                        let epInjs = {};
                         Object.values(d.injuries).forEach(reg => {
-                            if(reg.amputation) epInjs['Ампутація'] = true;
-                            if(reg.rupture) epInjs['Розрив'] = true;
+                            if (!reg) return;
                             if(reg.shrapnel) epInjs['Уламкове'] = true;
                             if(reg.bullet) epInjs['Кульове'] = true;
+                            if(reg.amputation || reg.amp_hand || reg.amp_foot || reg.amp_fingers) epInjs['Ампутація'] = true;
                             if(reg.fracture) epInjs['Перелом'] = true;
+                            if(reg.rupture) epInjs['Розрив'] = true;
                             if(reg.burn) epInjs['Опік'] = true;
-                            if(reg.akbt) epInjs['АКБТ'] = true;
+                            if(reg.laceration) epInjs['Рвана рана'] = true;
                             if(reg.contusion) epInjs['Забій'] = true;
+                            if(reg.crush) epInjs['Краш-синдром'] = true;
+                            if(reg.tbi) epInjs['ЧМТ'] = true;
+                            if(reg.eye) epInjs['Травма ока'] = true;
+                            if(reg.akbt) epInjs['АКБТ'] = true;
+                            if(reg.barotrauma) epInjs['Баротравма'] = true;
+                            if(reg.pneumothorax) epInjs['Пневмоторакс'] = true;
                         });
-                        Object.keys(epInjs).forEach(k => { if(epInjs[k]) injuryStats[k]++; });
+                        Object.keys(epInjs).forEach(k => { if(epInjs[k]) injuryStats[k] = (injuryStats[k] || 0) + 1; });
                     }
 
                     const epEvacStr = d.evacTime || d.evacDate || '';
@@ -2179,6 +2227,8 @@
                     actLocsSev: { labels: sortByTotal(aLocSevCounts), data: aLocSevCounts },
                     locCause: { labels: sortedLocs, datasets: locCauseDatasets },
                     injuryStats,
+                    evacDaysSum,
+                    evacDaysCount,
                     evacChartDataConfig,
                     evacStatusData,
                     causeColors
@@ -3369,106 +3419,1007 @@
                     triggerNotification("Бібліотека ExcelJS ще не завантажилась. Перевірте з'єднання з Інтернетом.", "error");
                     return;
                 }
-                const workbook = new ExcelJS.Workbook();
-                workbook.creator = 'MedTactical';
-                workbook.lastModifiedBy = 'System';
-                workbook.created = new Date();
-                
-                const sheet1 = workbook.addWorksheet('Загальна статистика');
-                sheet1.columns = [
-                    { header: 'Всього епізодів', key: 'total', width: 20 },
-                    { header: 'Бойові (200)', key: 'c200', width: 15 },
-                    { header: 'Небойові (200)', key: 'c200nc', width: 15 },
-                    { header: 'Поранення (300)', key: 'cWound', width: 20 },
-                    { header: 'Бойові травми', key: 'cCombat', width: 15 },
-                    { header: 'Небойові травми', key: 'cNonCombat', width: 20 },
-                    { header: 'ЗБВ', key: 'cMia', width: 10 },
-                    { header: 'СЗЧ', key: 'cAwol', width: 10 },
-                    { header: 'Дезертирство', key: 'cDesert', width: 15 }
-                ];
-                sheet1.getRow(1).font = { bold: true };
-                sheet1.addRow({
-                    total: chartData.totalEpisodes, c200: chartData.types.c200, c200nc: chartData.types.c200nc,
-                    cWound: chartData.types.cWound, cCombat: chartData.types.cCombat, cNonCombat: chartData.types.cNonCombat,
-                    cMia: chartData.types.cMia, cAwol: chartData.types.cAwol, cDesert: chartData.types.cDesert
-                });
 
-                const sheet2 = workbook.addWorksheet('Дані для графіків');
-                sheet2.columns = [
-                    { header: 'Тип втрати', key: 'tL', width: 20 }, { header: 'К-сть', key: 'tC', width: 10 }, { header: '', key: 's1', width: 5 },
-                    { header: 'Підрозділ', key: 'uL', width: 25 }, { header: 'К-сть', key: 'uC', width: 10 }, { header: '', key: 's2', width: 5 },
-                    { header: 'Причина', key: 'cL', width: 25 }, { header: 'К-сть', key: 'cC', width: 10 }, { header: '', key: 's3', width: 5 },
-                    { header: 'Час доби', key: 'timeL', width: 15 }, { header: 'К-сть', key: 'timeC', width: 10 }
-                ];
-                sheet2.getRow(1).font = { bold: true };
+                try {
+                    const workbook = new ExcelJS.Workbook();
+                    workbook.creator = 'MedTactical Analytics';
+                    workbook.lastModifiedBy = 'MedTactical';
+                    workbook.created = new Date();
 
-                const tL = ['Бойові (200)', 'Небойові (200)', 'Бойові (300)', 'Небойові (300)', 'Поранення', 'ЗБВ', 'СЗЧ', 'Дезертирство'];
-                const tC = [chartData.types.c200, chartData.types.c200nc, chartData.types.cCombat, chartData.types.cNonCombat, chartData.types.cWound, chartData.types.cMia, chartData.types.cAwol, chartData.types.cDesert];
-                const uL = chartData.units.labels || [];
-                const cL = chartData.reasons.labels || [];
-                const timeL = chartData.time.labels || [];
+                    // Стильові палітри та константи
+                    const C_NAVY = 'FF0F172A';        // Slate 900
+                    const C_HEADER = 'FF1E293B';      // Slate 800
+                    const C_TEAL = 'FF0F766E';        // Teal 700
+                    const C_TOTAL = 'FFF1F5F9';       // Slate 100
+                    const C_WHITE = 'FFFFFFFF';
+                    const C_BORDER = 'FFE2E8F0';      // Slate 200
+                    const C_BORDER_DARK = 'FF94A3B8'; // Slate 400
 
-                const maxR = Math.max(tL.length, uL.length, cL.length, timeL.length);
-                for (let i = 0; i < maxR; i++) {
-                    const u = uL[i];
-                    let uVal = '';
-                    if (u && chartData.units.data[u]) {
-                        const d = chartData.units.data[u];
-                        uVal = (d['200'] || 0) + (d['Неб. смерть'] || 0) + (d['Поранення'] || 0) + (d['Бойове'] || 0) + (d['Небойове'] || 0) + (d['ЗБВ'] || 0) + (d['СЗЧ'] || 0) + (d['Дезертирство'] || 0);
+                    const thinBorder = {
+                        top: { style: 'thin', color: { argb: C_BORDER } },
+                        bottom: { style: 'thin', color: { argb: C_BORDER } },
+                        left: { style: 'thin', color: { argb: C_BORDER } },
+                        right: { style: 'thin', color: { argb: C_BORDER } }
+                    };
+
+                    const totalBorder = {
+                        top: { style: 'thin', color: { argb: C_BORDER_DARK } },
+                        bottom: { style: 'double', color: { argb: 'FF334155' } },
+                        left: { style: 'thin', color: { argb: C_BORDER } },
+                        right: { style: 'thin', color: { argb: C_BORDER } }
+                    };
+
+                    const applyAutoFit = (ws, minWidths = {}) => {
+                        ws.columns.forEach((col, idx) => {
+                            let maxLen = 0;
+                            col.eachCell({ includeEmpty: false }, (cell) => {
+                                const v = cell.value;
+                                if (v !== null && v !== undefined) {
+                                    const s = typeof v === 'object' && v.result !== undefined ? String(v.result) : (typeof v === 'object' && v.formula ? '12345' : String(v));
+                                    if (s.length > maxLen) maxLen = s.length;
+                                }
+                            });
+                            const colNum = idx + 1;
+                            const minW = minWidths[colNum] || 12;
+                            col.width = Math.min(Math.max(maxLen + 3, minW), 45);
+                        });
+                    };
+
+                    // Розрахунок показників евакуації та черги (узгоджено з аналітичними підсумками)
+                    const fromMs = anDateFrom ? parseSafeDate(anDateFrom.includes(':') ? anDateFrom : `${anDateFrom} 00:00:00`) : 0;
+                    const toMs = anDateTo ? parseSafeDate(anDateTo.includes(':') ? anDateTo : `${anDateTo} 23:59:59`) : 0;
+
+                    const getWaitDuration = (dateStr) => {
+                        const epMs = parseSafeDate(dateStr);
+                        if (!epMs || epMs <= 0) return '—';
+                        const nowMs = toMs > 0 ? toMs : Date.now();
+                        const diffHours = Math.max(0, Math.floor((nowMs - epMs) / (1000 * 60 * 60)));
+                        const days = Math.floor(diffHours / 24);
+                        const hours = diffHours % 24;
+                        if (days > 0) return `${days} дн. ${hours} год.`;
+                        return `${hours} год.`;
+                    };
+
+                    let allEps = episodes;
+                    if (anShowLatest) {
+                        const map = new Map();
+                        [...episodes].sort((a, b) => parseSafeDate(a.date) - parseSafeDate(b.date)).forEach(ep => map.set(ep.soldierId, ep));
+                        allEps = Array.from(map.values());
                     }
-                    sheet2.addRow({
-                        tL: tL[i] || '', tC: tC[i] !== undefined ? tC[i] : '',
-                        uL: u || '', uC: uVal,
-                        cL: cL[i] || '', cC: cL[i] ? chartData.reasons.data[cL[i]] : '',
-                        timeL: timeL[i] || '', timeC: timeL[i] ? chartData.time.timeMap[timeL[i]] : ''
+
+                    const actualEvacWoundedEps = [];
+                    const actualEvacDeadEps = [];
+                    const globalNotEvacWoundedEps = [];
+                    const globalNotEvacDeadEps = [];
+                    const globalNotEvacMiaEps = [];
+                    const evacQueueEps = [];
+
+                    allEps.forEach(ep => {
+                        const epTime = parseSafeDate(ep.date);
+                        if (toMs > 0 && epTime > toMs) return;
+
+                        if (anSector !== "all") {
+                            if (ep.actualLoc !== anSector && ep.docLoc !== anSector) return;
+                        }
+
+                        const effType = groupAnalytics ? (ep.lossType === 'Зниклий безвісти (ЗБВ)' ? 'Загибель (200)' : ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType) : (ep.lossType === 'Бойове травмування (300)' ? 'Поранення (300)' : ep.lossType);
+                        const isWounded = isAny300(effType);
+                        const isDead = isAny200(effType);
+                        const isMia = effType === 'Зниклий безвісти (ЗБВ)';
+
+                        let okUdp = anUdp === "all" ? true : (anUdp === "yes" ? ep.inUdp : !ep.inUdp);
+                        if (okUdp) {
+                            const epEvacMs = parseSafeDate(ep.evacTime || ep.evacDate || '');
+                            let isHistoricallyEvacuated = (ep.evacStatus === 'Евакуйований');
+                            if (toMs > 0 && epEvacMs > 0 && epEvacMs > toMs) {
+                                isHistoricallyEvacuated = false;
+                            }
+
+                            if (isHistoricallyEvacuated && epEvacMs > 0) {
+                                let okFrom = !fromMs || epEvacMs >= fromMs;
+                                let okTo = !toMs || epEvacMs <= toMs;
+                                if (okFrom && okTo) {
+                                    if (isWounded) actualEvacWoundedEps.push(ep);
+                                    if (isDead) actualEvacDeadEps.push(ep);
+                                }
+                            }
+
+                            let historicalEvacStatus = ep.evacStatus;
+                            if (historicalEvacStatus === 'Евакуйований' && toMs > 0 && epEvacMs > 0 && epEvacMs > toMs) {
+                                historicalEvacStatus = 'Не евакуйований';
+                            }
+
+                            if (historicalEvacStatus === 'Не евакуйований') {
+                                if (isWounded) globalNotEvacWoundedEps.push(ep);
+                                if (isDead) globalNotEvacDeadEps.push(ep);
+                                if (isMia) globalNotEvacMiaEps.push(ep);
+                                evacQueueEps.push(ep);
+                            }
+                        }
                     });
+
+                    const activeCritCount = globalNotEvacWoundedEps.filter(e => e.severity === 'Критичний' || e.severity === 'Важкий').length;
+
+                    // Пріоритизація черги на евакуацію
+                    const getPriorityInfo = (ep) => {
+                        const lossType = ep.lossType || '';
+                        const sev = ep.severity || '';
+                        if (isAny300(lossType)) {
+                            if (sev === 'Критичний') return { rank: 1, label: '🔴 ПРІОРИТЕТ 1 (КРИТИЧНИЙ)', fill: 'FFFFE4E6', fg: 'FF991B1B' };
+                            if (sev === 'Важкий') return { rank: 2, label: '🟠 ПРІОРИТЕТ 2 (ВАЖКИЙ)', fill: 'FFFFEDD5', fg: 'FF9A3412' };
+                            if (sev === 'Середній') return { rank: 3, label: '🟡 ПРІОРИТЕТ 3 (СЕРЕДНІЙ)', fill: 'FFFEF9C3', fg: 'FF854D0E' };
+                            if (sev === 'Легкий') return { rank: 4, label: '🟢 ПРІОРИТЕТ 4 (ЛЕГКИЙ)', fill: 'FFECFDF5', fg: 'FF065F46' };
+                            return { rank: 5, label: '🟡 ПРІОРИТЕТ 5 (300)', fill: 'FFFEF3C7', fg: 'FF92400E' };
+                        }
+                        if (isAny200(lossType)) return { rank: 6, label: '⚫ ТІЛА (200)', fill: 'FFF1F5F9', fg: 'FF334155' };
+                        if (lossType === 'Зниклий безвісти (ЗБВ)') return { rank: 7, label: '🔵 ЗБВ (НЕ ВСТАНОВЛЕНО)', fill: 'FFEFF6FF', fg: 'FF1E40AF' };
+                        return { rank: 8, label: '⚪ ІНШЕ', fill: 'FFFFFFFF', fg: 'FF0F172A' };
+                    };
+
+                    const sortedEvacQueue = [...evacQueueEps].sort((a, b) => {
+                        const pA = getPriorityInfo(a).rank;
+                        const pB = getPriorityInfo(b).rank;
+                        if (pA !== pB) return pA - pB;
+                        return parseSafeDate(a.date) - parseSafeDate(b.date);
+                    });
+
+                    // ==========================================
+                    // 1. АРКУШ: ЗВЕДЕНА ДОВІДКА (DASHBOARD & KPI)
+                    // ==========================================
+                    const wsSummary = workbook.addWorksheet('Зведена довідка', { views: [{ showGridLines: true }] });
+
+                    // Заголовок-банер
+                    wsSummary.mergeCells('A1:D1');
+                    const titleCell = wsSummary.getCell('A1');
+                    titleCell.value = 'АНАЛІТИЧНИЙ ЗВІТ З ОБЛІКУ ВТРАТ ТА ЕВАКУАЦІЇ';
+                    titleCell.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: C_WHITE } };
+                    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_NAVY } };
+                    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    wsSummary.getRow(1).height = 30;
+
+                    // Метадані фільтрів
+                    const metaData = [
+                        ['Період звіту:', `${anDateFrom || 'Вся історія'} — ${anDateTo || 'Поточний час'}`],
+                        ['Сектор / Локація:', anSector === 'all' ? 'Всі сектори' : anSector],
+                        ['Умови виконання (УПД):', anUdp === 'all' ? 'Всі епізоди' : (anUdp === 'yes' ? 'Тільки бойове розпорядження (на УПД)' : 'Поза бойовим розпорядженням (без УПД)')],
+                        ['Дата формування:', new Date().toLocaleString('uk-UA')],
+                        ['Всього епізодів у вибірці:', `${chartData.totalEpisodes} чол.`]
+                    ];
+                    metaData.forEach((item) => {
+                        const r = wsSummary.addRow([item[0], item[1]]);
+                        r.getCell(1).font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF475569' } };
+                        r.getCell(2).font = { name: 'Segoe UI', size: 9, color: { argb: 'FF0F172A' } };
+                    });
+
+                    wsSummary.addRow([]);
+
+                    // Таблиця 1: Ключові показники категорій втрат
+                    const rSec1 = wsSummary.addRow(['1. РОЗПОДІЛ ВТРАТ ЗА КАТЕГОРІЯМИ']);
+                    wsSummary.mergeCells(`A${rSec1.number}:C${rSec1.number}`);
+                    rSec1.getCell(1).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: C_WHITE } };
+                    rSec1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TEAL } };
+                    rSec1.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    rSec1.height = 22;
+
+                    const rHead1 = wsSummary.addRow(['Категорія втрат', 'Кількість (чол.)', '% від загалу']);
+                    rHead1.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    rHead1.height = 20;
+
+                    const catStartRow = wsSummary.rowCount + 1;
+                    const catItems = [
+                        ['Загибель (200, бойові)', chartData.types?.c200 || 0],
+                        ['Небойова смерть (200)', chartData.types?.c200nc || 0],
+                        ['Поранення (300)', chartData.types?.cWound || 0],
+                        ['Бойове травмування (300)', chartData.types?.cCombat || 0],
+                        ['Небойове травмування (300)', chartData.types?.cNonCombat || 0],
+                        ['Зниклий безвісти (ЗБВ)', chartData.types?.cMia || 0],
+                        ['Самовільне залишення частини (СЗЧ)', chartData.types?.cAwol || 0],
+                        ['Дезертирство', chartData.types?.cDesert || 0]
+                    ];
+                    const catEndRow = catStartRow + catItems.length - 1;
+                    const catTotalRow = catEndRow + 1;
+
+                    catItems.forEach((cat, idx) => {
+                        const curR = catStartRow + idx;
+                        const r = wsSummary.addRow([
+                            cat[0],
+                            cat[1],
+                            { formula: `IF($B$${catTotalRow}>0, B${curR}/$B$${catTotalRow}, 0)` }
+                        ]);
+                        r.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+                        r.getCell(2).alignment = { vertical: 'middle', horizontal: 'right' };
+                        r.getCell(2).numFmt = '#,##0';
+                        r.getCell(3).alignment = { vertical: 'middle', horizontal: 'right' };
+                        r.getCell(3).numFmt = '0.0%';
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    });
+
+                    const rTotal1 = wsSummary.addRow([
+                        'РАЗОМ ВТРАТ:',
+                        { formula: `SUM(B${catStartRow}:B${catEndRow})` },
+                        { formula: `IF(B${catTotalRow}>0, 1, 0)` }
+                    ]);
+                    rTotal1.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TOTAL } };
+                        cell.border = totalBorder;
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                    });
+                    rTotal1.getCell(2).numFmt = '#,##0';
+                    rTotal1.getCell(3).numFmt = '0.0%';
+                    rTotal1.height = 22;
+
+                    wsSummary.addRow([]);
+
+                    // Таблиця 2: Ступінь важкості поранених (300)
+                    const rSec2 = wsSummary.addRow(['2. СТУПІНЬ ВАЖКОСТІ ПОРАНЕНИХ ТА ТРАВМОВАНИХ (300)']);
+                    wsSummary.mergeCells(`A${rSec2.number}:C${rSec2.number}`);
+                    rSec2.getCell(1).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: C_WHITE } };
+                    rSec2.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TEAL } };
+                    rSec2.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    rSec2.height = 22;
+
+                    const rHead2 = wsSummary.addRow(['Ступінь важкості', 'Кількість (чол.)', '% серед 300']);
+                    rHead2.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    rHead2.height = 20;
+
+                    const sevStartRow = wsSummary.rowCount + 1;
+                    const sevItems = [
+                        ['Критичний', chartData.severity?.['Критичний'] || 0],
+                        ['Важкий', chartData.severity?.['Важкий'] || 0],
+                        ['Середній', chartData.severity?.['Середній'] || 0],
+                        ['Легкий', chartData.severity?.['Легкий'] || 0]
+                    ];
+                    const sevEndRow = sevStartRow + sevItems.length - 1;
+                    const sevTotalRow = sevEndRow + 1;
+
+                    sevItems.forEach((item, idx) => {
+                        const curR = sevStartRow + idx;
+                        const r = wsSummary.addRow([
+                            item[0],
+                            item[1],
+                            { formula: `IF($B$${sevTotalRow}>0, B${curR}/$B$${sevTotalRow}, 0)` }
+                        ]);
+                        r.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+                        r.getCell(2).alignment = { vertical: 'middle', horizontal: 'right' };
+                        r.getCell(2).numFmt = '#,##0';
+                        r.getCell(3).alignment = { vertical: 'middle', horizontal: 'right' };
+                        r.getCell(3).numFmt = '0.0%';
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    });
+
+                    const rTotal2 = wsSummary.addRow([
+                        'Всього поранених (300):',
+                        { formula: `SUM(B${sevStartRow}:B${sevEndRow})` },
+                        { formula: `IF(B${sevTotalRow}>0, 1, 0)` }
+                    ]);
+                    rTotal2.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TOTAL } };
+                        cell.border = totalBorder;
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                    });
+                    rTotal2.getCell(2).numFmt = '#,##0';
+                    rTotal2.getCell(3).numFmt = '0.0%';
+                    rTotal2.height = 22;
+
+                    wsSummary.addRow([]);
+
+                    // Таблиця 3: Стан евакуації та черга
+                    const rSec3 = wsSummary.addRow(['3. СТАТИСТИКА ЕВАКУАЦІЇ ТА ЧЕРГА']);
+                    wsSummary.mergeCells(`A${rSec3.number}:D${rSec3.number}`);
+                    rSec3.getCell(1).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: C_WHITE } };
+                    rSec3.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TEAL } };
+                    rSec3.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    rSec3.height = 22;
+
+                    const rHead3 = wsSummary.addRow(['Показник', 'Поранені (300)', 'Загиблі (200)', 'Зниклі безвісти (ЗБВ)']);
+                    rHead3.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'center' };
+                        cell.border = thinBorder;
+                    });
+                    rHead3.height = 20;
+
+                    const evacRows = [
+                        ['Евакуйовано за звітний період', actualEvacWoundedEps.length, actualEvacDeadEps.length, '—'],
+                        ['Залишаються неевакуйованими (в черзі)', globalNotEvacWoundedEps.length, globalNotEvacDeadEps.length, globalNotEvacMiaEps.length],
+                        ['З них потребують термінової евакуації (Важкі / Критичні)', activeCritCount, '—', '—']
+                    ];
+                    evacRows.forEach(rowVals => {
+                        const r = wsSummary.addRow(rowVals);
+                        r.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+                        r.getCell(2).alignment = { vertical: 'middle', horizontal: 'center' };
+                        r.getCell(3).alignment = { vertical: 'middle', horizontal: 'center' };
+                        r.getCell(4).alignment = { vertical: 'middle', horizontal: 'center' };
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    });
+
+                    wsSummary.addRow([]);
+
+                    // Таблиця 4: Середній час евакуації
+                    const rSec4 = wsSummary.addRow(['4. СЕРЕДНІЙ ЧАС ДО ЕВАКУАЦІЇ (ДНІВ)']);
+                    wsSummary.mergeCells(`A${rSec4.number}:B${rSec4.number}`);
+                    rSec4.getCell(1).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: C_WHITE } };
+                    rSec4.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TEAL } };
+                    rSec4.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    rSec4.height = 22;
+
+                    const rHead4 = wsSummary.addRow(['Категорія / Ступінь важкості', 'Середній час (днів)']);
+                    rHead4.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    rHead4.height = 20;
+
+                    const evacTimeCats = ['Критичний', 'Важкий', 'Середній', 'Легкий', '200 (Тіла)'];
+                    const evacConfigData = chartData.evacChartDataConfig?.datasets?.[0]?.data || [];
+                    evacTimeCats.forEach((cat, idx) => {
+                        let days = 0;
+                        if (chartData.evacDaysCount && chartData.evacDaysSum && chartData.evacDaysCount[cat] > 0) {
+                            days = +(chartData.evacDaysSum[cat] / chartData.evacDaysCount[cat]).toFixed(1);
+                        } else if (evacConfigData[idx] !== undefined) {
+                            days = Number(evacConfigData[idx]) || 0;
+                        }
+                        const r = wsSummary.addRow([cat, days]);
+                        r.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+                        r.getCell(2).alignment = { vertical: 'middle', horizontal: 'right' };
+                        r.getCell(2).numFmt = '0.0';
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    });
+
+                    applyAutoFit(wsSummary, { 1: 34, 2: 18, 3: 18, 4: 22 });
+
+                    // ==========================================
+                    // 2. АРКУШ: ЧЕРГА НА ЕВАКУАЦІЮ (PRIORITY EVAC LIST)
+                    // ==========================================
+                    const wsQueue = workbook.addWorksheet('Черга на евакуацію', {
+                        views: [{ showGridLines: true, state: 'frozen', xSplit: 0, ySplit: 2 }]
+                    });
+
+                    // Заголовок аркуша
+                    const qTitle = wsQueue.addRow(['ОПЕРАТИВНА ЧЕРГА НА ЕВАКУАЦІЮ ТА ПОШУК (ПОТОЧНИЙ СТАТУС: НЕ ЕВАКУЙОВАНО)']);
+                    wsQueue.mergeCells('A1:L1');
+                    qTitle.getCell(1).font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: C_WHITE } };
+                    qTitle.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF991B1B' } };
+                    qTitle.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    qTitle.height = 26;
+
+                    const qHeaders = [
+                        '№ з/п', 'Терміновість / Пріоритет', 'Час очікування', 'Дата події', 'Звання',
+                        'ПІБ', 'Позивний', 'Підрозділ', 'Фактичне місце', 'Місце за док.',
+                        'Діагноз / Поранення', 'Примітки / Координати / Зв\'язок'
+                    ];
+                    const qHeadRow = wsQueue.addRow(qHeaders);
+                    qHeadRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: (col === 1 || col === 2 || col === 3 || col === 4) ? 'center' : 'left' };
+                        cell.border = thinBorder;
+                    });
+                    qHeadRow.height = 22;
+
+                    if (sortedEvacQueue.length === 0) {
+                        const emptyRow = wsQueue.addRow(['Всі поранені та постраждалі евакуйовані або немає неевакуйованих у вибірці', '', '', '', '', '', '', '', '', '', '', '']);
+                        wsQueue.mergeCells(`A${emptyRow.number}:L${emptyRow.number}`);
+                        emptyRow.getCell(1).font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FF059669' } };
+                        emptyRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+                        emptyRow.height = 24;
+                    } else {
+                        sortedEvacQueue.forEach((ep, idx) => {
+                            const s = soldiers.find(x => x.id === ep.soldierId) || {};
+                            const pInfo = getPriorityInfo(ep);
+                            const waitTime = getWaitDuration(ep.date);
+                            const rowVals = [
+                                idx + 1,
+                                pInfo.label,
+                                waitTime,
+                                ep.date ? String(ep.date).replace('T', ' ') : '',
+                                s.rank || '',
+                                s.name || '',
+                                s.callsign ? formatCallsignUI(s.callsign) : '',
+                                s.unit || ep.unit || '',
+                                ep.actualLoc || '',
+                                ep.docLoc || '',
+                                getInjStrUI(ep.injuries) || ep.cause || ep.lossType || '',
+                                [ep.notes || '', ep.description || ''].filter(Boolean).join(' | ')
+                            ];
+                            const r = wsQueue.addRow(rowVals);
+                            r.height = 20;
+
+                            r.eachCell((cell, col) => {
+                                cell.font = { name: 'Segoe UI', size: 9 };
+                                cell.border = thinBorder;
+                                if (col === 1 || col === 3 || col === 4) {
+                                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                                } else if (col === 2) {
+                                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                                    cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: pInfo.fg } };
+                                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: pInfo.fill } };
+                                } else {
+                                    cell.alignment = { vertical: 'middle', horizontal: 'left' };
+                                }
+                            });
+                            if (pInfo.rank === 1 || pInfo.rank === 2) {
+                                r.eachCell((cell, col) => {
+                                    if (col !== 2) {
+                                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: pInfo.rank === 1 ? 'FFFFF1F2' : 'FFFFF7ED' } };
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    wsQueue.autoFilter = { from: 'A2', to: 'L2' };
+                    applyAutoFit(wsQueue, {
+                        1: 8, 2: 28, 3: 16, 4: 18, 5: 14, 6: 25,
+                        7: 15, 8: 18, 9: 20, 10: 20, 11: 30, 12: 35
+                    });
+
+                    // ==========================================
+                    // 3. АРКУШ: ПІДРОЗДІЛИ ТА СЕКТОРИ
+                    // ==========================================
+                    const wsUnits = workbook.addWorksheet('Підрозділи та Сектори', { views: [{ showGridLines: true }] });
+
+                    // Секція 1: Підрозділи
+                    const uSec1 = wsUnits.addRow(['РОЗПОДІЛ ВТРАТ ЗА ПІДРОЗДІЛАМИ']);
+                    wsUnits.mergeCells('A1:J1');
+                    uSec1.getCell(1).font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: C_WHITE } };
+                    uSec1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_NAVY } };
+                    uSec1.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    uSec1.height = 25;
+
+                    const uHeaders = ['Підрозділ', '200 (Бойові)', '200 (Небойові)', '300 (Поранення)', '300 (Бойові травми)', '300 (Небойові)', 'ЗБВ', 'СЗЧ / Дезерт.', 'Всього', '% від загалу'];
+                    const uHeadRow = wsUnits.addRow(uHeaders);
+                    uHeadRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    uHeadRow.height = 22;
+
+                    const uLabels = chartData.units.labels || [];
+                    const uStartRow = 3;
+                    const uEndRow = uStartRow + Math.max(uLabels.length, 1) - 1;
+                    const uTotRow = uEndRow + 1;
+
+                    if (uLabels.length === 0) {
+                        const r = wsUnits.addRow(['Немає даних', 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    } else {
+                        uLabels.forEach((unit, idx) => {
+                            const d = chartData.units.data[unit] || {};
+                            const curR = uStartRow + idx;
+                            const r = wsUnits.addRow([
+                                unit,
+                                d['200'] || 0,
+                                d['Неб. смерть'] || 0,
+                                d['Поранення'] || 0,
+                                d['Бойове'] || 0,
+                                d['Небойове'] || 0,
+                                d['ЗБВ'] || 0,
+                                (d['СЗЧ'] || 0) + (d['Дезертирство'] || 0),
+                                { formula: `SUM(B${curR}:H${curR})` },
+                                { formula: `IF($I$${uTotRow}>0, I${curR}/$I$${uTotRow}, 0)` }
+                            ]);
+                            r.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+                            for (let c = 2; c <= 9; c++) {
+                                r.getCell(c).alignment = { vertical: 'middle', horizontal: 'right' };
+                                r.getCell(c).numFmt = '#,##0';
+                            }
+                            r.getCell(10).alignment = { vertical: 'middle', horizontal: 'right' };
+                            r.getCell(10).numFmt = '0.0%';
+                            r.eachCell(cell => { cell.font = { name: 'Segoe UI', size: 9.5 }; cell.border = thinBorder; });
+                        });
+                    }
+
+                    const uTotalRow = wsUnits.addRow([
+                        'РАЗОМ ПО ПІДРОЗДІЛАХ:',
+                        { formula: `SUM(B${uStartRow}:B${uEndRow})` },
+                        { formula: `SUM(C${uStartRow}:C${uEndRow})` },
+                        { formula: `SUM(D${uStartRow}:D${uEndRow})` },
+                        { formula: `SUM(E${uStartRow}:E${uEndRow})` },
+                        { formula: `SUM(F${uStartRow}:F${uEndRow})` },
+                        { formula: `SUM(G${uStartRow}:G${uEndRow})` },
+                        { formula: `SUM(H${uStartRow}:H${uEndRow})` },
+                        { formula: `SUM(I${uStartRow}:I${uEndRow})` },
+                        { formula: `IF(I${uTotRow}>0, 1, 0)` }
+                    ]);
+                    uTotalRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TOTAL } };
+                        cell.border = totalBorder;
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                    });
+                    for (let c = 2; c <= 9; c++) uTotalRow.getCell(c).numFmt = '#,##0';
+                    uTotalRow.getCell(10).numFmt = '0.0%';
+                    uTotalRow.height = 22;
+
+                    wsUnits.addRow([]);
+                    wsUnits.addRow([]);
+
+                    // Секція 2: Локації / Сектори
+                    const locSecRow = wsUnits.addRow(['РОЗПОДІЛ ВТРАТ ЗА ФАКТИЧНИМИ ЛОКАЦІЯМИ / СЕКТОРАМИ']);
+                    const locSecNum = locSecRow.number;
+                    wsUnits.mergeCells(`A${locSecNum}:J${locSecNum}`);
+                    locSecRow.getCell(1).font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: C_WHITE } };
+                    locSecRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TEAL } };
+                    locSecRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    locSecRow.height = 25;
+
+                    const locHeaders = ['Локація / Сектор', '200 (Бойові)', '200 (Небойові)', '300 (Поранення)', '300 (Бойові травми)', '300 (Небойові)', 'ЗБВ', 'СЗЧ / Дезерт.', 'Всього', '% від загалу'];
+                    const locHeadRow = wsUnits.addRow(locHeaders);
+                    locHeadRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    locHeadRow.height = 22;
+
+                    const locLabels = chartData.actLocs.labels || [];
+                    const locStartRow = locHeadRow.number + 1;
+                    const locEndRow = locStartRow + Math.max(locLabels.length, 1) - 1;
+                    const locTotRow = locEndRow + 1;
+
+                    if (locLabels.length === 0) {
+                        const r = wsUnits.addRow(['Немає даних', 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    } else {
+                        locLabels.forEach((loc, idx) => {
+                            const d = chartData.actLocs.data[loc] || {};
+                            const curR = locStartRow + idx;
+                            const r = wsUnits.addRow([
+                                loc,
+                                d['200'] || 0,
+                                d['Неб. смерть'] || 0,
+                                d['Поранення'] || 0,
+                                d['Бойове'] || 0,
+                                d['Небойове'] || 0,
+                                d['ЗБВ'] || 0,
+                                (d['СЗЧ'] || 0) + (d['Дезертирство'] || 0),
+                                { formula: `SUM(B${curR}:H${curR})` },
+                                { formula: `IF($I$${locTotRow}>0, I${curR}/$I$${locTotRow}, 0)` }
+                            ]);
+                            r.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+                            for (let c = 2; c <= 9; c++) {
+                                r.getCell(c).alignment = { vertical: 'middle', horizontal: 'right' };
+                                r.getCell(c).numFmt = '#,##0';
+                            }
+                            r.getCell(10).alignment = { vertical: 'middle', horizontal: 'right' };
+                            r.getCell(10).numFmt = '0.0%';
+                            r.eachCell(cell => { cell.font = { name: 'Segoe UI', size: 9.5 }; cell.border = thinBorder; });
+                        });
+                    }
+
+                    const locTotalRow = wsUnits.addRow([
+                        'РАЗОМ ПО СЕКТОРАХ:',
+                        { formula: `SUM(B${locStartRow}:B${locEndRow})` },
+                        { formula: `SUM(C${locStartRow}:C${locEndRow})` },
+                        { formula: `SUM(D${locStartRow}:D${locEndRow})` },
+                        { formula: `SUM(E${locStartRow}:E${locEndRow})` },
+                        { formula: `SUM(F${locStartRow}:F${locEndRow})` },
+                        { formula: `SUM(G${locStartRow}:G${locEndRow})` },
+                        { formula: `SUM(H${locStartRow}:H${locEndRow})` },
+                        { formula: `SUM(I${locStartRow}:I${locEndRow})` },
+                        { formula: `IF(I${locTotRow}>0, 1, 0)` }
+                    ]);
+                    locTotalRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TOTAL } };
+                        cell.border = totalBorder;
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                    });
+                    for (let c = 2; c <= 9; c++) locTotalRow.getCell(c).numFmt = '#,##0';
+                    locTotalRow.getCell(10).numFmt = '0.0%';
+                    locTotalRow.height = 22;
+
+                    applyAutoFit(wsUnits, { 1: 26, 9: 14, 10: 14 });
+
+                    // ==========================================
+                    // 4. АРКУШ: ПРИЧИНИ ТА ТРАВМИ
+                    // ==========================================
+                    const wsCauses = workbook.addWorksheet('Причини та Травми', { views: [{ showGridLines: true }] });
+
+                    // Секція 1: Причини уражень
+                    const cSec1 = wsCauses.addRow(['1. ПРИЧИНИ УРАЖЕНЬ ТА ОБСТАВИНИ']);
+                    wsCauses.mergeCells('A1:G1');
+                    cSec1.getCell(1).font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: C_WHITE } };
+                    cSec1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_NAVY } };
+                    cSec1.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    cSec1.height = 25;
+
+                    const cHeaders = ['Причина / Тип зброї', '200 (Загибель)', '300 (Поранення)', '300 (Травми)', 'ЗБВ', 'Всього', '% від загалу'];
+                    const cHeadRow = wsCauses.addRow(cHeaders);
+                    cHeadRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    cHeadRow.height = 22;
+
+                    const reasonLabels = chartData.reasons.labels || [];
+                    const cStartRow = 3;
+                    const cEndRow = cStartRow + Math.max(reasonLabels.length, 1) - 1;
+                    const cTotRow = cEndRow + 1;
+
+                    if (reasonLabels.length === 0) {
+                        const r = wsCauses.addRow(['Немає даних', 0, 0, 0, 0, 0, 0]);
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    } else {
+                        reasonLabels.forEach((reason, idx) => {
+                            const d = chartData.reasons.data[reason] || {};
+                            const curR = cStartRow + idx;
+                            const r = wsCauses.addRow([
+                                reason,
+                                (d['200'] || 0) + (d['Неб. смерть'] || 0),
+                                d['Поранення'] || 0,
+                                (d['Бойове'] || 0) + (d['Небойове'] || 0),
+                                d['ЗБВ'] || 0,
+                                { formula: `SUM(B${curR}:E${curR})` },
+                                { formula: `IF($F$${cTotRow}>0, F${curR}/$F$${cTotRow}, 0)` }
+                            ]);
+                            r.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+                            for (let c = 2; c <= 6; c++) {
+                                r.getCell(c).alignment = { vertical: 'middle', horizontal: 'right' };
+                                r.getCell(c).numFmt = '#,##0';
+                            }
+                            r.getCell(7).alignment = { vertical: 'middle', horizontal: 'right' };
+                            r.getCell(7).numFmt = '0.0%';
+                            r.eachCell(cell => { cell.font = { name: 'Segoe UI', size: 9.5 }; cell.border = thinBorder; });
+                        });
+                    }
+
+                    const cTotalRow = wsCauses.addRow([
+                        'РАЗОМ ЗА ПРИЧИНАМИ:',
+                        { formula: `SUM(B${cStartRow}:B${cEndRow})` },
+                        { formula: `SUM(C${cStartRow}:C${cEndRow})` },
+                        { formula: `SUM(D${cStartRow}:D${cEndRow})` },
+                        { formula: `SUM(E${cStartRow}:E${cEndRow})` },
+                        { formula: `SUM(F${cStartRow}:F${cEndRow})` },
+                        { formula: `IF(F${cTotRow}>0, 1, 0)` }
+                    ]);
+                    cTotalRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TOTAL } };
+                        cell.border = totalBorder;
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                    });
+                    for (let c = 2; c <= 6; c++) cTotalRow.getCell(c).numFmt = '#,##0';
+                    cTotalRow.getCell(7).numFmt = '0.0%';
+                    cTotalRow.height = 22;
+
+                    wsCauses.addRow([]);
+                    wsCauses.addRow([]);
+
+                    // Секція 2: Характер уражень (Травми)
+                    const injSecRow = wsCauses.addRow(['2. ХАРАКТЕР БОЙОВИХ УРАЖЕНЬ ТА ТРАВМ']);
+                    const injSecNum = injSecRow.number;
+                    wsCauses.mergeCells(`A${injSecNum}:C${injSecNum}`);
+                    injSecRow.getCell(1).font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: C_WHITE } };
+                    injSecRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TEAL } };
+                    injSecRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    injSecRow.height = 25;
+
+                    const injHeaders = ['Вид ураження / Травма', 'Кількість уражень', '% серед усіх уражень'];
+                    const injHeadRow = wsCauses.addRow(injHeaders);
+                    injHeadRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    injHeadRow.height = 22;
+
+                    const injStats = chartData.injuryStats || {};
+                    const sortedInjKeys = Object.keys(injStats).sort((a, b) => injStats[b] - injStats[a]);
+                    const injStartRow = injHeadRow.number + 1;
+                    const injEndRow = injStartRow + Math.max(sortedInjKeys.length, 1) - 1;
+                    const injTotRow = injEndRow + 1;
+
+                    if (sortedInjKeys.length === 0) {
+                        const r = wsCauses.addRow(['Немає даних', 0, 0]);
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    } else {
+                        sortedInjKeys.forEach((key, idx) => {
+                            const curR = injStartRow + idx;
+                            const r = wsCauses.addRow([
+                                key,
+                                injStats[key] || 0,
+                                { formula: `IF($B$${injTotRow}>0, B${curR}/$B$${injTotRow}, 0)` }
+                            ]);
+                            r.getCell(1).alignment = { vertical: 'middle', horizontal: 'left' };
+                            r.getCell(2).alignment = { vertical: 'middle', horizontal: 'right' };
+                            r.getCell(2).numFmt = '#,##0';
+                            r.getCell(3).alignment = { vertical: 'middle', horizontal: 'right' };
+                            r.getCell(3).numFmt = '0.0%';
+                            r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                        });
+                    }
+
+                    const injTotalRow = wsCauses.addRow([
+                        'РАЗОМ УРАЖЕНЬ:',
+                        { formula: `SUM(B${injStartRow}:B${injEndRow})` },
+                        { formula: `IF(B${injTotRow}>0, 1, 0)` }
+                    ]);
+                    injTotalRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TOTAL } };
+                        cell.border = totalBorder;
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'right' };
+                    });
+                    injTotalRow.getCell(2).numFmt = '#,##0';
+                    injTotalRow.getCell(3).numFmt = '0.0%';
+                    injTotalRow.height = 22;
+
+                    wsCauses.addRow([]);
+                    wsCauses.addRow([]);
+
+                    // Секція 3: Годинна активність (24 години)
+                    const timeSecRow = wsCauses.addRow(['3. РОЗПОДІЛ АКТИВНОСТІ ЗА ГОДИНАМИ ДОБИ']);
+                    const timeSecNum = timeSecRow.number;
+                    wsCauses.mergeCells(`A${timeSecNum}:F${timeSecNum}`);
+                    timeSecRow.getCell(1).font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: C_WHITE } };
+                    timeSecRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_NAVY } };
+                    timeSecRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    timeSecRow.height = 25;
+
+                    const timeHeaders = ['Година доби', '200 (Загибель)', '300 (Поранення / Травми)', 'ЗБВ', 'СЗЧ / Дезертирство', 'Всього за годину'];
+                    const timeHeadRow = wsCauses.addRow(timeHeaders);
+                    timeHeadRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'center' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    timeHeadRow.height = 22;
+
+                    const timeLabels = chartData.time.labels || [];
+                    const timeMap = chartData.time.timeMap || {};
+                    const timeStartRow = timeHeadRow.number + 1;
+                    const timeEndRow = timeStartRow + timeLabels.length - 1;
+
+                    timeLabels.forEach((hr, idx) => {
+                        const d = timeMap[hr] || {};
+                        const curR = timeStartRow + idx;
+                        const r = wsCauses.addRow([
+                            hr,
+                            (d['200'] || 0) + (d['Неб. смерть'] || 0),
+                            (d['Поранення'] || 0) + (d['Бойове'] || 0) + (d['Небойове'] || 0),
+                            d['ЗБВ'] || 0,
+                            (d['СЗЧ'] || 0) + (d['Дезертирство'] || 0),
+                            { formula: `SUM(B${curR}:E${curR})` }
+                        ]);
+                        r.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+                        for (let c = 2; c <= 6; c++) {
+                            r.getCell(c).alignment = { vertical: 'middle', horizontal: 'right' };
+                            r.getCell(c).numFmt = '#,##0';
+                        }
+                        r.eachCell(cell => { cell.font = { name: 'Segoe UI', size: 9.5 }; cell.border = thinBorder; });
+                    });
+
+                    const timeTotalRow = wsCauses.addRow([
+                        'РАЗОМ ЗА ДОБУ:',
+                        { formula: `SUM(B${timeStartRow}:B${timeEndRow})` },
+                        { formula: `SUM(C${timeStartRow}:C${timeEndRow})` },
+                        { formula: `SUM(D${timeStartRow}:D${timeEndRow})` },
+                        { formula: `SUM(E${timeStartRow}:E${timeEndRow})` },
+                        { formula: `SUM(F${timeStartRow}:F${timeEndRow})` }
+                    ]);
+                    timeTotalRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TOTAL } };
+                        cell.border = totalBorder;
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'center' : 'right' };
+                    });
+                    for (let c = 2; c <= 6; c++) timeTotalRow.getCell(c).numFmt = '#,##0';
+                    timeTotalRow.height = 22;
+
+                    applyAutoFit(wsCauses, { 1: 28, 6: 16, 7: 16 });
+
+                    // ==========================================
+                    // 5. АРКУШ: ХРОНОЛОГІЯ ПО ДНЯХ
+                    // ==========================================
+                    const wsDynamics = workbook.addWorksheet('Хронологія по днях', { views: [{ showGridLines: true, state: 'frozen', xSplit: 0, ySplit: 2 }] });
+
+                    const dTitle = wsDynamics.addRow(['ХРОНОЛОГІЧНА ДИНАМІКА ВТРАТ ПО ДНЯХ']);
+                    wsDynamics.mergeCells('A1:I1');
+                    dTitle.getCell(1).font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: C_WHITE } };
+                    dTitle.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_NAVY } };
+                    dTitle.getCell(1).alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                    dTitle.height = 25;
+
+                    const dHeaders = ['Дата', '200 (Бойові)', '200 (Небойові)', '300 (Поранення)', '300 (Бойові травми)', '300 (Небойові)', 'ЗБВ', 'СЗЧ / Дезерт.', 'Всього за день'];
+                    const dHeadRow = wsDynamics.addRow(dHeaders);
+                    dHeadRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'center' : 'right' };
+                        cell.border = thinBorder;
+                    });
+                    dHeadRow.height = 22;
+
+                    const dynDates = chartData.dynamics.dates || [];
+                    const dGroups = chartData.dynamics.dGroups || {};
+                    const dynStartRow = 3;
+                    const dynEndRow = dynStartRow + Math.max(dynDates.length, 1) - 1;
+
+                    if (dynDates.length === 0) {
+                        const r = wsDynamics.addRow(['Немає даних', 0, 0, 0, 0, 0, 0, 0, 0]);
+                        r.eachCell(c => { c.font = { name: 'Segoe UI', size: 9.5 }; c.border = thinBorder; });
+                    } else {
+                        dynDates.forEach((dt, idx) => {
+                            const d = dGroups[dt] || {};
+                            const curR = dynStartRow + idx;
+                            const r = wsDynamics.addRow([
+                                dt,
+                                d['200'] || 0,
+                                d['Неб. смерть'] || 0,
+                                d['Поранення'] || 0,
+                                d['Бойове'] || 0,
+                                d['Небойове'] || 0,
+                                d['ЗБВ'] || 0,
+                                (d['СЗЧ'] || 0) + (d['Дезертирство'] || 0),
+                                { formula: `SUM(B${curR}:H${curR})` }
+                            ]);
+                            r.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+                            for (let c = 2; c <= 9; c++) {
+                                r.getCell(c).alignment = { vertical: 'middle', horizontal: 'right' };
+                                r.getCell(c).numFmt = '#,##0';
+                            }
+                            r.eachCell(cell => { cell.font = { name: 'Segoe UI', size: 9.5 }; cell.border = thinBorder; });
+                        });
+                    }
+
+                    const dynTotalRow = wsDynamics.addRow([
+                        'РАЗОМ ЗА ПЕРІОД:',
+                        { formula: `SUM(B${dynStartRow}:B${dynEndRow})` },
+                        { formula: `SUM(C${dynStartRow}:C${dynEndRow})` },
+                        { formula: `SUM(D${dynStartRow}:D${dynEndRow})` },
+                        { formula: `SUM(E${dynStartRow}:E${dynEndRow})` },
+                        { formula: `SUM(F${dynStartRow}:F${dynEndRow})` },
+                        { formula: `SUM(G${dynStartRow}:G${dynEndRow})` },
+                        { formula: `SUM(H${dynStartRow}:H${dynEndRow})` },
+                        { formula: `SUM(I${dynStartRow}:I${dynEndRow})` }
+                    ]);
+                    dynTotalRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_TOTAL } };
+                        cell.border = totalBorder;
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'center' : 'right' };
+                    });
+                    for (let c = 2; c <= 9; c++) dynTotalRow.getCell(c).numFmt = '#,##0';
+                    dynTotalRow.height = 22;
+
+                    applyAutoFit(wsDynamics, { 1: 16, 9: 18 });
+
+                    // ==========================================
+                    // 6. АРКУШ: ДЕТАЛЬНИЙ РЕЄСТР
+                    // ==========================================
+                    const wsReg = workbook.addWorksheet('Детальний реєстр', {
+                        views: [{ showGridLines: true, state: 'frozen', xSplit: 0, ySplit: 1 }]
+                    });
+
+                    const regHeaders = [
+                        '№ з/п', 'Дата та час', 'Звання', 'ПІБ', 'Позивний', 'Підрозділ',
+                        'Тип втрати', 'Важкість', 'Причина / Зброя', 'Фактичне місце',
+                        'Місце за док.', 'УПД', 'Статус евакуації / СЗЧ', 'Дата евакуації',
+                        'Зброя в наявності', 'Рапорт', 'Ураження (детально)', 'Примітки / Опис'
+                    ];
+
+                    const regHeadRow = wsReg.addRow(regHeaders);
+                    regHeadRow.eachCell((cell, col) => {
+                        cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C_WHITE } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C_HEADER } };
+                        cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'center' : 'left' };
+                        cell.border = thinBorder;
+                    });
+                    regHeadRow.height = 24;
+
+                    anFilteredEpisodes.forEach((ep, idx) => {
+                        const s = soldiers.find(x => x.id === ep.soldierId) || {};
+                        const rowVals = [
+                            idx + 1,
+                            ep.date ? String(ep.date).replace('T', ' ') : '',
+                            s.rank || '',
+                            s.name || '',
+                            s.callsign ? formatCallsignUI(s.callsign) : '',
+                            s.unit || ep.unit || '',
+                            ep.lossType || '',
+                            ep.severity || '',
+                            ep.cause || '',
+                            ep.actualLoc || '',
+                            ep.docLoc || '',
+                            ep.inUdp ? 'Так' : 'Ні',
+                            isAwol(ep.lossType) ? (ep.awolStatus || '') : (ep.evacStatus || ''),
+                            ep.evacTime ? String(ep.evacTime).replace('T', ' ') : (ep.evacDate || ''),
+                            ep.weaponStatus || '-',
+                            ep.hasReport ? `Складено (${ep.reportDate || "-"})` : "Ні",
+                            getInjStrUI(ep.injuries),
+                            ep.notes || ep.description || ''
+                        ];
+                        const r = wsReg.addRow(rowVals);
+
+                        // Колірне маркування рядка за категорією/важкістю
+                        let rowFill = null;
+                        const effType = ep.lossType || '';
+                        const sev = ep.severity || '';
+
+                        if (isAny300(effType)) {
+                            if (sev === 'Критичний') rowFill = 'FFFFE4E6';      // рожевий (rose-100)
+                            else if (sev === 'Важкий') rowFill = 'FFFFEDD5';    // помаранчевий (orange-100)
+                            else if (sev === 'Середній') rowFill = 'FFFEF9C3';  // світло-жовтий (yellow-100)
+                            else if (sev === 'Легкий') rowFill = 'FFECFDF5';    // м'ятно-зелений (emerald-50)
+                            else rowFill = 'FFFEF3C7';                          // бурштиновий (amber-100)
+                        } else if (isAny200(effType)) {
+                            rowFill = 'FFF1F5F9';                               // сталевий (slate-100)
+                        } else if (effType === 'Зниклий безвісти (ЗБВ)') {
+                            rowFill = 'FFEFF6FF';                               // блакитний (blue-50)
+                        } else if (isAwol(effType)) {
+                            rowFill = 'FFF5F3FF';                               // лавандовий (purple-50)
+                        }
+
+                        r.eachCell((cell, col) => {
+                            cell.font = { name: 'Segoe UI', size: 9 };
+                            cell.border = thinBorder;
+                            if (col === 1 || col === 2 || col === 12) {
+                                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                            } else {
+                                cell.alignment = { vertical: 'middle', horizontal: 'left' };
+                            }
+                            if (rowFill) {
+                                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+                            }
+                            // Маркування колонки статусу евакуації / СЗЧ (Колонка 13)
+                            if (col === 13) {
+                                const stVal = String(cell.value || '');
+                                if (stVal === 'Не евакуйований' || stVal.includes('Розшук')) {
+                                    cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFDC2626' } };
+                                } else if (stVal === 'Евакуйований' || stVal.includes('Повернувся')) {
+                                    cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF16A34A' } };
+                                }
+                            }
+                        });
+                    });
+
+                    const lastColLetter = 'R';
+                    wsReg.autoFilter = { from: 'A1', to: `${lastColLetter}1` };
+
+                    applyAutoFit(wsReg, {
+                        1: 8, 2: 18, 3: 15, 4: 26, 5: 16, 6: 20,
+                        7: 22, 8: 14, 9: 22, 10: 22, 11: 20, 12: 8,
+                        13: 20, 14: 18, 15: 16, 16: 18, 17: 35, 18: 30
+                    });
+
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const link = document.createElement("a");
+                    const objUrl = URL.createObjectURL(blob);
+                    link.href = objUrl;
+                    const secTag = anSector === 'all' ? 'Всі_сектори' : anSector.replace(/[^a-zA-Z0-9а-яА-ЯіїєґІЇЄҐ_]/g, '_');
+                    link.download = `Аналітика_втрат_${new Date().toLocaleDateString('en-CA')}_${secTag}.xlsx`;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
+                    triggerNotification("Експорт аналітики в Excel успішно завершено!", "success");
+                } catch (err) {
+                    console.error("handleExportAnalyticsExcel error:", err);
+                    triggerNotification("Помилка під час генерації Excel-файлу: " + err.message, "error");
                 }
-
-                const sheet3 = workbook.addWorksheet('Детальний реєстр');
-                sheet3.columns = [
-                    { header: 'Дата/Час', key: 'date', width: 15 },
-                    { header: 'Звання', key: 'rank', width: 15 },
-                    { header: 'ПІБ', key: 'name', width: 25 },
-                    { header: 'Позивний', key: 'callsign', width: 15 },
-                    { header: 'Підрозділ', key: 'unit', width: 20 },
-                    { header: 'Тип втрати', key: 'lossType', width: 20 },
-                    { header: 'Важкість', key: 'severity', width: 15 },
-                    { header: 'Причина', key: 'cause', width: 20 },
-                    { header: 'Фактичне місце', key: 'loc', width: 25 },
-                    { header: 'Евакуація / СЗЧ', key: 'status', width: 20 },
-                    { header: 'Зброя', key: 'weapon', width: 15 },
-                    { header: 'Рапорт', key: 'report', width: 20 },
-                    { header: 'Травми', key: 'inj', width: 35 }
-                ];
-                sheet3.getRow(1).font = { bold: true };
-
-                anFilteredEpisodes.forEach(ep => {
-                    const s = soldiers.find(x => x.id === ep.soldierId) || {};
-                    sheet3.addRow({
-                        date: ep.date ? String(ep.date).replace('T', ' ') : '',
-                        rank: s.rank || '',
-                        name: s.name || '',
-                        callsign: s.callsign ? formatCallsignUI(s.callsign) : '',
-                        unit: s.unit || '',
-                        lossType: ep.lossType || '',
-                        severity: ep.severity || '',
-                        cause: ep.cause || '',
-                        loc: ep.actualLoc || '',
-                        status: isAwol(ep.lossType) ? (ep.awolStatus || '') : (ep.evacStatus || ''),
-                        weapon: ep.weaponStatus || '-',
-                        report: ep.hasReport ? `Складено (${ep.reportDate || "-"})` : "Ні",
-                        inj: getInjStrUI(ep.injuries)
-                    });
-                });
-
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                const link = document.createElement("a");
-                const objUrl = URL.createObjectURL(blob);
-                link.href = objUrl;
-                link.download = `Analytics_Report_${new Date().toLocaleDateString('en-CA')}.xlsx`;
-                link.click();
-                setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
             };
 
             const toggleFilterItem = (list, setList, item) => {
@@ -3639,7 +4590,10 @@
                     setNewSoldierUnit("");
                 }
                 
-                setEpisodeDate("");
+                // За замовчуванням ставимо поточний локальний час
+                const now = new Date();
+                const localIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                setEpisodeDate(localIso);
                 setLossType("");
                 setCause("");
                 setSeverity("");
@@ -3698,7 +4652,7 @@
 
             const toggleInjuryType = (regionId, type) => {
                 setInjuries(prev => {
-                    const regionObj = prev[regionId] || { amputation: false, rupture: false, shrapnel: false, bullet: false, fracture: false, burn: false, akbt: false, contusion: false };
+                    const regionObj = prev[regionId] || {};
                     return { ...prev, [regionId]: { ...regionObj, [type]: !regionObj[type] } };
                 });
             };
@@ -3706,84 +4660,92 @@
             const hasAnyInjury = (regionId) => {
                 const reg = injuries && injuries[regionId];
                 if (!reg) return false;
-                return reg.amputation || reg.rupture || reg.shrapnel || reg.bullet || reg.fracture || reg.burn || reg.akbt || reg.contusion;
+                return Object.values(reg).some(Boolean);
             };
 
             const handleSaveWounded = (e) => {
                 e.preventDefault();
                 
-                if(!episodeDate) return triggerNotification("Вкажіть точну дату та час події", "error");
-                if(!lossType) return triggerNotification("Оберіть тип події", "error");
-                if(!cause) return triggerNotification("Оберіть причину", "error");
-                if(isAny300(lossType) && !severity) return triggerNotification("Оберіть важкість", "error");
+                try {
+                    if (!episodeDate) return triggerNotification("Вкажіть точну дату та час події", "error");
+                    if (!lossType) return triggerNotification("Оберіть тип події", "error");
+                    if (!cause) return triggerNotification("Оберіть причину", "error");
+                    if (isAny300(lossType) && !severity) return triggerNotification("Оберіть важкість", "error");
 
-                saveHistory();
+                    saveHistory();
 
-                let finalSoldierId = selectedSoldierId;
+                    let finalSoldierId = selectedSoldierId;
 
-                if (!finalSoldierId) {
-                    const exactMatch = soldiers.find(s => {
-                        const nameMatches = s.name.trim().toLowerCase() === newSoldierName.trim().toLowerCase();
-                        if (!nameMatches) return false;
-                        if (newSoldierCallsign.trim()) {
-                            return s.callsign.trim().toLowerCase() === newSoldierCallsign.trim().toLowerCase();
-                        }
-                        return true;
-                    });
-                    if (exactMatch) finalSoldierId = exactMatch.id;
-                }
-
-                if (!finalSoldierId) {
-                    if (!newSoldierName.trim() || !newSoldierUnit) {
-                        return triggerNotification("ПІБ та Підрозділ є обов'язковими (Позивний та Звання — за бажанням)", "error");
+                    if (!finalSoldierId) {
+                        const exactMatch = soldiers.find(s => {
+                            const sName = (s.name || '').trim().toLowerCase();
+                            const qName = (newSoldierName || '').trim().toLowerCase();
+                            if (!sName || sName !== qName) return false;
+                            if ((newSoldierCallsign || '').trim()) {
+                                const sCall = (s.callsign || '').trim().toLowerCase();
+                                const qCall = (newSoldierCallsign || '').trim().toLowerCase();
+                                return sCall === qCall;
+                            }
+                            return true;
+                        });
+                        if (exactMatch) finalSoldierId = exactMatch.id;
                     }
 
-                    const newSoldierId = 'sol_' + Date.now();
-                    const cleanCallsign = formatCallsignUI(newSoldierCallsign);
-                    const newSoldierObj = { id: newSoldierId, name: newSoldierName.trim(), callsign: cleanCallsign, rank: newSoldierRank || "Не вказано", unit: newSoldierUnit };
-                    setSoldiers(prev => [...prev, newSoldierObj]);
-                    finalSoldierId = newSoldierId;
-                    const callsignDisplay = cleanCallsign ? ` «${cleanCallsign}»` : "";
-                    addLog("Новий в/сл", `Створено: ${newSoldierRank || ""} ${newSoldierName}${callsignDisplay}`);
-                } else {
-                    const cleanCallsign = formatCallsignUI(newSoldierCallsign);
-                    setSoldiers(prev => prev.map(s => {
-                        if (s.id === finalSoldierId) {
-                            return { ...s, rank: newSoldierRank || s.rank, unit: newSoldierUnit || s.unit, callsign: cleanCallsign || s.callsign };
+                    if (!finalSoldierId) {
+                        if (!(newSoldierName || '').trim() || !newSoldierUnit) {
+                            return triggerNotification("Вкажіть ПІБ та оберіть Підрозділ бійця зі списку", "error");
                         }
-                        return s;
-                    }));
+
+                        const newSoldierId = 'sol_' + Date.now();
+                        const cleanCallsign = formatCallsignUI(newSoldierCallsign);
+                        const newSoldierObj = { id: newSoldierId, name: (newSoldierName || '').trim(), callsign: cleanCallsign, rank: newSoldierRank || "Не вказано", unit: newSoldierUnit };
+                        setSoldiers(prev => [...prev, newSoldierObj]);
+                        finalSoldierId = newSoldierId;
+                        const callsignDisplay = cleanCallsign ? ` «${cleanCallsign}»` : "";
+                        addLog("Новий в/сл", `Створено: ${newSoldierRank || ""} ${newSoldierName}${callsignDisplay}`);
+                    } else {
+                        const cleanCallsign = formatCallsignUI(newSoldierCallsign);
+                        setSoldiers(prev => prev.map(s => {
+                            if (s.id === finalSoldierId) {
+                                return { ...s, rank: newSoldierRank || s.rank, unit: newSoldierUnit || s.unit, callsign: cleanCallsign || s.callsign };
+                            }
+                            return s;
+                        }));
+                    }
+
+                    const existingEpisodes = episodes.filter(ep => ep.soldierId === finalSoldierId).sort((a,b) => new Date(b.date) - new Date(a.date));
+                    if (existingEpisodes.length > 0) {
+                        const lastEp = existingEpisodes[0];
+                        if (isAny200(lastEp.lossType)) return triggerNotification("Боєць зафіксований як 200. Нових подій додавати не можна.", "error");
+                    }
+
+                    const soldierObj = soldiers.find(s => s.id === finalSoldierId) || { name: newSoldierName, callsign: (newSoldierCallsign || '').trim() };
+                    const is300 = isAny300(lossType);
+                    const todayStrDate = new Date().toLocaleDateString('en-CA');
+
+                    const newEpisode = {
+                        id: 'ep_' + Date.now(),
+                        soldierId: finalSoldierId, date: episodeDate, lossType, cause,
+                        severity: is300 ? severity : null,
+                        rank: newSoldierRank || soldierObj.rank || "Не вказано",
+                        unit: newSoldierUnit || soldierObj.unit || "Не вказано",
+                        inUdp, actualLoc, docLoc,
+                        injuries: is300 ? injuries : {},
+                        notes, evacStatus, awolStatus, weaponStatus,
+                        evacTime: (evacStatus === 'Евакуйований' || awolStatus === 'Повернувся') ? (evacDate || todayStrDate) : "",
+                        hasReport, reportDate: hasReport ? (reportDate || todayStrDate) : ""
+                    };
+
+                    setEpisodes(prev => [newEpisode, ...prev]);
+                    const soldierDisplayName = soldierObj.callsign ? `«${soldierObj.callsign}»` : (soldierObj.name || newSoldierName);
+                    addLog("Нова подія", `Зафіксовано ${lossType} у в/сл ${soldierDisplayName}. Причина: ${cause}.`);
+                    
+                    setIsAddWoundedOpen(false);
+                    triggerNotification("Запис успішно додано", "success");
+                } catch (err) {
+                    console.error("handleSaveWounded error:", err);
+                    triggerNotification("Помилка збереження: " + (err.message || String(err)), "error");
                 }
-
-                const existingEpisodes = episodes.filter(ep => ep.soldierId === finalSoldierId).sort((a,b) => new Date(b.date) - new Date(a.date));
-                if (existingEpisodes.length > 0) {
-                    const lastEp = existingEpisodes[0];
-                    if (isAny200(lastEp.lossType)) return triggerNotification("Боєць зафіксований як 200. Нових подій додавати не можна.", "error");
-                }
-
-                const soldierObj = soldiers.find(s => s.id === finalSoldierId) || { name: newSoldierName, callsign: newSoldierCallsign.trim() };
-                const is300 = isAny300(lossType);
-                const todayStrDate = new Date().toLocaleDateString('en-CA');
-
-                const newEpisode = {
-                    id: 'ep_' + Date.now(),
-                    soldierId: finalSoldierId, date: episodeDate, lossType, cause,
-                    severity: is300 ? severity : null,
-                    rank: newSoldierRank || soldierObj.rank || "Не вказано",
-                    unit: newSoldierUnit || soldierObj.unit || "Не вказано",
-                    inUdp, actualLoc, docLoc,
-                    injuries: is300 ? injuries : {},
-                    notes, evacStatus, awolStatus, weaponStatus,
-                    evacTime: (evacStatus === 'Евакуйований' || awolStatus === 'Повернувся') ? (evacDate || todayStrDate) : "",
-                    hasReport, reportDate: hasReport ? (reportDate || todayStrDate) : ""
-                };
-
-                setEpisodes(prev => [newEpisode, ...prev]);
-                const soldierDisplayName = soldierObj.callsign ? `«${soldierObj.callsign}»` : (soldierObj.name || newSoldierName);
-                addLog("Нова подія", `Зафіксовано ${lossType} у в/сл ${soldierDisplayName}. Причина: ${cause}.`);
-                
-                setIsAddWoundedOpen(false);
-                triggerNotification("Запис успішно додано");
             };
 
             const handleStartEdit = useCallback((episode) => {
@@ -3823,13 +4785,14 @@
                 e.preventDefault();
                 if (!currentEpisode) return;
 
-                if(!episodeDate) return triggerNotification("Вкажіть точну дату та час події", "error");
-                if(!lossType) return triggerNotification("Оберіть тип події", "error");
-                if(!cause) return triggerNotification("Оберіть причину", "error");
-                if(isAny300(lossType) && !severity) return triggerNotification("Оберіть важкість", "error");
-                if (!newSoldierUnit || !newSoldierName.trim()) return triggerNotification("ПІБ та Підрозділ є обов'язковими", "error");
+                try {
+                    if (!episodeDate) return triggerNotification("Вкажіть точну дату та час події", "error");
+                    if (!lossType) return triggerNotification("Оберіть тип події", "error");
+                    if (!cause) return triggerNotification("Оберіть причину", "error");
+                    if (isAny300(lossType) && !severity) return triggerNotification("Оберіть важкість", "error");
+                    if (!newSoldierUnit || !(newSoldierName || '').trim()) return triggerNotification("Вкажіть ПІБ та оберіть Підрозділ бійця зі списку", "error");
 
-                saveHistory();
+                    saveHistory();
 
                 const original = episodes.find(ep => ep.id === currentEpisode.id);
                 const is300 = isAny300(lossType);
@@ -3865,8 +4828,12 @@
                 addLog("Редагування", `Оновлено дані для в/сл: ${newSoldierName}${editCallsignDisplay}. ${detailsText}`);
                 
                 setIsEditOpen(false); setCurrentEpisode(null);
-                triggerNotification("Запис оновлено");
-            };
+                triggerNotification("Запис оновлено", "success");
+            } catch (err) {
+                console.error("handleUpdateWounded error:", err);
+                triggerNotification("Помилка оновлення запису: " + (err.message || String(err)), "error");
+            }
+        };
 
             const handleDeleteEpisode = () => {
                 saveHistory();
@@ -4516,7 +5483,7 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.6.1
+                                    ⚡ v3.6.2
                                 </button>
                                 <button
                                     onClick={() => setIsBackupOpen(true)}
@@ -4681,7 +5648,7 @@
                     </header>
 
                     {notification && (
-                        <div className="fixed top-20 right-6 z-[100] animate-in fade-in slide-in-from-top-4 duration-200">
+                        <div className="fixed top-20 right-6 z-[300] animate-in fade-in slide-in-from-top-4 duration-200">
                             <div className={`px-4 py-3 rounded-xl shadow-2xl border flex items-center gap-2.5 text-xs font-semibold ${notification.type === 'error' ? 'bg-red-950 border-red-700 text-red-200 shadow-red-950/50' : 'bg-slate-900 border-slate-700 text-slate-100 shadow-slate-950/50'}`}>
                                 <Icon name={notification.type === 'error' ? 'alert-octagon' : 'check-circle'} className={`w-4 h-4 ${notification.type === 'error' ? 'text-red-400' : 'text-emerald-400'}`} />
                                 <span>{notification.text}</span>
@@ -4967,9 +5934,11 @@
                                                             </div>
                                                             <div className="grid grid-cols-2 gap-1.5 max-h-28 overflow-y-auto bg-slate-950 p-2 rounded-xl border border-slate-800/80">
                                                                 {[
-                                                                    {k:'amputation', l:'Ампутація'}, {k:'rupture', l:'Розрив'}, {k:'shrapnel', l:'Уламкове'}, 
-                                                                    {k:'bullet', l:'Кульове'}, {k:'fracture', l:'Перелом'}, {k:'burn', l:'Опік'}, 
-                                                                    {k:'akbt', l:'АКБТ'}, {k:'contusion', l:'Забій'}
+                                                                    {k:'shrapnel', l:'Уламкове'}, {k:'bullet', l:'Кульове'}, {k:'amputation', l:'Ампутація'},
+                                                                    {k:'fracture', l:'Перелом'}, {k:'rupture', l:'Розрив'}, {k:'burn', l:'Опік'},
+                                                                    {k:'eye', l:'Травма ока'}, {k:'tbi', l:'ЧМТ'}, {k:'akbt', l:'АКБТ'},
+                                                                    {k:'barotrauma', l:'Баротравма'}, {k:'pneumothorax', l:'Пневмоторакс'},
+                                                                    {k:'crush', l:'Краш-синдром'}, {k:'laceration', l:'Рвана рана'}, {k:'contusion', l:'Забій'}
                                                                 ].map(item => (
                                                                     <label key={item.k} className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white cursor-pointer select-none">
                                                                         <input type="checkbox" checked={filterInjuries.includes(item.k)} onChange={() => toggleFilterItem(filterInjuries, setFilterInjuries, item.k)} className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 shrink-0"/>
@@ -5336,11 +6305,11 @@
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 items-start">
                                         
                                         {/* 1. ЧЕРВОНА ЗОНА */}
-                                        <div className="bg-slate-900/95 rounded-2xl border border-red-900/50 shadow-xl flex flex-col min-h-[360px] overflow-hidden">
-                                            <div className="p-3.5 border-b border-red-900/50 bg-gradient-to-r from-red-950/80 via-red-900/30 to-slate-900 flex items-center justify-between">
+                                        <div className="bg-slate-900/70 border border-slate-800/80 border-t-2 border-t-red-500 rounded-2xl shadow-xl flex flex-col min-h-[360px] overflow-hidden backdrop-blur-sm">
+                                            <div className="p-3 border-b border-slate-800/80 bg-slate-950/70 flex items-center justify-between">
                                                 <div className="flex items-center gap-2 font-bold text-red-400 text-xs tracking-wider uppercase font-mono">
                                                     <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-md shadow-red-500/50"></div>
-                                                    <span>ЧЕРВОНА ЗОНА</span>
+                                                    <span>Червона зона</span>
                                                     <span className="bg-red-500/20 text-red-300 border border-red-500/40 px-1.5 py-0.2 rounded font-mono text-[10px] font-bold">
                                                         {critAndHeavyList.length}
                                                     </span>
@@ -5350,13 +6319,13 @@
                                                         <button 
                                                             type="button" 
                                                             onClick={() => copyGroupList(critAndHeavyList, 'ЧЕРВОНА ЗОНА (КРИТИЧНІ / ВАЖКІ)')}
-                                                            className="p-1 rounded-lg bg-red-950 hover:bg-red-900/60 text-red-300 border border-red-800/80 transition cursor-pointer" 
+                                                            className="p-1 rounded-lg bg-red-950/60 hover:bg-red-900/60 text-red-300 border border-red-800/80 transition cursor-pointer" 
                                                             title="Скопіювати список бійців Червоної зони"
                                                         >
                                                             <Icon name="copy" className="w-3.5 h-3.5" />
                                                         </button>
                                                     )}
-                                                    <span className="text-[10px] text-red-300 font-mono font-bold bg-red-950/80 px-2 py-0.5 rounded-lg border border-red-800/80 shadow-inner">
+                                                    <span className="text-[10px] text-red-300/80 font-mono font-medium">
                                                         Критичні / Важкі
                                                     </span>
                                                 </div>
@@ -5373,11 +6342,11 @@
                                         </div>
 
                                         {/* 2. ЖОВТА ЗОНА */}
-                                        <div className="bg-slate-900/95 rounded-2xl border border-amber-900/50 shadow-xl flex flex-col min-h-[360px] overflow-hidden">
-                                            <div className="p-3.5 border-b border-amber-900/50 bg-gradient-to-r from-amber-950/80 via-amber-900/30 to-slate-900 flex items-center justify-between">
+                                        <div className="bg-slate-900/70 border border-slate-800/80 border-t-2 border-t-amber-500 rounded-2xl shadow-xl flex flex-col min-h-[360px] overflow-hidden backdrop-blur-sm">
+                                            <div className="p-3 border-b border-slate-800/80 bg-slate-950/70 flex items-center justify-between">
                                                 <div className="flex items-center gap-2 font-bold text-amber-400 text-xs tracking-wider uppercase font-mono">
                                                     <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-md shadow-amber-500/50"></div>
-                                                    <span>ЖОВТА ЗОНА</span>
+                                                    <span>Жовта зона</span>
                                                     <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.2 rounded font-mono text-[10px] font-bold">
                                                         {medList.length}
                                                     </span>
@@ -5387,13 +6356,13 @@
                                                         <button 
                                                             type="button" 
                                                             onClick={() => copyGroupList(medList, 'ЖОВТА ЗОНА (СЕРЕДНІ)')}
-                                                            className="p-1 rounded-lg bg-amber-950 hover:bg-amber-900/60 text-amber-300 border border-amber-800/80 transition cursor-pointer" 
+                                                            className="p-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-800/80 transition cursor-pointer" 
                                                             title="Скопіювати список бійців Жовтої зони"
                                                         >
                                                             <Icon name="copy" className="w-3.5 h-3.5" />
                                                         </button>
                                                     )}
-                                                    <span className="text-[10px] text-amber-300 font-mono font-bold bg-amber-950/80 px-2 py-0.5 rounded-lg border border-amber-800/80 shadow-inner">
+                                                    <span className="text-[10px] text-amber-300/80 font-mono font-medium">
                                                         Середні
                                                     </span>
                                                 </div>
@@ -5410,11 +6379,11 @@
                                         </div>
 
                                         {/* 3. ЗЕЛЕНА ЗОНА */}
-                                        <div className="bg-slate-900/95 rounded-2xl border border-emerald-900/50 shadow-xl flex flex-col min-h-[360px] overflow-hidden">
-                                            <div className="p-3.5 border-b border-emerald-900/50 bg-gradient-to-r from-emerald-950/80 via-emerald-900/30 to-slate-900 flex items-center justify-between">
+                                        <div className="bg-slate-900/70 border border-slate-800/80 border-t-2 border-t-emerald-500 rounded-2xl shadow-xl flex flex-col min-h-[360px] overflow-hidden backdrop-blur-sm">
+                                            <div className="p-3 border-b border-slate-800/80 bg-slate-950/70 flex items-center justify-between">
                                                 <div className="flex items-center gap-2 font-bold text-emerald-400 text-xs tracking-wider uppercase font-mono">
                                                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/50"></div>
-                                                    <span>ЗЕЛЕНА ЗОНА</span>
+                                                    <span>Зелена зона</span>
                                                     <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-mono text-[10px] font-bold">
                                                         {lightList.length}
                                                     </span>
@@ -5424,13 +6393,13 @@
                                                         <button 
                                                             type="button" 
                                                             onClick={() => copyGroupList(lightList, 'ЗЕЛЕНА ЗОНА (ЛЕГКІ)')}
-                                                            className="p-1 rounded-lg bg-emerald-950 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/80 transition cursor-pointer" 
+                                                            className="p-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/80 transition cursor-pointer" 
                                                             title="Скопіювати список бійців Зеленої зони"
                                                         >
                                                             <Icon name="copy" className="w-3.5 h-3.5" />
                                                         </button>
                                                     )}
-                                                    <span className="text-[10px] text-emerald-300 font-mono font-bold bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-800/80 shadow-inner">
+                                                    <span className="text-[10px] text-emerald-300/80 font-mono font-medium">
                                                         Легкі
                                                     </span>
                                                 </div>
@@ -5447,11 +6416,11 @@
                                         </div>
 
                                         {/* 4. ЧОРНА ЗОНА */}
-                                        <div className="bg-slate-900/95 rounded-2xl border border-slate-800 shadow-xl flex flex-col min-h-[360px] overflow-hidden">
-                                            <div className="p-3.5 border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-900 flex items-center justify-between">
-                                                <div className="flex items-center gap-2 font-bold text-slate-400 text-xs tracking-wider uppercase font-mono">
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-zinc-500 shadow-md shadow-zinc-500/50"></div>
-                                                    <span>ЧОРНА ЗОНА</span>
+                                        <div className="bg-slate-900/70 border border-slate-800/80 border-t-2 border-t-zinc-500 rounded-2xl shadow-xl flex flex-col min-h-[360px] overflow-hidden backdrop-blur-sm">
+                                            <div className="p-3 border-b border-slate-800/80 bg-slate-950/70 flex items-center justify-between">
+                                                <div className="flex items-center gap-2 font-bold text-slate-300 text-xs tracking-wider uppercase font-mono">
+                                                    <div className="w-2.5 h-2.5 rounded-full bg-zinc-400 shadow-md shadow-zinc-400/50"></div>
+                                                    <span>Чорна зона</span>
                                                     <span className="bg-zinc-800 text-zinc-300 border border-zinc-700 px-1.5 py-0.2 rounded font-mono text-[10px] font-bold">
                                                         {otherList.length}
                                                     </span>
@@ -5467,7 +6436,7 @@
                                                             <Icon name="copy" className="w-3.5 h-3.5" />
                                                         </button>
                                                     )}
-                                                    <span className="text-[10px] text-slate-400 font-mono font-bold bg-slate-950 border border-slate-800 px-2 py-0.5 rounded-lg shadow-inner">
+                                                    <span className="text-[10px] text-slate-400 font-mono font-medium">
                                                         200 / ЗБВ
                                                     </span>
                                                 </div>
@@ -7535,10 +8504,23 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                                    {/* 18.09.2026 */}
+                                    {/* 26.09.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.6.1 (Патч стабільності експорту, таймерів тріажу та дат Excel)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.6.2 (3-рядкові картки тріажу, повні поранення без обрізань, травми ока & чистий UI)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">26.09.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Новий просторий 3-рядковий формат карток тріажу (~92px):</strong> Повний огляд даних бійця. Рядок 1: позивний, звання, підрозділ, скорочене ПІБ («ПРІЗВИЩЕ І. Б.» з повним у підказці), ланцюжок статусів та таймер очікування. Рядок 2: повноширинний детальний опис поранень без скорочень трьома крапками. Рядок 3: локація, УПД та кнопки швидких дій.</li>
+                                            <li><strong className="text-white">Повне відображення специфічних уражень:</strong> Виправлено розпізнавання та показ травм ока («Травма ока»), синдрому роздавлювання (краш-синдром), ЧМТ, ампутацій, баротравм, гемо/пневмотораксу в деталях картки, фільтрах та статистиці.</li>
+                                            <li><strong className="text-white">Оптимізація інтерфейсу тріажу:</strong> Прибрано надлишкові діаграми для забезпечення максимальної чистоти інтерфейсу та миттєвого рендерингу на планшетах.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 18.09.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">⚡ v3.6.1 (Патч стабільності експорту, таймерів тріажу та дат Excel)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">18.09.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
