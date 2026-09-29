@@ -63,7 +63,7 @@
                             <button onclick="openModal('modal-changelog')" title="Історія оновлень"
                                 class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1.5">
                                 <span class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                                <span>⚡ v1.5.0</span>
+                                <span>⚡ v1.5.1</span>
                             </button>
                         </div>
                         <p class="text-slate-400 text-xs md:text-sm mt-0.5">Вставте будь-який сирий текст списків майна — отримайте ідеально чистий стандартизований шаблон.</p>
@@ -96,6 +96,12 @@
                 <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors">
                     <input type="checkbox" id="chk-sort" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer">
                     <span class="font-medium">Сортувати А-Я</span>
+                </label>
+
+                <!-- Опція: Нормалізувати номенклатуру -->
+                <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors" title="Стандартизувати синоніми та діаметри (наприклад: Д 120 / 120 мм, ПОВ-57)">
+                    <input type="checkbox" id="chk-normalize" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer">
+                    <span class="font-medium">Нормалізувати номенклатуру (Д 120 / ПОВ-57)</span>
                 </label>
 
                 <!-- Опція: Розділювач у кінці рядка -->
@@ -212,7 +218,7 @@
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пара / к-кт / набір / блок</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пач. / цинк / ящ. / уп.</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">рул. / бухта / мот. / кот.</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">м / пог. м / кв. м / куб. м</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">м / км / пог. м / кв. м / куб. м</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">амп. / фл. / туб / доз / балон</span>
                 <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">л / кг / кан. / т / картридж</span>
             </div>
@@ -242,10 +248,23 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.5.0 -->
+                <!-- v1.5.1 -->
                 <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.5.0 (Поточна)</span>
+                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.5.1 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">29.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Розумне розбиття складних рядків (smartSplitLine):</strong> розбиття за крапкою з комою (<code>;</code>) тепер перевіряє кількість фрагментів з числовими показниками; складні назви та комплекти з характеристиками через крапку з комою (наприклад, <code>GSR 12V-35; L-Boxx; 4нас - 1 шт</code>) більше не розриваються на пошкоджені фрагменти.</li>
+                        <li><strong class="text-white">Тактична нормалізація номенклатури (ПОВ-57 та димоходи):</strong> впроваджено стандартизоване перетворення армійських пічних комплектів: <code>Піч чавунна переносна ПОВ-57</code>, димохідні труби, відводи 90° (<code>Коліно 90° 120 мм</code>), дефлектори (<code>Грибок 120 мм</code>) та іскрогасники (<code>Іскрогасник 120 мм</code>) із приведенням позначень діаметрів (<code>Д 120</code> ➔ <code>120 мм</code>).</li>
+                        <li><strong class="text-white">Опціональний перемикач стандартизації:</strong> додано чекбокс «Нормалізувати номенклатуру» в панель налаштувань із надійним збереженням стану в LocalStorage.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.5.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.5.0</span>
                         <span class="text-[11px] font-mono text-slate-500">23.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -319,6 +338,7 @@
         const statsBadge = document.getElementById('stats-badge');
         const chkMerge = document.getElementById('chk-merge');
         const chkSort = document.getElementById('chk-sort');
+        const chkNormalize = document.getElementById('chk-normalize');
         const selDelimiter = document.getElementById('sel-delimiter');
         const selPrefix = document.getElementById('sel-prefix');
         const quickStatus = document.getElementById('quick-status');
@@ -416,6 +436,7 @@
             if (u.includes('кв') || u === 'м2' || u === 'м²') return 'кв. м';
             if (u.includes('куб') || u === 'м3' || u === 'м³') return 'куб. м';
             if (u === 'м' || u.startsWith('метр')) return 'м';
+            if (u === 'км' || u.startsWith('кілометр')) return 'км';
             if (u.startsWith('амп')) return 'амп.';
             if (u.startsWith('фл')) return 'фл.';
             if (u.startsWith('тюб')) return 'тюб.';
@@ -473,6 +494,7 @@
             if (u.includes('кв') || cleanU === 'м2' || cleanU === 'м²') return 'кв. м';
             if (u.includes('куб') || cleanU === 'м3' || cleanU === 'м³') return 'куб. м';
             if (cleanU === 'м' || cleanU.startsWith('метр')) return 'м';
+            if (cleanU === 'км' || cleanU.startsWith('кілометр')) return 'км';
             if (cleanU.startsWith('бухт')) {
                 if (q === 1) return 'бухта';
                 if (q >= 2 && q <= 4) return 'бухти';
@@ -542,7 +564,7 @@
         }
 
         // Регулярний вираз для пошуку кількості та одиниці виміру
-        const qtyRegex = /(?:^|[-\s–—\t:])*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|од\.?|одиниц[яіь]|пара|пар|пари|к-кт|к-т|комплект(?:и|ів)?|компл\.?|пач(?:ок|ка|ки|\.)?|цинк(?:и|ів)?|ц\.?|ящик(?:и|ів)?|ящ\.?|упаков(?:ка|ки|ок)?|упак\.?|уп\.?|пакет(?:и|ів)?|пак\.?|рулон(?:и|ів)?|рул\.?|бухт(?:а|и|)?|бухт\.?|моток|мотків|мот\.?|котушк(?:а|и|ок)?|кот\.?|пог\.?\s*м\.?|п\.?\s*м\.?|п\/м|кв\.?\s*м\.?|м²|м2|куб\.?\s*м\.?|м³|м3|метр(?:и|ів)?|м\.?|ампул(?:а|и|)?|амп\.?|флакон(?:и|ів)?|фл\.?|тюбик(?:и|ів)?|тюб\.?|туб(?:а|и|)?|туб\.?|доз(?:а|и|)?|доз\.?|банк(?:а|и|ок)?|бан\.?|пляшк(?:а|и|ок)?|пляш\.?|каністр(?:а|и|)?|кан\.?|картридж(?:і|ів)?|картр\.?|фільтр(?:и|ів)?|секці(?:я|ї|й)?|сект\.?|лист(?:и|ів)?|аркуш(?:і|ів)?|арк\.?|блок(?:и|ів)?|балон(?:и|ів)?|літр(?:и|ів)?|л\.?|кілограм(?:и|ів)?|кг\.?|грам(?:и|ів)?|г\.?|тонн(?:а|и|)?|т\.?)(?=[^\w\u0400-\u04FF]|$)/gi;
+        const qtyRegex = /(?:^|[-\s–—\t:])*(\d+(?:[.,]\d+)?)\s*(шт\.?|щт\.?|од\.?|одиниц[яіь]|пара|пар|пари|к-кт|к-т|комплект(?:и|ів)?|компл\.?|пач(?:ок|ка|ки|\.)?|цинк(?:и|ів)?|ц\.?|ящик(?:и|ів)?|ящ\.?|упаков(?:ка|ки|ок)?|упак\.?|уп\.?|пакет(?:и|ів)?|пак\.?|рулон(?:и|ів)?|рул\.?|бухт(?:а|и|)?|бухт\.?|моток|мотків|мот\.?|котушк(?:а|и|ок)?|кот\.?|пог\.?\s*м\.?|п\.?\s*м\.?|п\/м|кв\.?\s*м\.?|м²|м2|куб\.?\s*м\.?|м³|м3|метр(?:и|ів)?|м\.?|км\.?|кілометр(?:и|ів)?|ампул(?:а|и|)?|амп\.?|флакон(?:и|ів)?|фл\.?|тюбик(?:и|ів)?|тюб\.?|туб(?:а|и|)?|туб\.?|доз(?:а|и|)?|доз\.?|банк(?:а|и|ок)?|бан\.?|пляшк(?:а|и|ок)?|пляш\.?|каністр(?:а|и|)?|кан\.?|картридж(?:і|ів)?|картр\.?|фільтр(?:и|ів)?|секці(?:я|ї|й)?|сект\.?|лист(?:и|ів)?|аркуш(?:і|ів)?|арк\.?|блок(?:и|ів)?|балон(?:и|ів)?|літр(?:и|ів)?|л\.?|кілограм(?:и|ів)?|кг\.?|грам(?:и|ів)?|г\.?|тонн(?:а|и|)?|т\.?)(?=[^\w\u0400-\u04FF]|$)/gi;
 
         // Пошук явного числа в кінці рядка без одиниці (наприклад, "- 2" або "-- 3")
         const bareQtyRegex = /[-\s–—\t:]+(\d+(?:[.,]\d+)?)(?:\s*(?:\([^\)]*\)|\[[^\]]*\]))?\s*$/;
@@ -632,6 +654,89 @@
             };
         }
 
+        // Розумне розбиття рядків за розділювачем ';' без руйнування комплектів та параметрів
+        function smartSplitLine(line) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.includes(';')) {
+                return [line];
+            }
+            // Відсікаємо кінцеві крапки з комою (вони не розділяють окремі позиції)
+            const cleaned = trimmed.replace(/;+\s*$/, '');
+            if (!cleaned.includes(';')) {
+                return [cleaned];
+            }
+            // Якщо крапка з комою розділяє явні пункти маркованого або нумерованого списку
+            if (/;\s*(?:[-–—•*+]\s*|\d+[\.\)]\s+)/.test(cleaned)) {
+                return cleaned.split(';').map(p => p.trim()).filter(Boolean);
+            }
+            // Перевіряємо наявність кількостей у кожній частині
+            const parts = cleaned.split(';').map(p => p.trim()).filter(Boolean);
+            let qtyCount = 0;
+            parts.forEach(p => {
+                qtyRegex.lastIndex = 0;
+                if (qtyRegex.test(p) || bareQtyRegex.test(p) || bareStartRegex.test(p)) {
+                    qtyCount++;
+                }
+            });
+            // Розбиваємо лише тоді, коли хоча б 2 фрагменти мають власні кількості
+            if (qtyCount >= 2) {
+                return parts;
+            }
+            // В іншому випадку це єдине майно із внутрішніми характеристиками (наприклад, "GSR 12V-35; L-Boxx; 4нас - 1 шт")
+            return [cleaned];
+        }
+
+        // Тактична нормалізація номенклатури (печі ПОВ-57, димохідні труби, коліна, грибки, іскрогасники, діаметри)
+        function normalizeNomenclature(name) {
+            if (!name) return '';
+            let n = name.trim();
+
+            // 1. Печі чавунні переносні ПОВ-57
+            if (/пов\s*[-–—]?\s*57/i.test(n) && /піч/i.test(n)) {
+                return 'Піч чавунна переносна ПОВ-57';
+            }
+
+            // Допоміжний пошук діаметра (120 мм за замовчуванням для пічного комплекту ПОВ-57)
+            function extractDiam(text, defaultDiam = '120') {
+                const m = text.match(/(?:[дd]\s*=?\s*|діам\.?\s*|)(\d{2,3})\s*мм/i);
+                if (m) return m[1];
+                const m2 = text.match(/(?:^|[^\wа-яіїєґА-ЯІЇЄҐ])[дd]\s*=?\s*(\d{2,3})(?=[^\wа-яіїєґА-ЯІЇЄҐ]|$)/i);
+                if (m2) return m2[1];
+                const m3 = text.match(/(\d{2,3})\s*мм/i);
+                if (m3) return m3[1];
+                return defaultDiam;
+            }
+
+            // 2. Іскрогасник
+            if (/іскрогасник/i.test(n)) {
+                const diam = extractDiam(n, '120');
+                return `Іскрогасник ${diam} мм`;
+            }
+
+            // 3. Грибок (димохідний дефлектор)
+            if (/грибок/i.test(n)) {
+                const diam = extractDiam(n, '120');
+                return `Грибок ${diam} мм`;
+            }
+
+            // 4. Коліно (відвід 90 град)
+            if (/коліно/i.test(n)) {
+                const diam = extractDiam(n, '120');
+                return `Коліно 90° ${diam} мм`;
+            }
+
+            // 5. Труба до печей
+            if (/труб/i.test(n) && (/(?:до\s+печей|чавунн|димохід)/i.test(n) || /(?:120\s*мм|д\s*120)/i.test(n))) {
+                const diam = extractDiam(n, '120');
+                return `Труба ${diam} мм`;
+            }
+
+            // 6. Загальна стандартизація діаметрів: Д 120 -> 120 мм
+            n = n.replace(/(?:^|[^\wа-яіїєґА-ЯІЇЄҐ])[ДдDd]\s*=?\s*(\d+)(?=[^\wа-яіїєґА-ЯІЇЄҐ]|$)/g, ' $1 мм').trim();
+
+            return n;
+        }
+
         // Ручне розбиття тексту на окремі рядки за розділювачем ';'
         function splitInputIntoLines() {
             const text = inputArea.value;
@@ -646,11 +751,11 @@
                     newLines.push('');
                     return;
                 }
-                if (isSectionHeader(trimmed) || !trimmed.includes(';')) {
+                if (isSectionHeader(trimmed)) {
                     newLines.push(trimmed);
                     return;
                 }
-                const parts = trimmed.split(';').map(p => p.trim()).filter(Boolean);
+                const parts = smartSplitLine(trimmed);
                 newLines.push(...parts);
             });
 
@@ -668,6 +773,7 @@
                 localStorage.setItem('formatterSettings', JSON.stringify({
                     merge: chkMerge.checked,
                     sort: chkSort.checked,
+                    normalize: chkNormalize.checked,
                     delimiter: selDelimiter.value,
                     prefix: selPrefix.value
                 }));
@@ -688,6 +794,7 @@
 
             const shouldMerge = chkMerge.checked;
             const shouldSort = chkSort.checked;
+            const shouldNormalize = chkNormalize.checked;
             const delimiter = selDelimiter.value;
             const prefixStyle = selPrefix.value;
 
@@ -696,10 +803,10 @@
             const lines = [];
             rawLines.forEach(l => {
                 const trimmed = l.trim();
-                if (!trimmed || isSectionHeader(trimmed) || !trimmed.includes(';')) {
+                if (!trimmed || isSectionHeader(trimmed)) {
                     lines.push(l);
                 } else {
-                    const parts = trimmed.split(';').map(p => p.trim()).filter(Boolean);
+                    const parts = smartSplitLine(trimmed);
                     lines.push(...parts);
                 }
             });
@@ -723,6 +830,9 @@
                     }
                     currentSection = { header: parsed.text, items: [] };
                 } else if (parsed.type === 'item') {
+                    if (shouldNormalize) {
+                        parsed.name = normalizeNomenclature(parsed.name);
+                    }
                     currentSection.items.push(parsed);
                     rawValidCount++;
                 }
@@ -811,6 +921,7 @@
         inputArea.addEventListener('input', formatData);
         chkMerge.addEventListener('change', formatData);
         chkSort.addEventListener('change', formatData);
+        chkNormalize.addEventListener('change', formatData);
         selDelimiter.addEventListener('change', formatData);
         selPrefix.addEventListener('change', formatData);
 
@@ -901,6 +1012,7 @@
             const savedSettings = JSON.parse(localStorage.getItem('formatterSettings') || '{}');
             if (savedSettings.merge !== undefined) chkMerge.checked = savedSettings.merge;
             if (savedSettings.sort !== undefined) chkSort.checked = savedSettings.sort;
+            if (savedSettings.normalize !== undefined) chkNormalize.checked = savedSettings.normalize;
             if (savedSettings.delimiter !== undefined) selDelimiter.value = savedSettings.delimiter;
             if (savedSettings.prefix !== undefined) selPrefix.value = savedSettings.prefix;
         } catch (e) {
