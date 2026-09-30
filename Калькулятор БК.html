@@ -76,7 +76,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> OFFLINE ENGINE
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.2.8
+                            ⚡ v1.2.9
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-1">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -254,9 +254,15 @@
                     <div class="flex items-start gap-3">
                         <i data-lucide="alert-triangle" class="text-amber-400 mt-0.5 shrink-0 w-5 h-5"></i>
                         <div class="w-full overflow-hidden space-y-2">
-                            <div>
-                                <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">Потребує уваги (нерозпізнані дані)</h3>
-                                <p class="text-[11px] text-amber-200/70">У цих рядках є невідомий текст, зайві цифри або пропущені позначення калібрів (клікніть щоб перейти):</p>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                <div>
+                                    <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">Потребує уваги (нерозпізнані дані)</h3>
+                                    <p class="text-[11px] text-amber-200/70">У цих рядках є невідомий текст, зайві цифри або пропущені позначення калібрів (клікніть щоб перейти):</p>
+                                </div>
+                                <button id="btn-copy-unparsed" onclick="copyAllUnparsed(this)" class="self-start sm:self-center px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-amber-100 border border-amber-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm shrink-0" title="Скопіювати всі нерозпізнані рядки в буфер обміну">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    <span>Скопіювати всі</span>
+                                </button>
                             </div>
                             <ul id="errors-list" class="text-xs space-y-1 text-amber-200 font-mono bg-slate-950/80 p-2.5 rounded-xl border border-amber-900/30 max-h-36 overflow-y-auto">
                                 <!-- Список рядків з помилками -->
@@ -304,7 +310,18 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.8 (Стійке розпізнавання гранат GHO, РГН, РГО, РГД-5 & Омогліфи)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.9 (Стрічкові набої 5.56/7.62/12.7, толерантність 7.61 & копіювання помилок)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">30.09.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Стрічкові набої (M249 / Minimi / ПКМ / M240):</strong> Впроваджено підтримку суфіксів <code>стр</code>, <code>стріч</code>, <code>стрічкові</code>, <code>стрічка</code>, <code>стрічки</code>, <code>ланка</code> (зокрема для записів типу <code>5.56стр - 600</code>) для калібрів 5.56х45, 7.62х54, 7.62х51 та 12.7 мм.</li>
+                        <li><strong class="text-white">Толерантність до одруківок калібрів:</strong> Додано автовиправлення одруківки суміжної клавіші <code>7,61</code> / <code>7.61</code> ➔ зараховується як <code>7.62х51 мм (NATO)</code> або <code>7.62х39 мм</code>.</li>
+                        <li><strong class="text-white">Швидке копіювання нерозпізнаного БК:</strong> Додано загальну кнопку <code>[ 📋 Скопіювати всі ]</code> у шапці блоку нерозпізнаних даних та індивідуальні кнопки <code>[ 📋 ]</code> для кожного невідомого рядка.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.2.8 (Стійке розпізнавання гранат GHO, РГН, РГО, РГД-5 & Омогліфи)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">25.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -463,7 +480,7 @@
     <script>
         /**
          * =========================================================================
-         * КАЛЬКУЛЯТОР БК (AMMO_PARSER) v1.2.8
+         * КАЛЬКУЛЯТОР БК (AMMO_PARSER) v1.2.9
          * Призначення: Швидкий аналіз, нормалізація, розпізнавання та підсумовування
          * витрати боєприпасів за сирими текстовими донесеннями підрозділів.
          * =========================================================================
@@ -556,22 +573,22 @@ GHO - 2
             // Стрілецька зброя: 5.45 мм
             { id: '5.45', name: '5.45х39 мм', icon: '🎯', category: 'small', idPattern: '5[.,/]45(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39)?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:пс|ps|пп|pp|бп|bp|т|трасер|трасуюч[а-яіїєґ]*|ак|ак[- ]?74))*' },
             
-            // Стрілецька зброя: 7.62 мм (з розбивкою за гільзою)
-            { id: '7.62x54', name: '7.62х54 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*54(?:[\\s\\-_]*r)?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:лпс|lps|б[- ]?32|b[- ]?32|бзт|bzt|т[- ]?46|t[- ]?46|снайперськ[а-яіїєґ]*|свд|пкм))*' },
-            { id: '7.62x51', name: '7.62х51 мм (NATO)', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:51|52)(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:uar|уар)(?:\\-?10)?)?(?:[\\s\\-_]*(?:nato|нато|win|\\.308|ball))*' },
-            { id: '7.62x39', name: '7.62х39 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,/]62|762)[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:пс|ps|бз|bz|т[- ]?45|t[- ]?45|акм?|akm?))*' },
-            { id: '7.62', name: '7.62 мм (неуточнений)', icon: '🎯', category: 'small', idPattern: '7[.,/]62(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:лпс|lps|б[- ]?32|b[- ]?32|бзт|bzt|пс|ps|т[- ]?4[56]|t[- ]?4[56]))*' },
+            // Стрілецька зброя: 7.62 мм (з розбивкою за гільзою та підтримкою стрічок/одруківок)
+            { id: '7.62x54', name: '7.62х54 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,/](?:62|61)|76[12])[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*54(?:[\\s\\-_]*r)?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст))?(?:[\\s\\-_]*(?:лпс|lps|б[- ]?32|b[- ]?32|бзт|bzt|т[- ]?46|t[- ]?46|снайперськ[а-яіїєґ]*|свд|пкм))*' },
+            { id: '7.62x51', name: '7.62х51 мм (NATO)', icon: '🎯', category: 'small', idPattern: '(?:7[.,/](?:62|61)|76[12])[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:51|52)(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст))?(?:[\\s\\-_]*(?:uar|уар)(?:\\-?10)?)?(?:[\\s\\-_]*(?:nato|нато|win|\\.308|ball|m240|м240))*' },
+            { id: '7.62x39', name: '7.62х39 мм', icon: '🎯', category: 'small', idPattern: '(?:7[.,/](?:62|61)|76[12])[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*39(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:пс|ps|бз|bz|т[- ]?45|t[- ]?45|акм?|akm?))*' },
+            { id: '7.62', name: '7.62 мм (неуточнений)', icon: '🎯', category: 'small', idPattern: '(?:7[.,/](?:62|61)|76[12])(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст))?(?:[\\s\\-_]*(?:лпс|lps|б[- ]?32|b[- ]?32|бзт|bzt|пс|ps|т[- ]?4[56]|t[- ]?4[56]))*' },
             
-            // Стрілецька зброя: 5.56 мм (NATO)
-            { id: '5.56', name: '5.56х45 мм (NATO)', icon: '🎯', category: 'small', idPattern: '5[.,/]56(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:uar|уар)(?:\\-?15)?)?(?:[\\s\\-_]*(?:nato|нато|ss109|m855|ball))*' },
+            // Стрілецька зброя: 5.56 мм (NATO) з підтримкою стрічок (M249/Minimi/стр)
+            { id: '5.56', name: '5.56х45 мм (NATO)', icon: '🎯', category: 'small', idPattern: '5[.,/]56(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст|ланка|м249|m249|minimi|мінімі))*(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:uar|уар)(?:\\-?15)?)?(?:[\\s\\-_]*(?:nato|нато|ss109|m855|ball|м249|m249|minimi|мінімі))*' },
 
             // Гладкоствольна зброя: 12 калібр
             { id: '12x70', name: '12 калібр (12х70)', icon: '🎯', category: 'small', idPattern: '12[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*70|12[\\s\\-/]+7(?![0-9])|12[\\s\\-]*кал(?:ібр)?' },
 
             // Великокаліберні кулемети: 12.7 та 14.5 мм
-            { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:bmg|бмг|браунінг|browning|м2|m2|ap|api|апі|б[- ]?32|b[- ]?32|бзт|bzt|мдз|mdz))*' },
-            { id: '12.7x108', name: '12.7х108 мм (ДШК/Утьос)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*108(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:дшк|dshk|утьос|утес|нсв|нсвт|б[- ]?32|b[- ]?32|бзт(?:[- ]?44)?|bzt|мдз|mdz))*' },
-            { id: '12.7', name: '12.7 мм (неуточнений)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:мдз|mdz|мд[- ]?з|мд|б[- ]?32|b[- ]?32|бзт(?:[- ]?44)?|bzt|бз|дшк|dshk|утьос|утес|нсв|нсвт|bmg|бмг|браунінг|browning|м2|m2))*' },
+            { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст))?(?:[\\s\\-_]*(?:bmg|бмг|браунінг|browning|м2|m2|ap|api|апі|б[- ]?32|b[- ]?32|бзт|bzt|мдз|mdz))*' },
+            { id: '12.7x108', name: '12.7х108 мм (ДШК/Утьос)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*108(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст))?(?:[\\s\\-_]*(?:дшк|dshk|утьос|утес|нсв|нсвт|б[- ]?32|b[- ]?32|бзт(?:[- ]?44)?|bzt|мдз|mdz))*' },
+            { id: '12.7', name: '12.7 мм (неуточнений)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст))?(?:[\\s\\-_]*(?:мдз|mdz|мд[- ]?з|мд|б[- ]?32|b[- ]?32|бзт(?:[- ]?44)?|bzt|бз|дшк|dshk|утьос|утес|нсв|нсвт|bmg|бмг|браунінг|browning|м2|m2))*' },
             { id: '14.5', name: '14.5х114 мм (КПВТ)', icon: '⚡', category: 'heavy_mg', idPattern: '14[.,]5(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*114)?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:мдз|mdz|мд[- ]?з|мд|б[- ]?32|b[- ]?32|бзт(?:[- ]?44)?|bzt|бз|зп|бс(?:[- ]?41)?|кпвт|kpvt))*(?:[\\s\\-_]*(?:мм|mm))?' },
 
 
@@ -1172,18 +1189,25 @@ GHO - 2
 
             renderTableRows();
 
-            // Генерація списку рядків з помилками / нерозпізнаними даними
+            // Збереження та генерація списку рядків з помилками / нерозпізнаними даними
+            lastUnparsedList = unparsed;
             if (unparsed.length > 0) {
                 let errHtml = '';
                 unparsed.forEach(u => {
                     const displayOriginal = escapeHtml(u.original);
+                    const safeOriginal = escapeHtml(u.original).replace(/'/g, "\\'");
                     errHtml += `
-                        <li onclick="focusLineInEditor(${u.lineNum})" class="whitespace-nowrap overflow-x-auto pb-1 flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-amber-950/50 cursor-pointer transition-colors group" title="Натисніть щоб перейти до рядка ${u.lineNum}">
-                            <div class="flex items-center gap-2">
-                                <span class="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-900/60 select-none text-[11px] group-hover:border-amber-500/50">Ряд. ${u.lineNum}</span> 
-                                <span class="text-slate-300 group-hover:text-white transition-colors">${displayOriginal}</span>
+                        <li class="whitespace-nowrap overflow-x-auto pb-1 flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-amber-950/50 transition-colors group">
+                            <div onclick="focusLineInEditor(${u.lineNum})" class="flex items-center gap-2 cursor-pointer min-w-0" title="Натисніть щоб перейти до рядка ${u.lineNum}">
+                                <span class="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-900/60 select-none text-[11px] group-hover:border-amber-500/50 shrink-0">Ряд. ${u.lineNum}</span> 
+                                <span class="text-slate-300 group-hover:text-white transition-colors truncate">${displayOriginal}</span>
                             </div>
-                            <span class="text-[10px] text-amber-400/60 group-hover:text-amber-300 font-mono shrink-0">перейти ↵</span>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button onclick="event.stopPropagation(); copySingleUnparsed('${safeOriginal}', this)" class="p-1 rounded bg-amber-950/80 hover:bg-amber-800 text-amber-400 hover:text-amber-200 border border-amber-900/60 transition-colors cursor-pointer active:scale-95" title="Скопіювати цей рядок">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <span onclick="focusLineInEditor(${u.lineNum})" class="text-[10px] text-amber-400/60 group-hover:text-amber-300 font-mono cursor-pointer select-none">перейти ↵</span>
+                            </div>
                         </li>
                     `;
                 });
@@ -1191,6 +1215,63 @@ GHO - 2
                 errorsContainer.classList.remove('hidden');
             } else {
                 errorsContainer.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        let lastUnparsedList = [];
+
+        /**
+         * Копіює всі нерозпізнані рядки в буфер обміну
+         */
+        function copyAllUnparsed(btnElement) {
+            if (!lastUnparsedList || lastUnparsedList.length === 0) return;
+            const textToCopy = lastUnparsedList.map(u => u.original).join('\n');
+            const doFeedback = () => {
+                if (btnElement) {
+                    const span = btnElement.querySelector('span');
+                    const origText = span ? span.textContent : 'Скопіювати всі';
+                    if (span) span.textContent = 'Скопійовано!';
+                    btnElement.classList.add('bg-emerald-500/30', 'text-emerald-300', 'border-emerald-500/50');
+                    setTimeout(() => {
+                        if (span) span.textContent = origText;
+                        btnElement.classList.remove('bg-emerald-500/30', 'text-emerald-300', 'border-emerald-500/50');
+                    }, 1500);
+                }
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy).then(doFeedback).catch(() => {
+                    fallbackCopy(textToCopy);
+                    doFeedback();
+                });
+            } else {
+                fallbackCopy(textToCopy);
+                doFeedback();
+            }
+        }
+
+        /**
+         * Копіює один окремий нерозпізнаний рядок
+         */
+        function copySingleUnparsed(text, btnElement) {
+            const doFeedback = () => {
+                if (btnElement) {
+                    btnElement.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i>`;
+                    lucide.createIcons();
+                    setTimeout(() => {
+                        btnElement.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5"></i>`;
+                        lucide.createIcons();
+                    }, 1200);
+                }
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(doFeedback).catch(() => {
+                    fallbackCopy(text);
+                    doFeedback();
+                });
+            } else {
+                fallbackCopy(text);
+                doFeedback();
             }
         }
 
@@ -1299,7 +1380,7 @@ GHO - 2
                 const formattedCount = r.count.toLocaleString('uk-UA');
                 textToSave += `${r.name}: ${formattedCount} шт.\n`;
             });
-            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично (Калькулятор БК v1.2.7)";
+            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично (Калькулятор БК v1.2.9)";
 
             const blob = new Blob(["\uFEFF" + textToSave], { type: "text/plain;charset=utf-8" });
             const url = URL.createObjectURL(blob);
