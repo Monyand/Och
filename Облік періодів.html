@@ -178,18 +178,18 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
     <div class="w-full max-w-[1600px] space-y-4">
 
         <!-- Шапка програми -->
-        <header class="bg-slate-900/80 backdrop-blur-md border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 border border-blue-400/40 shrink-0">
-                    <i data-lucide="calendar-range" class="w-6 h-6"></i>
+        <header class="bg-slate-900/80 backdrop-blur-md border border-slate-800/90 rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 border border-blue-400/40 shrink-0">
+                    <i data-lucide="calendar-range" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2.5 flex-wrap">
-                        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-lg sm:text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300">
                             Аналізатор періодів бойових завдань та ДВ
                         </h1>
-                        <button onclick="openModal('modal-changelog')" class="text-xs bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(59,130,246,0.2)]" title="Історія оновлень">
-                            ⚡ v1.3.0
+                        <button onclick="openModal('modal-changelog')" class="text-[11px] bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(59,130,246,0.2)]" title="Історія оновлень">
+                            ⚡ v1.4.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs mt-0.5">
@@ -197,7 +197,25 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     </p>
                 </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                <button type="button" onclick="document.getElementById('fileInput').click()" 
+                    class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 hover:border-slate-500 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 group" title="Вибрати окремі файли (.xlsx, .docx)">
+                    <i data-lucide="file-plus" class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform"></i>
+                    <span>Файли</span>
+                </button>
+                <button type="button" onclick="document.getElementById('folderInput').click()" 
+                    class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-blue-600/30 active:scale-95 group" title="Вибрати цілу папку зі списками">
+                    <i data-lucide="folder-up" class="w-4 h-4 text-cyan-200 group-hover:scale-110 transition-transform"></i>
+                    <span>Папка</span>
+                </button>
+                <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .docx" multiple>
+                <input type="file" id="folderInput" class="hidden" webkitdirectory directory multiple>
+                <button type="button" onclick="openModal('modal-files')" 
+                    class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 hover:border-cyan-400/60 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm group">
+                    <i data-lucide="folder-check" class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform"></i>
+                    <span>Файли та фільтр</span>
+                    <span id="files-processed-badge" class="bg-blue-500/20 text-cyan-300 border border-blue-500/30 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">0 шт.</span>
+                </button>
                 <div id="storageIndicator" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-slate-950/70 border border-slate-800 text-slate-400 shadow-inner" title="Дані автоматично зберігаються в локальному сховищі браузера (100% офлайн)">
                     <span id="storageIndicatorDot" class="w-2 h-2 rounded-full bg-slate-600"></span>
                     <span id="storageIndicatorText">Сховище порожнє</span>
@@ -205,219 +223,106 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             </div>
         </header>
 
-        <!-- Блок завантаження файлів (2-колонковий макет) -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
-            
-            <!-- Ліва колонка: Dropzone + Toolbar із підсумками категорій (8 колонок) -->
-            <div class="xl:col-span-8 flex flex-col gap-3">
-                <!-- Drop Zone -->
-                <div id="dropZone"
-                    class="drop-zone w-full border-2 border-dashed border-blue-500/35 hover:border-cyan-400 bg-gradient-to-b from-blue-500/5 to-slate-900/40 hover:bg-blue-500/10 rounded-2xl p-4.5 text-center transition-all duration-200 flex flex-col sm:flex-row items-center justify-between gap-4 group shadow-md cursor-pointer">
-                    <div class="flex items-center gap-3.5 text-center sm:text-left min-w-0" onclick="document.getElementById('fileInput').click()">
-                        <div class="bg-blue-500/15 text-blue-400 group-hover:text-cyan-300 p-3 rounded-2xl group-hover:scale-105 transition-transform shrink-0 border border-blue-400/30 shadow-lg shadow-blue-500/15">
-                            <i data-lucide="folder-up" class="w-6 h-6"></i>
-                        </div>
-                        <div class="truncate min-w-0">
-                            <p class="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
-                                Перетягніть файли або цілу папку сюди
-                            </p>
-                            <p class="text-xs text-slate-400 mt-0.5">
-                                Підтримуються вкладені папки, списки ВОП/РОП/БРО та ДВ 30 <span class="text-[10px] font-mono px-1.5 py-0.5 bg-slate-800/80 rounded text-cyan-300 border border-slate-700/60 ml-1">.xlsx, .docx</span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" onclick="event.stopPropagation(); document.getElementById('fileInput').click()"
-                            class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
-                            <i data-lucide="file-plus" class="w-3.5 h-3.5 text-blue-400"></i>
-                            Файли
-                        </button>
-                        <button type="button" onclick="event.stopPropagation(); document.getElementById('folderInput').click()"
-                            class="px-3.5 py-1.5 rounded-xl bg-blue-600/80 hover:bg-blue-600 text-white border border-blue-400/60 hover:border-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md shadow-blue-600/20 cursor-pointer">
-                            <i data-lucide="folder" class="w-3.5 h-3.5 text-cyan-300"></i>
-                            Ціла папка
-                        </button>
-                    </div>
-                    <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .docx" multiple>
-                    <input type="file" id="folderInput" class="hidden" webkitdirectory directory multiple>
-                </div>
-
-                <!-- Фільтр назв файлів (вхідний відбір списків) -->
-                <div class="p-2.5 bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-800/90 shadow-md flex flex-col sm:flex-row items-center justify-between gap-2.5">
-                    <div class="flex items-center gap-2 text-xs text-slate-300 font-semibold shrink-0">
-                        <div class="w-6 h-6 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-cyan-400">
-                            <i data-lucide="filter" class="w-3.5 h-3.5"></i>
-                        </div>
-                        <span>Фільтр файлів:</span>
-                    </div>
-                    <div class="relative flex-1 w-full">
-                        <input type="text" id="fileNameFilterInput" placeholder="Ключові слова у назвах файлів (через кому, напр. списки, відомість)..."
-                            class="w-full bg-slate-950/90 text-cyan-300 border border-slate-700/80 rounded-lg pl-3 pr-8 py-1.5 text-xs font-mono placeholder:text-slate-500 placeholder:font-sans focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner">
-                        <button type="button" id="clearFileNameFilterBtn" onclick="clearFileNameFilter()" class="hidden absolute right-2 top-2 text-slate-400 hover:text-rose-400 p-0.5 rounded cursor-pointer" title="Очистити фільтр назв">
-                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                        </button>
-                    </div>
-                    <span class="text-[11px] font-sans text-slate-400 shrink-0 hidden md:inline" title="Регістр і зайві пробіли ігноруються. Якщо порожньо — беруться всі файли з датами">
-                        (через кому)
-                    </span>
-                </div>
-
-                <!-- Progress Bar (при завантаженні) -->
-                <div id="loadingIndicator" class="hidden p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-md">
-                    <div class="flex items-center justify-between text-xs font-mono">
-                        <span class="text-slate-300 flex items-center gap-2">
-                            <span class="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
-                            <span id="loadingText" class="truncate max-w-[400px]">Обробка...</span>
-                        </span>
-                        <span id="loadingPercent" class="text-cyan-400 font-bold">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Панель підсумків та швидких дій (Toolbar) -->
-                <div class="p-2.5 bg-slate-900/85 backdrop-blur-md rounded-xl border border-slate-800/80 shadow-md flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 font-mono text-xs flex-wrap">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 mr-0.5">Дні / Категорії:</span>
-                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 shadow-sm">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"></span>
-                            <span class="text-[11px] font-sans font-medium text-slate-300">БРО:</span>
-                            <strong id="badge-count-bro" class="text-emerald-300 text-xs font-mono font-bold">0</strong>
-                        </span>
-                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300 shadow-sm">
-                            <span class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]"></span>
-                            <span class="text-[11px] font-sans font-medium text-slate-300">РОП:</span>
-                            <strong id="badge-count-rop" class="text-amber-300 text-xs font-mono font-bold">0</strong>
-                        </span>
-                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-300 shadow-sm">
-                            <span class="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.8)]"></span>
-                            <span class="text-[11px] font-sans font-medium text-slate-300">ВОП:</span>
-                            <strong id="badge-count-vop" class="text-rose-300 text-xs font-mono font-bold">0</strong>
-                        </span>
-                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-950/40 border border-sky-500/30 text-sky-300 shadow-sm">
-                            <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]"></span>
-                            <span class="text-[11px] font-sans font-medium text-slate-300">ДВ 30:</span>
-                            <strong id="badge-count-dv30" class="text-cyan-300 text-xs font-mono font-bold">0</strong>
-                        </span>
-                    </div>
-
-                    <button id="clearBtn" class="hidden flex items-center gap-1.5 px-3 py-1 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-lg text-xs font-semibold transition-all border border-rose-500/40 cursor-pointer shadow-sm" title="Очистити всі завантажені файли з пам'яті">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i>
-                        <span>Скинути дані</span>
-                    </button>
-                </div>
+        <!-- Progress Bar (при завантаженні файлів) -->
+        <div id="loadingIndicator" class="hidden p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-md">
+            <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-slate-300 flex items-center gap-2">
+                    <span class="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
+                    <span id="loadingText" class="truncate max-w-[500px]">Обробка...</span>
+                </span>
+                <span id="loadingPercent" class="text-cyan-400 font-bold">0%</span>
             </div>
-
-            <!-- Права колонка: Опрацьовані файли (4 колонки) -->
-            <div class="xl:col-span-4 flex flex-col">
-                <div class="bg-slate-900/85 backdrop-blur-md border border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between h-full shadow-md">
-                    <div>
-                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between border-b border-slate-800 pb-2.5">
-                            <span class="flex items-center gap-2">
-                                <i data-lucide="folder-check" class="w-4 h-4 text-cyan-400"></i>
-                                <span>Опрацьовані файли</span>
-                            </span>
-                            <span id="files-processed-badge" class="bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[11px] px-2.5 py-0.5 rounded-md font-mono font-bold">0 шт.</span>
-                        </h3>
-                        
-                        <div id="processedFilesList" class="mt-2.5">
-                            <ul id="fileLog" class="space-y-1.5 max-h-[145px] overflow-y-auto pr-1 custom-scrollbar text-xs">
-                                <li class="text-slate-500 italic text-xs py-8 text-center flex flex-col items-center justify-center gap-1.5">
-                                    <i data-lucide="file-spreadsheet" class="w-6 h-6 text-slate-600"></i>
-                                    <span>Очікування файлів...</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
             </div>
         </div>
 
-        <!-- Повнорозмірна таблиця результатів (100% ширини екрану) -->
-        <div class="bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-[calc(100vh-250px)] min-h-[520px] overflow-hidden">
+        <!-- Повнорозмірна таблиця результатів (100% ширини екрану, максимальна висота) -->
+        <div id="dropZone" class="drop-zone bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-[calc(100vh-95px)] min-h-[640px] overflow-hidden transition-all relative">
                 
-                <!-- Шапка таблиці з пошуком та фільтрами -->
-                <div class="p-3.5 border-b border-slate-800/90 bg-slate-900/95 space-y-3">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                                <i data-lucide="table" class="w-3.5 h-3.5"></i>
-                            </div>
-                            <h2 class="text-sm font-extrabold text-white tracking-wide">Зведена таблиця періодів</h2>
-                            <span id="statsText" class="font-mono text-[11px] text-slate-400 ml-1 font-medium"></span>
+            <!-- Rock-Solid 2-рядковий Toolbar -->
+            <div class="p-3 sm:p-3.5 border-b border-slate-800/90 bg-slate-900/95 space-y-2.5">
+                <!-- Рядок 1: Заголовок, лічильники та основні дії -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                            <i data-lucide="table" class="w-3.5 h-3.5"></i>
                         </div>
-
-                        <div class="flex items-center gap-2">
-                            <!-- Перемикач режимів перегляду -->
-                            <div class="flex items-center bg-slate-950 p-0.5 rounded-xl border border-slate-800 shadow-inner">
-                                <button type="button" onclick="setViewMode('list')" id="view-mode-list"
-                                    class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md">
-                                    <i data-lucide="list" class="w-3.5 h-3.5"></i>
-                                    <span>Список</span>
-                                </button>
-                                <button type="button" onclick="setViewMode('matrix')" id="view-mode-matrix"
-                                    class="px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer text-slate-400 hover:text-white">
-                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-                                    <span>Табель</span>
-                                </button>
-                            </div>
-
-                            <!-- Кнопка скидання вибору (з'являється коли обрано > 0) -->
-                            <button id="clearSelectionBtn" onclick="clearSelection()" class="hidden px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-blue-950/60 hover:bg-blue-900/80 text-blue-200 border border-blue-500/50 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Скинути вибір бійців">
-                                <span id="clearSelectionCount">✓ Обрано: 0</span>
-                                <i data-lucide="x" class="w-3.5 h-3.5 text-blue-400 hover:text-rose-400"></i>
-                            </button>
-
-                            <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span id="exportExcelBtnText">Завантажити Excel</span>
-                            </button>
-                        </div>
+                        <h2 class="text-sm font-extrabold text-white tracking-wide truncate">Особовий склад</h2>
+                        <span id="statsText" class="font-mono text-[11px] text-slate-400 ml-1 font-medium truncate"></span>
                     </div>
 
-                    <!-- Панель пошуку та фільтрів-перемикачів -->
-                    <div class="flex flex-col sm:flex-row items-center gap-2.5">
-                        <!-- Пошук -->
-                        <div class="relative flex-1 w-full">
-                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-                            <input type="text" id="searchInput" placeholder="Пошук за ПІБ, званням, посадою (можна через кому)..."
-                                class="w-full bg-slate-950/90 text-slate-100 border border-slate-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs font-sans placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner">
+                    <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                        <!-- Перемикач режимів перегляду -->
+                        <div class="flex items-center bg-slate-950 p-0.5 rounded-xl border border-slate-800 shadow-inner">
+                            <button type="button" onclick="setViewMode('list')" id="view-mode-list"
+                                class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md">
+                                <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                                <span>Список</span>
+                            </button>
+                            <button type="button" onclick="setViewMode('matrix')" id="view-mode-matrix"
+                                class="px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer text-slate-400 hover:text-white">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                <span>Табель</span>
+                            </button>
                         </div>
 
-                        <!-- Фільтри -->
-                        <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
-                            <button type="button" onclick="setFilter('all')" id="filter-all"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-600 text-white border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all cursor-pointer">
-                                Всі
-                            </button>
-                            <button type="button" onclick="setFilter('bro')" id="filter-bro"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/40 border border-emerald-900/60 transition-all cursor-pointer">
-                                🛡️ БРО
-                            </button>
-                            <button type="button" onclick="setFilter('rop')" id="filter-rop"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-amber-400 hover:bg-amber-950/40 border border-amber-900/60 transition-all cursor-pointer">
-                                🛡️ РОП
-                            </button>
-                            <button type="button" onclick="setFilter('vop')" id="filter-vop"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-rose-400 hover:bg-rose-950/40 border border-rose-900/60 transition-all cursor-pointer">
-                                ⚔️ ВОП
-                            </button>
-                            <button type="button" onclick="setFilter('dv30')" id="filter-dv30"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-cyan-400 hover:bg-cyan-950/40 border border-cyan-900/60 transition-all cursor-pointer">
-                                🏷️ ДВ 30
-                            </button>
-                            <button type="button" onclick="setFilter('active')" id="filter-active"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/40 border border-emerald-900/60 transition-all cursor-pointer">
-                                🟢 Активні
-                            </button>
-                            <button type="button" onclick="setFilter('inactive')" id="filter-inactive"
-                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer">
-                                ⚪ Вибули
-                            </button>
-                        </div>
+                        <!-- Кнопка скидання вибору -->
+                        <button id="clearSelectionBtn" onclick="clearSelection()" class="hidden px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-blue-950/60 hover:bg-blue-900/80 text-blue-200 border border-blue-500/50 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Скинути вибір бійців">
+                            <span id="clearSelectionCount">✓ Обрано: 0</span>
+                            <i data-lucide="x" class="w-3.5 h-3.5 text-blue-400 hover:text-rose-400"></i>
+                        </button>
+
+                        <!-- Завантажити Excel -->
+                        <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span id="exportExcelBtnText">Завантажити Excel</span>
+                        </button>
                     </div>
                 </div>
+
+                <!-- Рядок 2: Пошук та фільтри категорій -->
+                <div class="flex flex-col lg:flex-row items-center gap-2.5">
+                    <!-- Пошук -->
+                    <div class="relative flex-1 w-full">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                        <input type="text" id="searchInput" placeholder="Пошук за ПІБ, званням, посадою (можна через кому)..."
+                            class="w-full bg-slate-950/90 text-slate-100 border border-slate-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs font-sans placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner">
+                    </div>
+
+                    <!-- Фільтри -->
+                    <div class="flex items-center gap-1.5 flex-wrap w-full lg:w-auto shrink-0">
+                        <button type="button" onclick="setFilter('all')" id="filter-all"
+                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-600 text-white border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all cursor-pointer">
+                            Всі
+                        </button>
+                        <button type="button" onclick="setFilter('bro')" id="filter-bro"
+                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/40 border border-emerald-900/60 transition-all cursor-pointer">
+                            🛡️ БРО
+                        </button>
+                        <button type="button" onclick="setFilter('rop')" id="filter-rop"
+                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-amber-400 hover:bg-amber-950/40 border border-amber-900/60 transition-all cursor-pointer">
+                            🛡️ РОП
+                        </button>
+                        <button type="button" onclick="setFilter('vop')" id="filter-vop"
+                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-rose-400 hover:bg-rose-950/40 border border-rose-900/60 transition-all cursor-pointer">
+                            ⚔️ ВОП
+                        </button>
+                        <button type="button" onclick="setFilter('dv30')" id="filter-dv30"
+                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-cyan-400 hover:bg-cyan-950/40 border border-cyan-900/60 transition-all cursor-pointer">
+                            🏷️ ДВ 30
+                        </button>
+                        <button type="button" onclick="setFilter('active')" id="filter-active"
+                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/40 border border-emerald-900/60 transition-all cursor-pointer">
+                            🟢 В строю
+                        </button>
+                        <button type="button" onclick="setFilter('inactive')" id="filter-inactive"
+                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer">
+                            ⚪ Вибули
+                        </button>
+                    </div>
+                </div>
+            </div>
 
                 <!-- Таблиця результатів (Список з періодами) -->
                 <div id="listViewContainer" class="flex-1 overflow-auto custom-scrollbar p-0 relative">
@@ -459,9 +364,28 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         </thead>
                         <tbody id="resultTableBody" class="divide-y divide-slate-800/80 font-sans">
                             <tr>
-                                <td colspan="7" class="py-24 text-center text-slate-500 italic">
-                                    <i data-lucide="folder-search" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
-                                    Перетягніть щоденні файли у ліву панель для формування зведення
+                                <td colspan="7" class="py-28 text-center">
+                                    <div class="max-w-md mx-auto flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-slate-800 bg-slate-950/40">
+                                        <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-cyan-400 mb-3 shadow-inner">
+                                            <i data-lucide="folder-up" class="w-6 h-6"></i>
+                                        </div>
+                                        <h3 class="text-sm font-bold text-white mb-1">Немає завантажених списків</h3>
+                                        <p class="text-xs text-slate-400 mb-4 max-w-xs">
+                                            Перетягніть сюди файли або скористайтеся кнопками завантаження
+                                        </p>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" onclick="document.getElementById('fileInput').click()" 
+                                                class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95">
+                                                <i data-lucide="file-plus" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                                <span>Додати файли</span>
+                                            </button>
+                                            <button type="button" onclick="document.getElementById('folderInput').click()" 
+                                                class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-blue-600/30 active:scale-95">
+                                                <i data-lucide="folder-up" class="w-3.5 h-3.5 text-cyan-200"></i>
+                                                <span>Додати папку</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -489,7 +413,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
     </div>
 
     <!-- MODAL: CHANGELOG -->
-    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
                 <div class="flex items-center gap-2.5">
@@ -508,7 +432,20 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             <div class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs font-sans">
                 <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
                     <div class="font-bold text-white flex items-center justify-between font-mono">
-                        <span class="text-cyan-400">⚡ v1.3.0 — Розумний фільтр файлів, 100% парсинг та Tactical UI</span>
+                        <span class="text-cyan-400">⚡ v1.4.0 — Професійний Excel-експорт (AutoFilter, формули, тактичні маркери)</span>
+                        <span class="text-[10px] text-slate-500">01.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
+                        <li><b>Тактичний Excel-експорт</b>: компактне групування рубежів (<code>▸ БРО (2 доби) → 23.08, 31.08</code>) та перерв (<code>▫️ 24.08 – 30.08 (7 діб)</code>) без повторів років <code>.2026</code>.</li>
+                        <li><b>Прочерки замість нулів</b>: усі порожні <code>0</code> у числових стовпцях замінено на приглушені <code>—</code> для миттєвого візуального сканування активних діб.</li>
+                        <li><b>100% екранна ергономіка</b>: збалансовані ширини колонок під одноекранний перегляд без горизонтального скролу; лаконічні назви шапки без перекриття стрілочками фільтрів.</li>
+                        <li><b>Живі формули та кольорові категорії</b>: динамічні формули Excel <code>=SUM(...)</code> у підсумковому рядку «РАЗОМ», нативні автофільтри та статусний колор-кодинг шапки (БРО, РОП, ВОП, ДВ 30).</li>
+                        <li><b>Оновлення календарного табеля</b>: автофільтри, прочерки та формули сум на 2-му аркуші книги.</li>
+                    </ul>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
+                    <div class="font-bold text-slate-300 flex items-center justify-between font-mono">
+                        <span class="text-blue-400">⚡ v1.3.0 — Розумний фільтр файлів, 100% парсинг та Tactical UI</span>
                         <span class="text-[10px] text-slate-500">02.09.2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
@@ -542,6 +479,74 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             </div>
             <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-950/60">
                 <button onclick="closeModal('modal-changelog')" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer">
+                    Закрити
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ОПРАЦЬОВАНІ ФАЙЛИ ТА ФІЛЬТР -->
+    <div id="modal-files" onclick="if(event.target === this) closeModal('modal-files')" class="fixed inset-0 z-[200] bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div class="p-4 sm:p-5 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-cyan-400">
+                        <i data-lucide="folder-check" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-white">Опрацьовані файли та вхідний фільтр</h3>
+                        <p class="text-[11px] text-slate-400">Керування завантаженими списками та правилами відбору файлів</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modal-files')" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="p-4 sm:p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs font-sans">
+                <!-- Фільтр назв файлів -->
+                <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <label for="fileNameFilterInput" class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                            <i data-lucide="filter" class="w-3.5 h-3.5 text-cyan-400"></i>
+                            <span>Фільтр ключових слів у назвах файлів:</span>
+                        </label>
+                        <span class="text-[11px] text-slate-500 font-mono">(через кому)</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="fileNameFilterInput" placeholder="напр.: списки, відомість, воп (якщо порожньо — беруться всі файли з датами)..."
+                            class="w-full bg-slate-900 text-cyan-300 border border-slate-700/80 rounded-xl pl-3 pr-8 py-2 text-xs font-mono placeholder:text-slate-500 placeholder:font-sans focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner">
+                        <button type="button" id="clearFileNameFilterBtn" onclick="clearFileNameFilter()" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-rose-400 p-0.5 rounded cursor-pointer" title="Очистити фільтр">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-400">
+                        Автоматично відсікає сторонні файли (ПБД, ЖБД, СЗЧ, поранення, штат тощо). Регістр не має значення.
+                    </p>
+                </div>
+
+                <!-- Список опрацьованих файлів -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Список файлів у пам'яті:</span>
+                        <button id="clearBtn" class="hidden flex items-center gap-1.5 px-2.5 py-1 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-lg text-xs font-semibold transition-all border border-rose-500/40 cursor-pointer shadow-sm" title="Очистити всі завантажені файли з пам'яті">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i>
+                            <span>Скинути всі дані</span>
+                        </button>
+                    </div>
+                    <div id="processedFilesList" class="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+                        <ul id="fileLog" class="space-y-1.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar text-xs">
+                            <li class="text-slate-500 italic text-xs py-8 text-center flex flex-col items-center justify-center gap-1.5">
+                                <i data-lucide="file-spreadsheet" class="w-6 h-6 text-slate-600"></i>
+                                <span>Очікування файлів...</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 flex justify-end bg-slate-950/60">
+                <button onclick="closeModal('modal-files')" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer">
                     Закрити
                 </button>
             </div>
@@ -589,6 +594,73 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             }
         }
 
+        function normalizePersonKey(str) {
+            if (!str) return '';
+            let s = String(str)
+                .replace(/[\u00A0\u1680\u180e\u2000-\u200b\u202f\u205f\u3000\ufeff]/g, ' ')
+                .replace(/[\u2018\u2019\u02bc\u0060\u00b4]/g, "'")
+                .replace(/["«»]/g, '')
+                .trim();
+
+            const homoglyphs = {
+                'A': 'А', 'B': 'В', 'C': 'С', 'E': 'Е', 'H': 'Н', 'I': 'І', 'i': 'і',
+                'K': 'К', 'M': 'М', 'O': 'О', 'P': 'Р', 'T': 'Т', 'X': 'Х',
+                'a': 'а', 'c': 'с', 'e': 'е', 'o': 'о', 'p': 'р', 'x': 'х'
+            };
+            s = s.replace(/[ABCEHIKMOPTXaceopx]/g, ch => homoglyphs[ch] || ch);
+
+            // Strip leading ranks if accidentally passed in name column
+            s = s.replace(/^(солдат|ст\.?\s*солдат|старший\s+солдат|мол\.?\s*сержант|молодший\s+сержант|сержант|ст\.?\s*сержант|старший\s+сержант|головний\s+сержант|штаб-сержант|майстер-сержант|старший\s+майстер-сержант|головний\s+майстер-сержант|мол\.?\s*лейтенант|молодший\s+лейтенант|лейтенант|ст\.?\s*лейтенант|старший\s+лейтенант|капітан|майор|підполковник|полковник|матрос|старший\s+матрос|старшина|в\/сл|вс)\s+/i, '');
+
+            s = s.replace(/[\.\,\;\:\/\\]+/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase();
+            return s;
+        }
+
+        function formatDisplayName(str) {
+            if (!str) return '';
+            return String(str).replace(/([а-яіїєґА-ЯІЇЄҐ]+)/g, m => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase());
+        }
+
+        function findExistingPersonKey(db, key, name, ipn) {
+            if (!key) return null;
+            if (db.has(key)) return key;
+
+            const cleanIpn = ipn ? String(ipn).replace(/\D/g, '') : '';
+
+            const words1 = key.split(' ').filter(Boolean);
+            const surname1 = words1[0];
+
+            for (const [k, p] of db.entries()) {
+                if (cleanIpn && cleanIpn.length >= 8) {
+                    if (p.records) {
+                        for (const rec of p.records.values()) {
+                            const recIpn = rec.ipn ? String(rec.ipn).replace(/\D/g, '') : '';
+                            if (recIpn && recIpn === cleanIpn) return k;
+                        }
+                    }
+                }
+
+                const words2 = k.split(' ').filter(Boolean);
+                const surname2 = words2[0];
+                if (surname1 === surname2) {
+                    if (words1.length >= 2 && words2.length >= 2) {
+                        const init1_1 = words1[1][0];
+                        const init2_1 = words2[1][0];
+                        if (init1_1 === init2_1) {
+                            if (words1.length >= 3 && words2.length >= 3) {
+                                const init1_2 = words1[2][0];
+                                const init2_2 = words2[2][0];
+                                if (init1_2 === init2_2) return k;
+                            } else if (words1.length === 2 || words2.length === 2) {
+                                return k;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
         function saveToStorage() {
             try {
                 if (database.size === 0) {
@@ -598,7 +670,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 }
 
                 const serializedDb = [];
-                for (const [name, personData] of database.entries()) {
+                for (const [key, personData] of database.entries()) {
                     const recs = [];
                     if (personData.records) {
                         for (const [dateStr, rec] of personData.records.entries()) {
@@ -606,6 +678,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         }
                     }
                     serializedDb.push({
+                        key: key,
                         name: personData.name,
                         records: recs
                     });
@@ -648,17 +721,35 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 uploadedFilesHistory = state.uploadedFilesHistory || [];
 
                 state.database.forEach(p => {
-                    const recordsMap = new Map();
-                    if (p.records && Array.isArray(p.records)) {
-                        p.records.forEach(r => {
-                            const { date, ...recData } = r;
-                            recordsMap.set(date, recData);
+                    const normKey = p.key || normalizePersonKey(p.name);
+                    const matchedKey = database.has(normKey) ? normKey : findExistingPersonKey(database, normKey, p.name, null);
+                    const targetKey = matchedKey || normKey;
+
+                    if (database.has(targetKey)) {
+                        const existing = database.get(targetKey);
+                        if (p.name && p.name.length > existing.name.length) {
+                            existing.name = p.name;
+                        }
+                        if (p.records && Array.isArray(p.records)) {
+                            p.records.forEach(r => {
+                                const { date, ...recData } = r;
+                                existing.records.set(date, recData);
+                            });
+                        }
+                    } else {
+                        const recordsMap = new Map();
+                        if (p.records && Array.isArray(p.records)) {
+                            p.records.forEach(r => {
+                                const { date, ...recData } = r;
+                                recordsMap.set(date, recData);
+                            });
+                        }
+                        database.set(targetKey, {
+                            key: targetKey,
+                            name: p.name,
+                            records: recordsMap
                         });
                     }
-                    database.set(p.name, {
-                        name: p.name,
-                        records: recordsMap
-                    });
                 });
 
                 if (state.successDates && Array.isArray(state.successDates)) {
@@ -709,11 +800,12 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
             renderFileLogList();
             
-            document.getElementById('files-processed-badge').innerText = '0 шт.';
-            document.getElementById('badge-count-bro').innerText = '0';
-            document.getElementById('badge-count-rop').innerText = '0';
-            document.getElementById('badge-count-vop').innerText = '0';
-            document.getElementById('badge-count-dv30').innerText = '0';
+            const badgeProcessed = document.getElementById('files-processed-badge');
+            if (badgeProcessed) badgeProcessed.innerText = '0 шт.';
+            ['bro', 'rop', 'vop', 'dv30'].forEach(k => {
+                const el = document.getElementById(`badge-count-${k}`);
+                if (el) el.innerText = '0';
+            });
             
             const clearBtn = document.getElementById('clearBtn');
             if (clearBtn) clearBtn.classList.add('hidden');
@@ -824,21 +916,37 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             });
 
             // Drag & Drop
-            dropZone.addEventListener('dragover', (e) => { 
-                e.preventDefault(); 
-                dropZone.classList.add('dragover'); 
-            });
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-            dropZone.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-                if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-                    const files = await getAllFileEntries(e.dataTransfer.items);
-                    if (files && files.length) processFiles(files);
-                } else if (e.dataTransfer.files && e.dataTransfer.files.length) {
-                    processFiles(e.dataTransfer.files);
-                }
-            });
+            let dragCounter = 0;
+            if (dropZone) {
+                dropZone.addEventListener('dragenter', (e) => {
+                    e.preventDefault();
+                    dragCounter++;
+                    dropZone.classList.add('dragover');
+                });
+                dropZone.addEventListener('dragover', (e) => { 
+                    e.preventDefault(); 
+                    dropZone.classList.add('dragover'); 
+                });
+                dropZone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    dragCounter--;
+                    if (dragCounter <= 0) {
+                        dragCounter = 0;
+                        dropZone.classList.remove('dragover');
+                    }
+                });
+                dropZone.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    dragCounter = 0;
+                    dropZone.classList.remove('dragover');
+                    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+                        const files = await getAllFileEntries(e.dataTransfer.items);
+                        if (files && files.length) processFiles(files);
+                    } else if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                        processFiles(e.dataTransfer.files);
+                    }
+                });
+            }
 
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files && e.target.files.length) processFiles(e.target.files);
@@ -966,9 +1074,38 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             return dStr;
         }
 
+        function formatDateShort(dStr) {
+            if (!dStr) return '';
+            const parts = dStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}.${parts[1]}`;
+            }
+            return dStr;
+        }
+
         function getEpochDay(dateStr) {
             const parts = dateStr.split('-');
             return Math.floor(new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])).getTime() / 86400000);
+        }
+
+        function addDaysToDateStr(dStr, days) {
+            const parts = dStr.split('-');
+            const dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            dt.setDate(dt.getDate() + days);
+            const y = dt.getFullYear();
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const d = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatDaysUa(n) {
+            const num = Math.abs(n);
+            const mod10 = num % 10;
+            const mod100 = num % 100;
+            if (mod100 >= 11 && mod100 <= 19) return `${n} діб`;
+            if (mod10 === 1) return `${n} доба`;
+            if (mod10 >= 2 && mod10 <= 4) return `${n} доби`;
+            return `${n} діб`;
         }
 
         function extractDateFromFilename(filename) {
@@ -1483,7 +1620,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             let rawDepth = colMap.depth !== -1 ? String(r[colMap.depth] || '').trim() : '';
 
                             const cleaned = cleanLocationAndTask(rawTask, rawDepth, isDV30);
-                            const normalizedKey = rawName.toUpperCase();
+                            const normalizedKey = normalizePersonKey(rawName);
 
                             pendingRecords.push({
                                 key: normalizedKey,
@@ -1515,15 +1652,25 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             }
                         }
 
-                        // Commit valid records to database
+                        // Commit valid records to database (with intelligent person matching & full name preference)
                         for (const item of pendingRecords) {
-                            if (!database.has(item.key)) {
-                                database.set(item.key, {
+                            const matchedKey = findExistingPersonKey(database, item.key, item.name, item.ipn);
+                            const targetKey = matchedKey || item.key;
+
+                            if (!database.has(targetKey)) {
+                                database.set(targetKey, {
+                                    key: targetKey,
                                     name: item.name,
                                     records: new Map()
                                 });
                             }
-                            const person = database.get(item.key);
+                            const person = database.get(targetKey);
+
+                            // Prefer fuller / longer full name (e.g. "Шевченко Тарас Григорович" over "Шевченко Т.Г.")
+                            if (item.name && item.name.length > person.name.length) {
+                                person.name = item.name;
+                            }
+
                             person.records.set(item.date, {
                                 rank: item.rank,
                                 pos: item.pos,
@@ -1564,6 +1711,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             let ropDays = 0;
             let vopDays = 0;
             let dv30Days = 0;
+            let gapDaysTotal = 0;
 
             let currentPeriod = null;
 
@@ -1576,7 +1724,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 else if (cat === 'vop') vopDays++;
                 else if (cat === 'dv30') dv30Days++;
 
-                uniqueLocations.add(rec.location);
+                if (rec.location) uniqueLocations.add(rec.location);
 
                 if (!currentPeriod) {
                     currentPeriod = {
@@ -1587,7 +1735,8 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         rank: rec.rank,
                         pos: rec.pos,
                         ipn: rec.ipn,
-                        days: 1
+                        days: 1,
+                        isGap: false
                     };
                 } else {
                     const diffDays = getEpochDay(dStr) - getEpochDay(currentPeriod.end);
@@ -1596,8 +1745,28 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     if (diffDays === 1 && sameLocation) {
                         currentPeriod.end = dStr;
                         currentPeriod.days++;
+                        if (rec.rank) currentPeriod.rank = rec.rank;
+                        if (rec.pos) currentPeriod.pos = rec.pos;
+                        if (rec.ipn) currentPeriod.ipn = rec.ipn;
                     } else {
                         periods.push(currentPeriod);
+                        if (diffDays > 1) {
+                            const gapStart = addDaysToDateStr(currentPeriod.end, 1);
+                            const gapEnd = addDaysToDateStr(dStr, -1);
+                            const gapDays = diffDays - 1;
+                            gapDaysTotal += gapDays;
+                            periods.push({
+                                start: gapStart,
+                                end: gapEnd,
+                                location: 'Не подавався',
+                                task: 'Не подавався (перерва)',
+                                rank: currentPeriod.rank,
+                                pos: currentPeriod.pos,
+                                ipn: currentPeriod.ipn,
+                                days: gapDays,
+                                isGap: true
+                            });
+                        }
                         currentPeriod = {
                             start: dStr,
                             end: dStr,
@@ -1606,7 +1775,8 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             rank: rec.rank,
                             pos: rec.pos,
                             ipn: rec.ipn,
-                            days: 1
+                            days: 1,
+                            isGap: false
                         };
                     }
                 }
@@ -1618,8 +1788,24 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             let isGloballyInactive = false;
             const latestPersonDate = sortedDates[sortedDates.length - 1];
             if (globalMaxDateStr && latestPersonDate) {
-                const gap = getEpochDay(globalMaxDateStr) - getEpochDay(latestPersonDate);
-                if (gap > 1) isGloballyInactive = true;
+                const trailGap = getEpochDay(globalMaxDateStr) - getEpochDay(latestPersonDate);
+                if (trailGap > 1) {
+                    isGloballyInactive = true;
+                    const trailStart = addDaysToDateStr(latestPersonDate, 1);
+                    const trailEnd = globalMaxDateStr;
+                    gapDaysTotal += trailGap;
+                    periods.push({
+                        start: trailStart,
+                        end: trailEnd,
+                        location: 'Не подавався',
+                        task: 'Не подавався (вибув)',
+                        rank: currentPeriod ? currentPeriod.rank : '',
+                        pos: currentPeriod ? currentPeriod.pos : '',
+                        ipn: currentPeriod ? currentPeriod.ipn : '',
+                        days: trailGap,
+                        isGap: true
+                    });
+                }
             }
 
             return {
@@ -1629,6 +1815,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 ropDays,
                 vopDays,
                 dv30Days,
+                gapDays: gapDaysTotal,
                 uniqueLocations: Array.from(uniqueLocations),
                 isGloballyInactive
             };
@@ -1651,28 +1838,47 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             if (database.size === 0) {
                 resultTableBody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="py-24 text-center text-slate-600 italic">
-                            <i data-lucide="folder-search" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
-                            Перетягніть щоденні файли у ліву панель для формування зведення
+                        <td colspan="7" class="py-28 text-center">
+                            <div class="max-w-md mx-auto flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-slate-800 bg-slate-950/40">
+                                <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-cyan-400 mb-3 shadow-inner">
+                                    <i data-lucide="folder-up" class="w-6 h-6"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-200 mb-1">Немає завантажених списків</h3>
+                                <p class="text-xs text-slate-400 mb-4 max-w-xs">
+                                    Перетягніть сюди щоденні файли або додайте їх за допомогою кнопок
+                                </p>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="document.getElementById('fileInput').click()" 
+                                        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm">
+                                        <i data-lucide="file-plus" class="w-3.5 h-3.5 text-blue-400"></i>
+                                        <span>Додати файли</span>
+                                    </button>
+                                    <button type="button" onclick="document.getElementById('folderInput').click()" 
+                                        class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-blue-600/30">
+                                        <i data-lucide="folder" class="w-3.5 h-3.5 text-cyan-200"></i>
+                                        <span>Додати папку</span>
+                                    </button>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 `;
                 if (matrixTableBody) {
                     matrixTableBody.innerHTML = `
                         <tr>
-                            <td colspan="10" class="py-24 text-center text-slate-600 italic">
-                                <i data-lucide="folder-search" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
-                                Перетягніть щоденні файли у ліву панель для формування зведення
+                            <td colspan="10" class="py-28 text-center text-slate-600 italic">
+                                <i data-lucide="calendar" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
+                                Очікування файлів для побудови табеля
                             </td>
                         </tr>
                     `;
                 }
                 statsText.textContent = '';
                 exportExcelBtn.classList.add('hidden');
-                document.getElementById('badge-count-bro').innerText = '0';
-                document.getElementById('badge-count-rop').innerText = '0';
-                document.getElementById('badge-count-vop').innerText = '0';
-                document.getElementById('badge-count-dv30').innerText = '0';
+                ['bro', 'rop', 'vop', 'dv30'].forEach(k => {
+                    const el = document.getElementById(`badge-count-${k}`);
+                    if (el) el.innerText = '0';
+                });
                 lucide.createIcons();
                 return;
             }
@@ -1704,10 +1910,15 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 });
             }
 
-            if (document.getElementById('badge-count-bro')) document.getElementById('badge-count-bro').innerText = sumBro;
-            document.getElementById('badge-count-rop').innerText = sumRop;
-            document.getElementById('badge-count-vop').innerText = sumVop;
-            document.getElementById('badge-count-dv30').innerText = sumDv30;
+            ['bro', 'rop', 'vop', 'dv30'].forEach(k => {
+                const el = document.getElementById(`badge-count-${k}`);
+                if (el) {
+                    if (k === 'bro') el.innerText = sumBro;
+                    else if (k === 'rop') el.innerText = sumRop;
+                    else if (k === 'vop') el.innerText = sumVop;
+                    else if (k === 'dv30') el.innerText = sumDv30;
+                }
+            });
 
             // Фільтрація
             let filtered = allRows.filter(row => {
@@ -1768,7 +1979,8 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 filtered.forEach((row, idx) => {
                     const personId = `p-${idx}`;
                     const details = row.details;
-                    const formattedRank = (row.latestRank || '—').replace(/\s+/g, '<br>');
+                    const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ').trim();
+                    const displayName = formatDisplayName(row.name);
                     const isSelected = selectedPersonNames.has(row.name);
 
                     let locationBadgesHtml = details.uniqueLocations.length > 0
@@ -1814,18 +2026,24 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                                 <span class="text-xs text-slate-400 font-mono font-bold">${idx + 1}</span>
                             </div>
                         </td>
-                        <td class="py-2.5 px-2.5 text-slate-300 font-medium text-[11px] border-r border-slate-800/70 leading-tight break-word-safe">${formattedRank}</td>
-                        <td class="py-2.5 px-2.5 font-extrabold text-white text-[13px] border-r border-slate-800/70 break-word-safe tracking-wide" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
-                            <span class="group-hover:text-blue-300 transition-colors">${escapeHtml(row.name)}</span>
-                            ${details.isGloballyInactive ? '<span class="inline-block ml-1.5 px-1.5 py-0.2 rounded text-[9px] font-mono bg-rose-950/80 text-rose-300 border border-rose-800/80 font-normal">⚠️ Вибув</span>' : ''}
+                        <td class="py-2.5 px-2.5 text-[11px] border-r border-slate-800/70 leading-normal break-word-safe">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 font-medium border border-slate-700/60 shadow-xs">${escapeHtml(cleanRank)}</span>
+                        </td>
+                        <td class="py-2.5 px-2.5 font-bold text-white text-[13px] border-r border-slate-800/70 break-word-safe tracking-normal" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="group-hover:text-blue-300 transition-colors font-semibold">${escapeHtml(displayName)}</span>
+                                ${details.isGloballyInactive ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono bg-rose-950/70 text-rose-300 border border-rose-800/60 shadow-xs font-normal"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>Вибув</span>' : ''}
+                            </div>
                         </td>
                         <td class="py-2.5 px-2.5 text-slate-300 text-xs border-r border-slate-800/70 leading-relaxed max-w-sm break-word-safe">${escapeHtml(row.latestPosition || '—')}</td>
                         <td class="py-2 px-2.5 border-r border-slate-800/70">${locationBadgesHtml}</td>
                         <td class="py-2 px-2 text-center border-r border-slate-800/70">
                             <span class="inline-flex items-center justify-center min-w-[34px] h-7 px-2 rounded-lg border font-mono text-xs ${daysBadgeClass}">${details.totalDays}</span>
                         </td>
-                        <td class="py-2 px-1 text-center text-slate-500 group-hover:text-blue-400 transition-colors">
-                            <i data-lucide="chevron-down" class="chevron w-4 h-4 mx-auto"></i>
+                        <td class="py-2 px-1 text-center">
+                            <div class="w-6 h-6 mx-auto rounded-md bg-slate-800/40 group-hover:bg-slate-700/60 flex items-center justify-center transition-colors">
+                                <i data-lucide="chevron-down" class="chevron w-3.5 h-3.5 text-slate-400 group-hover:text-blue-300"></i>
+                            </div>
                         </td>
                     `;
 
@@ -1834,6 +2052,26 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     trDetails.className = 'hidden bg-slate-950/80 border-b border-slate-800 shadow-inner';
 
                     let periodsHtml = details.periods.map(p => {
+                        const isSingleDay = (p.start === p.end);
+                        const dateRange = isSingleDay ? formatDateDisplay(p.start) : `${formatDateDisplay(p.start)} – ${formatDateDisplay(p.end)}`;
+
+                        if (p.isGap) {
+                            return `
+                                <div class="flex flex-col md:flex-row md:items-center justify-between p-2.5 rounded-xl border border-slate-800 bg-slate-900/35 mb-2 shadow-sm text-xs font-mono text-slate-400 opacity-80">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-slate-400 font-semibold">
+                                            ⏸️ ${dateRange}
+                                        </span>
+                                        <span class="font-bold text-slate-300">Не подавався</span>
+                                        <span class="text-slate-500 text-[11px]">(${escapeHtml(p.task)})</span>
+                                    </div>
+                                    <span class="text-slate-400 self-end md:self-auto mt-1 md:mt-0 font-medium text-xs bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                                        ${p.days} дн.
+                                    </span>
+                                </div>
+                            `;
+                        }
+
                         let badgeBg = 'bg-slate-900 border-slate-800 text-slate-300';
                         if (/бро/i.test(p.location)) badgeBg = 'bg-emerald-950/50 border-emerald-700/60 text-emerald-300';
                         else if (/роп/i.test(p.location)) badgeBg = 'bg-amber-950/50 border-amber-700/60 text-amber-300';
@@ -1845,7 +2083,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                                 <div class="flex-1 space-y-1">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <span class="text-cyan-400 font-bold">
-                                            📅 ${formatDateDisplay(p.start)} - ${formatDateDisplay(p.end)}
+                                            📅 ${dateRange}
                                         </span>
                                         <span class="font-bold text-white">${escapeHtml(p.location)}</span>
                                         ${p.task !== p.location ? `<span class="text-slate-400 text-[11px]">(${escapeHtml(p.task)})</span>` : ''}
@@ -1930,8 +2168,8 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
             filtered.forEach((row, idx) => {
                 const details = row.details;
-                const formattedRank = (row.latestRank || '—').replace(/\s+/g, '<br>');
-                const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ');
+                const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ').trim();
+                const displayName = formatDisplayName(row.name);
                 const isSelected = selectedPersonNames.has(row.name);
 
                 sumBro += details.broDays;
@@ -1980,10 +2218,12 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             <span class="text-slate-400 font-mono font-bold text-[11px]">${idx + 1}</span>
                         </div>
                     </td>
-                    <td class="sticky left-[56px] z-20 ${stickyColBg} py-1.5 px-2 text-slate-300 font-medium border-r border-slate-800/70 leading-tight w-24 min-w-[96px] max-w-[96px] whitespace-nowrap overflow-hidden text-ellipsis text-[11px]" title="${escapeHtml(cleanRank)}">${formattedRank}</td>
-                    <td class="sticky left-[152px] z-20 ${stickyColBg} py-1.5 px-2.5 font-extrabold text-white border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] w-60 min-w-[240px] max-w-[240px] whitespace-nowrap overflow-hidden text-ellipsis text-[12px]" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
+                    <td class="sticky left-[56px] z-20 ${stickyColBg} py-1.5 px-2 border-r border-slate-800/70 w-24 min-w-[96px] max-w-[96px] truncate" title="${escapeHtml(cleanRank)}">
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 text-[10px] font-medium border border-slate-700/50 truncate max-w-full">${escapeHtml(cleanRank)}</span>
+                    </td>
+                    <td class="sticky left-[152px] z-20 ${stickyColBg} py-1.5 px-2.5 font-bold text-white border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] w-60 min-w-[240px] max-w-[240px] truncate text-[12px]" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
                         <div class="flex items-center gap-1.5 truncate">
-                            <span class="truncate">${escapeHtml(row.name)}</span>
+                            <span class="truncate font-semibold">${escapeHtml(displayName)}</span>
                             ${details.isGloballyInactive ? '<span class="text-[9px] font-mono text-rose-400 font-normal shrink-0" title="Вибув зі списків">⚠️</span>' : ''}
                         </div>
                     </td>
@@ -2055,7 +2295,288 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
             const sortedDates = Array.from(successDatesCount).sort();
 
-            const headerTitles = [
+            // ==========================================
+            // 1. АРКУШ 1: ЗВЕДЕННЯ ПЕРІОДІВ (ВАРІАНТ А - ОКРЕМІ СТОВПЦІ БОЙОВИХ ТА ВІДСУТНОСТІ)
+            // ==========================================
+            const summaryHeaderTitles = [
+                "№",
+                "Звання",
+                "ПІБ",
+                "Посада",
+                "ІПН",
+                "Бойові рубежі",
+                "Перерви",
+                "БРО",
+                "РОП",
+                "ВОП",
+                "ДВ 30",
+                "Всього",
+                "Не подавався"
+            ];
+
+            const summary_ws_data = [summaryHeaderTitles];
+
+            let sumBro = 0;
+            let sumRop = 0;
+            let sumVop = 0;
+            let sumDv30 = 0;
+            let sumTotal = 0;
+            let sumGaps = 0;
+
+            targetRows.forEach((row, i) => {
+                const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ');
+                const cleanPos = (row.latestPosition || '—').replace(/\n|\r/g, ' ');
+                const cleanIpn = row.latestIpn || '—';
+
+                sumBro += row.details.broDays;
+                sumRop += row.details.ropDays;
+                sumVop += row.details.vopDays;
+                sumDv30 += row.details.dv30Days;
+                sumTotal += row.details.totalDays;
+                sumGaps += (row.details.gapDays || 0);
+
+                // Option A: Grouped combat periods & compact absence intervals
+                const combatGroups = new Map(); // loc -> { totalDays: 0, ranges: [] }
+                const gapLines = [];
+
+                (row.details.periods || []).forEach(p => {
+                    const isSingleDay = (p.start === p.end);
+                    const rangeStr = isSingleDay 
+                        ? formatDateShort(p.start) 
+                        : `${formatDateShort(p.start)} – ${formatDateShort(p.end)}`;
+
+                    if (p.isGap) {
+                        gapLines.push(`▫️ ${rangeStr} (${formatDaysUa(p.days)})`);
+                    } else {
+                        // Strip 'На глибину' noise for clean presentation
+                        const locClean = (p.location || 'БД').replace(/^на\s+глибину\s+/i, '').trim();
+                        if (!combatGroups.has(locClean)) {
+                            combatGroups.set(locClean, { totalDays: 0, ranges: [] });
+                        }
+                        const grp = combatGroups.get(locClean);
+                        grp.totalDays += p.days;
+                        grp.ranges.push(rangeStr);
+                    }
+                });
+
+                const combatLines = [];
+                for (const [loc, grp] of combatGroups.entries()) {
+                    const daysStr = formatDaysUa(grp.totalDays);
+                    combatLines.push(`▸ ${loc} (${daysStr}) → ${grp.ranges.join(', ')}`);
+                }
+
+                const combatText = combatLines.length > 0 ? combatLines.join('\n') : '—';
+                const gapText = gapLines.length > 0 ? gapLines.join('\n') : '—';
+
+                summary_ws_data.push([
+                    i + 1,
+                    cleanRank,
+                    row.name, // ПОВНЕ ПІБ БЕЗ СКОРОЧЕНЬ
+                    cleanPos,
+                    cleanIpn,
+                    combatText,
+                    gapText,
+                    row.details.broDays > 0 ? row.details.broDays : '—',
+                    row.details.ropDays > 0 ? row.details.ropDays : '—',
+                    row.details.vopDays > 0 ? row.details.vopDays : '—',
+                    row.details.dv30Days > 0 ? row.details.dv30Days : '—',
+                    row.details.totalDays > 0 ? row.details.totalDays : '—',
+                    row.details.gapDays > 0 ? row.details.gapDays : '—'
+                ]);
+            });
+
+            // Summary row at bottom of Sheet 1
+            summary_ws_data.push([
+                "",
+                "",
+                `РАЗОМ (${targetRows.length} бійців):`,
+                "",
+                "",
+                "",
+                "",
+                sumBro,
+                sumRop,
+                sumVop,
+                sumDv30,
+                sumTotal,
+                sumGaps
+            ]);
+
+            const wsSummary = XLSX.utils.aoa_to_sheet(summary_ws_data);
+
+            // Styling Sheet 1
+            const baseHeaderStyle = {
+                font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: "FFFFFF" } },
+                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "475569" } },
+                    bottom: { style: "medium", color: { rgb: "0F172A" } },
+                    left: { style: "thin", color: { rgb: "475569" } },
+                    right: { style: "thin", color: { rgb: "475569" } }
+                }
+            };
+
+            const getSummaryHeaderStyle = (colIdx) => {
+                let bgRgb = "1E293B"; // Dark Slate
+                if (colIdx === 7) bgRgb = "064E3B"; // БРО: Dark Emerald
+                else if (colIdx === 8) bgRgb = "78350F"; // РОП: Dark Amber
+                else if (colIdx === 9) bgRgb = "881337"; // ВОП: Dark Rose
+                else if (colIdx === 10) bgRgb = "075985"; // ДВ 30: Dark Cyan
+                else if (colIdx === 11) bgRgb = "1E40AF"; // Всього: Dark Blue
+                else if (colIdx === 12) bgRgb = "334155"; // Не подавався: Muted Slate
+                return {
+                    ...baseHeaderStyle,
+                    fill: { fgColor: { rgb: bgRgb } }
+                };
+            };
+
+            const borderLight = {
+                top: { style: "thin", color: { rgb: "CBD5E1" } },
+                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+                left: { style: "thin", color: { rgb: "CBD5E1" } },
+                right: { style: "thin", color: { rgb: "CBD5E1" } }
+            };
+
+            const rangeSummary = XLSX.utils.decode_range(wsSummary['!ref']);
+            const summaryRowHeights = [{ hpt: 28 }];
+            const dataStartRow = 2;
+            const dataEndRow = targetRows.length + 1;
+
+            for (let R = rangeSummary.s.r; R <= rangeSummary.e.r; ++R) {
+                const isHeader = (R === 0);
+                const isSummary = (R === rangeSummary.e.r);
+                const isEven = (R % 2 === 0);
+                const defaultRowBg = isEven ? "F8FAFC" : "FFFFFF";
+
+                if (!isHeader && !isSummary) {
+                    const personIdx = R - 1;
+                    const rData = targetRows[personIdx];
+                    let maxLines = 1;
+                    if (rData && rData.details) {
+                        const combatCount = (summary_ws_data[R][5] || '').split('\n').filter(Boolean).length;
+                        const gapCount = (summary_ws_data[R][6] || '').split('\n').filter(Boolean).length;
+                        const posLines = Math.ceil(((rData.latestPosition || '').length) / 34);
+                        maxLines = Math.max(combatCount, gapCount, posLines, 1);
+                    }
+                    summaryRowHeights.push({ hpt: Math.max(20, Math.min(maxLines, 4) * 16 + 4) });
+                }
+
+                for (let C = rangeSummary.s.c; C <= rangeSummary.e.c; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!wsSummary[cellAddress]) continue;
+
+                    if (isHeader) {
+                        wsSummary[cellAddress].s = getSummaryHeaderStyle(C);
+                    } else if (isSummary) {
+                        const cell = wsSummary[cellAddress];
+                        let alignH = "center";
+                        if (C === 2) alignH = "right";
+
+                        // Live Excel formulas for summary columns
+                        if (C >= 7 && C <= 12 && targetRows.length > 0) {
+                            const colLetter = XLSX.utils.encode_col(C);
+                            cell.f = `SUM(${colLetter}${dataStartRow}:${colLetter}${dataEndRow})`;
+                            cell.t = 'n';
+                        }
+
+                        cell.s = {
+                            font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: "0F172A" } },
+                            fill: { fgColor: { rgb: "E2E8F0" } },
+                            alignment: { horizontal: alignH, vertical: "center" },
+                            border: {
+                                top: { style: "medium", color: { rgb: "334155" } },
+                                bottom: { style: "medium", color: { rgb: "334155" } },
+                                left: { style: "thin", color: { rgb: "CBD5E1" } },
+                                right: { style: "thin", color: { rgb: "CBD5E1" } }
+                            }
+                        };
+                    } else {
+                        const cell = wsSummary[cellAddress];
+                        let alignH = "left";
+                        let isBold = false;
+                        let fontColor = "0F172A";
+                        let wrap = false;
+
+                        if (C === 0) { // №
+                            alignH = "center";
+                            fontColor = "64748B";
+                        } else if (C === 1) { // Звання
+                            alignH = "left";
+                            fontColor = "475569";
+                        } else if (C === 2) { // ПІБ
+                            alignH = "left";
+                            fontColor = "0F172A";
+                            isBold = true;
+                        } else if (C === 3) { // Посада
+                            alignH = "left";
+                            fontColor = "334155";
+                            wrap = true;
+                        } else if (C === 4) { // ІПН
+                            alignH = "center";
+                            fontColor = "475569";
+                        } else if (C === 5) { // Бойові періоди
+                            alignH = "left";
+                            fontColor = "1E293B";
+                            wrap = true;
+                        } else if (C === 6) { // Періоди відсутності
+                            alignH = "left";
+                            fontColor = "64748B";
+                            wrap = true;
+                        } else { // Числові стовпці днів
+                            alignH = "center";
+                            const isNum = (typeof cell.v === 'number');
+                            if (isNum && cell.v > 0) {
+                                cell.t = 'n';
+                                isBold = true;
+                                if (C === 7) fontColor = "14532D"; // БРО
+                                else if (C === 8) fontColor = "854D0E"; // РОП
+                                else if (C === 9) fontColor = "9F1239"; // ВОП
+                                else if (C === 10) fontColor = "0369A1"; // ДВ 30
+                                else if (C === 11) fontColor = "1D4ED8"; // Всього бойових
+                                else if (C === 12) fontColor = "64748B"; // Не подавався
+                            } else {
+                                cell.t = 's';
+                                fontColor = "94A3B8"; // Приглушений колір для прочерку "—"
+                                isBold = false;
+                            }
+                        }
+
+                        cell.s = {
+                            font: { name: 'Calibri', sz: (C === 5 || C === 6 ? 9.5 : 10), bold: isBold, color: { rgb: fontColor } },
+                            fill: { fgColor: { rgb: defaultRowBg } },
+                            alignment: { horizontal: alignH, vertical: "center", wrapText: wrap },
+                            border: borderLight
+                        };
+                    }
+                }
+            }
+
+            summaryRowHeights.push({ hpt: 24 });
+            wsSummary['!rows'] = summaryRowHeights;
+
+            wsSummary['!cols'] = [
+                { wch: 4 },    // №
+                { wch: 16 },   // Звання (під заголовок + фільтр)
+                { wch: 28 },   // ПІБ
+                { wch: 38 },   // Посада
+                { wch: 12 },   // ІПН
+                { wch: 30 },   // Бойові рубежі
+                { wch: 24 },   // Перерви
+                { wch: 8 },    // БРО
+                { wch: 8 },    // РОП
+                { wch: 8 },    // ВОП
+                { wch: 8.5 },  // ДВ 30
+                { wch: 10 },   // Всього
+                { wch: 13 }    // Не подавався
+            ];
+
+            wsSummary['!freeze'] = { xSplit: 3, ySplit: 1, topLeftCell: 'D2' };
+            wsSummary['!autofilter'] = { ref: `A1:M${targetRows.length + 1}` };
+
+            // ==========================================
+            // 2. АРКУШ 2: КАЛЕНДАРНИЙ ТАБЕЛЬ (МАТРИЦЯ ПО ДНЯХ)
+            // ==========================================
+            const matrixHeaderTitles = [
                 "№", "Звання", "ПІБ",
                 ...sortedDates.map(dStr => {
                     const parts = dStr.split('-');
@@ -2064,24 +2585,12 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 "БРО", "РОП", "ВОП", "ЗабБД", "Всього діб"
             ];
 
-            const ws_data = [headerTitles];
-
-            let sumBro = 0;
-            let sumRop = 0;
-            let sumVop = 0;
-            let sumDv30 = 0;
-            let sumTotal = 0;
+            const matrix_ws_data = [matrixHeaderTitles];
             const dateActiveCounts = {};
             sortedDates.forEach(d => { dateActiveCounts[d] = 0; });
 
             targetRows.forEach((row, i) => {
                 const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ');
-                sumBro += row.details.broDays;
-                sumRop += row.details.ropDays;
-                sumVop += row.details.vopDays;
-                sumDv30 += row.details.dv30Days;
-                sumTotal += row.details.totalDays;
-
                 const rowValues = [
                     i + 1,
                     cleanRank,
@@ -2105,18 +2614,18 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 });
 
                 rowValues.push(
-                    row.details.broDays,
-                    row.details.ropDays,
-                    row.details.vopDays,
-                    row.details.dv30Days,
-                    row.details.totalDays
+                    row.details.broDays > 0 ? row.details.broDays : '—',
+                    row.details.ropDays > 0 ? row.details.ropDays : '—',
+                    row.details.vopDays > 0 ? row.details.vopDays : '—',
+                    row.details.dv30Days > 0 ? row.details.dv30Days : '—',
+                    row.details.totalDays > 0 ? row.details.totalDays : '—'
                 );
 
-                ws_data.push(rowValues);
+                matrix_ws_data.push(rowValues);
             });
 
-            // Підсумковий рядок (РАЗОМ ПО ДНЯХ)
-            const summaryRow = [
+            // Підсумковий рядок матриці
+            matrix_ws_data.push([
                 "",
                 "",
                 "РАЗОМ ПО ДНЯХ:",
@@ -2126,50 +2635,49 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 sumVop,
                 sumDv30,
                 sumTotal
-            ];
-            ws_data.push(summaryRow);
+            ]);
 
-            const ws = XLSX.utils.aoa_to_sheet(ws_data);
-
-            // Styling Header & Data Cells
-            const headerStyle = {
-                font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: "FFFFFF" } },
-                fill: { fgColor: { rgb: "1E293B" } },
-                alignment: { horizontal: "center", vertical: "center", wrapText: true },
-                border: {
-                    top: { style: "thin", color: { rgb: "475569" } },
-                    bottom: { style: "medium", color: { rgb: "0F172A" } },
-                    left: { style: "thin", color: { rgb: "475569" } },
-                    right: { style: "thin", color: { rgb: "475569" } }
-                }
-            };
-
-            const borderLight = {
-                top: { style: "thin", color: { rgb: "CBD5E1" } },
-                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
-                left: { style: "thin", color: { rgb: "CBD5E1" } },
-                right: { style: "thin", color: { rgb: "CBD5E1" } }
-            };
-
-            const range = XLSX.utils.decode_range(ws['!ref']);
+            const wsMatrix = XLSX.utils.aoa_to_sheet(matrix_ws_data);
+            const rangeMatrix = XLSX.utils.decode_range(wsMatrix['!ref']);
             const numDates = sortedDates.length;
 
-            for (let R = range.s.r; R <= range.e.r; ++R) {
+            const getMatrixHeaderStyle = (colIdx) => {
+                const sumColStart = 3 + numDates;
+                let bgRgb = "1E293B"; // Dark Slate
+                if (colIdx === sumColStart) bgRgb = "064E3B"; // БРО: Emerald
+                else if (colIdx === sumColStart + 1) bgRgb = "78350F"; // РОП: Amber
+                else if (colIdx === sumColStart + 2) bgRgb = "881337"; // ВОП: Rose
+                else if (colIdx === sumColStart + 3) bgRgb = "075985"; // ЗабБД: Cyan
+                else if (colIdx === sumColStart + 4) bgRgb = "1E40AF"; // Всього діб: Blue
+                return {
+                    ...baseHeaderStyle,
+                    fill: { fgColor: { rgb: bgRgb } }
+                };
+            };
+
+            for (let R = rangeMatrix.s.r; R <= rangeMatrix.e.r; ++R) {
                 const isHeader = (R === 0);
-                const isSummary = (R === range.e.r);
+                const isSummary = (R === rangeMatrix.e.r);
                 const isEven = (R % 2 === 0);
                 const defaultRowBg = isEven ? "F8FAFC" : "FFFFFF";
 
-                for (let C = range.s.c; C <= range.e.c; ++C) {
+                for (let C = rangeMatrix.s.c; C <= rangeMatrix.e.c; ++C) {
                     const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!ws[cellAddress]) continue;
+                    if (!wsMatrix[cellAddress]) continue;
 
                     if (isHeader) {
-                        ws[cellAddress].s = headerStyle;
+                        wsMatrix[cellAddress].s = getMatrixHeaderStyle(C);
                     } else if (isSummary) {
-                        const cell = ws[cellAddress];
+                        const cell = wsMatrix[cellAddress];
                         let alignH = "center";
                         if (C === 2) alignH = "right";
+
+                        // Add live Excel formulas on summary row for category totals
+                        if (C >= 3 + numDates && targetRows.length > 0) {
+                            const colLetter = XLSX.utils.encode_col(C);
+                            cell.f = `SUM(${colLetter}${dataStartRow}:${colLetter}${dataEndRow})`;
+                            cell.t = 'n';
+                        }
 
                         cell.s = {
                             font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: "0F172A" } },
@@ -2183,56 +2691,63 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             }
                         };
                     } else {
-                        const cell = ws[cellAddress];
+                        const cell = wsMatrix[cellAddress];
                         let alignH = "left";
                         let isBold = false;
                         let fontColor = "0F172A";
                         let bgHex = defaultRowBg;
 
-                        if (C === 0) { // №
+                        if (C === 0) {
                             alignH = "center";
                             fontColor = "64748B";
-                        } else if (C === 1) { // Звання
+                        } else if (C === 1) {
                             alignH = "left";
                             fontColor = "475569";
-                        } else if (C === 2) { // ПІБ
+                        } else if (C === 2) {
                             alignH = "left";
                             fontColor = "0F172A";
                             isBold = true;
-                        } else if (C >= 3 && C < 3 + numDates) { // Calendar columns
+                        } else if (C >= 3 && C < 3 + numDates) {
                             alignH = "center";
                             const val = String(cell.v || '');
                             if (val === "БРО") {
-                                bgHex = "DCFCE7"; // Green light (Emerald)
+                                bgHex = "DCFCE7";
                                 fontColor = "14532D";
                                 isBold = true;
                             } else if (val === "РОП") {
-                                bgHex = "FEF08A"; // Distinct Yellow light
+                                bgHex = "FEF08A";
                                 fontColor = "713F12";
                                 isBold = true;
                             } else if (val === "ВОП") {
-                                bgHex = "FFE4E6"; // Rose/Red light (high contrast against РОП)
+                                bgHex = "FFE4E6";
                                 fontColor = "9F1239";
                                 isBold = true;
                             } else if (val === "ЗабБД") {
-                                bgHex = "BAE6FD"; // Sky blue light
+                                bgHex = "BAE6FD";
                                 fontColor = "0369A1";
                                 isBold = true;
                             } else if (val === "✕" || val === "X") {
-                                bgHex = "F1F5F9"; // Soft neutral slate
-                                fontColor = "DC2626"; // Bold clean red
-                                isBold = true;
+                                bgHex = "F8FAFC";
+                                fontColor = "CBD5E1";
+                                isBold = false;
                             }
-                        } else { // Summary totals at right
+                        } else {
                             alignH = "center";
-                            cell.t = 'n';
-                            const sumIdx = C - (3 + numDates);
-                            if (cell.v > 0) isBold = true;
-                            if (sumIdx === 0 && cell.v > 0) fontColor = "14532D"; // БРО (зелений)
-                            else if (sumIdx === 1 && cell.v > 0) fontColor = "854D0E"; // РОП (жовто-коричневий)
-                            else if (sumIdx === 2 && cell.v > 0) fontColor = "9F1239"; // ВОП (червоно-бордовий)
-                            else if (sumIdx === 3 && cell.v > 0) fontColor = "0369A1"; // ЗабБД (синій)
-                            else if (sumIdx === 4) fontColor = "1D4ED8"; // Всього діб
+                            const isNum = (typeof cell.v === 'number');
+                            if (isNum && cell.v > 0) {
+                                cell.t = 'n';
+                                isBold = true;
+                                const sumIdx = C - (3 + numDates);
+                                if (sumIdx === 0) fontColor = "14532D";
+                                else if (sumIdx === 1) fontColor = "854D0E";
+                                else if (sumIdx === 2) fontColor = "9F1239";
+                                else if (sumIdx === 3) fontColor = "0369A1";
+                                else if (sumIdx === 4) fontColor = "1D4ED8";
+                            } else {
+                                cell.t = 's';
+                                fontColor = "94A3B8";
+                                isBold = false;
+                            }
                         }
 
                         cell.s = {
@@ -2245,33 +2760,34 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 }
             }
 
-            // Column Widths
-            ws['!cols'] = [
+            wsMatrix['!cols'] = [
                 { wch: 5 },   // №
-                { wch: 14 },  // Звання
-                { wch: 32 },  // ПІБ
-                ...sortedDates.map(() => ({ wch: 6 })), // Колонки дат
-                { wch: 7 },   // БРО
-                { wch: 7 },   // РОП
-                { wch: 7 },   // ВОП
-                { wch: 8 },   // ЗабБД
-                { wch: 11 }   // Всього діб
+                { wch: 18 },  // Звання
+                { wch: 34 },  // ПІБ
+                ...sortedDates.map(() => ({ wch: 6 })),
+                { wch: 8 },   // БРО
+                { wch: 8 },   // РОП
+                { wch: 8 },   // ВОП
+                { wch: 9 },   // ЗабБД
+                { wch: 12 }   // Всього діб
             ];
+            wsMatrix['!rows'] = [{ hpt: 26 }];
+            wsMatrix['!freeze'] = { xSplit: 3, ySplit: 1, topLeftCell: 'D2' };
+            const lastMatrixColLetter = XLSX.utils.encode_col(matrixHeaderTitles.length - 1);
+            wsMatrix['!autofilter'] = { ref: `A1:${lastMatrixColLetter}${targetRows.length + 1}` };
 
-            // Set row heights
-            ws['!rows'] = [{ hpt: 24 }]; // Header height
-
-            // Freeze Panes: 1-й рядок (шапка) + 3 перші стовпці (№, Звання, ПІБ)
-            ws['!freeze'] = { xSplit: 3, ySplit: 1, topLeftCell: 'D2' };
-
+            // ==========================================
+            // 3. ЗБИРАННЯ ТА ЗБЕРЕЖЕННЯ КНИГИ
+            // ==========================================
             const wb = XLSX.utils.book_new();
-            const sheetName = isSelective ? `Обрані (${targetRows.length})` : "Табель періодів";
-            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            const sheet1Title = isSelective ? `Зведення (${targetRows.length})` : "Зведення періодів";
+            XLSX.utils.book_append_sheet(wb, wsSummary, sheet1Title);
+            XLSX.utils.book_append_sheet(wb, wsMatrix, "Календарний табель");
 
             const dateStr = new Date().toLocaleDateString('uk-UA').replace(/\./g, '_');
             const fileName = isSelective 
-                ? `Табель_періодів_обрані_${targetRows.length}_вс_${dateStr}.xlsx`
-                : `Табель_періодів_завдань_${dateStr}.xlsx`;
+                ? `Зведення_періодів_обрані_${targetRows.length}_вс_${dateStr}.xlsx`
+                : `Зведення_періодів_завдань_${dateStr}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
 
