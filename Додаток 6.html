@@ -167,7 +167,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v1.9.6</span>
+                    <span>🚀 v2.0.0</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -205,6 +205,25 @@
         </div>
 
         <div class="p-6">
+            <!-- ПЕРЕМИКАЧ РЕЖИМІВ РОБОТИ: ПБД (ЗБІР З РОТ) vs АРХІВ ДОДАТКІВ 6 (МІСЯЦЬ) -->
+            <div class="mb-5 bg-slate-900/95 dark:bg-gray-950 p-2 rounded-xl border border-slate-700/80 shadow-lg flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-1.5 p-1 bg-slate-950/80 rounded-lg border border-slate-800">
+                    <button type="button" id="btn-mode-pbd" onclick="setAppMode('pbd')"
+                        class="px-3.5 py-1.5 rounded-md font-mono text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)] border border-blue-400/50"
+                        title="Режим добового прийому звітів з рот (ПБД/Додаток 2): контроль обов'язкових 21 підрозділів, виявлення міжротових дублів, формування щоденного Додатка 6">
+                        <span>⚡ ДОБОВИЙ ЗБІР З РОТ (ПБД)</span>
+                    </button>
+                    <button type="button" id="btn-mode-archive" onclick="setAppMode('archive')"
+                        class="px-3.5 py-1.5 rounded-md font-mono text-xs font-bold text-gray-400 hover:text-gray-200 hover:bg-slate-800 transition-all cursor-pointer border border-transparent"
+                        title="Режим місячного архіву Додатків 6: зведення вже готових Додатків 6 за місяць, щоденний календарний фільтр, табель діб, експорт щоденними вкладками">
+                        <span>📅 АРХІВ ДОДАТКІВ 6 (МІСЯЦЬ / ТАБЕЛЬ)</span>
+                    </button>
+                </div>
+                <div id="mode-status-info" class="text-xs font-mono px-2 text-gray-400 flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded bg-blue-950/80 text-blue-300 border border-blue-600/40 text-[11px] font-mono">⚡ ДОБОВИЙ ЗБІР З РОТ АКТИВНО</span>
+                </div>
+            </div>
+
             <!-- Зона завантаження файлів (2-колонковий макет на великих екранах) -->
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6 items-start">
 
@@ -288,9 +307,9 @@
                             </svg>
                         </div>
                         <div class="text-center sm:text-left">
-                            <p class="text-sm font-bold text-blue-900 dark:text-blue-300">Натисніть або перетягніть
+                            <p id="drop-zone-title" class="text-sm font-bold text-blue-900 dark:text-blue-300">Натисніть або перетягніть
                                 файли сюди</p>
-                            <p class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-0.5">Крок 1: Завантажте всі
+                            <p id="drop-zone-sub" class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-0.5">Крок 1: Завантажте всі
                                 файли ПБД (.docx, .xlsx)</p>
                         </div>
                         <input type="file" id="fileInput" multiple
@@ -409,6 +428,18 @@
                                         </path>
                                     </svg>
                                     <span>ALL_TIERS [270k..30k]</span>
+                                </button>
+
+                                <button onclick="downloadMonthlyDayTabsExcel()"
+                                    class="group flex items-center bg-white dark:bg-gray-800 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-gray-700 dark:text-gray-200 hover:text-amber-600 dark:hover:text-amber-300 font-mono font-bold py-1.5 px-3 rounded-md border border-gray-200 dark:border-gray-700 hover:border-amber-400/50 transition-all shadow-sm hover:shadow-[0_0_12px_rgba(245,158,11,0.35)] focus:outline-none text-xs hover:-translate-y-0.5 cursor-pointer"
+                                    title="Завантажити зведений місячний Excel: вкладка 'Табель' (загальна кількість діб) + окрема вкладка для кожного дня з людьми які там подавались">
+                                    <svg class="w-4 h-4 mr-1.5 text-amber-500 group-hover:scale-110 transition-transform"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                    <span>MONTH_TABS.XLSX</span>
                                 </button>
 
                                 <button onclick="openDocxExportModal()"
@@ -563,6 +594,19 @@
 
             <!-- Результати -->
             <div id="resultsArea" class="hidden">
+
+                <!-- КАЛЕНДАРНИЙ ФІЛЬТР ДАТ (РЕЖИМ АРХІВУ) -->
+                <div id="archive-date-filter-bar" class="hidden mb-4 p-3 bg-slate-900/90 dark:bg-gray-900/90 rounded-xl border border-amber-500/30 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <span class="text-xs font-mono font-extrabold text-amber-400 flex items-center gap-1.5 shrink-0">
+                            <span>📅 ДАТА:</span>
+                        </span>
+                        <div id="archive-date-buttons" class="flex items-center gap-1.5 flex-wrap"></div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span id="archive-day-summary" class="text-xs font-mono text-amber-300/90 bg-amber-950/50 px-2.5 py-1 rounded border border-amber-600/40 shadow-xs"></span>
+                    </div>
+                </div>
 
                 <!-- ПАНЕЛЬ ДЕТАЛЕЙ (КОМПАКТНИЙ SMART DRAWER) -->
                 <div id="alertDrawerPanel"
@@ -1679,9 +1723,28 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "2.0.0",
+                date: "05.10.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "⚡ Дворежимна архітектура, консолідований місячний табель та динамічні дати",
+                        color: "blue",
+                        items: [
+                            "<b>Два режими роботи</b>: перемикач між «⚡ ДОБОВИЙ ЗБІР З РОТ (ПБД)» (контроль подачі 21 підрозділу, виявлення перетинів) та «📅 АРХІВ ДОДАТКІВ 6 (МІСЯЦЬ / ТАБЕЛЬ)» (пакетне завантаження за місяць).",
+                            "<b>Автовизначення дати з документів</b>: функція <code>extractDateFromDocInfo</code> динамічно витягує дату з шапки/тексту кожного Word-файлу замість поточної системної дати.",
+                            "<b>Консолідований місячний експорт (MONTH_TABS.XLSX)</b>: кнопка експорту книги Excel з окремими вкладками для кожного дня місяця та загальним першим аркушем «Табель (Зведена)».",
+                            "<b>Оптимізований формат позицій (Варіант 2)</b>: на аркуші «Табель (Зведена)» бойові позиції бійців групуються у компактні діапазони дат із розбивкою діб за категоріями (РОП 170, БРО 100).",
+                            "<b>Ізольована перевірка дублікатів в архіві</b>: дублікати шукаються суворо в межах однієї календарної дати, що усунуло 714 хибних тривог при обробці місячного архіву.",
+                            "<b>Інтерактивна панель дат</b>: додано швидкі фільтри вибору конкретної дати з підрахунком особового складу над зоною результатів."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.9.6",
                 date: "22.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🛡️ Комплексний аудит надійності, Air-Gap та безпеки DOM",
@@ -2646,6 +2709,205 @@
             showToast("Налаштування шаблону Word відновлено до зразка!", "info");
         }
 
+        // --- ДЕТЕКЦІЯ ТА ОБРОБКА ДАТ З НАЗВ ФАЙЛІВ ТА ТЕКСТУ ---
+        function extractDateFromDocInfo(fileName = '', htmlString = '') {
+            if (fileName) {
+                // 1. Повна дата у назві файлу: ДД.ММ.РРРР, ДД.ММ.РР, ДД_ММ_РРРР
+                const fnRegex = /(?:^|[^\d])(0?[1-9]|[12]\d|3[01])[._](0?[1-9]|1[012])[._](20\d{2}|\d{2})(?=[^\d]|$)/;
+                const fnMatch = fileName.match(fnRegex);
+                if (fnMatch) {
+                    const day = fnMatch[1].padStart(2, '0');
+                    const month = fnMatch[2].padStart(2, '0');
+                    let year = fnMatch[3];
+                    if (year.length === 2) year = '20' + year;
+                    return `${day}.${month}.${year}`;
+                }
+
+                // 2. Коротка дата ДД.ММ у назві файлу
+                const fnShortRegex = /(?:^|[^\d])(0?[1-9]|[12]\d|3[01])[._](0?[1-9]|1[012])(?=[^\d]|$)/;
+                const fnShortMatch = fileName.match(fnShortRegex);
+                if (fnShortMatch) {
+                    const day = fnShortMatch[1].padStart(2, '0');
+                    const month = fnShortMatch[2].padStart(2, '0');
+                    const currentYear = new Date().getFullYear();
+                    return `${day}.${month}.${currentYear}`;
+                }
+            }
+
+            if (htmlString) {
+                const text = htmlString.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+                const contextRegex = /(?:станом\s+на|від|з\s+\d{1,2}[\.:]\d{2}\s+|до\s+наказу[^\d]+)?(0?[1-9]|[12]\d|3[01])[._](0?[1-9]|1[012])[._](20\d{2})/i;
+                const match = text.match(contextRegex);
+                if (match) {
+                    const day = match[1].padStart(2, '0');
+                    const month = match[2].padStart(2, '0');
+                    const year = match[3];
+                    return `${day}.${month}.${year}`;
+                }
+
+                const uaMonths = {
+                    'січ': '01', 'лют': '02', 'бер': '03', 'кві': '04', 'тра': '05', 'чер': '06',
+                    'лип': '07', 'сер': '08', 'вер': '09', 'жов': '10', 'лис': '11', 'гру': '12'
+                };
+                const textMonthRegex = /(0?[1-9]|[12]\d|3[01])\s+(січня|лютого|березня|квітня|травня|червня|липня|серпня|вересня|жовтня|листопада|грудня)\s+(20\d{2})/i;
+                const tmMatch = text.match(textMonthRegex);
+                if (tmMatch) {
+                    const day = tmMatch[1].padStart(2, '0');
+                    const mKey = tmMatch[2].toLowerCase().substring(0, 3);
+                    const month = uaMonths[mKey] || '01';
+                    const year = tmMatch[3];
+                    return `${day}.${month}.${year}`;
+                }
+            }
+            return '';
+        }
+
+        function getAllDetectedDates() {
+            const datesSet = new Set();
+            const allRecords = [...vopData, ...btgrData, ...broData, ...zabData];
+            allRecords.forEach(r => {
+                if (r.docDate && r.docDate.trim()) {
+                    datesSet.add(r.docDate.trim());
+                }
+            });
+            return Array.from(datesSet).sort((a, b) => {
+                const [d1, m1, y1] = a.split('.').map(Number);
+                const [d2, m2, y2] = b.split('.').map(Number);
+                return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+            });
+        }
+
+        function getDetectedDateStr() {
+            const dates = getAllDetectedDates();
+            if (dates.length === 1) {
+                return dates[0];
+            } else if (dates.length > 1) {
+                const first = dates[0];
+                const last = dates[dates.length - 1];
+                const [d1, m1, y1] = first.split('.');
+                const [d2, m2, y2] = last.split('.');
+                if (y1 === y2 && m1 === m2) {
+                    return `${d1}-${d2}.${m1}.${y1}`;
+                }
+                return `${first}-${last}`;
+            }
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            return `${dd}.${mm}.${yyyy}`;
+        }
+
+        // --- КЕРУВАННЯ РЕЖИМАМИ (ПБД vs АРХІВ ДОДАТКІВ 6) ---
+        let currentAppMode = localStorage.getItem('dodatok6_app_mode') || 'pbd';
+        let selectedDateFilter = 'all';
+
+        function setAppMode(mode) {
+            currentAppMode = mode;
+            localStorage.setItem('dodatok6_app_mode', mode);
+
+            const btnPbd = document.getElementById('btn-mode-pbd');
+            const btnArchive = document.getElementById('btn-mode-archive');
+            const dropTitle = document.getElementById('drop-zone-title');
+            const dropSub = document.getElementById('drop-zone-sub');
+            const dispWidget = document.getElementById('dispatcherWidget');
+            const modeStatus = document.getElementById('mode-status-info');
+
+            if (mode === 'archive') {
+                if (btnPbd) {
+                    btnPbd.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-bold text-gray-400 hover:text-gray-200 hover:bg-slate-800 transition-all cursor-pointer border border-transparent";
+                }
+                if (btnArchive) {
+                    btnArchive.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-extrabold bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-400/50 transition-all cursor-pointer";
+                }
+                if (dropTitle) dropTitle.innerText = "Натисніть або перетягніть файли Додатків 6 сюди";
+                if (dropSub) dropSub.innerText = "Крок 1: Завантажте готові Додатки 6 за місяць або період (.docx, .xlsx)";
+                if (dispWidget) dispWidget.classList.add('hidden');
+                if (modeStatus) modeStatus.innerHTML = `<span class="px-2.5 py-1 rounded bg-amber-950/80 text-amber-300 border border-amber-600/40 text-[11px] font-mono font-bold">📅 АРХІВ ДОДАТКІВ 6 АКТИВНО</span>`;
+            } else {
+                if (btnPbd) {
+                    btnPbd.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)] border border-blue-400/50 transition-all cursor-pointer";
+                }
+                if (btnArchive) {
+                    btnArchive.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-bold text-gray-400 hover:text-gray-200 hover:bg-slate-800 transition-all cursor-pointer border border-transparent";
+                }
+                if (dropTitle) dropTitle.innerText = "Натисніть або перетягніть файли сюди";
+                if (dropSub) dropSub.innerText = "Крок 1: Завантажте всі файли ПБД (.docx, .xlsx)";
+                if (dispWidget) dispWidget.classList.remove('hidden');
+                if (modeStatus) modeStatus.innerHTML = `<span class="px-2.5 py-1 rounded bg-blue-950/80 text-blue-300 border border-blue-600/40 text-[11px] font-mono font-bold">⚡ ДОБОВИЙ ЗБІР З РОТ АКТИВНО</span>`;
+            }
+
+            checkMissingFiles();
+            checkDuplicates();
+            renderArchiveDateButtons();
+            renderTables();
+        }
+
+        function renderArchiveDateButtons() {
+            const container = document.getElementById('archive-date-filter-bar');
+            const buttonsWrapper = document.getElementById('archive-date-buttons');
+            const summarySpan = document.getElementById('archive-day-summary');
+            if (!container || !buttonsWrapper) return;
+
+            if (currentAppMode !== 'archive') {
+                container.classList.add('hidden');
+                return;
+            }
+
+            const detectedDates = getAllDetectedDates();
+            if (detectedDates.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            buttonsWrapper.innerHTML = '';
+
+            // Кнопка "Всі дні"
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            const isAll = (selectedDateFilter === 'all');
+            allBtn.className = isAll
+                ? 'px-3 py-1 rounded-md text-xs font-mono font-extrabold bg-amber-600 text-white shadow-sm border border-amber-400 cursor-pointer'
+                : 'px-3 py-1 rounded-md text-xs font-mono font-medium bg-slate-800 text-gray-300 hover:text-white hover:bg-slate-700 border border-slate-700 cursor-pointer transition-colors';
+            allBtn.innerHTML = `<span>📅 Всі дні (${detectedDates.length} дн.)</span>`;
+            allBtn.onclick = () => {
+                selectedDateFilter = 'all';
+                renderArchiveDateButtons();
+                renderTables();
+            };
+            buttonsWrapper.appendChild(allBtn);
+
+            // Кнопки по окремих днях
+            detectedDates.forEach(dateStr => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isSelected = (selectedDateFilter === dateStr);
+                btn.className = isSelected
+                    ? 'px-3 py-1 rounded-md text-xs font-mono font-extrabold bg-amber-600 text-white shadow-sm border border-amber-400 cursor-pointer'
+                    : 'px-3 py-1 rounded-md text-xs font-mono font-medium bg-slate-800 text-gray-300 hover:text-white hover:bg-slate-700 border border-slate-700 cursor-pointer transition-colors';
+
+                const dayRecordsCount = [...vopData, ...btgrData, ...broData, ...zabData].filter(r => (r.docDate || extractDateFromDocInfo(r.fileName || '')) === dateStr).length;
+                const shortDate = dateStr.length >= 5 ? dateStr.slice(0, 5) : dateStr;
+                btn.innerHTML = `<span>${shortDate}</span> <span class="opacity-75 text-[10px] ml-1">(${dayRecordsCount})</span>`;
+                btn.title = `Показати відомість лише за ${dateStr} (${dayRecordsCount} в/с)`;
+                btn.onclick = () => {
+                    selectedDateFilter = dateStr;
+                    renderArchiveDateButtons();
+                    renderTables();
+                };
+                buttonsWrapper.appendChild(btn);
+            });
+
+            if (summarySpan) {
+                if (selectedDateFilter === 'all') {
+                    summarySpan.innerText = `Зведена за всі дні (${detectedDates.length} діб)`;
+                } else {
+                    summarySpan.innerText = `Зріз за дату: ${selectedDateFilter}`;
+                }
+            }
+        }
+
         function openDocxExportModal() {
             const totalSoldiers = vopData.length + btgrData.length + broData.length + zabData.length;
             if (totalSoldiers === 0) {
@@ -2653,24 +2915,36 @@
                 return;
             }
 
-            const today = new Date();
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-
-            const formatD = (d) => {
-                const dd = String(d.getDate()).padStart(2, '0');
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const yyyy = d.getFullYear();
-                return `${dd}.${mm}.${yyyy}`;
-            };
+            const detectedDates = getAllDetectedDates();
+            let defaultStart = '';
+            let defaultEnd = '';
+            if (detectedDates.length === 1) {
+                defaultStart = detectedDates[0];
+                defaultEnd = detectedDates[0];
+            } else if (detectedDates.length > 1) {
+                defaultStart = detectedDates[0];
+                defaultEnd = detectedDates[detectedDates.length - 1];
+            } else {
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const formatD = (d) => {
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const yyyy = d.getFullYear();
+                    return `${dd}.${mm}.${yyyy}`;
+                };
+                defaultStart = formatD(yesterday);
+                defaultEnd = formatD(today);
+            }
 
             const elStart = document.getElementById('docx-export-start-date');
             const elEnd = document.getElementById('docx-export-end-date');
             if (elStart && (!elStart.value || elStart.value.trim() === '')) {
-                elStart.value = formatD(yesterday);
+                elStart.value = defaultStart;
             }
             if (elEnd && (!elEnd.value || elEnd.value.trim() === '')) {
-                elEnd.value = formatD(today);
+                elEnd.value = defaultEnd;
             }
 
             const tier1Count = vopData.length + btgrData.length;
@@ -2987,6 +3261,40 @@
         }
 
         function checkMissingFiles() {
+            const alertContainer = document.getElementById('missingFilesAlert');
+            if (!alertContainer) return;
+
+            if (currentAppMode === 'archive') {
+                const detectedDates = getAllDetectedDates();
+                const totalFiles = [...new Set([...vopData, ...btgrData, ...broData, ...zabData].map(p => p.fileName))].length;
+
+                if (totalFiles === 0) {
+                    alertContainer.classList.add('hidden');
+                    return;
+                }
+
+                alertContainer.classList.remove('hidden');
+                alertContainer.className = "mb-3 p-2.5 px-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-800 dark:text-indigo-200 rounded-lg shadow-sm text-xs";
+
+                const dateBadges = detectedDates.map(d =>
+                    `<span class="inline-flex items-center bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-[10px] px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 font-mono font-bold">📅 ${d}</span>`
+                ).join(' ');
+
+                alertContainer.innerHTML = `
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex items-center justify-between flex-wrap gap-1">
+                            <span class="font-bold text-xs flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span>РЕЖИМ АРХІВУ: опрацьовано ${detectedDates.length} діб (${totalFiles} файлів)</span>
+                            </span>
+                            <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono">${detectedDates.length > 0 ? `${detectedDates[0]} – ${detectedDates[detectedDates.length - 1]}` : ''}</span>
+                        </div>
+                        ${detectedDates.length > 0 ? `<div class="flex flex-wrap gap-1 mt-0.5">${dateBadges}</div>` : ''}
+                    </div>
+                `;
+                return;
+            }
+
             const rawExpected = localStorage.getItem('required_units') !== null
                 ? localStorage.getItem('required_units')
                 : "1 мр\n2 мр\n3 мр\n1 мінбат\n2 мінбат\nрбр\nзрбатр\nвзвод зв'язку\nуправління";
@@ -2994,9 +3302,6 @@
             const expectedUnits = rawExpected.split('\n')
                 .map(u => u.trim())
                 .filter(u => u.length > 0);
-
-            const alertContainer = document.getElementById('missingFilesAlert');
-            if (!alertContainer) return;
 
             if (expectedUnits.length === 0) {
                 alertContainer.classList.add('hidden');
@@ -4552,11 +4857,7 @@
                 }
             }
 
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            const dateStr = `${dd}.${mm}.${yyyy}`;
+            const dateStr = getDetectedDateStr();
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Зведена по позиціях");
@@ -4759,7 +5060,8 @@
             const promises = Array.from(files).map(async (file) => {
                 try {
                     const htmlString = await extractHtmlFromDocument(file);
-                    const parsedRecords = parseDocumentRecords(htmlString, file.name);
+                    const docDate = extractDateFromDocInfo(file.name, htmlString);
+                    const parsedRecords = parseDocumentRecords(htmlString, file.name, docDate);
 
                     let fileVopCount = 0; let fileBtgrCount = 0; let fileBroCount = 0; let fileZabCount = 0;
 
@@ -4781,6 +5083,7 @@
                     infoDiv.innerHTML = `
                         <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         <span class="font-medium text-gray-700 dark:text-gray-300 truncate text-[11px]" title="${file.name}">${file.name}</span>
+                        ${docDate ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50 flex-shrink-0 font-semibold" title="Визначена дата документа">${docDate}</span>` : ''}
                     `;
 
                     const deleteBtn = document.createElement('button');
@@ -4822,14 +5125,21 @@
             loadingStatus.classList.add('hidden');
             document.getElementById('resultsArea').classList.remove('hidden');
 
-            checkDuplicates();
-            recalculateEmptyFields();
-            checkInvalidTasks();
-            if (currentBlacklistRecords.length > 0) checkBlacklist();
-            if (currentMasterRecords.length > 0) checkMissing();
-            checkMissingFiles();
-            renderTables();
-            filterTables();
+            const detectedDates = getAllDetectedDates();
+            if (detectedDates.length > 1 && currentAppMode === 'pbd') {
+                setAppMode('archive');
+                showToast(`Виявлено файли за ${detectedDates.length} дат — перемкнено на режим "Архів Додатків 6"!`, "info");
+            } else {
+                checkDuplicates();
+                recalculateEmptyFields();
+                checkInvalidTasks();
+                if (currentBlacklistRecords.length > 0) checkBlacklist();
+                if (currentMasterRecords.length > 0) checkMissing();
+                checkMissingFiles();
+                renderArchiveDateButtons();
+                renderTables();
+                filterTables();
+            }
         }
 
         function removeProcessedFile(fileName, liElement) {
@@ -4864,6 +5174,7 @@
             if (currentBlacklistRecords.length > 0) checkBlacklist();
             if (currentMasterRecords.length > 0) checkMissing();
             checkMissingFiles();
+            renderArchiveDateButtons();
             renderTables();
             filterTables();
         }
@@ -5099,8 +5410,7 @@
             styleExcelSheet(ws1);
             XLSX.utils.book_append_sheet(wb, ws1, "Описки в ПІБ");
 
-            const today = new Date();
-            const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+            const dateStr = getDetectedDateStr();
             XLSX.writeFile(wb, `ЗВІТ_Описки_ПІБ_БЧС_${dateStr}.xlsx`);
         }
 
@@ -5581,7 +5891,10 @@
             return str.toString().replace(/[\u200B-\u200F\uFEFF\u202A-\u202E\u2060-\u206F\u00AD]/g, '').replace(/\s+/g, ' ').trim();
         }
 
-        function parseDocumentRecords(htmlString, fileName) {
+        function parseDocumentRecords(htmlString, fileName, docDate = '') {
+            if (!docDate) {
+                docDate = extractDateFromDocInfo(fileName, htmlString);
+            }
             let records = [];
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlString, 'text/html');
@@ -5661,7 +5974,7 @@
 
                             records.push({
                                 id: uniqueId, rank, name: "[ВІДСУТНІЙ В/С]", pos, task, fileName, type,
-                                normName: "[відсутній в/с]"
+                                normName: "[відсутній в/с]", docDate
                             });
                         }
                         return;
@@ -5682,7 +5995,7 @@
 
                     records.push({
                         id: uniqueId, rank, name, pos, task, fileName, type,
-                        normName: normalizeName(name)
+                        normName: normalizeName(name), docDate
                     });
                 });
             });
@@ -5894,16 +6207,10 @@
             XLSX.writeFile(wb, "ЗВІТ_Відсутні_Дані.xlsx");
         }
 
-        function checkDuplicates() {
-            duplicateNames.clear();
-            currentDuplicateGroups = [];
-
-            let allData = [...vopData, ...btgrData, ...broData, ...zabData].filter(p => p.name !== "[ВІДСУТНІЙ В/С]" && p.normName);
+        function findDuplicatesInRecordList(records) {
             let dupes = [];
-
-            // 1. Групуємо людей за нормалізованим ім'ям за 1 швидкий прохід
             const nameToPersonsMap = new Map();
-            allData.forEach(p => {
+            records.forEach(p => {
                 if (!nameToPersonsMap.has(p.normName)) nameToPersonsMap.set(p.normName, []);
                 nameToPersonsMap.get(p.normName).push(p);
             });
@@ -5918,7 +6225,6 @@
                 let currentGroup = [...nameToPersonsMap.get(nameA)];
                 processedNames.add(nameA);
 
-                // 2. Порівнюємо лише унікальні імена для високої швидкодії
                 for (let j = i + 1; j < uniqueNames.length; j++) {
                     const nameB = uniqueNames[j];
                     if (processedNames.has(nameB)) continue;
@@ -5936,6 +6242,33 @@
                         dupes.push(currentGroup);
                     }
                 }
+            }
+            return dupes;
+        }
+
+        function checkDuplicates() {
+            duplicateNames.clear();
+            currentDuplicateGroups = [];
+
+            let allData = [...vopData, ...btgrData, ...broData, ...zabData].filter(p => p.name !== "[ВІДСУТНІЙ В/С]" && p.normName);
+            let dupes = [];
+
+            if (currentAppMode === 'archive') {
+                // В режимі Архіву: дублікатом вважається ТІЛЬКИ повторне подання людини в ОДИН І ТОЙ САМИЙ ДЕНЬ!
+                const byDateMap = new Map();
+                allData.forEach(p => {
+                    const d = (p.docDate || extractDateFromDocInfo(p.fileName || '') || 'Без дати').trim();
+                    if (!byDateMap.has(d)) byDateMap.set(d, []);
+                    byDateMap.get(d).push(p);
+                });
+
+                byDateMap.forEach((recordsForDate) => {
+                    const dateDupes = findDuplicatesInRecordList(recordsForDate);
+                    dupes.push(...dateDupes);
+                });
+            } else {
+                // В режимі ПБД: суворий пошук дублікатів по всьому масиву
+                dupes = findDuplicatesInRecordList(allData);
             }
 
             currentDuplicateGroups = dupes;
@@ -6145,17 +6478,29 @@
         }
 
         function renderTables() {
-            if (document.getElementById('countVop')) document.getElementById('countVop').innerText = vopData.length;
-            if (document.getElementById('countBtgr')) document.getElementById('countBtgr').innerText = btgrData.length;
-            if (document.getElementById('countBro')) document.getElementById('countBro').innerText = broData.length;
-            if (document.getElementById('countZab')) document.getElementById('countZab').innerText = zabData.length;
+            let activeVop = vopData;
+            let activeBtgr = btgrData;
+            let activeBro = broData;
+            let activeZab = zabData;
 
-            renderTable(vopData, 'vop-body');
-            renderTable(btgrData, 'btgr-body');
-            renderTable(broData, 'bro-body');
-            renderTable(zabData, 'zab-body');
+            if (currentAppMode === 'archive' && selectedDateFilter !== 'all') {
+                const matchDate = (r) => (r.docDate || extractDateFromDocInfo(r.fileName || '')) === selectedDateFilter;
+                activeVop = vopData.filter(matchDate);
+                activeBtgr = btgrData.filter(matchDate);
+                activeBro = broData.filter(matchDate);
+                activeZab = zabData.filter(matchDate);
+            }
 
-            // Зберігаємо поточний стан пошукового фільтра після перемалювання
+            if (document.getElementById('countVop')) document.getElementById('countVop').innerText = activeVop.length;
+            if (document.getElementById('countBtgr')) document.getElementById('countBtgr').innerText = activeBtgr.length;
+            if (document.getElementById('countBro')) document.getElementById('countBro').innerText = activeBro.length;
+            if (document.getElementById('countZab')) document.getElementById('countZab').innerText = activeZab.length;
+
+            renderTable(activeVop, 'vop-body');
+            renderTable(activeBtgr, 'btgr-body');
+            renderTable(activeBro, 'bro-body');
+            renderTable(activeZab, 'zab-body');
+
             filterTables();
         }
 
@@ -6194,11 +6539,7 @@
         }
 
         function downloadAllCategoriesExcel() {
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            const dateStr = `${dd}.${mm}.${yyyy}`;
+            const dateStr = getDetectedDateStr();
             const newFilename = `Всі_категорії_Позиції_${dateStr}.xlsx`;
 
             const wb = XLSX.utils.book_new();
@@ -6232,12 +6573,289 @@
             XLSX.writeFile(wb, newFilename);
         }
 
+        // Хелпер для згортання послідовних дат у компактні періоди (напр. "01.09-21.09, 25.09-30.09")
+        function formatDatesAsPeriods(datesArray) {
+            if (!datesArray || datesArray.length === 0) return '';
+
+            const parsed = [];
+            datesArray.forEach(d => {
+                if (!d) return;
+                const parts = d.trim().split('.');
+                if (parts.length >= 2) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10);
+                    let year = parts.length >= 3 ? parseInt(parts[2], 10) : new Date().getFullYear();
+                    if (year < 100) year += 2000;
+                    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                        parsed.push(new Date(year, month - 1, day));
+                    }
+                }
+            });
+
+            if (parsed.length === 0) return datesArray.join(', ');
+
+            parsed.sort((a, b) => a - b);
+            const uniqueDates = [];
+            parsed.forEach(dt => {
+                if (uniqueDates.length === 0 || dt.getTime() !== uniqueDates[uniqueDates.length - 1].getTime()) {
+                    uniqueDates.push(dt);
+                }
+            });
+
+            const ranges = [];
+            let rangeStart = uniqueDates[0];
+            let prevDate = uniqueDates[0];
+            const oneDayMs = 24 * 60 * 60 * 1000;
+
+            for (let i = 1; i < uniqueDates.length; i++) {
+                const curr = uniqueDates[i];
+                const diffDays = Math.round((curr - prevDate) / oneDayMs);
+                if (diffDays === 1) {
+                    prevDate = curr;
+                } else {
+                    ranges.push({ start: rangeStart, end: prevDate });
+                    rangeStart = curr;
+                    prevDate = curr;
+                }
+            }
+            ranges.push({ start: rangeStart, end: prevDate });
+
+            const formatDDMM = (d) => {
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                return `${dd}.${mm}`;
+            };
+
+            return ranges.map(r => {
+                if (r.start.getTime() === r.end.getTime()) {
+                    return formatDDMM(r.start);
+                } else {
+                    return `${formatDDMM(r.start)}-${formatDDMM(r.end)}`;
+                }
+            }).join(', ');
+        }
+
+        function downloadMonthlyDayTabsExcel() {
+            const allData = [...vopData, ...btgrData, ...broData, ...zabData];
+            if (allData.length === 0) {
+                showToast("Немає завантажених даних для формування місячного звіту!", "warning");
+                return;
+            }
+
+            // 1. Групування записів за датами (docDate або дата з файлу)
+            const dateMap = new Map();
+            allData.forEach(r => {
+                let d = (r.docDate || '').trim();
+                if (!d) {
+                    d = extractDateFromDocInfo(r.fileName || '') || 'Без дати';
+                }
+                if (!dateMap.has(d)) {
+                    dateMap.set(d, []);
+                }
+                dateMap.get(d).push(r);
+            });
+
+            // Хронологічне сортування дат
+            const sortedDates = Array.from(dateMap.keys()).sort((a, b) => {
+                if (a === 'Без дати') return 1;
+                if (b === 'Без дати') return -1;
+                const [d1, m1, y1] = a.split('.').map(Number);
+                const [d2, m2, y2] = b.split('.').map(Number);
+                return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+            });
+
+            const wb = XLSX.utils.book_new();
+
+            // 2. Вкладка 1: «Табель (Зведена)» — агрегація по кожному військовослужбовцю
+            const soldierMap = new Map();
+            const categoryPriority = { 'vop': 1, 'btgr': 2, 'bro': 3, 'zab': 4 };
+            const categoryLabels = {
+                'vop': 'ВОП (270)',
+                'btgr': 'РОП (170)',
+                'bro': 'БРО (100)',
+                'zab': 'Заб. БД (30)'
+            };
+
+            allData.forEach(r => {
+                if (!r.name || r.name === '[ВІДСУТНІЙ В/С]') return;
+                const key = r.normName || normalizeName(r.name);
+                if (!soldierMap.has(key)) {
+                    soldierMap.set(key, {
+                        name: r.name,
+                        rank: r.rank || '',
+                        pos: r.pos || '',
+                        posDates: new Map(), // cleanTask -> Set(dates)
+                        catDates: new Map(), // catLabel -> Set(dates)
+                        dates: new Set()
+                    });
+                }
+                const s = soldierMap.get(key);
+                if ((r.rank || '').length > s.rank.length) s.rank = r.rank;
+                if ((r.pos || '').length > s.pos.length) s.pos = r.pos;
+
+                let d = (r.docDate || '').trim();
+                if (!d) d = extractDateFromDocInfo(r.fileName || '');
+                if (d) s.dates.add(d);
+
+                // Очищаємо назву позиції від наліплених дужок (ВОП), (РОП), (БРО), (Заб. БД)
+                let cleanTask = (r.task || '').replace(/\s*\((?:ВОП|РОП|БРО|Заб\.?\s*БД|\d{2,3}k?)\)/gi, '').trim() || 'Позиція';
+                if (!s.posDates.has(cleanTask)) s.posDates.set(cleanTask, new Set());
+                if (d) s.posDates.get(cleanTask).add(d);
+
+                const catLabel = categoryLabels[r.type] || r.type;
+                if (catLabel) {
+                    if (!s.catDates.has(catLabel)) s.catDates.set(catLabel, new Set());
+                    if (d) s.catDates.get(catLabel).add(d);
+                }
+            });
+
+            const sortedSoldiers = Array.from(soldierMap.values()).sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+
+            const summaryWsData = [[
+                "№ п/п",
+                "Звання",
+                "ПІБ",
+                "Займана посада",
+                "Завдання / Позиції за місяць",
+                "Категорії",
+                "Всього діб",
+                "Перелік дат"
+            ]];
+
+            sortedSoldiers.forEach((s, idx) => {
+                const sDates = Array.from(s.dates).sort((a, b) => {
+                    const [d1, m1, y1] = a.split('.').map(Number);
+                    const [d2, m2, y2] = b.split('.').map(Number);
+                    return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+                });
+                const periodsStr = formatDatesAsPeriods(sDates);
+
+                // 1. Позиції з точними періодами дат
+                const posParts = [];
+                s.posDates.forEach((dateSet, pName) => {
+                    const dArr = Array.from(dateSet).sort((a, b) => {
+                        const [d1, m1, y1] = a.split('.').map(Number);
+                        const [d2, m2, y2] = b.split('.').map(Number);
+                        return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+                    });
+                    const pDateStr = formatDatesAsPeriods(dArr);
+                    posParts.push(`${pName} (${pDateStr})`);
+                });
+                const tasksStr = posParts.join('; ');
+
+                // 2. Категорії з розбивкою діб
+                const catParts = [];
+                const sortedCatKeys = Array.from(s.catDates.keys()).sort((a, b) => {
+                    const prioA = Object.values(categoryLabels).indexOf(a);
+                    const prioB = Object.values(categoryLabels).indexOf(b);
+                    return (prioA !== -1 ? prioA : 99) - (prioB !== -1 ? prioB : 99);
+                });
+                sortedCatKeys.forEach(catKey => {
+                    catParts.push(`${catKey} — ${s.catDates.get(catKey).size} дн.`);
+                });
+                const catsStr = catParts.join(', ');
+
+                summaryWsData.push([
+                    idx + 1,
+                    s.rank,
+                    s.name,
+                    s.pos,
+                    tasksStr,
+                    catsStr,
+                    sDates.length,
+                    periodsStr
+                ]);
+            });
+
+            const summaryWs = XLSX.utils.aoa_to_sheet(summaryWsData);
+            summaryWs['!cols'] = [
+                { wch: 5 },   // № п/п
+                { wch: 14 },  // Звання
+                { wch: 30 },  // ПІБ
+                { wch: 32 },  // Займана посада
+                { wch: 45 },  // Завдання / Позиції
+                { wch: 28 },  // Категорії
+                { wch: 12 },  // Всього діб
+                { wch: 32 }   // Перелік дат
+            ];
+            styleExcelSheet(summaryWs);
+            XLSX.utils.book_append_sheet(wb, summaryWs, "Табель (Зведена)");
+
+            // 3. Щоденні вкладки (1 вкладка на 1 день)
+            const usedSheetNames = new Set(["Табель (Зведена)"]);
+
+            sortedDates.forEach(dateKey => {
+                const records = dateMap.get(dateKey) || [];
+                if (records.length === 0) return;
+
+                // Сортування всередині дня: Категорія (ВОП -> РОП -> БРО -> Заб), далі ПІБ
+                records.sort((a, b) => {
+                    const prioA = categoryPriority[a.type] || 99;
+                    const prioB = categoryPriority[b.type] || 99;
+                    if (prioA !== prioB) return prioA - prioB;
+                    return (a.name || '').localeCompare(b.name || '', 'uk');
+                });
+
+                let sheetName = dateKey;
+                if (dateKey !== 'Без дати' && dateKey.length >= 5) {
+                    sheetName = dateKey.slice(0, 5); // напр. "01.09"
+                }
+                if (usedSheetNames.has(sheetName)) {
+                    sheetName = dateKey.slice(0, 10);
+                }
+                if (usedSheetNames.has(sheetName)) {
+                    let counter = 2;
+                    while (usedSheetNames.has(`${sheetName}_${counter}`)) {
+                        counter++;
+                    }
+                    sheetName = `${sheetName}_${counter}`;
+                }
+                usedSheetNames.add(sheetName);
+
+                const dailyWsData = [[
+                    "№ п/п",
+                    "Звання",
+                    "ПІБ",
+                    "Займана посада",
+                    "Категорія",
+                    "Завдання які виконувались / Позиція",
+                    "Джерело (Файл)"
+                ]];
+
+                records.forEach((r, idx) => {
+                    dailyWsData.push([
+                        idx + 1,
+                        r.rank || '',
+                        r.name || '',
+                        r.pos || '',
+                        categoryLabels[r.type] || r.type || '',
+                        r.task || '',
+                        r.fileName || ''
+                    ]);
+                });
+
+                const dailyWs = XLSX.utils.aoa_to_sheet(dailyWsData);
+                dailyWs['!cols'] = [
+                    { wch: 5 },   // № п/п
+                    { wch: 12 },  // Звання
+                    { wch: 30 },  // ПІБ
+                    { wch: 32 },  // Займана посада
+                    { wch: 16 },  // Категорія
+                    { wch: 35 },  // Завдання
+                    { wch: 25 }   // Файл
+                ];
+                styleExcelSheet(dailyWs);
+                XLSX.utils.book_append_sheet(wb, dailyWs, sheetName);
+            });
+
+            const dateStr = getDetectedDateStr();
+            const exportFileName = `Місячний_звіт_Додаток6_${dateStr}.xlsx`;
+            XLSX.writeFile(wb, exportFileName);
+            showToast(`Сформовано щоденний звіт "${exportFileName}" (${sortedDates.length} дн.)!`, "success");
+        }
+
         function downloadExcel(dataArray, filename, sheetName = "РОП-ВОП") {
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            const dateStr = `${dd}.${mm}.${yyyy}`;
+            const dateStr = getDetectedDateStr();
             const newFilename = filename.replace(/\.xlsx$/, `_${dateStr}.xlsx`);
 
             const wsData = [["№ п/п", "Звання", "ПІБ", "Займана посада", "Завдання які виконувались", "Джерело"]];
@@ -6285,6 +6903,11 @@
             ignoredBlacklistIds.clear();
             ignoredMissingIds.clear();
             processedDocsCount = 0;
+            selectedDateFilter = 'all';
+            const dateFilterBar = document.getElementById('archive-date-filter-bar');
+            if (dateFilterBar) dateFilterBar.classList.add('hidden');
+            const alertContainer = document.getElementById('missingFilesAlert');
+            if (alertContainer) alertContainer.classList.add('hidden');
         }
 
         function populateEditTasksDatalist() {
@@ -6775,8 +7398,7 @@
                 XLSX.utils.book_append_sheet(wb, ws2, "Помилково подані");
             }
 
-            const today = new Date();
-            const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+            const dateStr = getDetectedDateStr();
             XLSX.writeFile(wb, `Utochnenya_Dodatok6_${dateStr}.xlsx`);
         }
 
@@ -7483,6 +8105,7 @@
 
         // Авто-перевірка диспетчера при завантаженні сторінки
         window.addEventListener('DOMContentLoaded', () => {
+            setAppMode(currentAppMode);
             const chk = document.getElementById('chkDispAutoSync');
             if (chk) chk.checked = _isAutoSyncEnabled;
             const ping = document.getElementById('dispAutoSyncPing');

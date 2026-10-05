@@ -189,7 +189,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             Аналізатор періодів бойових завдань та ДВ
                         </h1>
                         <button onclick="openModal('modal-changelog')" class="text-[11px] bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(59,130,246,0.2)]" title="Історія оновлень">
-                            ⚡ v1.4.0
+                            ⚡ v1.4.1
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs mt-0.5">
@@ -320,12 +320,30 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer">
                             ⚪ Вибули
                         </button>
+                        <button type="button" onclick="setFilter('duplicates')" id="filter-duplicates"
+                            class="hidden px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-amber-950/80 text-amber-300 hover:bg-amber-900/80 border border-amber-600/60 transition-all cursor-pointer shadow-xs" title="Показати бійців із конфліктом ІПН або ПІБ">
+                            ⚠️ Дублікати <span id="badge-count-duplicates" class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-200 text-[10px]">0</span>
+                        </button>
                     </div>
                 </div>
             </div>
 
-                <!-- Таблиця результатів (Список з періодами) -->
-                <div id="listViewContainer" class="flex-1 overflow-auto custom-scrollbar p-0 relative">
+            <!-- Контейнер банера дублікатів -->
+            <div id="duplicateBannerContainer" class="hidden px-3 pt-2.5 pb-1">
+                <div class="p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-amber-200 shadow-md">
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold shrink-0">⚠️</span>
+                        <span id="duplicateBannerText">Увага: виявлено можливі дублікати (однаковий ІПН або схоже ПІБ у бійців)</span>
+                    </div>
+                    <button type="button" onclick="setFilter('duplicates')" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs font-bold transition-all cursor-pointer shrink-0 shadow-sm flex items-center gap-1.5">
+                        <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                        <span>Показати тільки дублікати</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Таблиця результатів (Список з періодами) -->
+            <div id="listViewContainer" class="flex-1 overflow-auto custom-scrollbar p-0 relative">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead class="bg-slate-950 sticky top-0 border-b border-slate-700/80 shadow-md z-10 font-mono text-[11px] text-slate-300">
                             <tr>
@@ -432,7 +450,18 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             <div class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs font-sans">
                 <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
                     <div class="font-bold text-white flex items-center justify-between font-mono">
-                        <span class="text-cyan-400">⚡ v1.4.0 — Професійний Excel-експорт (AutoFilter, формули, тактичні маркери)</span>
+                        <span class="text-cyan-400">⚡ v1.4.1 — Виділення дублікатів в Excel та оптимізація розмітки</span>
+                        <span class="text-[10px] text-slate-500">05.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
+                        <li><b>Виділення дублікатів у книзі Excel</b>: бійці з перетином у декількох підрозділах автоматично підсвічуються бурштиновим бейджем <code>[⚠️ Дубль]</code>, світло-жовтим фоном рядка та виразною рамкою.</li>
+                        <li><b>Оптимізація ширини стовпців</b>: скориговано розміри колонок посади (46 wch), ПІБ (34 wch) та рубежів (40 wch) для запобігання надмірному розтягуванню рядків по висоті.</li>
+                        <li><b>Стандартизація списків</b>: лаконічні маркери <code>•</code> замість стрілок у зведенні рубежів для сумісності з різними версіями MS Excel.</li>
+                    </ul>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
+                    <div class="font-bold text-slate-300 flex items-center justify-between font-mono">
+                        <span class="text-blue-400">⚡ v1.4.0 — Професійний Excel-експорт (AutoFilter, формули, тактичні маркери)</span>
                         <span class="text-[10px] text-slate-500">01.10.2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
@@ -631,17 +660,20 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             const surname1 = words1[0];
 
             for (const [k, p] of db.entries()) {
+                const words2 = k.split(' ').filter(Boolean);
+                const surname2 = words2[0];
+                const sameSurnameFirstChar = (surname1 && surname2 && surname1[0] === surname2[0]);
+
                 if (cleanIpn && cleanIpn.length >= 8) {
                     if (p.records) {
                         for (const rec of p.records.values()) {
                             const recIpn = rec.ipn ? String(rec.ipn).replace(/\D/g, '') : '';
-                            if (recIpn && recIpn === cleanIpn) return k;
+                            // Only match if IPN matches AND surname begins with the same letter
+                            // (Prevents accidental merge of two completely different people with copy-pasted IPNs)
+                            if (recIpn && recIpn === cleanIpn && sameSurnameFirstChar) return k;
                         }
                     }
                 }
-
-                const words2 = k.split(' ').filter(Boolean);
-                const surname2 = words2[0];
                 if (surname1 === surname2) {
                     if (words1.length >= 2 && words2.length >= 2) {
                         const init1_1 = words1[1][0];
@@ -1040,16 +1072,25 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 vop: 'text-rose-400 hover:bg-rose-950/30',
                 dv30: 'text-sky-400 hover:bg-sky-950/30',
                 active: 'text-emerald-400 hover:bg-emerald-950/30',
-                inactive: 'text-slate-400 hover:bg-slate-800'
+                inactive: 'text-slate-400 hover:bg-slate-800',
+                duplicates: 'text-amber-300 hover:bg-amber-900/40'
             };
-            ['all', 'bro', 'rop', 'vop', 'dv30', 'active', 'inactive'].forEach(f => {
+            ['all', 'bro', 'rop', 'vop', 'dv30', 'active', 'inactive', 'duplicates'].forEach(f => {
                 const btn = document.getElementById(`filter-${f}`);
                 if (!btn) return;
                 if (f === filterType) {
-                    btn.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-500 text-white border border-blue-400 transition-all cursor-pointer";
+                    if (f === 'duplicates') {
+                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-amber-500 text-slate-950 border border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition-all cursor-pointer";
+                    } else {
+                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-500 text-white border border-blue-400 transition-all cursor-pointer";
+                    }
                 } else {
                     const c = colorMap[f] || 'text-slate-400 hover:bg-slate-800';
-                    btn.className = `px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 ${c} border border-slate-800 transition-all cursor-pointer`;
+                    if (f === 'duplicates') {
+                        btn.className = `px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-amber-950/80 ${c} border border-amber-600/60 transition-all cursor-pointer shadow-xs`;
+                    } else {
+                        btn.className = `px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-950 ${c} border border-slate-800 transition-all cursor-pointer`;
+                    }
                 }
             });
             if (database.size > 0) window.renderTableFunc();
@@ -1821,6 +1862,120 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             };
         }
 
+        function detectDuplicates(allRows) {
+            const ipnMap = new Map();
+            allRows.forEach(row => {
+                row.duplicateInfo = {
+                    isDuplicate: false,
+                    reasons: []
+                };
+                const cleanIpn = row.latestIpn ? String(row.latestIpn).replace(/\D/g, '') : '';
+                if (cleanIpn && cleanIpn.length >= 8 && !/^0+$/.test(cleanIpn)) {
+                    if (!ipnMap.has(cleanIpn)) ipnMap.set(cleanIpn, []);
+                    ipnMap.get(cleanIpn).push(row);
+                }
+            });
+
+            // 1. Конфлікт однакового ІПН (різні особи з однаковим податковим номером)
+            for (const [ipn, rows] of ipnMap.entries()) {
+                if (rows.length > 1) {
+                    rows.forEach(r => {
+                        const otherNames = rows.filter(other => other !== r).map(other => formatDisplayName(other.name));
+                        r.duplicateInfo.isDuplicate = true;
+                        r.duplicateInfo.reasons.push({
+                            type: 'ipn',
+                            label: `⚠️ Дубль ІПН: ${ipn}`,
+                            tooltip: `Однаковий ІПН (${ipn}) у бійців: ${otherNames.join(', ')}`
+                        });
+                    });
+                }
+            }
+
+            // 2. Конфлікт ПІБ (тільки якщо повний збіг або збіг з ініціалом/без по батькові)
+            for (let i = 0; i < allRows.length; i++) {
+                const r1 = allRows[i];
+                const k1 = normalizePersonKey(r1.name);
+                const w1 = k1.split(' ').filter(Boolean);
+                if (w1.length === 0) continue;
+                const surname1 = w1[0];
+                const first1 = w1.length > 1 ? w1[1] : '';
+                const patr1 = w1.length > 2 ? w1[2] : '';
+
+                for (let j = i + 1; j < allRows.length; j++) {
+                    const r2 = allRows[j];
+                    const k2 = normalizePersonKey(r2.name);
+                    const w2 = k2.split(' ').filter(Boolean);
+                    if (w2.length === 0) continue;
+                    const surname2 = w2[0];
+                    const first2 = w2.length > 1 ? w2[1] : '';
+                    const patr2 = w2.length > 2 ? w2[2] : '';
+
+                    if (surname1 !== surname2) continue; // Прізвища різні -> точно не дублікат
+
+                    // Перевірка по батькові: якщо в обох бійців вказано повне по батькові і воно РІЗНЕ — це різні люди (однофамільці)!
+                    if (patr1 && patr2 && patr1.length > 1 && patr2.length > 1 && patr1 !== patr2) {
+                        continue; // Різні по батькові (Богданович != Григорович) -> НЕ дублікат!
+                    }
+
+                    // Якщо в обох вказано першу літеру по батькові і вона різна
+                    if (patr1 && patr2 && patr1[0] !== patr2[0]) {
+                        continue; // Різні перші літери по батькові -> НЕ дублікат!
+                    }
+
+                    // Перевірка імені
+                    if (first1 && first2) {
+                        if (first1.length > 1 && first2.length > 1 && first1 !== first2) {
+                            continue; // Різні повні імена (Андрій != Богдан) -> НЕ дублікат!
+                        }
+                        if (first1[0] !== first2[0]) {
+                            continue; // Різні перші літери імені -> НЕ дублікат!
+                        }
+                    }
+
+                    // Тепер, коли прізвище однакове, ім'я сумісне, і по батькові або однакове, або одне з них відсутнє/ініціал:
+                    let isNameConflict = false;
+                    let desc1 = '';
+                    let desc2 = '';
+
+                    if (k1 === k2) {
+                        isNameConflict = true;
+                        desc1 = `Повний збіг ПІБ з «${formatDisplayName(r2.name)}»`;
+                        desc2 = `Повний збіг ПІБ з «${formatDisplayName(r1.name)}»`;
+                    } else if (patr1 && patr2 && patr1 === patr2 && first1 === first2) {
+                        isNameConflict = true;
+                        desc1 = `Повний збіг ПІБ з «${formatDisplayName(r2.name)}»`;
+                        desc2 = `Повний збіг ПІБ з «${formatDisplayName(r1.name)}»`;
+                    } else if (first1 && first2 && (first1.length === 1 || first2.length === 1 || !patr1 || !patr2 || patr1.length === 1 || patr2.length === 1)) {
+                        isNameConflict = true;
+                        desc1 = `Схоже скорочене ПІБ з «${formatDisplayName(r2.name)}»`;
+                        desc2 = `Схоже скорочене ПІБ з «${formatDisplayName(r1.name)}»`;
+                    }
+
+                    if (isNameConflict) {
+                        r1.duplicateInfo.isDuplicate = true;
+                        if (!r1.duplicateInfo.reasons.some(x => x.tooltip.includes(formatDisplayName(r2.name)))) {
+                            r1.duplicateInfo.reasons.push({
+                                type: 'pib',
+                                label: `⚠️ Дубль ПІБ`,
+                                tooltip: desc1
+                            });
+                        }
+
+                        r2.duplicateInfo.isDuplicate = true;
+                        if (!r2.duplicateInfo.reasons.some(x => x.tooltip.includes(formatDisplayName(r1.name)))) {
+                            r2.duplicateInfo.reasons.push({
+                                type: 'pib',
+                                label: `⚠️ Дубль ПІБ`,
+                                tooltip: desc2
+                            });
+                        }
+                    }
+                }
+            }
+
+            return allRows.filter(r => r.duplicateInfo.isDuplicate);
+        }
+
         window.renderTableFunc = function() {
             const resultTableBody = document.getElementById('resultTableBody');
             const matrixTableBody = document.getElementById('matrixTableBody');
@@ -1836,6 +1991,11 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             });
 
             if (database.size === 0) {
+                const dupBanner = document.getElementById('duplicateBannerContainer');
+                const dupFilterBtn = document.getElementById('filter-duplicates');
+                if (dupBanner) dupBanner.classList.add('hidden');
+                if (dupFilterBtn) dupFilterBtn.classList.add('hidden');
+
                 resultTableBody.innerHTML = `
                     <tr>
                         <td colspan="7" class="py-28 text-center">
@@ -1920,6 +2080,26 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 }
             });
 
+            // Детекція дублікатів (ІПН та ПІБ)
+            const duplicateRows = detectDuplicates(allRows);
+            const duplicateCount = duplicateRows.length;
+
+            const dupBanner = document.getElementById('duplicateBannerContainer');
+            const dupText = document.getElementById('duplicateBannerText');
+            const dupFilterBtn = document.getElementById('filter-duplicates');
+            const dupBadgeCount = document.getElementById('badge-count-duplicates');
+
+            if (duplicateCount > 0) {
+                if (dupBanner) dupBanner.classList.remove('hidden');
+                if (dupText) dupText.innerHTML = `Увага: виявлено можливі дублікати (однаковий ІПН або схоже ПІБ у <b>${duplicateCount}</b> бійців)`;
+                if (dupFilterBtn) dupFilterBtn.classList.remove('hidden');
+                if (dupBadgeCount) dupBadgeCount.textContent = duplicateCount;
+            } else {
+                if (dupBanner) dupBanner.classList.add('hidden');
+                if (dupFilterBtn) dupFilterBtn.classList.add('hidden');
+                if (currentFilter === 'duplicates') currentFilter = 'all';
+            }
+
             // Фільтрація
             let filtered = allRows.filter(row => {
                 if (currentFilter === 'bro' && row.details.broDays === 0) return false;
@@ -1928,6 +2108,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 if (currentFilter === 'dv30' && row.details.dv30Days === 0) return false;
                 if (currentFilter === 'active' && row.details.isGloballyInactive) return false;
                 if (currentFilter === 'inactive' && !row.details.isGloballyInactive) return false;
+                if (currentFilter === 'duplicates' && (!row.duplicateInfo || !row.duplicateInfo.isDuplicate)) return false;
 
                 if (searchQuery) {
                     const terms = searchQuery.split(/[,;\n]+/).map(t => t.trim().toLowerCase()).filter(Boolean);
@@ -1943,8 +2124,14 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 return true;
             });
 
-            // Сортування (Український алфавіт та інші колонки)
+            // Сортування (Дублікати завжди виносяться на початок списку, далі за обраною колонкою)
             filtered.sort((a, b) => {
+                const aDup = (a.duplicateInfo && a.duplicateInfo.isDuplicate) ? 1 : 0;
+                const bDup = (b.duplicateInfo && b.duplicateInfo.isDuplicate) ? 1 : 0;
+                if (aDup !== bDup) {
+                    return bDup - aDup; // Дублікати перші!
+                }
+
                 let res = 0;
                 if (currentSort.col === 'name') {
                     res = a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' });
@@ -2010,9 +2197,37 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     }
 
                     const isEven = idx % 2 === 0;
-                    const rowBgClass = isSelected 
-                        ? 'bg-blue-950/60 border-l-4 border-l-blue-500' 
-                        : (isEven ? 'bg-slate-900/30' : 'bg-slate-900/70');
+                    const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
+
+                    let rowBgClass = '';
+                    if (isSelected) {
+                        rowBgClass = 'bg-blue-950/60 border-l-4 border-l-blue-500';
+                    } else if (isDup) {
+                        rowBgClass = 'bg-amber-950/30 border-l-4 border-l-amber-500 hover:bg-amber-950/45';
+                    } else {
+                        rowBgClass = isEven ? 'bg-slate-900/30' : 'bg-slate-900/70';
+                    }
+
+                    let dupBadgesHtml = '';
+                    if (isDup) {
+                        const uniqueReasons = new Map();
+                        row.duplicateInfo.reasons.forEach(r => {
+                            if (!uniqueReasons.has(r.type)) {
+                                uniqueReasons.set(r.type, {
+                                    label: r.label,
+                                    tooltips: [r.tooltip]
+                                });
+                            } else {
+                                uniqueReasons.get(r.type).tooltips.push(r.tooltip);
+                            }
+                        });
+
+                        dupBadgesHtml = Array.from(uniqueReasons.values()).map(b => `
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs cursor-help" title="${escapeHtml(b.tooltips.join('; '))}">
+                                ${escapeHtml(b.label)}
+                            </span>
+                        `).join('');
+                    }
 
                     const trMain = document.createElement('tr');
                     trMain.id = `row-${personId}`;
@@ -2032,6 +2247,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         <td class="py-2.5 px-2.5 font-bold text-white text-[13px] border-r border-slate-800/70 break-word-safe tracking-normal" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <span class="group-hover:text-blue-300 transition-colors font-semibold">${escapeHtml(displayName)}</span>
+                                ${dupBadgesHtml}
                                 ${details.isGloballyInactive ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono bg-rose-950/70 text-rose-300 border border-rose-800/60 shadow-xs font-normal"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>Вибув</span>' : ''}
                             </div>
                         </td>
@@ -2050,6 +2266,21 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     const trDetails = document.createElement('tr');
                     trDetails.id = `details-${personId}`;
                     trDetails.className = 'hidden bg-slate-950/80 border-b border-slate-800 shadow-inner';
+
+                    let conflictAlertHtml = '';
+                    if (isDup) {
+                        conflictAlertHtml = `
+                            <div class="p-2.5 rounded-xl border border-amber-500/60 bg-amber-950/50 mb-3 text-xs text-amber-200 flex items-start gap-2 shadow-sm font-sans">
+                                <span class="text-amber-400 font-bold shrink-0 text-sm">⚠️</span>
+                                <div class="space-y-1">
+                                    <div class="font-bold text-amber-300">Виявлено можливе дублювання або конфлікт даних:</div>
+                                    <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-200/90 font-mono">
+                                        ${row.duplicateInfo.reasons.map(r => `<li>${escapeHtml(r.tooltip)}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     let periodsHtml = details.periods.map(p => {
                         const isSingleDay = (p.start === p.end);
@@ -2099,7 +2330,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         `;
                     }).join('');
 
-                    trDetails.innerHTML = `<td colspan="7" class="p-4 pl-8 md:pl-14"><div class="max-w-4xl">${periodsHtml}</div></td>`;
+                    trDetails.innerHTML = `<td colspan="7" class="p-4 pl-8 md:pl-14"><div class="max-w-4xl">${conflictAlertHtml}${periodsHtml}</div></td>`;
 
                     resultTableBody.appendChild(trMain);
                     resultTableBody.appendChild(trDetails);
@@ -2206,11 +2437,12 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 });
 
                 const isEven = idx % 2 === 0;
-                const matrixRowBg = isSelected ? 'bg-blue-950/60' : (isEven ? 'bg-slate-900/30' : 'bg-slate-900/70');
-                const stickyColBg = isSelected ? 'bg-blue-950' : 'bg-slate-950';
+                const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
+                const matrixRowBg = isSelected ? 'bg-blue-950/60' : (isDup ? 'bg-amber-950/30' : (isEven ? 'bg-slate-900/30' : 'bg-slate-900/70'));
+                const stickyColBg = isSelected ? 'bg-blue-950' : (isDup ? 'bg-amber-950/90' : 'bg-slate-950');
 
                 const tr = document.createElement('tr');
-                tr.className = `hover:bg-slate-800/70 transition-colors border-b border-slate-800/70 ${details.isGloballyInactive ? 'opacity-60' : ''} ${matrixRowBg}`;
+                tr.className = `hover:bg-slate-800/70 transition-colors border-b border-slate-800/70 ${details.isGloballyInactive ? 'opacity-60' : ''} ${isDup ? 'border-l-4 border-l-amber-500' : ''} ${matrixRowBg}`;
                 tr.innerHTML = `
                     <td class="sticky left-0 z-20 ${stickyColBg} py-1.5 px-1 text-center w-14 min-w-[56px] max-w-[56px] border-r border-slate-800/70" onclick="event.stopPropagation()">
                         <div class="flex items-center justify-center gap-1.5">
@@ -2224,6 +2456,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     <td class="sticky left-[152px] z-20 ${stickyColBg} py-1.5 px-2.5 font-bold text-white border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] w-60 min-w-[240px] max-w-[240px] truncate text-[12px]" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
                         <div class="flex items-center gap-1.5 truncate">
                             <span class="truncate font-semibold">${escapeHtml(displayName)}</span>
+                            ${isDup ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 font-bold" title="${escapeHtml(row.duplicateInfo.reasons.map(r => r.tooltip).join('; '))}">⚠️ Дубль</span>` : ''}
                             ${details.isGloballyInactive ? '<span class="text-[9px] font-mono text-rose-400 font-normal shrink-0" title="Вибув зі списків">⚠️</span>' : ''}
                         </div>
                     </td>
@@ -2284,14 +2517,22 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             }
 
             const isSelective = selectedPersonNames.size > 0;
-            const targetRows = isSelective
+            let targetRows = isSelective
                 ? tableDataForExport.filter(r => selectedPersonNames.has(r.name))
-                : tableDataForExport;
+                : [...tableDataForExport];
 
             if (targetRows.length === 0) {
                 alert("Серед обраних бійців немає записів для експорту!");
                 return;
             }
+
+            // Гарантуємо, що дублікати виводяться першими у звіті Excel
+            targetRows.sort((a, b) => {
+                const aDup = (a.duplicateInfo && a.duplicateInfo.isDuplicate) ? 1 : 0;
+                const bDup = (b.duplicateInfo && b.duplicateInfo.isDuplicate) ? 1 : 0;
+                if (aDup !== bDup) return bDup - aDup;
+                return 0;
+            });
 
             const sortedDates = Array.from(successDatesCount).sort();
 
@@ -2328,6 +2569,20 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 const cleanPos = (row.latestPosition || '—').replace(/\n|\r/g, ' ');
                 const cleanIpn = row.latestIpn || '—';
 
+                // Option B: Для дублікатів додаємо примітку про конфлікт з нового рядка
+                let nameCellVal = row.name;
+                const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
+                if (isDup && row.duplicateInfo.reasons.length > 0) {
+                    const conflictNotes = row.duplicateInfo.reasons.map(r => {
+                        if (r.type === 'ipn') {
+                            const match = r.tooltip.match(/у бійців:\s*(.*)$/i);
+                            return `[⚠️ Дубль ІПН: ${match ? match[1] : r.tooltip}]`;
+                        }
+                        return `[⚠️ ${r.tooltip}]`;
+                    });
+                    nameCellVal = `${row.name}\n${conflictNotes.join('\n')}`;
+                }
+
                 sumBro += row.details.broDays;
                 sumRop += row.details.ropDays;
                 sumVop += row.details.vopDays;
@@ -2346,7 +2601,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         : `${formatDateShort(p.start)} – ${formatDateShort(p.end)}`;
 
                     if (p.isGap) {
-                        gapLines.push(`▫️ ${rangeStr} (${formatDaysUa(p.days)})`);
+                        gapLines.push(`• ${rangeStr} (${formatDaysUa(p.days)})`);
                     } else {
                         // Strip 'На глибину' noise for clean presentation
                         const locClean = (p.location || 'БД').replace(/^на\s+глибину\s+/i, '').trim();
@@ -2362,7 +2617,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 const combatLines = [];
                 for (const [loc, grp] of combatGroups.entries()) {
                     const daysStr = formatDaysUa(grp.totalDays);
-                    combatLines.push(`▸ ${loc} (${daysStr}) → ${grp.ranges.join(', ')}`);
+                    combatLines.push(`• ${loc} (${daysStr}): ${grp.ranges.join(', ')}`);
                 }
 
                 const combatText = combatLines.length > 0 ? combatLines.join('\n') : '—';
@@ -2371,7 +2626,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 summary_ws_data.push([
                     i + 1,
                     cleanRank,
-                    row.name, // ПОВНЕ ПІБ БЕЗ СКОРОЧЕНЬ
+                    nameCellVal,
                     cleanPos,
                     cleanIpn,
                     combatText,
@@ -2446,20 +2701,28 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 const isHeader = (R === 0);
                 const isSummary = (R === rangeSummary.e.r);
                 const isEven = (R % 2 === 0);
-                const defaultRowBg = isEven ? "F8FAFC" : "FFFFFF";
+                const rData = (!isHeader && !isSummary) ? targetRows[R - 1] : null;
+                const isRowDup = (rData && rData.duplicateInfo && rData.duplicateInfo.isDuplicate);
+                const defaultRowBg = isRowDup ? "FEF3C7" : (isEven ? "F8FAFC" : "FFFFFF");
 
                 if (!isHeader && !isSummary) {
-                    const personIdx = R - 1;
-                    const rData = targetRows[personIdx];
                     let maxLines = 1;
                     if (rData && rData.details) {
+                        const nameLines = (summary_ws_data[R][2] || '').split('\n').filter(Boolean).length;
                         const combatCount = (summary_ws_data[R][5] || '').split('\n').filter(Boolean).length;
                         const gapCount = (summary_ws_data[R][6] || '').split('\n').filter(Boolean).length;
-                        const posLines = Math.ceil(((rData.latestPosition || '').length) / 34);
-                        maxLines = Math.max(combatCount, gapCount, posLines, 1);
+                        const posLines = Math.ceil(((rData.latestPosition || '').length) / 38);
+                        maxLines = Math.max(nameLines, combatCount, gapCount, posLines, 1);
                     }
-                    summaryRowHeights.push({ hpt: Math.max(20, Math.min(maxLines, 4) * 16 + 4) });
+                    summaryRowHeights.push({ hpt: Math.max(isRowDup ? 28 : 20, Math.min(maxLines, 5) * 16 + 4) });
                 }
+
+                const rowBorder = isRowDup ? {
+                    top: { style: "thin", color: { rgb: "F59E0B" } },
+                    bottom: { style: "thin", color: { rgb: "F59E0B" } },
+                    left: { style: "thin", color: { rgb: "F59E0B" } },
+                    right: { style: "thin", color: { rgb: "F59E0B" } }
+                } : borderLight;
 
                 for (let C = rangeSummary.s.c; C <= rangeSummary.e.c; ++C) {
                     const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
@@ -2505,8 +2768,9 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             fontColor = "475569";
                         } else if (C === 2) { // ПІБ
                             alignH = "left";
-                            fontColor = "0F172A";
+                            fontColor = isRowDup ? "92400E" : "0F172A";
                             isBold = true;
+                            wrap = isRowDup;
                         } else if (C === 3) { // Посада
                             alignH = "left";
                             fontColor = "334155";
@@ -2545,7 +2809,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             font: { name: 'Calibri', sz: (C === 5 || C === 6 ? 9.5 : 10), bold: isBold, color: { rgb: fontColor } },
                             fill: { fgColor: { rgb: defaultRowBg } },
                             alignment: { horizontal: alignH, vertical: "center", wrapText: wrap },
-                            border: borderLight
+                            border: rowBorder
                         };
                     }
                 }
@@ -2555,19 +2819,19 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             wsSummary['!rows'] = summaryRowHeights;
 
             wsSummary['!cols'] = [
-                { wch: 4 },    // №
-                { wch: 16 },   // Звання (під заголовок + фільтр)
-                { wch: 28 },   // ПІБ
-                { wch: 38 },   // Посада
-                { wch: 12 },   // ІПН
-                { wch: 30 },   // Бойові рубежі
-                { wch: 24 },   // Перерви
+                { wch: 5 },    // №
+                { wch: 18 },   // Звання (під заголовок + фільтр)
+                { wch: 34 },   // ПІБ (з урахуванням дублікатів)
+                { wch: 46 },   // Посада (без переносів на 3-4 рядки)
+                { wch: 13 },   // ІПН
+                { wch: 40 },   // Бойові рубежі
+                { wch: 28 },   // Перерви
                 { wch: 8 },    // БРО
                 { wch: 8 },    // РОП
                 { wch: 8 },    // ВОП
-                { wch: 8.5 },  // ДВ 30
-                { wch: 10 },   // Всього
-                { wch: 13 }    // Не подавався
+                { wch: 9 },    // ДВ 30
+                { wch: 11 },   // Всього
+                { wch: 14 }    // Не подавався
             ];
 
             wsSummary['!freeze'] = { xSplit: 3, ySplit: 1, topLeftCell: 'D2' };
@@ -2591,10 +2855,16 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
             targetRows.forEach((row, i) => {
                 const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ');
+                let matrixNameVal = row.name;
+                const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
+                if (isDup) {
+                    matrixNameVal = `${row.name} [⚠️ Дубль]`;
+                }
+
                 const rowValues = [
                     i + 1,
                     cleanRank,
-                    row.name
+                    matrixNameVal
                 ];
 
                 sortedDates.forEach(dStr => {
@@ -2659,7 +2929,16 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 const isHeader = (R === 0);
                 const isSummary = (R === rangeMatrix.e.r);
                 const isEven = (R % 2 === 0);
-                const defaultRowBg = isEven ? "F8FAFC" : "FFFFFF";
+                const rData = (!isHeader && !isSummary) ? targetRows[R - 1] : null;
+                const isRowDup = (rData && rData.duplicateInfo && rData.duplicateInfo.isDuplicate);
+                const defaultRowBg = isRowDup ? "FEF3C7" : (isEven ? "F8FAFC" : "FFFFFF");
+
+                const cellBorder = isRowDup ? {
+                    top: { style: "thin", color: { rgb: "F59E0B" } },
+                    bottom: { style: "thin", color: { rgb: "F59E0B" } },
+                    left: { style: "thin", color: { rgb: "CBD5E1" } },
+                    right: { style: "thin", color: { rgb: "CBD5E1" } }
+                } : borderLight;
 
                 for (let C = rangeMatrix.s.c; C <= rangeMatrix.e.c; ++C) {
                     const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
@@ -2705,7 +2984,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             fontColor = "475569";
                         } else if (C === 2) {
                             alignH = "left";
-                            fontColor = "0F172A";
+                            fontColor = isRowDup ? "92400E" : "0F172A";
                             isBold = true;
                         } else if (C >= 3 && C < 3 + numDates) {
                             alignH = "center";
@@ -2727,7 +3006,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                                 fontColor = "0369A1";
                                 isBold = true;
                             } else if (val === "✕" || val === "X") {
-                                bgHex = "F8FAFC";
+                                bgHex = isRowDup ? "FEF3C7" : "F8FAFC";
                                 fontColor = "CBD5E1";
                                 isBold = false;
                             }
@@ -2754,7 +3033,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             font: { name: 'Calibri', sz: (C >= 3 && C < 3 + numDates ? 9 : 10), bold: isBold, color: { rgb: fontColor } },
                             fill: { fgColor: { rgb: bgHex } },
                             alignment: { horizontal: alignH, vertical: "center" },
-                            border: borderLight
+                            border: cellBorder
                         };
                     }
                 }

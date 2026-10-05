@@ -76,7 +76,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> OFFLINE ENGINE
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.2.9
+                            ⚡ v1.3.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-1">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -257,7 +257,7 @@
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                 <div>
                                     <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider">Потребує уваги (нерозпізнані дані)</h3>
-                                    <p class="text-[11px] text-amber-200/70">У цих рядках є невідомий текст, зайві цифри або пропущені позначення калібрів (клікніть щоб перейти):</p>
+                                    <p class="text-[11px] text-amber-200/70">У цих рядках є невідомий текст, залишки на складі, зайві цифри або пропущені позначення калібрів (клікніть щоб перейти):</p>
                                 </div>
                                 <button id="btn-copy-unparsed" onclick="copyAllUnparsed(this)" class="self-start sm:self-center px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-amber-100 border border-amber-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shadow-sm shrink-0" title="Скопіювати всі нерозпізнані рядки в буфер обміну">
                                     <i data-lucide="copy" class="w-3.5 h-3.5"></i>
@@ -280,7 +280,7 @@
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">5.45х39</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">7.62 (x39, x51, x54)</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">5.56x45</span>
-            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12х70</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12х70 / 12х76 / ТАХО</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12.7 (x99, x108)</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">14.5x114</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">40х46 (NR338, M433, ВОГ)</span>
@@ -310,7 +310,20 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.2.9 (Стрічкові набої 5.56/7.62/12.7, толерантність 7.61 & копіювання помилок)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.3.0 (Набої 12 калібру ТАХО / 12/76 Магнум & захист від дробів)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">05.10.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Повна підтримка набоїв «ТАХО» / «TAHO»:</strong> Впроваджено розпізнавання бренду вітчизняних набоїв 12 калібру (кирилиця/латиниця, будь-який регістр) у префіксному та суфіксному форматі (<code>25 шт ТАХО 12/70</code>, <code>ТАХО 12/70 - 25 шт</code>, <code>10 тахо 12/70</code>).</li>
+                        <li><strong class="text-white">Підтримка 12/76 (Магнум) та типів спорядження:</strong> Додано розпізнавання гільзи 12/76, картечі, шроту, куль та антидронових набоїв (<code>ТАХО картеч</code>, <code>ТАХО антидрон</code>, <code>патрони 12/70</code>, <code>рушниця 12 кал</code>).</li>
+                        <li><strong class="text-white">Захист від колізій із магазинами АК:</strong> Записи без числа 12 типу <code>ТАХО - 30 шт</code> більше не зараховуються помилково як 5.45х39 мм.</li>
+                        <li><strong class="text-white">Захист від дробів у кількості:</strong> Знаки <code>/</code> та <code>*</code> у дробах калібру (<code>12/70</code>) більше не відтинають довжину гільзи як хибну кількість.</li>
+                        <li><strong class="text-white">Одиничний облік та оновлений інтерфейс:</strong> Додано 12x70 до списку одиночного обліку та оновлено назву в таблиці: <code>12 калібр (12х70 / ТАХО)</code>.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.2.9 (Стрічкові набої 5.56/7.62/12.7, толерантність 7.61 & копіювання помилок)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">30.09.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -480,7 +493,7 @@
     <script>
         /**
          * =========================================================================
-         * КАЛЬКУЛЯТОР БК (AMMO_PARSER) v1.2.9
+         * КАЛЬКУЛЯТОР БК (AMMO_PARSER) v1.3.0
          * Призначення: Швидкий аналіз, нормалізація, розпізнавання та підсумовування
          * витрати боєприпасів за сирими текстовими донесеннями підрозділів.
          * =========================================================================
@@ -521,7 +534,8 @@
         // 3. ЗРАЗКИ СИРИХ ДОНЕСЕНЬ (ПРЕСЕТИ)
         // -------------------------------------------------------------------------
         const samplePresets = {
-            all: `10 12*70
+            all: `25 шт ТАХО 12/70
+10 12*70
 120 шт-5.45х39
 ручна граната Ф1-1шт, ГХО - 2
 200 7.62х54
@@ -542,6 +556,7 @@
 150 7.62x54
 200 7.62x51 NATO
 60 шт 5.56х45
+25 шт ТАХО 12/70
 15 шт 12х70`,
             grenades: `ручна граната Ф1 - 2 шт
 3 шт РГД-5
@@ -565,8 +580,8 @@ GHO - 2
         // 4. ДОВІДНИК ТИПІВ БОЄПРИПАСІВ ТА РЕГУЛЯРНІ ВИРАЗИ
         // idPattern підтримує омогліфи (кирилиця/латиниця), дефіси, пробіли та ведучі нулі
         // -------------------------------------------------------------------------
-        const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9_])'; // Запобігає захопленню цифр всередині слів та чисел
-        const sep = '(?:[\\s\\-_]*(?:мм|mm))?[\\s\\-–—:=./;\\x5c]*';
+        const numPrefix = '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9_/*xх.])'; // Запобігає захопленню цифр всередині слів, чисел та калібрів
+        const sep = '(?:[\\s\\-_]*(?:мм|mm))?[\\s\\-–—:=./;\\x5c)\\]}&*]*';
         const unit = '(?:[\\s\\-]*[\\-\\x5c/\\s]*(?:шт|щт|штук[и]?|гранат[аи]?|грн)\\.?)?';
 
         const ammoConfigs = [
@@ -582,8 +597,8 @@ GHO - 2
             // Стрілецька зброя: 5.56 мм (NATO) з підтримкою стрічок (M249/Minimi/стр)
             { id: '5.56', name: '5.56х45 мм (NATO)', icon: '🎯', category: 'small', idPattern: '5[.,/]56(?:[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:45|39))?(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст|ланка|м249|m249|minimi|мінімі))*(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:uar|уар)(?:\\-?15)?)?(?:[\\s\\-_]*(?:nato|нато|ss109|m855|ball|м249|m249|minimi|мінімі))*' },
 
-            // Гладкоствольна зброя: 12 калібр
-            { id: '12x70', name: '12 калібр (12х70)', icon: '🎯', category: 'small', idPattern: '12[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*70|12[\\s\\-/]+7(?![0-9])|12[\\s\\-]*кал(?:ібр)?' },
+            // Гладкоствольна зброя: 12 калібр (12х70, 12х76 Магнум, набої ТАХО / TAHO, картеч, шрот, помпа/рушниця)
+            { id: '12x70', name: '12 калібр (12х70 / ТАХО)', icon: '🎯', category: 'small', idPattern: '(?:(?:[тt][аa][хhx][оo0])[\\s\\-_]*(?:12[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:70|76)|12[\\s\\-/]+7[06]?(?![0-9])|12[\\s\\-]*(?:кал(?:ібр)?|к(?![а-яіїєґa-z0-9])|ga(?:uge)?)|(?:70|76)(?![0-9]))(?:[\\s\\-_]*(?:картеч[а-яіїєґ]*|шрот[а-яіїєґ]*|кул[яеі][а-яіїєґ]*|антидрон[а-яіїєґ]*|магнум|magnum))*|(?:12[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*(?:70|76)|12[\\s\\-/]+7[06]?(?![0-9])|12[\\s\\-]*(?:кал(?:ібр)?|к(?![а-яіїєґa-z0-9])|ga(?:uge)?))(?:[\\s\\-_]*(?:[тt][аa][хhx][оo0]|картеч[а-яіїєґ]*|шрот[а-яіїєґ]*|кул[яеі][а-яіїєґ]*|антидрон[а-яіїєґ]*|магнум|magnum))*|(?:[тt][аa][хhx][оo0])(?![\\s\\-_]*(?:12|70|76))(?:[\\s\\-_]*(?:картеч[а-яіїєґ]*|шрот[а-яіїєґ]*|кул[яеі][а-яіїєґ]*|антидрон[а-яіїєґ]*|магнум|magnum))*|(?:рушниц[а-яіїєґ]*|помп[а-яіїєґ]*|дробовик[а-яіїєґ]*)(?:[\\s\\-_]*(?:12[\\s\\-]*(?:кал(?:ібр)?|к|ga|[xх*\\/\\-](?:70|76))|[тt][аa][хhx][оo0]))*|(?:патрон[а-яіїєґ]*|набо[їеє][в]?)[\\s\\-_]*(?:до\\s*)?(?:рушниц[а-яіїєґ]*|помп[а-яіїєґ]*|дробовик[а-яіїєґ]*))' },
 
             // Великокаліберні кулемети: 12.7 та 14.5 мм
             { id: '12.7x99', name: '12.7х99 мм (.50 BMG)', icon: '⚡', category: 'heavy_mg', idPattern: '12[.,]7[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*99(?:[\\s\\-_]*(?:мм|mm))?(?:[\\s\\-_]*(?:стр(?:іч(?:ков[а-яіїєґ]*|к[а-яіїєґ]*)?)?|ст))?(?:[\\s\\-_]*(?:bmg|бмг|браунінг|browning|м2|m2|ap|api|апі|б[- ]?32|b[- ]?32|бзт|bzt|мдз|mdz))*' },
@@ -595,7 +610,7 @@ GHO - 2
             // Гранатомети, постріли РПГ та СПГ
             { id: 'RPG75', name: 'РПГ-75М', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*75(?:[\\s\\-_]*[мm])?' },
             { id: 'PG7V', name: 'Постріл ПГ-7В/ВС1', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pп][gг])[\\s\\-_]*0?7(?:[\\s\\-_]*[vвmмsсlлrрtтаa1-9]+)?|(?:постріл[а-яіїєґ]*\\s*)?(?:рпг|rpg)[\\s\\-_]*0?7(?![0-9])(?:[\\s\\-_]*[vвmмsсlлrрtтаa1-9]+)?' },
-            { id: 'OG7V', name: 'Постріл ОГ-7В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[oо]g[si]?|[oо]г[сі]?)[\\s\\-_]*0?7[\\s\\-_]*(?:[vвmмaаwksct]*[\\-_]?[0-9]*)' },
+            { id: 'OG7V', name: 'Постріл ОГ-7В / ОГІ-7', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:(?:[oо][gг][iіиj]|[oо][gг][\\-_][iіиj])(?:[\\s\\-_]*0?7(?:[\\s\\-_]*(?:[vвmмaаwksct0-9]+))*)?|(?:[oо][gг][sс]?|[oо]г[с]?)[\\s\\-_]*0?7[\\s\\-_]*(?:[vвmмaаwksct]*[\\-_]?[0-9]*)|(?:[oо][gг][iіиj]))(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])' },
             { id: 'RHEAT7MA', name: 'Постріл RHEAT-7MA2', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:r[\\-_]?heat|р[\\-_]?хеат|р[\\-_]?хіт)[\\s\\-_]*0?7(?:[\\s\\-_]*(?:ma|ма)[\\s\\-_]*2?)?' },
             { id: 'RHEW9MA', name: 'Постріл RHEW-9MA', icon: '🚀', category: 'rpg', idPattern: 'rhew[\\s\\-_]*0?9[\\s\\-_]*ma' },
             { id: 'PG9V', name: 'Постріл ПГ-9В', icon: '🚀', category: 'rpg', idPattern: '(?:постріл[а-яіїєґ]*\\s*)?(?:[pпрР][gгGГ])[\\s\\-_]*0?9[\\s\\-_]*[vв]?' },
@@ -603,6 +618,7 @@ GHO - 2
             { id: 'RPV16', name: 'РПВ-16', icon: '🚀', category: 'rpg', idPattern: 'рпв(?:[\\s\\-]*16)?(?:[\\s\\-]*01)?' },
             { id: 'VPR20', name: 'ВПР-20', icon: '🚀', category: 'rpg', idPattern: '(?:впр|vpr)[\\s\\-_]*20' },
             { id: 'AT4', name: 'АТ-4', icon: '🚀', category: 'rpg', idPattern: '(?:(?:рпг|гранатомет)[\\s\\-_]*)?(?:ат|at)[\\s\\-]*4(?:[\\s\\-]*(?:cs|кс|сs|сз)[-_\\s]*(?:rs|рс))?' },
+            { id: 'MATADOR', name: 'Matador (RGW-90)', icon: '🚀', category: 'rpg', idPattern: '(?:r[\\-_]?gw[\\s\\-_]*90|р[\\-_]?г[\\-_]?в[\\s\\-_]*90|(?:гранатомет[а-яіїєґ]*\\s*)?(?:mat[h]?ador|матадор)(?:[\\s\\-_]*(?:rgw|рпг|90))*)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])' },
             { id: 'RPG18', name: 'РПГ-18 (Муха)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*18' },
             { id: 'RPG22', name: 'РПГ-22 (Нетто)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*22' },
             { id: 'RPG26', name: 'РПГ-26 (Аглень)', icon: '🚀', category: 'rpg', idPattern: '(?:рпг|rpg)[\\s\\-_]*26' },
@@ -610,7 +626,7 @@ GHO - 2
             
             // Гранатометні постріли 40х46 та ВОГ
             { id: '40x46', name: '40х46 мм', icon: '💣', category: 'grenade', idPattern: '(?:(?:б[\\/\\.]?к|bk|постріл[а-яіїєґ]*|гранат[а-яіїєґ]*)[\\s\\-_]*)*(?:(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?[\\s\\-]*)?40[\\s\\-]*(?:[xх*\\x5c/\\-.]|\\s*на\\s*)[\\s\\-]*46(?:[\\s\\-_]*(?:\\(?(?:вог|vog)[а-яіїєґa-z]*\\)?|(?:nr|нр)[\\s\\-_]*338(?:[\\s\\-_]*(?:hefj|rlv))?|rlv(?:[\\s\\-_]*hefj)?|m[\\s\\-_]*433|м[\\s\\-_]*433|m[\\s\\-_]*406|м[\\s\\-_]*406|hedp|хедп))*|(?:nr|нр)[\\s\\-_]*338(?:[\\s\\-_]*(?:hefj|rlv))?|rlv[\\s\\-_]*hefj)' },
-            { id: 'VOG', name: 'ВОГ (17/25)', icon: '💣', category: 'grenade', idPattern: '(?:(?:40[\\s\\-_]*(?:мм|mm)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])[\\s\\-_]*)?(?:вог|vog|гп|gp)[а-яіїєґa-z]*(?:[\\s\\-_]*(?:17|25|30)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]))?|40[\\s\\-_]*(?:мм|mm)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])(?![\\s\\-_]*46))' },
+            { id: 'VOG', name: 'ВОГ (17/25)', icon: '💣', category: 'grenade', idPattern: '(?:(?:40[\\s\\-_]*(?:мм|mm)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])[\\s\\-_]*)?(?:вог|vog|гп|gp)[а-яіїєґa-z]*(?:[\\s\\-_]*(?:17|25|30)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]))?|40[\\s\\-_]*(?:мм|mm)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])(?![\\s\\-_]*46))' },
 
             // Ручні осколкові та термобаричні гранати
             { id: 'GHO', name: 'GHO', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[gг][hх][oо0]|[gг][oо0][hх])(?:[\\s\\-_]*[12])?(?:[\\s\\-_]*(?:rdx|рдеікс|рдекс))?\\.?' },
@@ -636,10 +652,14 @@ GHO - 2
         const implicitIds = new Set([
             'GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'RGT27S', 
             'VOG', '40x46', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'RHEAT7MA', 'BULLSPIKE', 
-            'RPV16', 'VPR20', 'AT4', 'RPG75', 'RPG18', 'RPG22', 'RPG26', 'RPG76',
-            'RSP'
+            'RPV16', 'VPR20', 'AT4', 'MATADOR', 'RPG75', 'RPG18', 'RPG22', 'RPG26', 'RPG76',
+            'RSP', '12x70'
         ]);
         const implicitConfigsList = ammoConfigs.filter(c => implicitIds.has(c.id));
+
+        // Регулярні вирази для детекції складських залишків (не бойова витрата)
+        const stockKeywordsRegex = /(?:^|[^а-яА-ЯіІїЇєЄґҐa-zA-Z0-9])(?:залиш(?:ок|ки|ку)?|остат(?:ок|ки|ку)?|наявн(?:ість|ості|о)?|лишил(?:ось|ися)|на\s*ран(?:ок|ку)|на\s*почат(?:ок|ку)|в\s*наявності)(?![а-яА-ЯіІїЇєЄґҐa-zA-Z0-9])/i;
+        const startsWithStockRegex = /^[\s\-_*:]*(?:залиш(?:ок|ки|ку)?|остат(?:ок|ки|ку)?|наявн(?:ість|ості|о)?|лишил(?:ось|ися)|на\s*ран(?:ок|ку)|на\s*почат(?:ок|ку)|в\s*наявності)(?![а-яА-ЯіІїЇєЄґҐa-zA-Z0-9])/i;
 
         /**
          * Безпечне екранування тексту для захисту від XSS
@@ -745,6 +765,7 @@ GHO - 2
             str = str.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ');
             str = str.replace(/[`’ʼ‘']/g, "'").replace(/[«»“”„"]/g, '"');
             str = str.replace(/[—–−‒]/g, '-');
+            str = str.replace(/\s+/g, ' ');
             return (options && options.toLower) ? str.toLowerCase() : str;
         }
 
@@ -754,19 +775,20 @@ GHO - 2
          */
         function smartSplitLine(line) {
             if (!line || !line.trim()) return [""];
-            const norm = normalizeMilitaryText(line, { toLower: true });
+            const cleanLine = normalizeMilitaryText(line, { toLower: false });
+            const norm = cleanLine.toLowerCase();
             let matches = [];
 
             ammoConfigs.forEach(conf => {
                 conf.numFirstRegex.lastIndex = 0;
                 let m;
                 while ((m = conf.numFirstRegex.exec(norm)) !== null) {
-                    matches.push({ start: m.index, end: m.index + m[0].length, text: line.substring(m.index, m.index + m[0].length) });
+                    matches.push({ start: m.index, end: m.index + m[0].length, text: cleanLine.substring(m.index, m.index + m[0].length) });
                 }
 
                 conf.ammoFirstRegex.lastIndex = 0;
                 while ((m = conf.ammoFirstRegex.exec(norm)) !== null) {
-                    matches.push({ start: m.index, end: m.index + m[0].length, text: line.substring(m.index, m.index + m[0].length) });
+                    matches.push({ start: m.index, end: m.index + m[0].length, text: cleanLine.substring(m.index, m.index + m[0].length) });
                 }
             });
 
@@ -780,11 +802,21 @@ GHO - 2
                 }
             }
 
-            if (nonOverlapping.length > 1) {
-                return nonOverlapping.map(m => m.text.trim());
+            if (nonOverlapping.length <= 1) {
+                return [line.trim()];
             }
 
-            return [line.trim()];
+            let results = [];
+            let prevEnd = 0;
+            for (let i = 0; i < nonOverlapping.length; i++) {
+                let m = nonOverlapping[i];
+                let prefix = cleanLine.substring(prevEnd, m.start);
+                let fullText = (prefix + m.text).trim().replace(/^[\s,;–—|/]+/, '').trim();
+                results.push(fullText);
+                prevEnd = m.end;
+            }
+
+            return results;
         }
 
         /**
@@ -1010,9 +1042,7 @@ GHO - 2
                     return;
                 }
 
-                const semiParts = trimmed.includes(';') 
-                    ? trimmed.split(';').map(p => p.trim()).filter(Boolean)
-                    : [trimmed];
+                const semiParts = trimmed.split(/[;|]/).map(p => p.trim()).filter(Boolean);
 
                 semiParts.forEach(part => {
                     const splitParts = smartSplitLine(part);
@@ -1069,77 +1099,105 @@ GHO - 2
                     return;
                 }
                 validLinesCount++;
-                let workingLine = normalizeMilitaryText(line, { toLower: true });
-                let matchedInLine = false;
 
-                // -----------------------------------------------------------------
-                // КРОК 1: Двосторонній основний парсинг
-                // 1) Кількість -> Тип БК (наприклад: 120 шт 5.45, 2шт-RHEAT-7MA2;)
-                // 2) Тип БК -> Кількість (наприклад: 5.45х39 - 120 шт, GHO 2)
-                // -----------------------------------------------------------------
-                ammoConfigs.forEach(conf => {
-                    const processMatch = (match, p1) => {
-                        const qty = parseInt(p1, 10);
-                        let targetId = conf.id;
-
-                        // Евристика 12-го калібру: <= 25 шт зараховуємо як 12х70 (дробовик), > 25 шт як 12.7х99 (кулемет)
-                        if (targetId === '12.7') {
-                            targetId = qty <= 25 ? '12x70' : '12.7x99';
-                        }
-
-                        totals[targetId].count += qty;
-                        matchedInLine = true;
-                        return ' '; // Замінюємо розпізнане на пробіл
-                    };
-
-                    // Пошук у форматі: [Число] [Роздільник] [Тип БК]
-                    conf.numFirstRegex.lastIndex = 0;
-                    workingLine = workingLine.replace(conf.numFirstRegex, processMatch);
-
-                    // Пошук у форматі: [Тип БК] [Роздільник] [Число]
-                    conf.ammoFirstRegex.lastIndex = 0;
-                    workingLine = workingLine.replace(conf.ammoFirstRegex, processMatch);
-                });
-
-                // -----------------------------------------------------------------
-                // КРОК 2: Гранати/постріли без явної кількості (за активного чекбокса)
-                // Наприклад, боєць написав просто: "Ф1", "RHEAT-7MA2", "ВОГ" -> рахується як 1 шт
-                // -----------------------------------------------------------------
-                if (assumeOne) {
-                    implicitConfigsList.forEach(conf => {
-                        conf.implicitRegex.lastIndex = 0;
-                        workingLine = workingLine.replace(conf.implicitRegex, () => {
-                            totals[conf.id].count += 1;
-                            matchedInLine = true;
-                            return ' ';
+                // Інтелектуальний поділ кількох позицій в одному рядку через smartSplitLine
+                const semiParts = line.split(/[;|]/).map(p => p.trim()).filter(Boolean);
+                let segments = [];
+                semiParts.forEach(sp => {
+                    const clauseStartsWithStock = startsWithStockRegex.test(sp);
+                    const parts = smartSplitLine(sp);
+                    parts.forEach(p => {
+                        segments.push({
+                            text: p,
+                            isStock: clauseStartsWithStock || stockKeywordsRegex.test(p)
                         });
                     });
-                }
+                });
+                let lineHasMatches = false;
 
-                // -----------------------------------------------------------------
-                // КРОК 3: Евристика автоматних магазинів АК
-                // Якщо залишилось кругле число, кратне ємності магазину (30, 60, 90...) без калібру
-                // автоматично зараховуємо його до 5.45х39 мм
-                // -----------------------------------------------------------------
-                akMagsRegex.lastIndex = 0;
-                workingLine = workingLine.replace(akMagsRegex, (match, p1) => {
-                    totals['5.45'].count += parseInt(p1, 10);
-                    matchedInLine = true;
-                    return ' ';
+                segments.forEach(segObj => {
+                    const segment = segObj.text;
+                    // Перевірка на залишок на складі (не бойова витрата)
+                    if (segObj.isStock) {
+                        unparsed.push({ lineNum: index + 1, original: segment, isEmpty: false, isStock: true });
+                        return;
+                    }
+
+                    let workingLine = normalizeMilitaryText(segment, { toLower: true });
+                    let matchedInSegment = false;
+
+                    // -----------------------------------------------------------------
+                    // КРОК 1: Двосторонній основний парсинг
+                    // 1) Кількість -> Тип БК (наприклад: 120 шт 5.45, 2шт-RHEAT-7MA2;)
+                    // 2) Тип БК -> Кількість (наприклад: 5.45х39 - 120 шт, GHO 2)
+                    // -----------------------------------------------------------------
+                    ammoConfigs.forEach(conf => {
+                        const processMatch = (match, p1) => {
+                            const qty = parseInt(p1, 10);
+                            let targetId = conf.id;
+
+                            // Евристика 12-го калібру: <= 25 шт зараховуємо як 12х70 (дробовик), > 25 шт як 12.7х99 (кулемет)
+                            if (targetId === '12.7') {
+                                targetId = qty <= 25 ? '12x70' : '12.7x99';
+                            }
+
+                            totals[targetId].count += qty;
+                            matchedInSegment = true;
+                            lineHasMatches = true;
+                            return ' '; // Замінюємо розпізнане на пробіл
+                        };
+
+                        // Пошук у форматі: [Число] [Роздільник] [Тип БК]
+                        conf.numFirstRegex.lastIndex = 0;
+                        workingLine = workingLine.replace(conf.numFirstRegex, processMatch);
+
+                        // Пошук у форматі: [Тип БК] [Роздільник] [Число]
+                        conf.ammoFirstRegex.lastIndex = 0;
+                        workingLine = workingLine.replace(conf.ammoFirstRegex, processMatch);
+                    });
+
+                    // -----------------------------------------------------------------
+                    // КРОК 2: Гранати/постріли без явної кількості (за активного чекбокса)
+                    // Наприклад, боєць написав просто: "Ф1", "RHEAT-7MA2", "ВОГ" -> рахується як 1 шт
+                    // -----------------------------------------------------------------
+                    if (assumeOne) {
+                        implicitConfigsList.forEach(conf => {
+                            conf.implicitRegex.lastIndex = 0;
+                            workingLine = workingLine.replace(conf.implicitRegex, () => {
+                                totals[conf.id].count += 1;
+                                matchedInSegment = true;
+                                lineHasMatches = true;
+                                return ' ';
+                            });
+                        });
+                    }
+
+                    // -----------------------------------------------------------------
+                    // КРОК 3: Евристика автоматних магазинів АК
+                    // Якщо залишилось кругле число, кратне ємності магазину (30, 60, 90...) без калібру
+                    // автоматично зараховуємо його до 5.45х39 мм
+                    // -----------------------------------------------------------------
+                    akMagsRegex.lastIndex = 0;
+                    workingLine = workingLine.replace(akMagsRegex, (match, p1) => {
+                        totals['5.45'].count += parseInt(p1, 10);
+                        matchedInSegment = true;
+                        lineHasMatches = true;
+                        return ' ';
+                    });
+
+                    // -----------------------------------------------------------------
+                    // КРОК 4: Валідація залишків рядка/сегмента
+                    // Записуємо рядок у блок нерозпізнаних, якщо в ньому нічого не знайдено
+                    // АБО якщо після вирізання розпізнаного залишилися невикористані цифри
+                    // -----------------------------------------------------------------
+                    let checkLine = workingLine.replace(/\([^)]*\)/g, ' '); // Ігноруємо коментарі в дужках
+                    if (!matchedInSegment || /\b\d+\b/.test(checkLine)) {
+                        unparsed.push({ lineNum: index + 1, original: segment, isEmpty: false });
+                    }
                 });
 
-                if (matchedInLine) {
+                if (lineHasMatches) {
                     successfullyParsedCount++;
-                }
-
-                // -----------------------------------------------------------------
-                // КРОК 4: Валідація залишків рядка
-                // Записуємо рядок у блок нерозпізнаних, якщо в ньому нічого не знайдено
-                // АБО якщо після вирізання розпізнаного залишилися невикористані цифри
-                // -----------------------------------------------------------------
-                let checkLine = workingLine.replace(/\([^)]*\)/g, ' '); // Ігноруємо коментарі в дужках
-                if (!matchedInLine || /\b\d+\b/.test(checkLine)) {
-                    unparsed.push({ lineNum: index + 1, original: line, isEmpty: false });
                 }
             });
 
@@ -1196,17 +1254,24 @@ GHO - 2
                 unparsed.forEach(u => {
                     const displayOriginal = escapeHtml(u.original);
                     const safeOriginal = escapeHtml(u.original).replace(/'/g, "\\'");
+                    const badgeClass = u.isStock
+                        ? 'text-cyan-400 font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800/60 select-none text-[11px] group-hover:border-cyan-500/50 shrink-0'
+                        : 'text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-900/60 select-none text-[11px] group-hover:border-amber-500/50 shrink-0';
+                    const noticeTag = u.isStock
+                        ? `<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 shrink-0 mr-1">[Залишок / не витрата]</span>`
+                        : '';
                     errHtml += `
-                        <li class="whitespace-nowrap overflow-x-auto pb-1 flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-amber-950/50 transition-colors group">
+                        <li class="whitespace-nowrap overflow-x-auto pb-1 flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-slate-800/50 transition-colors group">
                             <div onclick="focusLineInEditor(${u.lineNum})" class="flex items-center gap-2 cursor-pointer min-w-0" title="Натисніть щоб перейти до рядка ${u.lineNum}">
-                                <span class="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-900/60 select-none text-[11px] group-hover:border-amber-500/50 shrink-0">Ряд. ${u.lineNum}</span> 
+                                <span class="${badgeClass}">Ряд. ${u.lineNum}</span> 
+                                ${noticeTag}
                                 <span class="text-slate-300 group-hover:text-white transition-colors truncate">${displayOriginal}</span>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                <button onclick="event.stopPropagation(); copySingleUnparsed('${safeOriginal}', this)" class="p-1 rounded bg-amber-950/80 hover:bg-amber-800 text-amber-400 hover:text-amber-200 border border-amber-900/60 transition-colors cursor-pointer active:scale-95" title="Скопіювати цей рядок">
+                                <button onclick="event.stopPropagation(); copySingleUnparsed('${safeOriginal}', this)" class="p-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition-colors cursor-pointer active:scale-95" title="Скопіювати цей рядок">
                                     <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                                 </button>
-                                <span onclick="focusLineInEditor(${u.lineNum})" class="text-[10px] text-amber-400/60 group-hover:text-amber-300 font-mono cursor-pointer select-none">перейти ↵</span>
+                                <span onclick="focusLineInEditor(${u.lineNum})" class="text-[10px] text-slate-500 group-hover:text-slate-300 font-mono cursor-pointer select-none">перейти ↵</span>
                             </div>
                         </li>
                     `;

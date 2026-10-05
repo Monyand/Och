@@ -21,6 +21,10 @@ cyber_config.json
 Перевірка_ПК.bat
 check_pc.ps1
 Звіт_Кіберперевірки_*.txt
+Активація_Флешки_Кешу.bat
+Повернути_Кеш_на_ПК.bat
+Активація_Флешки_Кешу.ps1
+Повернути_Кеш_на_ПК.ps1
 
 
 # Military Suite (monolithic suite & encrypted backups)
@@ -30,6 +34,9 @@ military_suite_backup_*.mils.enc
 
 # Personal notes (local only)
 WARDROBE.md
+
+# Chat exports & confidential logs (OPSEC)
+Element - */
 
 # Local confidential agent rules (never commit)
 .agents/rules/

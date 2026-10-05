@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Облік бойових розпоряджень (БР) | 2 МБ 125 ОВМБр</title>
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Cascadia Code', 'Segoe UI Mono', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#131b2e',
+                            900: '#0c1322',
+                            950: '#070b14',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- SheetJS for Excel (.xlsx) export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #070b14;
+            color: #e2e8f0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .mono, .font-mono {
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Segoe UI Mono', Consolas, monospace;
+            font-feature-settings: "tnum" 1;
+        }
+
+        /* Glassmorphism subtle panels */
+        .glass-panel {
+            background: rgba(12, 19, 34, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(30, 41, 59, 0.8);
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #070b14;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        /* Search highlights */
+        mark.hl {
+            background-color: rgba(245, 158, 11, 0.28);
+            color: #fef08a;
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        /* Accordion transition */
+        .accordion-content {
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), opacity 0.25s ease;
+        }
+
+        /* Toast notification */
+        #toastBox {
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #toastBox.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-[#070b14] text-slate-200 selection:bg-amber-500/25 selection:text-amber-200">
+
+    <!-- Top Sticky Header -->
+    <header class="sticky top-0 z-40 w-full bg-[#0c1322]/95 backdrop-blur-md border-b border-slate-800/90 shadow-xl">
+        <div class="max-w-[1720px] w-full mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Left: Back to Hub + Title + Version -->
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="p-2 -ml-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Повернутися в HUB">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 via-amber-600/10 to-transparent border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-md shadow-amber-500/10">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <h1 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                                Облік бойових розпоряджень
+                            </h1>
+                            <button id="versionBadge" onclick="openChangelogModal()" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer flex items-center gap-1">
+                                <span>⚡ v1.1.0</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-slate-400 font-medium hidden sm:block">2 механізований батальйон 125 ОВМБр • Оперативний штаб</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="flex items-center gap-2">
+                <button onclick="openImportModal()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-sky-400 border border-sky-500/30 hover:border-sky-500/50 shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="folder-input" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">Імпорт з Element</span>
+                </button>
+                <button onclick="exportToExcel()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="sheet" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">Експорт Excel</span>
+                </button>
+                <div class="relative inline-block text-left">
+                    <button onclick="toggleBackupMenu()" id="backupMenuBtn" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="database" class="w-4 h-4 text-slate-400"></i>
+                        <span class="hidden lg:inline">База</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                    </button>
+                    <!-- Backup Dropdown Menu -->
+                    <div id="backupDropdown" class="hidden absolute right-0 mt-2 w-48 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1 z-50">
+                        <button onclick="exportJsonBackup()" class="w-full text-left px-4 py-2 text-xs text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+                            <i data-lucide="download" class="w-3.5 h-3.5 text-sky-400"></i> Створити JSON бекап
+                        </button>
+                        <button onclick="triggerRestoreJson()" class="w-full text-left px-4 py-2 text-xs text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+                            <i data-lucide="upload" class="w-3.5 h-3.5 text-amber-400"></i> Відновити з JSON
+                        </button>
+                        <input type="file" id="restoreJsonInput" accept=".json" onchange="handleRestoreJson(event)" class="hidden">
+                        <div class="border-t border-slate-800 my-1"></div>
+                        <button onclick="cleanUpOldDuplicates()" class="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-400"></i> Очистити номери й теми
+                        </button>
+                    </div>
+                </div>
+                <button onclick="openAddModal()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Нова БР</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container (Full Width / Max 1720px) -->
+    <main class="flex-1 max-w-[1720px] w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
+
+        <!-- Unified Military Slate KPI Cards (No Rainbow Borders!) -->
+        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <!-- 1. All Records -->
+            <div onclick="filterByQuickStatus('all')" class="bg-[#0c1322] border border-slate-800/90 hover:border-slate-700 p-3.5 rounded-xl cursor-pointer transition select-none group">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider">Всього в базі</span>
+                    <i data-lucide="layers" class="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="kpiTotal" class="text-2xl font-bold mono text-white">0</span>
+                    <span class="text-xs text-slate-500 font-medium">розпоряджень</span>
+                </div>
+            </div>
+
+            <!-- 2. Active / In Progress -->
+            <div onclick="filterByQuickStatus('В роботі')" class="bg-[#0c1322] border border-slate-800/90 hover:border-amber-500/50 p-3.5 rounded-xl cursor-pointer transition select-none group">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-400/90">На контролі</span>
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="kpiActive" class="text-2xl font-bold mono text-amber-400">0</span>
+                    <span class="text-xs text-amber-400/70 font-medium">активних</span>
+                </div>
+            </div>
+
+            <!-- 3. Completed -->
+            <div onclick="filterByQuickStatus('Виконано')" class="bg-[#0c1322] border border-slate-800/90 hover:border-emerald-500/50 p-3.5 rounded-xl cursor-pointer transition select-none group">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400/90">Виконано</span>
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="kpiCompleted" class="text-2xl font-bold mono text-emerald-400">0</span>
+                    <span class="text-xs text-emerald-400/70 font-medium">доповідано</span>
+                </div>
+            </div>
+
+            <!-- 4. Daily BRO -->
+            <div onclick="filterByQuickCategory('БРО')" class="bg-[#0c1322] border border-slate-800/90 hover:border-sky-500/50 p-3.5 rounded-xl cursor-pointer transition select-none group">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-sky-400/90">Щоденна БРО</span>
+                    <i data-lucide="shield" class="w-4 h-4 text-sky-400"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="kpiBro" class="text-2xl font-bold mono text-sky-400">0</span>
+                    <span class="text-xs text-sky-400/70 font-medium">розпоряджень</span>
+                </div>
+            </div>
+
+            <!-- 5. Officers & Inspectors -->
+            <div onclick="filterByQuickCategory('Посадові особи')" class="bg-[#0c1322] border border-slate-800/90 hover:border-indigo-500/50 p-3.5 rounded-xl cursor-pointer transition select-none group col-span-2 sm:col-span-1">
+                <div class="flex items-center justify-between text-slate-400 mb-1">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-400/90">Перевіряючі</span>
+                    <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span id="kpiInspectors" class="text-2xl font-bold mono text-indigo-300">0</span>
+                    <span class="text-xs text-indigo-400/70 font-medium">груп / осіб</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rock-Solid Multi-Row Control Panel -->
+        <section class="bg-[#0c1322] border border-slate-800/90 p-3.5 rounded-xl space-y-3 shadow-lg">
+            
+            <!-- Row 1: Search Bar & Core Selectors -->
+            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
+                
+                <!-- Main Search Input (Flex Grow) -->
+                <div class="relative flex-1">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <input type="text" id="searchInput" oninput="handleSearchInput()" placeholder="Пошук: номер БР, прізвище перевіряючого, підрозділ, текст наказу..."
+                        class="w-full bg-[#111b2e] text-sm text-slate-100 placeholder-slate-400 rounded-xl pl-10 pr-9 py-2 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition">
+                    <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1" title="Очистити">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="w-full md:w-44">
+                    <select id="statusFilter" onchange="applyFilters()"
+                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition">
+                        <option value="all">Усі статуси</option>
+                        <option value="В роботі">🟡 В роботі</option>
+                        <option value="Виконано">🟢 Виконано</option>
+                        <option value="Щоденно">🔵 Щоденно</option>
+                        <option value="До відома">🟣 До відома</option>
+                        <option value="Протерміновано">🔴 Протерміновано</option>
+                        <option value="Скасовано">⚪ Скасовано</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="w-full md:w-48">
+                    <select id="categoryFilter" onchange="applyFilters()"
+                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition">
+                        <option value="all">Усі категорії</option>
+                        <option value="БРО">🛡️ БРО (Оборона)</option>
+                        <option value="Посадові особи">👥 Посадові особи</option>
+                        <option value="Сили та засоби">🪖 Сили та засоби</option>
+                        <option value="Зв'язок / РЕБ">📡 Зв'язок / РЕБ</option>
+                        <option value="БпЛА">🛸 БпЛА / Дрони</option>
+                        <option value="Розвідка">🔭 Розвідка</option>
+                        <option value="Інженерне">🧱 Інженерне / Фортифікація</option>
+                        <option value="МТЗ / Логістика">🚛 МТЗ / Логістика</option>
+                        <option value="Загальні">📑 Загальні розпорядження</option>
+                    </select>
+                </div>
+
+                <!-- Sort Order -->
+                <div class="w-full md:w-44">
+                    <select id="sortFilter" onchange="applyFilters()"
+                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition">
+                        <option value="date-desc">Свіжі спочатку ↓</option>
+                        <option value="date-asc">Старі спочатку ↑</option>
+                        <option value="num-desc">За номером (спадання)</option>
+                        <option value="num-asc">За номером (зростання)</option>
+                    </select>
+                </div>
+
+                <!-- View Switcher -->
+                <div class="flex items-center gap-1 bg-[#111b2e] p-1 rounded-xl border border-slate-700/80 self-end md:self-auto shrink-0">
+                    <button id="viewTableBtn" onclick="setViewMode('table')" class="p-1.5 rounded-lg text-amber-400 bg-slate-800 shadow-sm transition" title="Табличний вигляд">
+                        <i data-lucide="table" class="w-4 h-4"></i>
+                    </button>
+                    <button id="viewCardsBtn" onclick="setViewMode('cards')" class="p-1.5 rounded-lg text-slate-400 hover:text-white transition" title="Картковий вигляд">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Row 2: Quick Chips & Date Filters & Status Counter -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/80 text-xs">
+                
+                <!-- Quick Filter Chips -->
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] text-slate-400 font-semibold mr-1">Фільтри:</span>
+                    <button onclick="setQuickPill('all')" id="pill-all" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 transition">
+                        Всі
+                    </button>
+                    <button onclick="setQuickPill('active')" id="pill-active" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1">
+                        <span>🔥 Тільки активні</span>
+                    </button>
+                    <button onclick="setQuickPill('inspectors')" id="pill-inspectors" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition">
+                        👥 Фокін / Скульський
+                    </button>
+                    <button onclick="setQuickPill('bro')" id="pill-bro" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition">
+                        🛡️ Щоденна БРО
+                    </button>
+                    <button onclick="setQuickPill('today')" id="pill-today" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition">
+                        📅 Сьогодні
+                    </button>
+                    <button onclick="setQuickPill('october')" id="pill-october" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition">
+                        🗓️ Жовтень 2026
+                    </button>
+                </div>
+
+                <!-- Date Range & Match Counter -->
+                <div class="flex items-center gap-3 ml-auto">
+                    <div class="flex items-center gap-1.5 text-slate-400">
+                        <span>Від:</span>
+                        <input type="text" id="dateFrom" placeholder="дд.мм.рррр" onchange="applyFilters()"
+                            class="w-24 bg-[#111b2e] border border-slate-700 rounded-lg px-2 py-1 text-slate-200 text-xs font-mono text-center">
+                        <span>До:</span>
+                        <input type="text" id="dateTo" placeholder="дд.мм.рррр" onchange="applyFilters()"
+                            class="w-24 bg-[#111b2e] border border-slate-700 rounded-lg px-2 py-1 text-slate-200 text-xs font-mono text-center">
+                    </div>
+
+                    <div class="h-4 w-px bg-slate-800 hidden sm:block"></div>
+
+                    <div class="text-xs text-slate-400 font-mono">
+                        Знайдено: <span id="filterCount" class="text-amber-400 font-bold">0</span>
+                        <button onclick="resetAllFilters()" class="ml-2 text-slate-400 hover:text-white underline text-[11px] cursor-pointer">Скинути всі</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Table View -->
+        <section id="tableViewContainer" class="bg-[#0c1322] border border-slate-800/90 rounded-xl overflow-hidden shadow-2xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="brMainTable">
+                    <thead>
+                        <tr class="bg-[#080d18] border-b border-slate-800 text-[11px] font-semibold uppercase tracking-wider text-slate-400 select-none">
+                            <th class="py-3 px-3 text-center w-12">№</th>
+                            <th class="py-3 px-3 w-28">Дата / Час</th>
+                            <th class="py-3 px-3 w-36">Номер БР</th>
+                            <th class="py-3 px-3 w-28">Вхідний №</th>
+                            <th class="py-3 px-3 w-32">Категорія</th>
+                            <th class="py-3 px-4 min-w-[340px]">Суть та зміст завдання</th>
+                            <th class="py-3 px-3 w-28">Термін дії</th>
+                            <th class="py-3 px-3 text-center w-36">Статус</th>
+                            <th class="py-3 px-3 text-right w-24">Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody id="brTableBody" class="divide-y divide-slate-800/60 text-xs">
+                        <!-- Rows rendered via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State Fallback -->
+            <div id="emptyState" class="hidden py-16 text-center space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-slate-800/60 border border-slate-700 flex items-center justify-center text-slate-500 mx-auto">
+                    <i data-lucide="file-search" class="w-6 h-6"></i>
+                </div>
+                <div class="text-sm font-semibold text-slate-300">Розпоряджень за вказаними фільтрами не знайдено</div>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Спробуйте змінити пошуковий запит або скинути фільтри</p>
+                <button onclick="resetAllFilters()" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 transition">
+                    Скинути всі фільтри
+                </button>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div id="paginationBar" class="px-4 py-3 border-t border-slate-800/90 bg-[#080d18] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+                <div>
+                    Показано <span id="pageRangeStart" class="text-white font-mono font-semibold">0</span>–<span id="pageRangeEnd" class="text-white font-mono font-semibold">0</span> з <span id="pageTotalItems" class="text-amber-400 font-mono font-bold">0</span> записів
+                </div>
+                <div class="flex items-center gap-1.5" id="paginationButtons">
+                    <!-- Pagination dynamically injected -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards View (Hidden by default) -->
+        <section id="cardsViewContainer" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+            <!-- Cards dynamically rendered -->
+        </section>
+
+    </main>
+
+    <!-- Modal 1: Add / Edit Order Modal -->
+    <div id="brModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="bg-[#0c1322] border border-slate-700/80 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                        <i data-lucide="file-edit" class="w-4 h-4"></i>
+                    </div>
+                    <h3 id="modalTitle" class="text-base font-bold text-white">Нове бойове розпорядження</h3>
+                </div>
+                <button onclick="closeModal('brModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="brForm" onsubmit="saveBrForm(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
+                <input type="hidden" id="formBrId">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Date -->
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Дата отримання <span class="text-rose-400">*</span></label>
+                        <input type="text" id="formDate" required placeholder="дд.мм.рррр"
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:border-amber-400 focus:outline-none">
+                    </div>
+                    <!-- Time -->
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Час отримання</label>
+                        <input type="text" id="formTime" placeholder="гг:хх (напр. 14:30)"
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:border-amber-400 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Brigade Number -->
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Номер БР бригади <span class="text-rose-400">*</span></label>
+                        <input type="text" id="formBrigadeNo" required placeholder="напр. № 7031 або 1626_7031"
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-mono font-bold focus:border-amber-400 focus:outline-none">
+                    </div>
+                    <!-- Internal Battalion Number -->
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Вхідний номер батальйону</label>
+                        <input type="text" id="formInternalNo" placeholder="напр. 2094/дск"
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:border-amber-400 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Category -->
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Категорія БР</label>
+                        <select id="formCategory"
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
+                            <option value="БРО">🛡️ БРО (Оборона)</option>
+                            <option value="Посадові особи">👥 Посадові особи</option>
+                            <option value="Сили та засоби">🪖 Сили та засоби</option>
+                            <option value="Зв'язок / РЕБ">📡 Зв'язок / РЕБ</option>
+                            <option value="БпЛА">🛸 БпЛА / Дрони</option>
+                            <option value="Розвідка">🔭 Розвідка</option>
+                            <option value="Інженерне">🧱 Інженерне / Фортифікація</option>
+                            <option value="МТЗ / Логістика">🚛 МТЗ / Логістика</option>
+                            <option value="Загальні">📑 Загальні розпорядження</option>
+                        </select>
+                    </div>
+                    <!-- Status -->
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Поточний статус</label>
+                        <select id="formStatus"
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
+                            <option value="В роботі">🟡 В роботі (на контролі)</option>
+                            <option value="Виконано">🟢 Виконано (доповідано)</option>
+                            <option value="Щоденно">🔵 Щоденно</option>
+                            <option value="До відома">🟣 До відома</option>
+                            <option value="Протерміновано">🔴 Протерміновано</option>
+                            <option value="Скасовано">⚪ Скасовано</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Subject -->
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Короткий зміст / Тема <span class="text-rose-400">*</span></label>
+                    <input type="text" id="formSubject" required placeholder="напр. Щодо роботи комісії Фокіна В.С. на 04.10.2026"
+                        class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 focus:outline-none font-medium">
+                </div>
+
+                <!-- Deadline -->
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Термін дії / Дедлайн</label>
+                    <input type="text" id="formDeadline" placeholder="напр. на 04.10.2026, з 02.10 по 10.10.2026, Щоденно"
+                        class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
+                </div>
+
+                <!-- Full Text -->
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Повний текст розпорядження / завдання</label>
+                    <textarea id="formFullText" rows="4" placeholder="Вставте повний текст повідомлення з чату або наказ командира..."
+                        class="w-full bg-[#111b2e] border border-slate-700 rounded-xl p-3 text-white font-sans focus:border-amber-400 focus:outline-none leading-relaxed"></textarea>
+                </div>
+
+                <!-- Report note -->
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Відмітка про виконання / вихідне донесення</label>
+                    <input type="text" id="formReport" placeholder="Введіть вихідний номер доповіді, дату або примітку..."
+                        class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
+                </div>
+
+                <!-- Footer buttons -->
+                <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-2.5">
+                    <button type="button" onclick="closeModal('brModal')" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                        Скасувати
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow-lg shadow-amber-500/20 transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>Зберегти</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: Element Chat Importer Modal -->
+    <div id="importModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="bg-[#0c1322] border border-slate-700/80 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
+                        <i data-lucide="folder-down" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white">Імпорт бойових розпоряджень з Element</h3>
+                </div>
+                <button onclick="closeModal('importModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-xs">
+                <p class="text-slate-300 leading-relaxed">
+                    Оберіть або перетягніть файли <code class="text-amber-300 font-mono">messages.html</code>, <code class="text-amber-300 font-mono">messages4.html</code> з папки експорту Element <strong>«ДОШКА ОГОЛОШЕНЬ»</strong>.
+                    Парсер автоматично нормалізує номери наказів, очистить сміття з тем та впорядкує статуси.
+                </p>
+
+                <!-- Drag & Drop Zone -->
+                <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
+                    class="border-2 border-dashed border-slate-700 hover:border-sky-400 rounded-2xl p-8 text-center transition cursor-pointer bg-[#111b2e]/60">
+                    <input type="file" id="importFileInput" multiple accept=".html,.htm" onchange="handleFileSelect(event)" class="hidden">
+                    <i data-lucide="upload-cloud" class="w-10 h-10 text-sky-400 mx-auto mb-2"></i>
+                    <p class="text-sm font-semibold text-white">Перетягніть файли messages.html сюди</p>
+                    <p class="text-xs text-slate-500 mt-1">або натисніть для вибору на комп'ютері</p>
+                </div>
+
+                <!-- Status output -->
+                <div id="importStatusBox" class="hidden p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-1.5 font-mono"></div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between">
+                <button onclick="loadSampleOctoberBRs()" class="text-xs text-slate-400 hover:text-amber-400 underline transition cursor-pointer">
+                    Завантажити чистий пакет (Жовтень 2026)
+                </button>
+                <button onclick="closeModal('importModal')" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition cursor-pointer">
+                    Закрити
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Changelog Modal (⚡ v1.1.0) -->
+    <div id="changelogModal" class="fixed inset-0 z-[210] hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="bg-[#0c1322] border border-slate-700/80 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.1.0</span>
+                    <h3 class="text-base font-bold text-white">Історія оновлень</h3>
+                </div>
+                <button onclick="closeModal('changelogModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-xs text-slate-300 max-h-[70vh] overflow-y-auto">
+                <div class="border-l-2 border-amber-400 pl-3 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-white font-mono">Версія 1.1.0</span>
+                        <span class="text-[11px] text-slate-500">03.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300 text-xs">
+                        <li><strong>Повний редизайн таблиці:</strong> розширена робоча область (Full-width 1720px), колонка змісту тепер займає 50% таблиці без сліпого обрізання.</li>
+                        <li><strong>Inline-розкриття (Accordion):</strong> клік по рядку плавно відкриває повний текст розпорядження прямо в таблиці з кнопкою швидкого копіювання.</li>
+                        <li><strong>Нормалізація номерів:</strong> автоматичне прибирання підкреслень (<code class="text-amber-300 font-mono">1626_6974_</code> → <code class="text-amber-300 font-mono">№ 6974</code>), вичищення сміття «Отримано: БР №» з тем.</li>
+                        <li><strong>Підсвічування пошуку:</strong> знайдені слова підсвічуються тактичним маркером.</li>
+                        <li><strong>Стриманий Slate UI:</strong> строгі графітові картки KPI без надлишкових неонових смуг.</li>
+                    </ul>
+                </div>
+                <div class="border-l-2 border-slate-700 pl-3 space-y-1 text-slate-400">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono">Версія 1.0.0</span>
+                        <span class="text-[11px] text-slate-500">03.10.2026</span>
+                    </div>
+                    <p class="text-xs">Перший реліз: парсер Element, 5 KPI, експорт у Excel, пошук, фільтри за категоріями та статусами.</p>
+                </div>
+            </div>
+            <div class="px-6 py-3.5 border-t border-slate-800 bg-slate-900/60 text-right">
+                <button onclick="closeModal('changelogModal')" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition cursor-pointer">
+                    Зрозуміло
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastBox" class="fixed bottom-6 right-6 z-[250] bg-slate-900 border border-slate-700 shadow-2xl rounded-xl px-4 py-3 text-xs text-white flex items-center gap-2 pointer-events-none">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toastMsg">Повідомлення</span>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Storage Key
+        const STORAGE_KEY = 'tactical_br_tracker_items_v1';
+
+        // Preloaded Initial October BRs (cleanly sanitized)
+        const DEFAULT_INITIAL_BRS = [
+            {
+                id: "br_20261003_2094",
+                date: "03.10.2026",
+                time: "11:52",
+                brigadeNo: "№ 7031",
+                brigadePrefix: "1626",
+                internalNo: "2094/дск",
+                category: "Посадові особи",
+                subject: "Щодо роботи Фокіна В.С., Скульського В.І. на 04.10.2026",
+                fullText: "Отримано: БР № 1626_7031_дск (2094/дск) щодо роботи Фокіна В.С., Скульського В.І. на 04.10.2026\n\nКомандиру 2 механізованого батальйону 125 овмбр забезпечити допуск та сприяння у виконанні завдань посадовим особам бригади.",
+                status: "В роботі",
+                deadline: "на 04.10.2026",
+                report: ""
+            },
+            {
+                id: "br_20261003_2093",
+                date: "03.10.2026",
+                time: "12:11",
+                brigadeNo: "№ 7030",
+                brigadePrefix: "1626",
+                internalNo: "2093/дск",
+                category: "БРО",
+                subject: "Щоденна БРО (без змін)",
+                fullText: "Отримано: БР № 1626_7030_дск (2093/дск) щоденна БРО. Продовжувати виконання бойових завдань в батальйонному районі оборони згідно встановленого бойового розпорядження.",
+                status: "Щоденно",
+                deadline: "Щоденно",
+                report: ""
+            },
+            {
+                id: "br_20261003_2091",
+                date: "03.10.2026",
+                time: "11:52",
+                brigadeNo: "№ 7029",
+                brigadePrefix: "1626",
+                internalNo: "2091/дск",
+                category: "Посадові особи",
+                subject: "Щодо роботи посадових осіб 125 овмбр від 02.10 по 10.10 2026",
+                fullText: "Отримано: БР № 1626_7029_дск (2091/дск) щодо роботи посадових осіб 125 овмбр від 02.10 по 10.10 2026\n\nКомандиру 2МБ: забезпечити роботу та сприяння у виконанні завдання на пунктах управління в підпорядкованих підрозділах на відстані виконання бойових (спеціальних) завдань в батальйонному районі оборони, в першому ешелоні оборони, районах ведення бойових дій на лінії бойового зіткнення з противником (на глибині взводних, ротних опорних пунктів до батальйону включно).",
+                status: "В роботі",
+                deadline: "з 02.10 по 10.10.2026",
+                report: ""
+            },
+            {
+                id: "br_20261002_2087",
+                date: "02.10.2026",
+                time: "12:15",
+                brigadeNo: "№ 7017",
+                brigadePrefix: "1626",
+                internalNo: "2087/дск",
+                category: "БРО",
+                subject: "Щодо допуску групи посадових осіб з 125 овмбр в БРО 2МБ",
+                fullText: "Отримано: БР № 1626_7017_дск (2087/дск) щодо допуску групи посадових осіб з 125 овмбр в БРО 2МБ\n\nКомандиру 2 механізованого батальйону 125 овмбр\nЗ 05.00 03.10.2026 до 24.00 03.10.2026 допустити в батальйонний район оборони для виконання бойових (спеціальних) завдань, а саме: проведення рекогносцировки в районі БОГОРОДИЧНЕ, НОВОСЕЛІВКА, ОЛЕКСАНДРІВКА, СТУДЕНОК визначену робочу групу у кількості 4 військовослужбовців.",
+                status: "В роботі",
+                deadline: "до 24.00 03.10.2026",
+                report: ""
+            },
+            {
+                id: "br_20261002_2086",
+                date: "02.10.2026",
+                time: "10:49",
+                brigadeNo: "№ 7012",
+                brigadePrefix: "1626",
+                internalNo: "2086/дск",
+                category: "Посадові особи",
+                subject: "Щодо забезпечення допуску групи офіцерів управління РВіА 3 АК",
+                fullText: "Отримано: БР № 1626_7012_дск (2086/дск) щодо забезпечення допуску до роботи групи офіцерів управління ракетних військ і артилерії управління 3 АК з 01.10.2026 по 15.10.2026: майору АНЦИБОРУ О.О. та групі офіцерів.",
+                status: "В роботі",
+                deadline: "по 15.10.2026",
+                report: ""
+            },
+            {
+                id: "br_20261002_2083",
+                date: "02.10.2026",
+                time: "13:01",
+                brigadeNo: "№ 7009",
+                brigadePrefix: "1626",
+                internalNo: "2083/дск",
+                category: "БРО",
+                subject: "Щоденна БРО (без змін)",
+                fullText: "Отримано: БР № 1626_7009_дск (2083/дск) щоденна БРО (БЕЗ ЗМІН)",
+                status: "Щоденно",
+                deadline: "Щоденно",
+                report: ""
+            }
+        ];
+
+        // State Management
+        let brItems = [];
+        let filteredItems = [];
+        let currentPage = 1;
+        const pageSize = 15;
+        let activeQuickPill = 'all';
+        let currentView = 'table'; // 'table' or 'cards'
+        let expandedRowId = null;
+
+        // Normalization Helpers
+        function sanitizeBrigadeNo(raw) {
+            if (!raw) return { display: '№ —', prefix: '' };
+            let clean = raw.trim().replace(/^БР\s*№?\s*/i, '').replace(/[_]+$/, '').replace(/^[_]+/, '');
+            
+            // e.g. "1626_6974_" or "01_1626_3545_" or "1626_7031_дск"
+            const parts = clean.split('_').filter(p => p && p.toLowerCase() !== 'дск');
+            const nums = parts.filter(p => /^\d+$/.test(p));
+            
+            let displayNum = clean;
+            let prefix = '1626';
+
+            if (nums.length >= 2) {
+                prefix = nums[nums.length - 2];
+                displayNum = `№ ${nums[nums.length - 1]}`;
+            } else if (nums.length === 1) {
+                displayNum = `№ ${nums[0]}`;
+            } else {
+                displayNum = clean.startsWith('№') ? clean : `№ ${clean}`;
+            }
+
+            return { display: displayNum, prefix: prefix };
+        }
+
+        function sanitizeSubject(raw) {
+            if (!raw) return '';
+            let text = raw.trim();
+
+            // Strip "Отримано: БР № ... ( ... )"
+            text = text.replace(/^Отримано:\s*БР\s*№?\s*[^\s()]+\s*(\([^)]*\))?\s*/i, '').trim();
+
+            if (/^щоденна\s*бро/i.test(text)) {
+                return 'Щоденна БРО (без змін)';
+            }
+
+            if (!text && raw) {
+                // If everything got stripped, take the original without "Отримано:"
+                text = raw.replace(/^Отримано:\s*/i, '').trim();
+            }
+
+            if (text.length > 0) {
+                text = text[0].toUpperCase() + text.slice(1);
+            }
+            return text;
+        }
+
+        // Automatic data migration/sanitization & Smart Deduplication Merge
+        function sanitizeExistingDatabase() {
+            let changed = false;
+
+            // Step 1: Normalize fields
+            const normalized = brItems.map(item => {
+                let updated = false;
+                let brigadeNo = item.brigadeNo;
+                let brigadePrefix = item.brigadePrefix || '1626';
+                let subject = item.subject;
+                let report = item.report || '';
+
+                // Check if brigadeNo has raw underscores or lacks "№ "
+                if (brigadeNo && (brigadeNo.includes('_') || !brigadeNo.startsWith('№'))) {
+                    const parsed = sanitizeBrigadeNo(brigadeNo);
+                    brigadeNo = parsed.display;
+                    brigadePrefix = parsed.prefix;
+                    updated = true;
+                }
+
+                // Check if subject has "Отримано: БР №"
+                if (subject && /^Отримано:\s*БР\s*№/i.test(subject)) {
+                    subject = sanitizeSubject(item.fullText || subject);
+                    updated = true;
+                }
+
+                // Clean up dummy report number if present
+                if (report.includes('276/3316')) {
+                    report = '';
+                    updated = true;
+                }
+
+                if (updated) changed = true;
+                return {
+                    ...item,
+                    brigadeNo,
+                    brigadePrefix,
+                    subject,
+                    report
+                };
+            });
+
+            // Step 2: Smart Deduplication Merge
+            const uniqueMap = new Map();
+            const deduplicated = [];
+
+            for (const item of normalized) {
+                const bNum = (item.brigadeNo || '').replace(/\D+/g, '');
+                const iNum = (item.internalNo || '').replace(/\D+/g, '');
+                const dateKey = (item.date || '').trim();
+
+                let key = '';
+                if (bNum && dateKey) {
+                    key = `${dateKey}_b_${bNum}`;
+                } else if (iNum && dateKey) {
+                    key = `${dateKey}_i_${iNum}`;
+                } else {
+                    key = item.id;
+                }
+
+                if (uniqueMap.has(key)) {
+                    // Duplicate found! Merge the best data
+                    const existing = uniqueMap.get(key);
+
+                    // Prefer specific deadline over generic "За планом"
+                    if (item.deadline && item.deadline !== 'За планом' && (!existing.deadline || existing.deadline === 'За планом')) {
+                        existing.deadline = item.deadline;
+                    }
+                    if (item.report && !existing.report) {
+                        existing.report = item.report;
+                    }
+                    if (item.status === 'Виконано' || (item.status && existing.status === 'В роботі')) {
+                        existing.status = item.status;
+                    }
+                    if (item.internalNo && item.internalNo !== '—' && (!existing.internalNo || existing.internalNo === '—')) {
+                        existing.internalNo = item.internalNo;
+                    }
+                    if (item.fullText && item.fullText.length > (existing.fullText || '').length) {
+                        existing.fullText = item.fullText;
+                    }
+                    changed = true;
+                } else {
+                    uniqueMap.set(key, item);
+                    deduplicated.push(item);
+                }
+            }
+
+            if (deduplicated.length !== brItems.length) {
+                changed = true;
+            }
+
+            brItems = deduplicated;
+
+            if (changed) {
+                saveToStorage();
+            }
+        }
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            sanitizeExistingDatabase();
+            lucide.createIcons();
+            applyFilters();
+        });
+
+        function loadFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    brItems = JSON.parse(raw);
+                } else {
+                    brItems = [...DEFAULT_INITIAL_BRS];
+                    saveToStorage();
+                }
+            } catch (e) {
+                console.error("Storage load error:", e);
+                brItems = [...DEFAULT_INITIAL_BRS];
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(brItems));
+            } catch (e) {
+                console.error("Storage save error:", e);
+            }
+        }
+
+        // Search & Filters
+        function handleSearchInput() {
+            const val = document.getElementById('searchInput').value;
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (val.trim()) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            applyFilters();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            applyFilters();
+        }
+
+        function setQuickPill(type) {
+            activeQuickPill = type;
+            document.querySelectorAll('[id^="pill-"]').forEach(btn => {
+                btn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer";
+            });
+
+            const activeBtn = document.getElementById(`pill-${type}`);
+            if (activeBtn) {
+                activeBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 transition cursor-pointer";
+            }
+
+            // Presets
+            if (type === 'all') {
+                document.getElementById('statusFilter').value = 'all';
+                document.getElementById('categoryFilter').value = 'all';
+                document.getElementById('searchInput').value = '';
+            } else if (type === 'active') {
+                document.getElementById('statusFilter').value = 'В роботі';
+                document.getElementById('categoryFilter').value = 'all';
+            } else if (type === 'inspectors') {
+                document.getElementById('categoryFilter').value = 'Посадові особи';
+                document.getElementById('statusFilter').value = 'all';
+            } else if (type === 'bro') {
+                document.getElementById('categoryFilter').value = 'БРО';
+                document.getElementById('statusFilter').value = 'all';
+            } else if (type === 'today') {
+                document.getElementById('dateFrom').value = "03.10.2026";
+                document.getElementById('dateTo').value = "03.10.2026";
+            } else if (type === 'october') {
+                document.getElementById('dateFrom').value = "01.10.2026";
+                document.getElementById('dateTo').value = "31.10.2026";
+            }
+
+            applyFilters();
+        }
+
+        function filterByQuickStatus(status) {
+            document.getElementById('statusFilter').value = status;
+            applyFilters();
+        }
+
+        function filterByQuickCategory(cat) {
+            document.getElementById('categoryFilter').value = cat;
+            applyFilters();
+        }
+
+        function resetAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('categoryFilter').value = 'all';
+            document.getElementById('sortFilter').value = 'date-desc';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            setQuickPill('all');
+        }
+
+        function applyFilters() {
+            const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const statusVal = document.getElementById('statusFilter').value;
+            const catVal = document.getElementById('categoryFilter').value;
+            const sortVal = document.getElementById('sortFilter').value;
+            const dFrom = document.getElementById('dateFrom').value.trim();
+            const dTo = document.getElementById('dateTo').value.trim();
+
+            filteredItems = brItems.filter(item => {
+                // Search match
+                if (query) {
+                    const matchText = [
+                        item.brigadeNo,
+                        item.brigadePrefix,
+                        item.internalNo,
+                        item.subject,
+                        item.fullText,
+                        item.deadline,
+                        item.report
+                    ].join(' ').toLowerCase();
+
+                    if (!matchText.includes(query)) return false;
+                }
+
+                // Status match
+                if (statusVal !== 'all' && item.status !== statusVal) {
+                    return false;
+                }
+
+                // Category match
+                if (catVal !== 'all' && item.category !== catVal) {
+                    return false;
+                }
+
+                // Date filter match
+                if (dFrom && parseDateWeight(item.date) < parseDateWeight(dFrom)) return false;
+                if (dTo && parseDateWeight(item.date) > parseDateWeight(dTo)) return false;
+
+                return true;
+            });
+
+            // Sorting
+            filteredItems.sort((a, b) => {
+                if (sortVal === 'date-desc') {
+                    return parseDateWeight(b.date, b.time) - parseDateWeight(a.date, a.time);
+                } else if (sortVal === 'date-asc') {
+                    return parseDateWeight(a.date, a.time) - parseDateWeight(b.date, b.time);
+                } else if (sortVal === 'num-desc') {
+                    return (b.brigadeNo || '').localeCompare(a.brigadeNo || '', undefined, { numeric: true });
+                } else if (sortVal === 'num-asc') {
+                    return (a.brigadeNo || '').localeCompare(b.brigadeNo || '', undefined, { numeric: true });
+                }
+                return 0;
+            });
+
+            currentPage = 1;
+            renderView();
+            updateKpis();
+        }
+
+        function parseDateWeight(dStr, tStr) {
+            try {
+                if (!dStr) return 0;
+                const parts = dStr.split('.');
+                if (parts.length !== 3) return 0;
+                const [d, m, y] = parts;
+                const [hh, mm] = (tStr || '00:00').split(':');
+                return new Date(y, m - 1, d, hh || 0, mm || 0).getTime();
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        // Highlight matching search words
+        function highlightMatch(text, query) {
+            if (!text) return '';
+            const safe = escapeHtml(text);
+            if (!query) return safe;
+
+            const qClean = escapeHtml(query.trim());
+            if (!qClean) return safe;
+
+            const regex = new RegExp(`(${qClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return safe.replace(regex, '<mark class="hl">$1</mark>');
+        }
+
+        // Render Controller
+        function renderView() {
+            document.getElementById('filterCount').innerText = filteredItems.length;
+            const emptyEl = document.getElementById('emptyState');
+            const tableBody = document.getElementById('brTableBody');
+            const cardsContainer = document.getElementById('cardsViewContainer');
+
+            if (filteredItems.length === 0) {
+                emptyEl.classList.remove('hidden');
+                tableBody.innerHTML = '';
+                cardsContainer.innerHTML = '';
+                document.getElementById('paginationBar').classList.add('hidden');
+                return;
+            } else {
+                emptyEl.classList.add('hidden');
+                document.getElementById('paginationBar').classList.remove('hidden');
+            }
+
+            const total = filteredItems.length;
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, total);
+            const pageItems = filteredItems.slice(startIdx, endIdx);
+
+            document.getElementById('pageRangeStart').innerText = total > 0 ? startIdx + 1 : 0;
+            document.getElementById('pageRangeEnd').innerText = endIdx;
+            document.getElementById('pageTotalItems').innerText = total;
+
+            renderPaginationButtons(total);
+
+            if (currentView === 'table') {
+                renderTable(pageItems, startIdx);
+            } else {
+                renderCards(pageItems);
+            }
+
+            lucide.createIcons();
+        }
+
+        // Render Table Rows (Wide & High Density)
+        function renderTable(items, startIdx) {
+            const tbody = document.getElementById('brTableBody');
+            const query = (document.getElementById('searchInput').value || '').trim();
+
+            tbody.innerHTML = items.map((item, idx) => {
+                const globalIdx = startIdx + idx + 1;
+                const statusBadge = getStatusBadge(item.status, item.id);
+                const catBadge = getCategoryBadge(item.category);
+                const isExpanded = expandedRowId === item.id;
+                const rowBg = idx % 2 === 0 ? 'bg-[#0c1322]' : 'bg-[#0f172a]/50';
+
+                return `
+                <tr class="${rowBg} hover:bg-slate-800/60 transition group cursor-pointer border-b border-slate-800/60" onclick="toggleRowAccordion('${item.id}')">
+                    <td class="py-3 px-3 text-center mono text-xs text-slate-500 font-medium">${globalIdx}</td>
+                    
+                    <td class="py-3 px-3 whitespace-nowrap">
+                        <div class="font-medium text-slate-200 text-xs font-sans">${highlightMatch(item.date, query)}</div>
+                        <div class="text-[11px] text-slate-400 font-sans">${item.time || '—'}</div>
+                    </td>
+
+                    <td class="py-3 px-3">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="mono font-bold text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                                ${highlightMatch(item.brigadeNo, query)}
+                            </span>
+                            ${item.brigadePrefix ? `<span class="text-[10px] text-slate-500 mono font-semibold">Бр ${item.brigadePrefix}</span>` : ''}
+                        </div>
+                    </td>
+
+                    <td class="py-3 px-3 whitespace-nowrap">
+                        <span class="text-xs text-slate-300 font-semibold font-sans">${highlightMatch(item.internalNo || '—', query)}</span>
+                    </td>
+
+                    <td class="py-3 px-3 whitespace-nowrap">
+                        ${catBadge}
+                    </td>
+
+                    <!-- Flexible Full Subject Column (2-3 lines, no truncate!) -->
+                    <td class="py-3 px-4">
+                        <div class="text-sm font-medium text-slate-100 group-hover:text-amber-200 transition leading-relaxed">
+                            ${highlightMatch(item.subject, query)}
+                        </div>
+                        ${item.report ? `
+                            <div class="text-xs text-emerald-400 flex items-center gap-1.5 mt-1 font-sans font-medium">
+                                <i data-lucide="check" class="w-3.5 h-3.5 shrink-0"></i>
+                                <span>${highlightMatch(item.report, query)}</span>
+                            </div>
+                        ` : ''}
+                    </td>
+
+                    <td class="py-3 px-3 whitespace-nowrap text-xs text-slate-300">
+                        ${item.deadline ? `<span class="bg-[#111b2e] px-2 py-0.5 rounded text-[11px] font-medium border border-slate-700/80 text-amber-300/90">${highlightMatch(item.deadline, query)}</span>` : '<span class="text-slate-600">—</span>'}
+                    </td>
+
+                    <td class="py-3 px-3 text-center whitespace-nowrap" onclick="event.stopPropagation()">
+                        ${statusBadge}
+                    </td>
+
+                    <td class="py-3 px-3 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-end gap-1">
+                            <button onclick="toggleRowAccordion('${item.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="${isExpanded ? 'Згорнути' : 'Розгорнути деталі'}">
+                                <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="editBr('${item.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Редагувати">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteBr('${item.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition" title="Видалити">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Inline Accordion Row for Deep Inspection -->
+                <tr id="accordion-${item.id}" class="${isExpanded ? '' : 'hidden'} bg-[#080d18] border-b border-slate-800">
+                    <td colspan="9" class="p-4 sm:p-6 text-left">
+                        <div class="w-full space-y-3.5 text-left">
+                            
+                            <!-- Header in Accordion -->
+                            <div class="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-slate-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="mono text-xs font-bold text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">${item.brigadeNo}</span>
+                                    <span class="text-xs text-slate-400">Вхідний: <strong class="text-white mono">${item.internalNo || '—'}</strong></span>
+                                    <span class="text-xs text-slate-400">Отримано: <strong class="text-white mono">${item.date} ${item.time || ''}</strong></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="copyToClipboard('${escapeJs(item.fullText || item.subject)}')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5 cursor-pointer">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Скопіювати текст БР
+                                    </button>
+                                    <button onclick="editBr('${item.id}')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white transition flex items-center gap-1.5 cursor-pointer">
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Редагувати
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Full Verbatim Text Container -->
+                            <div>
+                                <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Повний текст бойового розпорядження:</div>
+                                <div class="p-4 sm:p-5 rounded-xl bg-[#050811] border border-slate-800 text-sm text-slate-100 font-sans leading-relaxed whitespace-pre-wrap max-h-80 overflow-y-auto selection:bg-amber-500/30 font-normal">${highlightMatch(item.fullText || item.subject, query)}</div>
+                            </div>
+
+                            <!-- Inline Execution Report Input -->
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                                <label class="text-xs font-semibold text-slate-300 whitespace-nowrap">Відмітка про виконання:</label>
+                                <input type="text" id="inlineReport-${item.id}" value="${escapeHtml(item.report || '')}" placeholder="Введіть вихідний номер доповіді, дату або примітку..."
+                                    class="flex-1 bg-[#111b2e] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none">
+                                <button onclick="saveInlineReport('${item.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center justify-center gap-1 cursor-pointer">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i> Зберегти доповідь
+                                </button>
+                            </div>
+
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // Toggle Accordion
+        function toggleRowAccordion(id) {
+            if (expandedRowId === id) {
+                expandedRowId = null;
+            } else {
+                expandedRowId = id;
+            }
+            renderView();
+        }
+
+        function saveInlineReport(id) {
+            const input = document.getElementById(`inlineReport-${id}`);
+            if (!input) return;
+            const val = input.value.trim();
+
+            const idx = brItems.findIndex(i => i.id === id);
+            if (idx !== -1) {
+                brItems[idx].report = val;
+                if (val && brItems[idx].status === 'В роботі') {
+                    brItems[idx].status = 'Виконано';
+                }
+                saveToStorage();
+                showToast("Відмітку про виконання збережено!");
+                applyFilters();
+            }
+        }
+
+        // Render Cards View
+        function renderCards(items) {
+            const container = document.getElementById('cardsViewContainer');
+            const query = (document.getElementById('searchInput').value || '').trim();
+
+            container.innerHTML = items.map(item => {
+                const statusBadge = getStatusBadge(item.status, item.id);
+                const catBadge = getCategoryBadge(item.category);
+
+                return `
+                <div class="bg-[#0c1322] border border-slate-800 hover:border-slate-700 p-4 rounded-xl space-y-3 transition flex flex-col justify-between shadow-lg">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            ${catBadge}
+                            <div class="text-[11px] text-slate-400 mono">${item.date} ${item.time || ''}</div>
+                        </div>
+                        <div class="flex items-center gap-1.5 mb-2">
+                            <span class="mono font-bold text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                                ${highlightMatch(item.brigadeNo, query)}
+                            </span>
+                            ${item.internalNo ? `<span class="mono text-xs text-slate-400 font-semibold">(${highlightMatch(item.internalNo, query)})</span>` : ''}
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-100 leading-snug">${highlightMatch(item.subject, query)}</h4>
+                        <p class="text-xs text-slate-300 mt-2 line-clamp-3 leading-relaxed font-sans">${highlightMatch(item.fullText || '', query)}</p>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                        <div>${statusBadge}</div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="copyToClipboard('${escapeJs(item.fullText || item.subject)}')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Копіювати текст">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="editBr('${item.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Редагувати">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="deleteBr('${item.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition" title="Видалити">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Set View Mode (Table / Cards)
+        function setViewMode(mode) {
+            currentView = mode;
+            const tContainer = document.getElementById('tableViewContainer');
+            const cContainer = document.getElementById('cardsViewContainer');
+            const tBtn = document.getElementById('viewTableBtn');
+            const cBtn = document.getElementById('viewCardsBtn');
+
+            if (mode === 'table') {
+                tContainer.classList.remove('hidden');
+                cContainer.classList.add('hidden');
+                tBtn.className = "p-1.5 rounded-lg text-amber-400 bg-slate-800 shadow-sm transition";
+                cBtn.className = "p-1.5 rounded-lg text-slate-400 hover:text-white transition";
+            } else {
+                tContainer.classList.add('hidden');
+                cContainer.classList.remove('hidden');
+                tBtn.className = "p-1.5 rounded-lg text-slate-400 hover:text-white transition";
+                cBtn.className = "p-1.5 rounded-lg text-amber-400 bg-slate-800 shadow-sm transition";
+            }
+            renderView();
+        }
+
+        // Badge Renderers
+        function getStatusBadge(status, id) {
+            const colors = {
+                'В роботі': 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+                'Виконано': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+                'Щоденно': 'bg-sky-500/10 text-sky-400 border-sky-500/30',
+                'До відома': 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+                'Протерміновано': 'bg-rose-500/10 text-rose-400 border-rose-500/30',
+                'Скасовано': 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+            };
+            const cls = colors[status] || colors['В роботі'];
+
+            return `
+            <select onchange="updateItemStatus('${id}', this.value)" class="text-xs font-semibold py-1 px-2 rounded-lg border ${cls} bg-[#111b2e] focus:outline-none transition cursor-pointer">
+                <option value="В роботі" ${status === 'В роботі' ? 'selected' : ''}>🟡 В роботі</option>
+                <option value="Виконано" ${status === 'Виконано' ? 'selected' : ''}>🟢 Виконано</option>
+                <option value="Щоденно" ${status === 'Щоденно' ? 'selected' : ''}>🔵 Щоденно</option>
+                <option value="До відома" ${status === 'До відома' ? 'selected' : ''}>🟣 До відома</option>
+                <option value="Протерміновано" ${status === 'Протерміновано' ? 'selected' : ''}>🔴 Протерм.</option>
+                <option value="Скасовано" ${status === 'Скасовано' ? 'selected' : ''}>⚪ Скасовано</option>
+            </select>
+            `;
+        }
+
+        function getCategoryBadge(cat) {
+            const styles = {
+                'БРО': 'bg-sky-500/10 text-sky-400 border-sky-500/30',
+                'Посадові особи': 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30',
+                'Сили та засоби': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+                'Зв\'язок / РЕБ': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+                'БпЛА': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+                'Розвідка': 'bg-rose-500/10 text-rose-400 border-rose-500/30',
+                'Інженерне': 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+                'МТЗ / Логістика': 'bg-teal-500/10 text-teal-400 border-teal-500/30',
+                'Загальні': 'bg-slate-500/10 text-slate-300 border-slate-500/30',
+            };
+            const c = styles[cat] || styles['Загальні'];
+            return `<span class="px-2 py-0.5 rounded text-[11px] font-semibold border ${c}">${escapeHtml(cat || 'Загальні')}</span>`;
+        }
+
+        function updateItemStatus(id, newStatus) {
+            const idx = brItems.findIndex(i => i.id === id);
+            if (idx !== -1) {
+                brItems[idx].status = newStatus;
+                saveToStorage();
+                updateKpis();
+                showToast(`Статус оновлено: ${newStatus}`);
+            }
+        }
+
+        function updateKpis() {
+            const total = brItems.length;
+            const active = brItems.filter(i => i.status === 'В роботі').length;
+            const completed = brItems.filter(i => i.status === 'Виконано').length;
+            const bro = brItems.filter(i => i.category === 'БРО').length;
+            const inspectors = brItems.filter(i => i.category === 'Посадові особи').length;
+
+            document.getElementById('kpiTotal').innerText = total;
+            document.getElementById('kpiActive').innerText = active;
+            document.getElementById('kpiCompleted').innerText = completed;
+            document.getElementById('kpiBro').innerText = bro;
+            document.getElementById('kpiInspectors').innerText = inspectors;
+        }
+
+        // Pagination UI
+        function renderPaginationButtons(total) {
+            const totalPages = Math.ceil(total / pageSize) || 1;
+            const container = document.getElementById('paginationButtons');
+
+            let html = `
+                <button onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-800 bg-[#111b2e] text-slate-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                </button>
+            `;
+
+            for (let p = 1; p <= totalPages; p++) {
+                if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
+                    const active = p === currentPage ? 'bg-amber-500 text-slate-950 font-bold border-amber-500' : 'bg-[#111b2e] border-slate-800 text-slate-300 hover:text-white';
+                    html += `<button onclick="goToPage(${p})" class="px-2.5 py-1 rounded-lg border text-xs font-mono ${active}">${p}</button>`;
+                } else if (p === currentPage - 2 || p === currentPage + 2) {
+                    html += `<span class="px-1 text-slate-600">...</span>`;
+                }
+            }
+
+            html += `
+                <button onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-800 bg-[#111b2e] text-slate-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </button>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function changePage(delta) {
+            const maxPage = Math.ceil(filteredItems.length / pageSize) || 1;
+            currentPage = Math.max(1, Math.min(currentPage + delta, maxPage));
+            renderView();
+        }
+
+        function goToPage(p) {
+            currentPage = p;
+            renderView();
+        }
+
+        // Add / Edit Modal
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = 'Нове бойове розпорядження';
+            document.getElementById('formBrId').value = '';
+            document.getElementById('formDate').value = '03.10.2026';
+            document.getElementById('formTime').value = new Date().toTimeString().slice(0, 5);
+            document.getElementById('formBrigadeNo').value = '';
+            document.getElementById('formInternalNo').value = '';
+            document.getElementById('formCategory').value = 'БРО';
+            document.getElementById('formStatus').value = 'В роботі';
+            document.getElementById('formSubject').value = '';
+            document.getElementById('formDeadline').value = '';
+            document.getElementById('formFullText').value = '';
+            document.getElementById('formReport').value = '';
+            openModal('brModal');
+        }
+
+        function editBr(id) {
+            const item = brItems.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('modalTitle').innerText = `Редагування розпорядження ${item.brigadeNo}`;
+            document.getElementById('formBrId').value = item.id;
+            document.getElementById('formDate').value = item.date || '';
+            document.getElementById('formTime').value = item.time || '';
+            document.getElementById('formBrigadeNo').value = item.brigadeNo || '';
+            document.getElementById('formInternalNo').value = item.internalNo || '';
+            document.getElementById('formCategory').value = item.category || 'БРО';
+            document.getElementById('formStatus').value = item.status || 'В роботі';
+            document.getElementById('formSubject').value = item.subject || '';
+            document.getElementById('formDeadline').value = item.deadline || '';
+            document.getElementById('formFullText').value = item.fullText || '';
+            document.getElementById('formReport').value = item.report || '';
+
+            openModal('brModal');
+        }
+
+        function saveBrForm(e) {
+            e.preventDefault();
+            const id = document.getElementById('formBrId').value;
+            const rawBrigade = document.getElementById('formBrigadeNo').value.trim();
+            const parsedBrigade = sanitizeBrigadeNo(rawBrigade);
+
+            const record = {
+                id: id || `br_manual_${Date.now()}`,
+                date: document.getElementById('formDate').value.trim(),
+                time: document.getElementById('formTime').value.trim(),
+                brigadeNo: parsedBrigade.display,
+                brigadePrefix: parsedBrigade.prefix,
+                internalNo: document.getElementById('formInternalNo').value.trim(),
+                category: document.getElementById('formCategory').value,
+                status: document.getElementById('formStatus').value,
+                subject: sanitizeSubject(document.getElementById('formSubject').value.trim()),
+                deadline: document.getElementById('formDeadline').value.trim(),
+                fullText: document.getElementById('formFullText').value.trim(),
+                report: document.getElementById('formReport').value.trim()
+            };
+
+            if (id) {
+                const idx = brItems.findIndex(i => i.id === id);
+                if (idx !== -1) brItems[idx] = record;
+            } else {
+                brItems.unshift(record);
+            }
+
+            saveToStorage();
+            closeModal('brModal');
+            showToast("Розпорядження збережено!");
+            applyFilters();
+        }
+
+        function deleteBr(id) {
+            const item = brItems.find(i => i.id === id);
+            if (!item) return;
+
+            if (confirm(`Ви дійсно бажаєте видалити розпорядження ${item.brigadeNo}?`)) {
+                brItems = brItems.filter(i => i.id !== id);
+                saveToStorage();
+                showToast("Розпорядження видалено");
+                applyFilters();
+            }
+        }
+
+        // Element Matrix Import with Deep Data Hygiene
+        function openImportModal() {
+            document.getElementById('importStatusBox').classList.add('hidden');
+            openModal('importModal');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.add('border-sky-400', 'bg-sky-950/20');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('border-sky-400', 'bg-sky-950/20');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('border-sky-400', 'bg-sky-950/20');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) processImportFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) processImportFiles(files);
+        }
+
+        document.getElementById('dropZone').addEventListener('click', () => {
+            document.getElementById('importFileInput').click();
+        });
+
+        async function processImportFiles(fileList) {
+            const statusBox = document.getElementById('importStatusBox');
+            statusBox.classList.remove('hidden');
+            statusBox.innerHTML = `<div class="text-sky-400">⏳ Обробка та нормалізація ${fileList.length} файлів...</div>`;
+
+            let totalFound = 0;
+            let addedCount = 0;
+            let dupCount = 0;
+
+            const monthMap = {
+                'січ': '01', 'лют': '02', 'бер': '03', 'квіт': '04', 'трав': '05', 'черв': '06',
+                'лип': '07', 'серп': '08', 'вер': '09', 'жовт': '10', 'лист': '11', 'груд': '12'
+            };
+
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                const text = await file.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+
+                let currentDate = "03.10.2026";
+                const elements = doc.querySelectorAll('.mx_DateSeparator_dateHeading, .mx_EventTile_body');
+
+                elements.forEach(el => {
+                    if (el.classList.contains('mx_DateSeparator_dateHeading')) {
+                        const dateText = el.textContent || '';
+                        const m = dateText.match(/(\d{1,2})\s+([а-яіїє]+)\.?\s+(\d{4})/i);
+                        if (m) {
+                            const day = m[1].padStart(2, '0');
+                            const monWord = m[2].toLowerCase().substring(0, 4);
+                            let mon = '10';
+                            for (let k in monthMap) {
+                                if (monWord.includes(k)) { mon = monthMap[k]; break; }
+                            }
+                            currentDate = `${day}.${mon}.${m[3]}`;
+                        }
+                    } else if (el.classList.contains('mx_EventTile_body')) {
+                        const rawContent = (el.textContent || '').trim();
+                        if (rawContent.includes('БР №') || rawContent.startsWith('Отримано: БР') || rawContent.includes('щоденна БРО') || rawContent.includes('Щоденна БРО')) {
+                            totalFound++;
+
+                            // Extract brigade raw
+                            let rawBrigade = 'БР';
+                            const bMatch = rawContent.match(/БР\s*№?\s*([0-9a-zA-Z_/-]+(?:_[дд]ск)?)/i);
+                            if (bMatch) rawBrigade = bMatch[1].trim();
+
+                            const parsedBrigade = sanitizeBrigadeNo(rawBrigade);
+
+                            // Extract internal number
+                            let internalNo = '';
+                            const iMatch = rawContent.match(/\(([№#]?\s*[0-9a-zA-Z_/-]+(?:[/-][дд]ск)?)\)/i);
+                            if (iMatch) internalNo = iMatch[1].trim();
+
+                            // Clean subject
+                            const cleanSubjectText = sanitizeSubject(rawContent);
+
+                            // Category heuristic
+                            let cat = 'Загальні';
+                            const low = rawContent.toLowerCase();
+                            if (low.includes('щоденна бро') || low.includes('бро 2мб') || (low.includes('район оборони') && !low.includes('фокін'))) cat = 'БРО';
+                            else if (low.includes('фокін') || low.includes('скульськ') || low.includes('посадов') || low.includes('перевір') || low.includes('допуску членів') || low.includes('групи офіцерів')) cat = 'Посадові особи';
+                            else if (low.includes('підпорядкуван') || low.includes('включення') || low.includes('вибуття') || low.includes('особового складу') || low.includes('солдат') || low.includes('сержант')) cat = 'Сили та засоби';
+                            else if (low.includes('інженер') || low.includes('облаштуван') || low.includes('фортифік')) cat = 'Інженерне';
+                            else if (low.includes('бпла') || low.includes('дрон') || low.includes('fpv') || low.includes('мавік')) cat = 'БпЛА';
+                            else if (low.includes('зв\'яз') || low.includes('радіо') || low.includes('реб')) cat = 'Зв\'язок / РЕБ';
+
+                            // Timestamp
+                            let timeStr = '12:00';
+                            const parentTile = el.closest('.mx_EventTile') || el.closest('li');
+                            if (parentTile) {
+                                const timeEl = parentTile.querySelector('.mx_MessageTimestamp');
+                                if (timeEl) timeStr = timeEl.textContent.trim();
+                            }
+
+                            // Bulletproof duplicate check by pure numeric IDs and dates
+                            const bDigits = parsedBrigade.display.replace(/\D+/g, '');
+                            const iDigits = (internalNo || '').replace(/\D+/g, '');
+
+                            const isDup = brItems.some(item => {
+                                if (item.date !== currentDate) return false;
+                                const itemBDigits = (item.brigadeNo || '').replace(/\D+/g, '');
+                                const itemIDigits = (item.internalNo || '').replace(/\D+/g, '');
+
+                                if (bDigits && itemBDigits && bDigits === itemBDigits) return true;
+                                if (iDigits && itemIDigits && iDigits === itemIDigits) return true;
+                                return false;
+                            });
+
+                            if (!isDup) {
+                                brItems.push({
+                                    id: `br_imp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                                    date: currentDate,
+                                    time: timeStr,
+                                    brigadeNo: parsedBrigade.display,
+                                    brigadePrefix: parsedBrigade.prefix,
+                                    internalNo: internalNo || '—',
+                                    category: cat,
+                                    subject: cleanSubjectText,
+                                    fullText: rawContent,
+                                    status: currentDate.includes('10.2026') ? 'В роботі' : 'Виконано',
+                                    deadline: cat === 'БРО' ? 'Щоденно' : 'За планом',
+                                    report: ''
+                                });
+                                addedCount++;
+                            } else {
+                                dupCount++;
+                            }
+                        }
+                    }
+                });
+            }
+
+            saveToStorage();
+            applyFilters();
+
+            statusBox.innerHTML = `
+                <div class="text-emerald-400 font-bold">✅ Імпорт та очищення завершено!</div>
+                <div class="text-slate-300">Виявлено БР у файлах: <span class="text-white">${totalFound}</span></div>
+                <div class="text-slate-300">Додано нових записів: <span class="text-emerald-400 font-bold">${addedCount}</span></div>
+                <div class="text-slate-300">Пропущено дублікатів: <span class="text-slate-500">${dupCount}</span></div>
+            `;
+        }
+
+        function loadSampleOctoberBRs() {
+            brItems = [...DEFAULT_INITIAL_BRS];
+            saveToStorage();
+            applyFilters();
+            closeModal('importModal');
+            showToast('Завантажено чистий демо-пакет за Жовтень 2026!');
+        }
+
+        // Clean up database button
+        function cleanUpOldDuplicates() {
+            sanitizeExistingDatabase();
+            toggleBackupMenu();
+            showToast('Базу успішно нормалізовано!');
+            applyFilters();
+        }
+
+        // Backup Menu & JSON
+        function toggleBackupMenu() {
+            const menu = document.getElementById('backupDropdown');
+            menu.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('backupDropdown');
+            const btn = document.getElementById('backupMenuBtn');
+            if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        function exportJsonBackup() {
+            toggleBackupMenu();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(brItems, null, 2));
+            const downloadAnchor = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Backup_BR_Tracker_${dateStr}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("Бекап завантажено!");
+        }
+
+        function triggerRestoreJson() {
+            toggleBackupMenu();
+            document.getElementById('restoreJsonInput').click();
+        }
+
+        function handleRestoreJson(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if (Array.isArray(parsed)) {
+                        brItems = parsed;
+                        sanitizeExistingDatabase();
+                        saveToStorage();
+                        applyFilters();
+                        showToast(`Успішно відновлено ${parsed.length} записів!`);
+                    } else {
+                        alert("Невірний формат файлу бекапу.");
+                    }
+                } catch (err) {
+                    alert("Помилка читання JSON файлу.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Export to Excel (.xlsx)
+        function exportToExcel() {
+            if (filteredItems.length === 0) {
+                alert('Немає записів для експорту.');
+                return;
+            }
+
+            const rows = filteredItems.map((item, idx) => ({
+                '№ з/п': idx + 1,
+                'Дата': item.date,
+                'Час': item.time || '',
+                'Номер БР (бригада)': item.brigadeNo,
+                'Бригада': item.brigadePrefix || '1626',
+                'Вхідний номер (бат)': item.internalNo || '—',
+                'Категорія': item.category,
+                'Короткий зміст': item.subject,
+                'Термін дії': item.deadline || '',
+                'Статус': item.status,
+                'Відмітка про виконання / Доповідь': item.report || '',
+                'Повний текст': item.fullText || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            ws['!cols'] = [
+                { wch: 6 },
+                { wch: 14 },
+                { wch: 8 },
+                { wch: 14 },
+                { wch: 10 },
+                { wch: 14 },
+                { wch: 20 },
+                { wch: 50 },
+                { wch: 18 },
+                { wch: 16 },
+                { wch: 32 },
+                { wch: 50 }
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Журнал БР 2МБ");
+            const dateStr = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `Журнал_БР_2МБ_${dateStr}.xlsx`);
+            showToast("Excel файл сформовано!");
+        }
+
+        // Copy to clipboard helper
+        function copyToClipboard(text) {
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Текст скопійовано в буфер!");
+            }).catch(() => {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                showToast("Текст скопійовано!");
+            });
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toastBox');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2600);
+        }
+
+        // Modals Management
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+            }
+        }
+
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            }
+        }
+
+        function openChangelogModal() {
+            openModal('changelogModal');
+        }
+
+        // Esc key closes modals
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal('brModal');
+                closeModal('importModal');
+                closeModal('changelogModal');
+            }
+        });
+
+        // HTML Escaping
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str || '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escapeJs(str) {
+            if (typeof str !== 'string') return '';
+            return str
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"')
+                .replace(/\n/g, '\\n')
+                .replace(/\r/g, '');
+        }
+    </script>
+</body>
+
+</html>
