@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Облік бойових розпоряджень (БР) | 2 МБ 125 ОВМБр</title>
+    <title>Облік бойових розпоряджень (БР) | Оперативний штаб</title>
 
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -97,6 +97,34 @@
             font-weight: 600;
         }
 
+        /* Line Clamp Utilities */
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Slide-over Drawer */
+        #detailDrawer.open {
+            transform: translateX(0);
+        }
+
         /* Accordion transition */
         .accordion-content {
             transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), opacity 0.25s ease;
@@ -136,10 +164,10 @@
                                 Облік бойових розпоряджень
                             </h1>
                             <button id="versionBadge" onclick="openChangelogModal()" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer flex items-center gap-1">
-                                <span>⚡ v1.1.0</span>
+                                <span>⚡ v1.2.0</span>
                             </button>
                         </div>
-                        <p class="text-xs text-slate-400 font-medium hidden sm:block">2 механізований батальйон 125 ОВМБр • Оперативний штаб</p>
+                        <p class="text-xs text-slate-400 font-medium hidden sm:block">Оперативний штаб • Реєстр та контроль виконання</p>
                     </div>
                 </div>
             </div>
@@ -161,17 +189,21 @@
                         <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
                     </button>
                     <!-- Backup Dropdown Menu -->
-                    <div id="backupDropdown" class="hidden absolute right-0 mt-2 w-48 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1 z-50">
-                        <button onclick="exportJsonBackup()" class="w-full text-left px-4 py-2 text-xs text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+                    <div id="backupDropdown" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1 z-50">
+                        <button onclick="exportJsonBackup()" class="w-full text-left px-4 py-2 text-xs text-slate-200 hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
                             <i data-lucide="download" class="w-3.5 h-3.5 text-sky-400"></i> Створити JSON бекап
                         </button>
-                        <button onclick="triggerRestoreJson()" class="w-full text-left px-4 py-2 text-xs text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+                        <button onclick="triggerRestoreJson()" class="w-full text-left px-4 py-2 text-xs text-slate-200 hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
                             <i data-lucide="upload" class="w-3.5 h-3.5 text-amber-400"></i> Відновити з JSON
                         </button>
                         <input type="file" id="restoreJsonInput" accept=".json" onchange="handleRestoreJson(event)" class="hidden">
                         <div class="border-t border-slate-800 my-1"></div>
-                        <button onclick="cleanUpOldDuplicates()" class="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2">
+                        <button onclick="cleanUpOldDuplicates()" class="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
                             <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-400"></i> Очистити номери й теми
+                        </button>
+                        <div class="border-t border-slate-800 my-1"></div>
+                        <button onclick="clearEntireDatabase()" class="w-full text-left px-4 py-2 text-xs text-rose-300 hover:bg-rose-950/40 flex items-center gap-2 cursor-pointer">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i> Очистити всю базу
                         </button>
                     </div>
                 </div>
@@ -186,71 +218,84 @@
     <!-- Main Container (Full Width / Max 1720px) -->
     <main class="flex-1 max-w-[1720px] w-full mx-auto px-3 sm:px-6 py-5 space-y-4">
 
-        <!-- Unified Military Slate KPI Cards (No Rainbow Borders!) -->
+        <!-- Elite Tactical Command KPI Cards -->
         <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <!-- 1. All Records -->
-            <div onclick="filterByQuickStatus('all')" class="bg-[#0c1322] border border-slate-800/90 hover:border-slate-700 p-3.5 rounded-xl cursor-pointer transition select-none group">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider">Всього в базі</span>
-                    <i data-lucide="layers" class="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition"></i>
+            <div onclick="filterByQuickStatus('all')" id="kpiCard-all" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 p-3.5 rounded-2xl cursor-pointer transition-all duration-200 select-none group shadow-lg shadow-black/40 border-t-2 border-t-slate-500">
+                <div class="flex items-center justify-between text-slate-400 mb-1.5">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-300">Всього в базі</span>
+                    <div class="w-7 h-7 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-white transition">
+                        <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                    </div>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="kpiTotal" class="text-2xl font-bold mono text-white">0</span>
-                    <span class="text-xs text-slate-500 font-medium">розпоряджень</span>
+                    <span id="kpiTotal" class="text-2xl sm:text-3xl font-extrabold mono text-white tracking-tight">0</span>
+                    <span class="text-xs text-slate-400 font-medium">розпоряджень</span>
                 </div>
             </div>
 
             <!-- 2. Active / In Progress -->
-            <div onclick="filterByQuickStatus('В роботі')" class="bg-[#0c1322] border border-slate-800/90 hover:border-amber-500/50 p-3.5 rounded-xl cursor-pointer transition select-none group">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-400/90">На контролі</span>
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <div onclick="filterByQuickStatus('В роботі')" id="kpiCard-active" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 p-3.5 rounded-2xl cursor-pointer transition-all duration-200 select-none group shadow-lg shadow-black/40 border-t-2 border-t-amber-500">
+                <div class="flex items-center justify-between text-slate-400 mb-1.5">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        На контролі
+                    </span>
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 group-hover:bg-amber-500/20 transition">
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                    </div>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="kpiActive" class="text-2xl font-bold mono text-amber-400">0</span>
-                    <span class="text-xs text-amber-400/70 font-medium">активних</span>
+                    <span id="kpiActive" class="text-2xl sm:text-3xl font-extrabold mono text-amber-400 tracking-tight">0</span>
+                    <span class="text-xs text-amber-400/80 font-medium">активних</span>
                 </div>
             </div>
 
             <!-- 3. Completed -->
-            <div onclick="filterByQuickStatus('Виконано')" class="bg-[#0c1322] border border-slate-800/90 hover:border-emerald-500/50 p-3.5 rounded-xl cursor-pointer transition select-none group">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400/90">Виконано</span>
-                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+            <div onclick="filterByQuickStatus('Виконано')" id="kpiCard-completed" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 p-3.5 rounded-2xl cursor-pointer transition-all duration-200 select-none group shadow-lg shadow-black/40 border-t-2 border-t-emerald-500">
+                <div class="flex items-center justify-between text-slate-400 mb-1.5">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400">Виконано</span>
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/20 transition">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                    </div>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="kpiCompleted" class="text-2xl font-bold mono text-emerald-400">0</span>
-                    <span class="text-xs text-emerald-400/70 font-medium">доповідано</span>
+                    <span id="kpiCompleted" class="text-2xl sm:text-3xl font-extrabold mono text-emerald-400 tracking-tight">0</span>
+                    <span class="text-xs text-emerald-400/80 font-medium">доповідано</span>
                 </div>
             </div>
 
             <!-- 4. Daily BRO -->
-            <div onclick="filterByQuickCategory('БРО')" class="bg-[#0c1322] border border-slate-800/90 hover:border-sky-500/50 p-3.5 rounded-xl cursor-pointer transition select-none group">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-sky-400/90">Щоденна БРО</span>
-                    <i data-lucide="shield" class="w-4 h-4 text-sky-400"></i>
+            <div onclick="filterByQuickCategory('БРО')" id="kpiCard-bro" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-sky-500/50 p-3.5 rounded-2xl cursor-pointer transition-all duration-200 select-none group shadow-lg shadow-black/40 border-t-2 border-t-sky-500">
+                <div class="flex items-center justify-between text-slate-400 mb-1.5">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-sky-400">Щоденна БРО</span>
+                    <div class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400 group-hover:bg-sky-500/20 transition">
+                        <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+                    </div>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="kpiBro" class="text-2xl font-bold mono text-sky-400">0</span>
-                    <span class="text-xs text-sky-400/70 font-medium">розпоряджень</span>
+                    <span id="kpiBro" class="text-2xl sm:text-3xl font-extrabold mono text-sky-400 tracking-tight">0</span>
+                    <span class="text-xs text-sky-400/80 font-medium">розпоряджень</span>
                 </div>
             </div>
 
             <!-- 5. Officers & Inspectors -->
-            <div onclick="filterByQuickCategory('Посадові особи')" class="bg-[#0c1322] border border-slate-800/90 hover:border-indigo-500/50 p-3.5 rounded-xl cursor-pointer transition select-none group col-span-2 sm:col-span-1">
-                <div class="flex items-center justify-between text-slate-400 mb-1">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-400/90">Перевіряючі</span>
-                    <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i>
+            <div onclick="filterByQuickCategory('Посадові особи')" id="kpiCard-inspectors" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-indigo-500/50 p-3.5 rounded-2xl cursor-pointer transition-all duration-200 select-none group shadow-lg shadow-black/40 border-t-2 border-t-indigo-500 col-span-2 sm:col-span-1">
+                <div class="flex items-center justify-between text-slate-400 mb-1.5">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-400">Перевіряючі</span>
+                    <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/20 transition">
+                        <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                    </div>
                 </div>
                 <div class="flex items-baseline gap-2">
-                    <span id="kpiInspectors" class="text-2xl font-bold mono text-indigo-300">0</span>
-                    <span class="text-xs text-indigo-400/70 font-medium">груп / осіб</span>
+                    <span id="kpiInspectors" class="text-2xl sm:text-3xl font-extrabold mono text-indigo-300 tracking-tight">0</span>
+                    <span class="text-xs text-indigo-400/80 font-medium">груп / осіб</span>
                 </div>
             </div>
         </section>
 
         <!-- Rock-Solid Multi-Row Control Panel -->
-        <section class="bg-[#0c1322] border border-slate-800/90 p-3.5 rounded-xl space-y-3 shadow-lg">
+        <section class="bg-[#0c1322] border border-slate-800/90 p-3.5 rounded-2xl space-y-3 shadow-lg">
             
             <!-- Row 1: Search Bar & Core Selectors -->
             <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
@@ -268,7 +313,7 @@
                 <!-- Status Filter -->
                 <div class="w-full md:w-44">
                     <select id="statusFilter" onchange="applyFilters()"
-                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition">
+                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition cursor-pointer">
                         <option value="all">Усі статуси</option>
                         <option value="В роботі">🟡 В роботі</option>
                         <option value="Виконано">🟢 Виконано</option>
@@ -282,7 +327,7 @@
                 <!-- Category Filter -->
                 <div class="w-full md:w-48">
                     <select id="categoryFilter" onchange="applyFilters()"
-                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition">
+                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition cursor-pointer">
                         <option value="all">Усі категорії</option>
                         <option value="БРО">🛡️ БРО (Оборона)</option>
                         <option value="Посадові особи">👥 Посадові особи</option>
@@ -299,7 +344,7 @@
                 <!-- Sort Order -->
                 <div class="w-full md:w-44">
                     <select id="sortFilter" onchange="applyFilters()"
-                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition">
+                        class="w-full bg-[#111b2e] text-xs text-slate-200 rounded-xl px-3 py-2.5 border border-slate-700/80 focus:border-amber-400 focus:outline-none transition cursor-pointer">
                         <option value="date-desc">Свіжі спочатку ↓</option>
                         <option value="date-asc">Старі спочатку ↑</option>
                         <option value="num-desc">За номером (спадання)</option>
@@ -307,13 +352,17 @@
                     </select>
                 </div>
 
-                <!-- View Switcher -->
+                <!-- View Switcher & Density Toggle -->
                 <div class="flex items-center gap-1 bg-[#111b2e] p-1 rounded-xl border border-slate-700/80 self-end md:self-auto shrink-0">
                     <button id="viewTableBtn" onclick="setViewMode('table')" class="p-1.5 rounded-lg text-amber-400 bg-slate-800 shadow-sm transition" title="Табличний вигляд">
                         <i data-lucide="table" class="w-4 h-4"></i>
                     </button>
                     <button id="viewCardsBtn" onclick="setViewMode('cards')" class="p-1.5 rounded-lg text-slate-400 hover:text-white transition" title="Картковий вигляд">
                         <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                    </button>
+                    <div class="h-4 w-px bg-slate-700/70 mx-0.5"></div>
+                    <button id="densityToggleBtn" onclick="toggleTableDensity()" class="p-1.5 rounded-lg text-slate-400 hover:text-white transition" title="Компактний режим (2 рядки)">
+                        <i data-lucide="align-justify" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
@@ -324,23 +373,26 @@
                 <!-- Quick Filter Chips -->
                 <div class="flex flex-wrap items-center gap-1.5">
                     <span class="text-[11px] text-slate-400 font-semibold mr-1">Фільтри:</span>
-                    <button onclick="setQuickPill('all')" id="pill-all" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 transition">
+                    <button onclick="setQuickPill('all')" id="pill-all" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 transition cursor-pointer">
                         Всі
                     </button>
-                    <button onclick="setQuickPill('active')" id="pill-active" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1">
+                    <button onclick="setQuickPill('nobro')" id="pill-nobro" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-amber-300 hover:text-white border border-slate-700 transition flex items-center gap-1 cursor-pointer" title="Приховати повторювані щоденні БРО">
+                        <span>⚡ Без щоденної БРО</span>
+                    </button>
+                    <button onclick="setQuickPill('active')" id="pill-active" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1 cursor-pointer">
                         <span>🔥 Тільки активні</span>
                     </button>
-                    <button onclick="setQuickPill('inspectors')" id="pill-inspectors" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition">
-                        👥 Фокін / Скульський
+                    <button onclick="setQuickPill('inspectors')" id="pill-inspectors" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer">
+                        👥 Посадові особи
                     </button>
-                    <button onclick="setQuickPill('bro')" id="pill-bro" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition">
+                    <button onclick="setQuickPill('bro')" id="pill-bro" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer">
                         🛡️ Щоденна БРО
                     </button>
-                    <button onclick="setQuickPill('today')" id="pill-today" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition">
+                    <button onclick="setQuickPill('today')" id="pill-today" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer">
                         📅 Сьогодні
                     </button>
-                    <button onclick="setQuickPill('october')" id="pill-october" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition">
-                        🗓️ Жовтень 2026
+                    <button onclick="setQuickPill('month')" id="pill-month" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer">
+                        🗓️ Поточний місяць
                     </button>
                 </div>
 
@@ -366,38 +418,52 @@
         </section>
 
         <!-- Main Table View -->
-        <section id="tableViewContainer" class="bg-[#0c1322] border border-slate-800/90 rounded-xl overflow-hidden shadow-2xl">
+        <section id="tableViewContainer" class="bg-[#0c1322] border border-slate-800/90 rounded-2xl overflow-hidden shadow-2xl">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse" id="brMainTable">
                     <thead>
                         <tr class="bg-[#080d18] border-b border-slate-800 text-[11px] font-semibold uppercase tracking-wider text-slate-400 select-none">
-                            <th class="py-3 px-3 text-center w-12">№</th>
-                            <th class="py-3 px-3 w-28">Дата / Час</th>
-                            <th class="py-3 px-3 w-36">Номер БР</th>
-                            <th class="py-3 px-3 w-28">Вхідний №</th>
-                            <th class="py-3 px-3 w-32">Категорія</th>
-                            <th class="py-3 px-4 min-w-[340px]">Суть та зміст завдання</th>
-                            <th class="py-3 px-3 w-28">Термін дії</th>
-                            <th class="py-3 px-3 text-center w-36">Статус</th>
-                            <th class="py-3 px-3 text-right w-24">Дії</th>
+                            <th class="py-3.5 px-3 text-center w-12">№</th>
+                            <th class="py-3.5 px-3.5 w-28">Дата / Час</th>
+                            <th class="py-3.5 px-3.5 w-36">Вхідний номер</th>
+                            <th class="py-3.5 px-3 w-32">Категорія</th>
+                            <th class="py-3.5 px-4 min-w-[360px]">Суть та зміст завдання</th>
+                            <th class="py-3.5 px-3.5 w-36">Термін / Доповідь</th>
+                            <th class="py-3.5 px-3 text-center w-36">Статус</th>
+                            <th class="py-3.5 px-3 text-right w-24">Дії</th>
                         </tr>
                     </thead>
-                    <tbody id="brTableBody" class="divide-y divide-slate-800/60 text-xs">
+                    <tbody id="brTableBody" class="divide-y divide-slate-800/50 text-xs">
                         <!-- Rows rendered via JavaScript -->
                     </tbody>
                 </table>
             </div>
 
             <!-- Empty State Fallback -->
-            <div id="emptyState" class="hidden py-16 text-center space-y-3">
-                <div class="w-12 h-12 rounded-2xl bg-slate-800/60 border border-slate-700 flex items-center justify-center text-slate-500 mx-auto">
-                    <i data-lucide="file-search" class="w-6 h-6"></i>
+            <div id="emptyState" class="hidden py-16 text-center space-y-4 max-w-md mx-auto">
+                <div id="emptyIconBox" class="w-14 h-14 rounded-2xl bg-slate-800/60 border border-slate-700 flex items-center justify-center text-slate-400 mx-auto shadow-inner">
+                    <i id="emptyIcon" data-lucide="inbox" class="w-7 h-7 text-amber-400/80"></i>
                 </div>
-                <div class="text-sm font-semibold text-slate-300">Розпоряджень за вказаними фільтрами не знайдено</div>
-                <p class="text-xs text-slate-500 max-w-sm mx-auto">Спробуйте змінити пошуковий запит або скинути фільтри</p>
-                <button onclick="resetAllFilters()" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 transition">
-                    Скинути всі фільтри
-                </button>
+                <div class="space-y-1">
+                    <div id="emptyTitle" class="text-base font-bold text-slate-200">База розпоряджень порожня</div>
+                    <p id="emptySubtitle" class="text-xs text-slate-400 leading-relaxed">Почніть роботу з імпорту файлів експорту Element або створіть перше розпорядження вручну.</p>
+                </div>
+                <div id="emptyDbActions" class="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    <button onclick="openModal('importModal')" class="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-lg shadow-sky-500/20 transition flex items-center gap-2 cursor-pointer">
+                        <i data-lucide="folder-down" class="w-4 h-4"></i>
+                        <span>Імпорт з Element</span>
+                    </button>
+                    <button onclick="openAddModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/20 transition flex items-center gap-2 cursor-pointer">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Нова БР</span>
+                    </button>
+                </div>
+                <div id="emptyFilterActions" class="hidden pt-1">
+                    <button onclick="resetAllFilters()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 transition flex items-center gap-2 mx-auto cursor-pointer">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Скинути всі фільтри</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Pagination Bar -->
@@ -451,17 +517,17 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <!-- Brigade Number -->
+                    <!-- Internal Battalion Number (Primary) -->
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Номер БР бригади <span class="text-rose-400">*</span></label>
-                        <input type="text" id="formBrigadeNo" required placeholder="напр. № 7031 або 1626_7031"
+                        <label class="block font-semibold text-slate-300 mb-1">Вхідний номер батальйону <span class="text-rose-400">*</span></label>
+                        <input type="text" id="formInternalNo" required placeholder="напр. 2121/дск"
                             class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-amber-300 font-mono font-bold focus:border-amber-400 focus:outline-none">
                     </div>
-                    <!-- Internal Battalion Number -->
+                    <!-- Brigade Number (Optional / Reference) -->
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Вхідний номер батальйону</label>
-                        <input type="text" id="formInternalNo" placeholder="напр. 2094/дск"
-                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:border-amber-400 focus:outline-none">
+                        <label class="block font-semibold text-slate-300 mb-1">Номер БР бригади <span class="text-slate-500 font-normal">(довідково)</span></label>
+                        <input type="text" id="formBrigadeNo" placeholder="напр. № 7093"
+                            class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-slate-200 font-mono focus:border-amber-400 focus:outline-none">
                     </div>
                 </div>
 
@@ -500,14 +566,14 @@
                 <!-- Subject -->
                 <div>
                     <label class="block font-semibold text-slate-300 mb-1">Короткий зміст / Тема <span class="text-rose-400">*</span></label>
-                    <input type="text" id="formSubject" required placeholder="напр. Щодо роботи комісії Фокіна В.С. на 04.10.2026"
+                    <input type="text" id="formSubject" required placeholder="напр. Щодо організації взаємодії та чергування..."
                         class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 focus:outline-none font-medium">
                 </div>
 
                 <!-- Deadline -->
                 <div>
                     <label class="block font-semibold text-slate-300 mb-1">Термін дії / Дедлайн</label>
-                    <input type="text" id="formDeadline" placeholder="напр. на 04.10.2026, з 02.10 по 10.10.2026, Щоденно"
+                    <input type="text" id="formDeadline" placeholder="напр. до 18:00, щоденно або за окремим планом"
                         class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 focus:outline-none">
                 </div>
 
@@ -571,10 +637,7 @@
                 <!-- Status output -->
                 <div id="importStatusBox" class="hidden p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-1.5 font-mono"></div>
             </div>
-            <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between">
-                <button onclick="loadSampleOctoberBRs()" class="text-xs text-slate-400 hover:text-amber-400 underline transition cursor-pointer">
-                    Завантажити чистий пакет (Жовтень 2026)
-                </button>
+            <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/60 flex items-center justify-end">
                 <button onclick="closeModal('importModal')" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition cursor-pointer">
                     Закрити
                 </button>
@@ -587,7 +650,7 @@
         <div class="bg-[#0c1322] border border-slate-700/80 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
                 <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.1.0</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.2.0</span>
                     <h3 class="text-base font-bold text-white">Історія оновлень</h3>
                 </div>
                 <button onclick="closeModal('changelogModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
@@ -597,13 +660,26 @@
             <div class="p-6 space-y-4 text-xs text-slate-300 max-h-[70vh] overflow-y-auto">
                 <div class="border-l-2 border-amber-400 pl-3 space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-white font-mono">Версія 1.1.0</span>
-                        <span class="text-[11px] text-slate-500">03.10.2026</span>
+                        <span class="font-bold text-white font-mono">Версія 1.2.0</span>
+                        <span class="text-[11px] text-slate-500">06.10.2026</span>
                     </div>
                     <ul class="list-disc list-inside space-y-1 text-slate-300 text-xs">
+                        <li><strong>OPSEC & Повна санація:</strong> усунено будь-які зашиті в коді тестові бойові розпорядження, номери наказів та прізвища (база стартує абсолютно чистою).</li>
+                        <li><strong>Автоматична очистка кешу:</strong> при відкритті програми автоматично видаляються застарілі демо-записи з попередніх сесій браузера.</li>
+                        <li><strong>Швидкий старт (Empty State):</strong> додано зручний екран порожньої бази з прямими кнопками «Імпорт з Element» та «Нова БР».</li>
+                        <li><strong>Пріоритет вхідного номера:</strong> вхідний номер батальйону виведено на перше місце в таблиці, картках, докладному перегляді та експорті в Excel.</li>
+                        <li><strong>Керування базою:</strong> додано дію «🗑️ Очистити всю базу» у меню «База».</li>
+                    </ul>
+                </div>
+                <div class="border-l-2 border-slate-700 pl-3 space-y-1 text-slate-400">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono">Версія 1.1.0</span>
+                        <span class="text-[11px] text-slate-500">03.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-slate-400 text-xs">
                         <li><strong>Повний редизайн таблиці:</strong> розширена робоча область (Full-width 1720px), колонка змісту тепер займає 50% таблиці без сліпого обрізання.</li>
                         <li><strong>Inline-розкриття (Accordion):</strong> клік по рядку плавно відкриває повний текст розпорядження прямо в таблиці з кнопкою швидкого копіювання.</li>
-                        <li><strong>Нормалізація номерів:</strong> автоматичне прибирання підкреслень (<code class="text-amber-300 font-mono">1626_6974_</code> → <code class="text-amber-300 font-mono">№ 6974</code>), вичищення сміття «Отримано: БР №» з тем.</li>
+                        <li><strong>Нормалізація номерів:</strong> автоматичне прибирання підкреслень (<code class="text-amber-300 font-mono">0000_1234_</code> → <code class="text-amber-300 font-mono">№ 1234</code>), вичищення сміття «Отримано: БР №» з тем.</li>
                         <li><strong>Підсвічування пошуку:</strong> знайдені слова підсвічуються тактичним маркером.</li>
                         <li><strong>Стриманий Slate UI:</strong> строгі графітові картки KPI без надлишкових неонових смуг.</li>
                     </ul>
@@ -624,6 +700,79 @@
         </div>
     </div>
 
+    <!-- Slide-over Drawer for Full BR Inspection -->
+    <div id="detailDrawerBackdrop" class="fixed inset-0 z-[190] hidden bg-slate-950/75 backdrop-blur-sm transition-opacity duration-300" onclick="closeDetailDrawer()"></div>
+    <div id="detailDrawer" class="fixed inset-y-0 right-0 z-[200] w-full max-w-2xl bg-[#0c1322] border-l border-slate-700/80 shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold border border-amber-500/30 shadow-md">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 id="drawerBrigadeNo" class="text-base font-bold text-white mono flex items-center gap-2">
+                        БР № —
+                    </h3>
+                    <p id="drawerMeta" class="text-xs text-slate-400 font-mono">Дата • Вхідний</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="editCurrentDrawerBr()" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer" title="Редагувати">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button onclick="closeDetailDrawer()" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer" title="Закрити (Esc)">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-5 text-sm">
+            <!-- Badges Bar -->
+            <div class="flex flex-wrap items-center gap-2" id="drawerBadges">
+                <span id="drawerCatBadge"></span>
+                <span id="drawerStatusBadge"></span>
+                <span id="drawerDeadlineBadge"></span>
+            </div>
+
+            <!-- Full Text Box -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Повний зміст розпорядження:</span>
+                    <button onclick="copyDrawerFullText()" class="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 cursor-pointer font-medium">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Скопіювати текст
+                    </button>
+                </div>
+                <div id="drawerFullText" class="p-4 rounded-xl bg-[#070b14] border border-slate-800 text-slate-200 font-sans leading-relaxed whitespace-pre-wrap selection:bg-amber-500/30 text-sm max-h-[380px] overflow-y-auto"></div>
+            </div>
+
+            <!-- Execution Report / Доповідь -->
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                        Відмітка про виконання (доповідь):
+                    </label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="drawerReportInput" placeholder="Введіть вихідний номер доповіді, час або примітку..."
+                        class="flex-1 bg-[#111b2e] border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:border-amber-400 focus:outline-none">
+                    <button onclick="saveDrawerReport()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="save" class="w-3.5 h-3.5"></i> Зберегти
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-3.5 border-t border-slate-800 bg-slate-900/70 flex items-center justify-between">
+            <span class="text-xs text-slate-500 font-mono">Натисніть ESC або клікніть за межами</span>
+            <button onclick="closeDetailDrawer()" class="px-4 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer">
+                Закрити
+            </button>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toastBox" class="fixed bottom-6 right-6 z-[250] bg-slate-900 border border-slate-700 shadow-2xl rounded-xl px-4 py-3 text-xs text-white flex items-center gap-2 pointer-events-none">
         <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
@@ -635,93 +784,18 @@
         // Storage Key
         const STORAGE_KEY = 'tactical_br_tracker_items_v1';
 
-        // Preloaded Initial October BRs (cleanly sanitized)
-        const DEFAULT_INITIAL_BRS = [
-            {
-                id: "br_20261003_2094",
-                date: "03.10.2026",
-                time: "11:52",
-                brigadeNo: "№ 7031",
-                brigadePrefix: "1626",
-                internalNo: "2094/дск",
-                category: "Посадові особи",
-                subject: "Щодо роботи Фокіна В.С., Скульського В.І. на 04.10.2026",
-                fullText: "Отримано: БР № 1626_7031_дск (2094/дск) щодо роботи Фокіна В.С., Скульського В.І. на 04.10.2026\n\nКомандиру 2 механізованого батальйону 125 овмбр забезпечити допуск та сприяння у виконанні завдань посадовим особам бригади.",
-                status: "В роботі",
-                deadline: "на 04.10.2026",
-                report: ""
-            },
-            {
-                id: "br_20261003_2093",
-                date: "03.10.2026",
-                time: "12:11",
-                brigadeNo: "№ 7030",
-                brigadePrefix: "1626",
-                internalNo: "2093/дск",
-                category: "БРО",
-                subject: "Щоденна БРО (без змін)",
-                fullText: "Отримано: БР № 1626_7030_дск (2093/дск) щоденна БРО. Продовжувати виконання бойових завдань в батальйонному районі оборони згідно встановленого бойового розпорядження.",
-                status: "Щоденно",
-                deadline: "Щоденно",
-                report: ""
-            },
-            {
-                id: "br_20261003_2091",
-                date: "03.10.2026",
-                time: "11:52",
-                brigadeNo: "№ 7029",
-                brigadePrefix: "1626",
-                internalNo: "2091/дск",
-                category: "Посадові особи",
-                subject: "Щодо роботи посадових осіб 125 овмбр від 02.10 по 10.10 2026",
-                fullText: "Отримано: БР № 1626_7029_дск (2091/дск) щодо роботи посадових осіб 125 овмбр від 02.10 по 10.10 2026\n\nКомандиру 2МБ: забезпечити роботу та сприяння у виконанні завдання на пунктах управління в підпорядкованих підрозділах на відстані виконання бойових (спеціальних) завдань в батальйонному районі оборони, в першому ешелоні оборони, районах ведення бойових дій на лінії бойового зіткнення з противником (на глибині взводних, ротних опорних пунктів до батальйону включно).",
-                status: "В роботі",
-                deadline: "з 02.10 по 10.10.2026",
-                report: ""
-            },
-            {
-                id: "br_20261002_2087",
-                date: "02.10.2026",
-                time: "12:15",
-                brigadeNo: "№ 7017",
-                brigadePrefix: "1626",
-                internalNo: "2087/дск",
-                category: "БРО",
-                subject: "Щодо допуску групи посадових осіб з 125 овмбр в БРО 2МБ",
-                fullText: "Отримано: БР № 1626_7017_дск (2087/дск) щодо допуску групи посадових осіб з 125 овмбр в БРО 2МБ\n\nКомандиру 2 механізованого батальйону 125 овмбр\nЗ 05.00 03.10.2026 до 24.00 03.10.2026 допустити в батальйонний район оборони для виконання бойових (спеціальних) завдань, а саме: проведення рекогносцировки в районі БОГОРОДИЧНЕ, НОВОСЕЛІВКА, ОЛЕКСАНДРІВКА, СТУДЕНОК визначену робочу групу у кількості 4 військовослужбовців.",
-                status: "В роботі",
-                deadline: "до 24.00 03.10.2026",
-                report: ""
-            },
-            {
-                id: "br_20261002_2086",
-                date: "02.10.2026",
-                time: "10:49",
-                brigadeNo: "№ 7012",
-                brigadePrefix: "1626",
-                internalNo: "2086/дск",
-                category: "Посадові особи",
-                subject: "Щодо забезпечення допуску групи офіцерів управління РВіА 3 АК",
-                fullText: "Отримано: БР № 1626_7012_дск (2086/дск) щодо забезпечення допуску до роботи групи офіцерів управління ракетних військ і артилерії управління 3 АК з 01.10.2026 по 15.10.2026: майору АНЦИБОРУ О.О. та групі офіцерів.",
-                status: "В роботі",
-                deadline: "по 15.10.2026",
-                report: ""
-            },
-            {
-                id: "br_20261002_2083",
-                date: "02.10.2026",
-                time: "13:01",
-                brigadeNo: "№ 7009",
-                brigadePrefix: "1626",
-                internalNo: "2083/дск",
-                category: "БРО",
-                subject: "Щоденна БРО (без змін)",
-                fullText: "Отримано: БР № 1626_7009_дск (2083/дск) щоденна БРО (БЕЗ ЗМІН)",
-                status: "Щоденно",
-                deadline: "Щоденно",
-                report: ""
-            }
-        ];
+        // Clean Initial State: Zero hardcoded orders or unit data
+        const DEFAULT_INITIAL_BRS = [];
+
+        // Legacy demo IDs to automatically purge from localStorage
+        const LEGACY_DEMO_IDS = new Set([
+            "br_20261003_2094",
+            "br_20261003_2093",
+            "br_20261003_2091",
+            "br_20261002_2087",
+            "br_20261002_2086",
+            "br_20261002_2083"
+        ]);
 
         // State Management
         let brItems = [];
@@ -730,19 +804,27 @@
         const pageSize = 15;
         let activeQuickPill = 'all';
         let currentView = 'table'; // 'table' or 'cards'
+        let tableDensity = 'compact'; // 'compact' (2 lines) or 'expanded' (full text)
         let expandedRowId = null;
+        let currentDrawerItemId = null;
 
         // Normalization Helpers
+        function formatInternalDisplay(val) {
+            if (!val || val === '—' || val === '-') return '';
+            let clean = val.trim().replace(/^вх\.?\s*/i, '').replace(/^[№#]\s*/i, '');
+            return `вх. ${clean}`;
+        }
+
         function sanitizeBrigadeNo(raw) {
             if (!raw) return { display: '№ —', prefix: '' };
             let clean = raw.trim().replace(/^БР\s*№?\s*/i, '').replace(/[_]+$/, '').replace(/^[_]+/, '');
             
-            // e.g. "1626_6974_" or "01_1626_3545_" or "1626_7031_дск"
+            // e.g. "0000_1234_" or "01_0000_1234_"
             const parts = clean.split('_').filter(p => p && p.toLowerCase() !== 'дск');
             const nums = parts.filter(p => /^\d+$/.test(p));
             
             let displayNum = clean;
-            let prefix = '1626';
+            let prefix = '';
 
             if (nums.length >= 2) {
                 prefix = nums[nums.length - 2];
@@ -786,7 +868,7 @@
             const normalized = brItems.map(item => {
                 let updated = false;
                 let brigadeNo = item.brigadeNo;
-                let brigadePrefix = item.brigadePrefix || '1626';
+                let brigadePrefix = item.brigadePrefix || '';
                 let subject = item.subject;
                 let report = item.report || '';
 
@@ -888,14 +970,22 @@
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {
-                    brItems = JSON.parse(raw);
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        // Purge legacy demo orders from previous sessions
+                        brItems = parsed.filter(item => !LEGACY_DEMO_IDS.has(item.id));
+                        if (brItems.length !== parsed.length) {
+                            saveToStorage();
+                        }
+                    } else {
+                        brItems = [];
+                    }
                 } else {
-                    brItems = [...DEFAULT_INITIAL_BRS];
-                    saveToStorage();
+                    brItems = [];
                 }
             } catch (e) {
                 console.error("Storage load error:", e);
-                brItems = [...DEFAULT_INITIAL_BRS];
+                brItems = [];
             }
         }
 
@@ -937,7 +1027,7 @@
             }
 
             // Presets
-            if (type === 'all') {
+            if (type === 'all' || type === 'nobro') {
                 document.getElementById('statusFilter').value = 'all';
                 document.getElementById('categoryFilter').value = 'all';
                 document.getElementById('searchInput').value = '';
@@ -951,14 +1041,38 @@
                 document.getElementById('categoryFilter').value = 'БРО';
                 document.getElementById('statusFilter').value = 'all';
             } else if (type === 'today') {
-                document.getElementById('dateFrom').value = "03.10.2026";
-                document.getElementById('dateTo').value = "03.10.2026";
-            } else if (type === 'october') {
-                document.getElementById('dateFrom').value = "01.10.2026";
-                document.getElementById('dateTo').value = "31.10.2026";
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = now.getFullYear();
+                const todayStr = `${dd}.${mm}.${yyyy}`;
+                document.getElementById('dateFrom').value = todayStr;
+                document.getElementById('dateTo').value = todayStr;
+            } else if (type === 'month') {
+                const now = new Date();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = now.getFullYear();
+                const lastDay = new Date(yyyy, now.getMonth() + 1, 0).getDate();
+                document.getElementById('dateFrom').value = `01.${mm}.${yyyy}`;
+                document.getElementById('dateTo').value = `${String(lastDay).padStart(2, '0')}.${mm}.${yyyy}`;
             }
 
             applyFilters();
+        }
+
+        function toggleTableDensity() {
+            tableDensity = tableDensity === 'compact' ? 'expanded' : 'compact';
+            const btn = document.getElementById('densityToggleBtn');
+            if (btn) {
+                if (tableDensity === 'compact') {
+                    btn.className = "p-1.5 rounded-lg text-slate-400 hover:text-white transition";
+                    btn.title = "Компактний режим (2 рядки)";
+                } else {
+                    btn.className = "p-1.5 rounded-lg text-amber-400 bg-slate-800 shadow-sm transition";
+                    btn.title = "Розгорнутий режим (повний текст)";
+                }
+            }
+            renderView();
         }
 
         function filterByQuickStatus(status) {
@@ -991,6 +1105,12 @@
             const dTo = document.getElementById('dateTo').value.trim();
 
             filteredItems = brItems.filter(item => {
+                // Quick pill 'nobro' (hide routine daily BRO)
+                if (activeQuickPill === 'nobro') {
+                    const isBro = item.category === 'БРО' || (item.subject || '').toLowerCase().includes('щоденна бро');
+                    if (isBro) return false;
+                }
+
                 // Search match
                 if (query) {
                     const matchText = [
@@ -1030,9 +1150,13 @@
                 } else if (sortVal === 'date-asc') {
                     return parseDateWeight(a.date, a.time) - parseDateWeight(b.date, b.time);
                 } else if (sortVal === 'num-desc') {
-                    return (b.brigadeNo || '').localeCompare(a.brigadeNo || '', undefined, { numeric: true });
+                    const valB = (b.internalNo && b.internalNo !== '—') ? b.internalNo : (b.brigadeNo || '');
+                    const valA = (a.internalNo && a.internalNo !== '—') ? a.internalNo : (a.brigadeNo || '');
+                    return valB.localeCompare(valA, undefined, { numeric: true });
                 } else if (sortVal === 'num-asc') {
-                    return (a.brigadeNo || '').localeCompare(b.brigadeNo || '', undefined, { numeric: true });
+                    const valA = (a.internalNo && a.internalNo !== '—') ? a.internalNo : (a.brigadeNo || '');
+                    const valB = (b.internalNo && b.internalNo !== '—') ? b.internalNo : (b.brigadeNo || '');
+                    return valA.localeCompare(valB, undefined, { numeric: true });
                 }
                 return 0;
             });
@@ -1080,6 +1204,28 @@
                 tableBody.innerHTML = '';
                 cardsContainer.innerHTML = '';
                 document.getElementById('paginationBar').classList.add('hidden');
+
+                const isDbEmpty = brItems.length === 0;
+                const emptyTitle = document.getElementById('emptyTitle');
+                const emptySubtitle = document.getElementById('emptySubtitle');
+                const emptyDbActions = document.getElementById('emptyDbActions');
+                const emptyFilterActions = document.getElementById('emptyFilterActions');
+                const emptyIcon = document.getElementById('emptyIcon');
+
+                if (isDbEmpty) {
+                    if (emptyTitle) emptyTitle.innerText = 'База розпоряджень порожня';
+                    if (emptySubtitle) emptySubtitle.innerText = 'Почніть роботу з імпорту повідомлень messages.html з чату Element або додайте розпорядження вручну.';
+                    if (emptyDbActions) emptyDbActions.classList.remove('hidden');
+                    if (emptyFilterActions) emptyFilterActions.classList.add('hidden');
+                    if (emptyIcon) emptyIcon.setAttribute('data-lucide', 'inbox');
+                } else {
+                    if (emptyTitle) emptyTitle.innerText = 'Розпоряджень за вказаними фільтрами не знайдено';
+                    if (emptySubtitle) emptySubtitle.innerText = 'Спробуйте змінити пошуковий запит або скинути поточні фільтри.';
+                    if (emptyDbActions) emptyDbActions.classList.add('hidden');
+                    if (emptyFilterActions) emptyFilterActions.classList.remove('hidden');
+                    if (emptyIcon) emptyIcon.setAttribute('data-lucide', 'file-search');
+                }
+                lucide.createIcons();
                 return;
             } else {
                 emptyEl.classList.add('hidden');
@@ -1116,49 +1262,77 @@
                 const statusBadge = getStatusBadge(item.status, item.id);
                 const catBadge = getCategoryBadge(item.category);
                 const isExpanded = expandedRowId === item.id;
-                const rowBg = idx % 2 === 0 ? 'bg-[#0c1322]' : 'bg-[#0f172a]/50';
+                const isRoutineBro = (item.category === 'БРО' && (item.subject || '').includes('без змін')) || (item.subject || '').toLowerCase() === 'щоденна бро (без змін)';
+                
+                // Visual hierarchy border & background
+                let borderLeftClass = 'border-l-2 border-l-slate-700/60';
+                if (item.status === 'В роботі') {
+                    borderLeftClass = 'border-l-2 border-l-amber-500';
+                } else if (item.status === 'Виконано') {
+                    borderLeftClass = 'border-l-2 border-l-emerald-500/80';
+                } else if (isRoutineBro) {
+                    borderLeftClass = 'border-l-2 border-l-slate-800';
+                }
+
+                const rowBg = idx % 2 === 0 ? 'bg-[#0c1322]' : 'bg-[#0f172a]/40';
+                const routineOpacity = isRoutineBro ? 'opacity-85 hover:opacity-100' : '';
+
+                // Clamp style based on density
+                const clampClass = tableDensity === 'compact' ? 'line-clamp-2' : '';
 
                 return `
-                <tr class="${rowBg} hover:bg-slate-800/60 transition group cursor-pointer border-b border-slate-800/60" onclick="toggleRowAccordion('${item.id}')">
-                    <td class="py-3 px-3 text-center mono text-xs text-slate-500 font-medium">${globalIdx}</td>
+                <tr class="${rowBg} ${borderLeftClass} ${routineOpacity} hover:bg-slate-800/60 transition group cursor-pointer border-b border-slate-800/60" onclick="openDetailDrawer('${item.id}')">
+                    <td class="py-3 px-3 text-center mono text-xs text-slate-500 font-medium select-none">${globalIdx}</td>
                     
-                    <td class="py-3 px-3 whitespace-nowrap">
-                        <div class="font-medium text-slate-200 text-xs font-sans">${highlightMatch(item.date, query)}</div>
-                        <div class="text-[11px] text-slate-400 font-sans">${item.time || '—'}</div>
-                    </td>
-
-                    <td class="py-3 px-3">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                            <span class="mono font-bold text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
-                                ${highlightMatch(item.brigadeNo, query)}
-                            </span>
-                            ${item.brigadePrefix ? `<span class="text-[10px] text-slate-500 mono font-semibold">Бр ${item.brigadePrefix}</span>` : ''}
+                    <td class="py-3 px-3.5 whitespace-nowrap">
+                        <div class="font-semibold text-slate-200 text-xs font-mono">${highlightMatch(item.date, query)}</div>
+                        <div class="text-[11px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                            <i data-lucide="clock" class="w-3 h-3 text-slate-500"></i>
+                            <span>${item.time || '—'}</span>
                         </div>
                     </td>
 
-                    <td class="py-3 px-3 whitespace-nowrap">
-                        <span class="text-xs text-slate-300 font-semibold font-sans">${highlightMatch(item.internalNo || '—', query)}</span>
+                    <td class="py-3 px-3.5 whitespace-nowrap">
+                        ${(item.internalNo && item.internalNo !== '—') ? `
+                            <span class="mono font-bold text-xs text-amber-300 bg-amber-500/15 px-2.5 py-1 rounded-lg border border-amber-500/40 shadow-xs inline-flex items-center gap-1.5">
+                                <i data-lucide="inbox" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                                <span>${highlightMatch(formatInternalDisplay(item.internalNo), query)}</span>
+                            </span>
+                        ` : `
+                            <span class="text-slate-500 font-mono text-xs italic px-2 py-0.5 rounded bg-slate-800/60 border border-slate-700/60 inline-flex items-center">
+                                вх. б/н
+                            </span>
+                        `}
                     </td>
 
                     <td class="py-3 px-3 whitespace-nowrap">
                         ${catBadge}
                     </td>
 
-                    <!-- Flexible Full Subject Column (2-3 lines, no truncate!) -->
+                    <!-- Optimized Subject Column -->
                     <td class="py-3 px-4">
-                        <div class="text-sm font-medium text-slate-100 group-hover:text-amber-200 transition leading-relaxed">
-                            ${highlightMatch(item.subject, query)}
-                        </div>
+                        ${isRoutineBro ? `
+                            <div class="text-xs text-slate-400 italic flex items-center gap-1.5 select-none">
+                                <i data-lucide="shield" class="w-3.5 h-3.5 text-slate-500 shrink-0"></i>
+                                <span>${highlightMatch(item.subject, query)}</span>
+                            </div>
+                        ` : `
+                            <div class="text-sm font-medium text-slate-100 group-hover:text-amber-200 transition leading-relaxed ${clampClass}">
+                                ${highlightMatch(item.subject, query)}
+                            </div>
+                        `}
                         ${item.report ? `
-                            <div class="text-xs text-emerald-400 flex items-center gap-1.5 mt-1 font-sans font-medium">
+                            <div class="text-xs text-emerald-400 flex items-center gap-1.5 mt-1 font-mono font-medium">
                                 <i data-lucide="check" class="w-3.5 h-3.5 shrink-0"></i>
                                 <span>${highlightMatch(item.report, query)}</span>
                             </div>
                         ` : ''}
                     </td>
 
-                    <td class="py-3 px-3 whitespace-nowrap text-xs text-slate-300">
-                        ${item.deadline ? `<span class="bg-[#111b2e] px-2 py-0.5 rounded text-[11px] font-medium border border-slate-700/80 text-amber-300/90">${highlightMatch(item.deadline, query)}</span>` : '<span class="text-slate-600">—</span>'}
+                    <td class="py-3 px-3.5 whitespace-nowrap text-xs">
+                        <div>
+                            ${item.deadline ? `<span class="bg-[#111b2e] px-2 py-0.5 rounded text-[11px] font-mono font-medium border border-slate-700/80 text-amber-300/90">${highlightMatch(item.deadline, query)}</span>` : '<span class="text-slate-600 font-mono">—</span>'}
+                        </div>
                     </td>
 
                     <td class="py-3 px-3 text-center whitespace-nowrap" onclick="event.stopPropagation()">
@@ -1167,8 +1341,11 @@
 
                     <td class="py-3 px-3 text-right whitespace-nowrap" onclick="event.stopPropagation()">
                         <div class="flex items-center justify-end gap-1">
-                            <button onclick="toggleRowAccordion('${item.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="${isExpanded ? 'Згорнути' : 'Розгорнути деталі'}">
-                                <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4"></i>
+                            <button onclick="openDetailDrawer('${item.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition" title="Переглянути повний текст">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="copyToClipboard('${escapeJs(item.fullText || item.subject)}')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Скопіювати текст">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
                             </button>
                             <button onclick="editBr('${item.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Редагувати">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
@@ -1182,15 +1359,16 @@
 
                 <!-- Inline Accordion Row for Deep Inspection -->
                 <tr id="accordion-${item.id}" class="${isExpanded ? '' : 'hidden'} bg-[#080d18] border-b border-slate-800">
-                    <td colspan="9" class="p-4 sm:p-6 text-left">
+                    <td colspan="8" class="p-4 sm:p-6 text-left">
                         <div class="w-full space-y-3.5 text-left">
-                            
-                            <!-- Header in Accordion -->
                             <div class="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-slate-800">
                                 <div class="flex items-center gap-2">
-                                    <span class="mono text-xs font-bold text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">${item.brigadeNo}</span>
-                                    <span class="text-xs text-slate-400">Вхідний: <strong class="text-white mono">${item.internalNo || '—'}</strong></span>
-                                    <span class="text-xs text-slate-400">Отримано: <strong class="text-white mono">${item.date} ${item.time || ''}</strong></span>
+                                    <span class="mono text-xs font-bold text-amber-300 bg-amber-500/15 px-2.5 py-1 rounded-lg border border-amber-500/40 flex items-center gap-1.5">
+                                        <i data-lucide="inbox" class="w-3.5 h-3.5 text-amber-400"></i>
+                                        <span>${formatInternalDisplay(item.internalNo) || 'вх. б/н'}</span>
+                                    </span>
+                                    ${item.brigadeNo ? `<span class="text-xs text-slate-400 font-mono">БР: <strong class="text-slate-300">${escapeHtml(item.brigadeNo)}</strong></span>` : ''}
+                                    <span class="text-xs text-slate-400 font-mono">Отримано: <strong class="text-white">${item.date} ${item.time || ''}</strong></span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <button onclick="copyToClipboard('${escapeJs(item.fullText || item.subject)}')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5 cursor-pointer">
@@ -1201,14 +1379,10 @@
                                     </button>
                                 </div>
                             </div>
-
-                            <!-- Full Verbatim Text Container -->
                             <div>
                                 <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Повний текст бойового розпорядження:</div>
                                 <div class="p-4 sm:p-5 rounded-xl bg-[#050811] border border-slate-800 text-sm text-slate-100 font-sans leading-relaxed whitespace-pre-wrap max-h-80 overflow-y-auto selection:bg-amber-500/30 font-normal">${highlightMatch(item.fullText || item.subject, query)}</div>
                             </div>
-
-                            <!-- Inline Execution Report Input -->
                             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
                                 <label class="text-xs font-semibold text-slate-300 whitespace-nowrap">Відмітка про виконання:</label>
                                 <input type="text" id="inlineReport-${item.id}" value="${escapeHtml(item.report || '')}" placeholder="Введіть вихідний номер доповіді, дату або примітку..."
@@ -1217,7 +1391,6 @@
                                     <i data-lucide="check" class="w-3.5 h-3.5"></i> Зберегти доповідь
                                 </button>
                             </div>
-
                         </div>
                     </td>
                 </tr>
@@ -1252,6 +1425,69 @@
             }
         }
 
+        // Slide-Over Detail Drawer Controller
+        function openDetailDrawer(id) {
+            const item = brItems.find(i => i.id === id);
+            if (!item) return;
+
+            currentDrawerItemId = id;
+            const formattedInt = (item.internalNo && item.internalNo !== '—') ? formatInternalDisplay(item.internalNo) : 'вх. б/н';
+            document.getElementById('drawerBrigadeNo').innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-2"><i data-lucide="inbox" class="w-5 h-5 text-amber-400"></i> ${escapeHtml(formattedInt)}</span>`;
+            document.getElementById('drawerMeta').innerText = `${item.date} ${item.time || ''}${item.brigadeNo ? ` • (БР ${item.brigadeNo})` : ''}`;
+            
+            document.getElementById('drawerCatBadge').innerHTML = getCategoryBadge(item.category);
+            document.getElementById('drawerStatusBadge').innerHTML = getStatusBadge(item.status, item.id);
+            document.getElementById('drawerDeadlineBadge').innerHTML = item.deadline 
+                ? `<span class="bg-[#111b2e] px-2.5 py-1 rounded-lg text-xs font-mono font-medium border border-slate-700 text-amber-300">Термін: ${escapeHtml(item.deadline)}</span>` 
+                : '';
+
+            document.getElementById('drawerFullText').innerHTML = escapeHtml(item.fullText || item.subject);
+            document.getElementById('drawerReportInput').value = item.report || '';
+
+            const drawer = document.getElementById('detailDrawer');
+            const backdrop = document.getElementById('detailDrawerBackdrop');
+            if (backdrop) backdrop.classList.remove('hidden');
+            if (drawer) drawer.classList.add('open');
+            lucide.createIcons();
+        }
+
+        function closeDetailDrawer() {
+            const drawer = document.getElementById('detailDrawer');
+            const backdrop = document.getElementById('detailDrawerBackdrop');
+            if (drawer) drawer.classList.remove('open');
+            if (backdrop) backdrop.classList.add('hidden');
+            currentDrawerItemId = null;
+        }
+
+        function copyDrawerFullText() {
+            if (!currentDrawerItemId) return;
+            const item = brItems.find(i => i.id === currentDrawerItemId);
+            if (item) copyToClipboard(item.fullText || item.subject);
+        }
+
+        function editCurrentDrawerBr() {
+            if (!currentDrawerItemId) return;
+            const id = currentDrawerItemId;
+            closeDetailDrawer();
+            editBr(id);
+        }
+
+        function saveDrawerReport() {
+            if (!currentDrawerItemId) return;
+            const val = (document.getElementById('drawerReportInput').value || '').trim();
+            const idx = brItems.findIndex(i => i.id === currentDrawerItemId);
+            if (idx !== -1) {
+                brItems[idx].report = val;
+                if (val && brItems[idx].status === 'В роботі') {
+                    brItems[idx].status = 'Виконано';
+                }
+                saveToStorage();
+                showToast("Відмітку про виконання збережено!");
+                applyFilters();
+                openDetailDrawer(currentDrawerItemId); // Refresh drawer metadata
+            }
+        }
+
         // Render Cards View
         function renderCards(items) {
             const container = document.getElementById('cardsViewContainer');
@@ -1262,25 +1498,34 @@
                 const catBadge = getCategoryBadge(item.category);
 
                 return `
-                <div class="bg-[#0c1322] border border-slate-800 hover:border-slate-700 p-4 rounded-xl space-y-3 transition flex flex-col justify-between shadow-lg">
+                <div class="bg-[#0c1322] border border-slate-800 hover:border-slate-700 p-4 rounded-2xl space-y-3 transition flex flex-col justify-between shadow-lg cursor-pointer hover:shadow-2xl" onclick="openDetailDrawer('${item.id}')">
                     <div>
                         <div class="flex items-center justify-between gap-2 mb-2">
                             ${catBadge}
                             <div class="text-[11px] text-slate-400 mono">${item.date} ${item.time || ''}</div>
                         </div>
                         <div class="flex items-center gap-1.5 mb-2">
-                            <span class="mono font-bold text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
-                                ${highlightMatch(item.brigadeNo, query)}
-                            </span>
-                            ${item.internalNo ? `<span class="mono text-xs text-slate-400 font-semibold">(${highlightMatch(item.internalNo, query)})</span>` : ''}
+                            ${(item.internalNo && item.internalNo !== '—') ? `
+                                <span class="mono font-bold text-xs text-amber-300 bg-amber-500/15 px-2.5 py-1 rounded-lg border border-amber-500/40 inline-flex items-center gap-1.5">
+                                    <i data-lucide="inbox" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+                                    <span>${highlightMatch(formatInternalDisplay(item.internalNo), query)}</span>
+                                </span>
+                            ` : `
+                                <span class="mono text-xs text-slate-500 italic px-2 py-0.5 rounded bg-slate-800/60 border border-slate-700/60 inline-flex items-center">
+                                    вх. б/н
+                                </span>
+                            `}
                         </div>
-                        <h4 class="font-bold text-sm text-slate-100 leading-snug">${highlightMatch(item.subject, query)}</h4>
+                        <h4 class="font-bold text-sm text-slate-100 leading-snug line-clamp-2">${highlightMatch(item.subject, query)}</h4>
                         <p class="text-xs text-slate-300 mt-2 line-clamp-3 leading-relaxed font-sans">${highlightMatch(item.fullText || '', query)}</p>
                     </div>
 
-                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2" onclick="event.stopPropagation()">
                         <div>${statusBadge}</div>
                         <div class="flex items-center gap-1">
+                            <button onclick="openDetailDrawer('${item.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition" title="Деталі">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </button>
                             <button onclick="copyToClipboard('${escapeJs(item.fullText || item.subject)}')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition" title="Копіювати текст">
                                 <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                             </button>
@@ -1381,6 +1626,27 @@
             document.getElementById('kpiCompleted').innerText = completed;
             document.getElementById('kpiBro').innerText = bro;
             document.getElementById('kpiInspectors').innerText = inspectors;
+
+            // Highlight active KPI card ring based on active status/category
+            const statusVal = document.getElementById('statusFilter').value;
+            const catVal = document.getElementById('categoryFilter').value;
+
+            ['all', 'active', 'completed', 'bro', 'inspectors'].forEach(k => {
+                const el = document.getElementById(`kpiCard-${k}`);
+                if (el) el.classList.remove('ring-2', 'ring-amber-500/80', 'ring-emerald-500/80', 'ring-sky-500/80', 'ring-indigo-500/80', 'ring-slate-400/50');
+            });
+
+            if (statusVal === 'В роботі') {
+                document.getElementById('kpiCard-active')?.classList.add('ring-2', 'ring-amber-500/80');
+            } else if (statusVal === 'Виконано') {
+                document.getElementById('kpiCard-completed')?.classList.add('ring-2', 'ring-emerald-500/80');
+            } else if (catVal === 'БРО') {
+                document.getElementById('kpiCard-bro')?.classList.add('ring-2', 'ring-sky-500/80');
+            } else if (catVal === 'Посадові особи') {
+                document.getElementById('kpiCard-inspectors')?.classList.add('ring-2', 'ring-indigo-500/80');
+            } else if (statusVal === 'all' && catVal === 'all' && activeQuickPill === 'all') {
+                document.getElementById('kpiCard-all')?.classList.add('ring-2', 'ring-slate-400/50');
+            }
         }
 
         // Pagination UI
@@ -1589,7 +1855,12 @@
                             // Extract internal number
                             let internalNo = '';
                             const iMatch = rawContent.match(/\(([№#]?\s*[0-9a-zA-Z_/-]+(?:[/-][дд]ск)?)\)/i);
-                            if (iMatch) internalNo = iMatch[1].trim();
+                            if (iMatch) {
+                                internalNo = iMatch[1].trim();
+                            } else {
+                                const iMatch2 = rawContent.match(/(?:вх\.?|вхідний\s*(?:№)?)\s*([0-9a-zA-Z_/-]+(?:[/-][дд]ск)?)/i);
+                                if (iMatch2) internalNo = iMatch2[1].trim();
+                            }
 
                             // Clean subject
                             const cleanSubjectText = sanitizeSubject(rawContent);
@@ -1597,8 +1868,8 @@
                             // Category heuristic
                             let cat = 'Загальні';
                             const low = rawContent.toLowerCase();
-                            if (low.includes('щоденна бро') || low.includes('бро 2мб') || (low.includes('район оборони') && !low.includes('фокін'))) cat = 'БРО';
-                            else if (low.includes('фокін') || low.includes('скульськ') || low.includes('посадов') || low.includes('перевір') || low.includes('допуску членів') || low.includes('групи офіцерів')) cat = 'Посадові особи';
+                            if (low.includes('щоденна бро') || low.includes('район оборони') || low.includes('оборон')) cat = 'БРО';
+                            else if (low.includes('посадов') || low.includes('перевір') || low.includes('допуск') || low.includes('групи офіцерів') || low.includes('робочої групи') || low.includes('комісі')) cat = 'Посадові особи';
                             else if (low.includes('підпорядкуван') || low.includes('включення') || low.includes('вибуття') || low.includes('особового складу') || low.includes('солдат') || low.includes('сержант')) cat = 'Сили та засоби';
                             else if (low.includes('інженер') || low.includes('облаштуван') || low.includes('фортифік')) cat = 'Інженерне';
                             else if (low.includes('бпла') || low.includes('дрон') || low.includes('fpv') || low.includes('мавік')) cat = 'БпЛА';
@@ -1661,20 +1932,27 @@
             `;
         }
 
-        function loadSampleOctoberBRs() {
-            brItems = [...DEFAULT_INITIAL_BRS];
-            saveToStorage();
-            applyFilters();
-            closeModal('importModal');
-            showToast('Завантажено чистий демо-пакет за Жовтень 2026!');
-        }
-
         // Clean up database button
         function cleanUpOldDuplicates() {
             sanitizeExistingDatabase();
             toggleBackupMenu();
             showToast('Базу успішно нормалізовано!');
             applyFilters();
+        }
+
+        // Full Database Reset
+        function clearEntireDatabase() {
+            toggleBackupMenu();
+            if (brItems.length === 0) {
+                showToast('База вже порожня');
+                return;
+            }
+            if (confirm(`Ви впевнені, що бажаєте повністю очистити базу (${brItems.length} записів)?\n\nЦю дію неможливо скасувати без збереженого файлу бекапу.`)) {
+                brItems = [];
+                saveToStorage();
+                applyFilters();
+                showToast('Базу успішно очищено!');
+            }
         }
 
         // Backup Menu & JSON
@@ -1744,9 +2022,7 @@
                 '№ з/п': idx + 1,
                 'Дата': item.date,
                 'Час': item.time || '',
-                'Номер БР (бригада)': item.brigadeNo,
-                'Бригада': item.brigadePrefix || '1626',
-                'Вхідний номер (бат)': item.internalNo || '—',
+                'Вхідний номер': (item.internalNo && item.internalNo !== '—') ? formatInternalDisplay(item.internalNo) : 'б/н',
                 'Категорія': item.category,
                 'Короткий зміст': item.subject,
                 'Термін дії': item.deadline || '',
@@ -1760,9 +2036,7 @@
                 { wch: 6 },
                 { wch: 14 },
                 { wch: 8 },
-                { wch: 14 },
-                { wch: 10 },
-                { wch: 14 },
+                { wch: 16 },
                 { wch: 20 },
                 { wch: 50 },
                 { wch: 18 },
@@ -1772,9 +2046,9 @@
             ];
 
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Журнал БР 2МБ");
+            XLSX.utils.book_append_sheet(wb, ws, "Журнал БР");
             const dateStr = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(wb, `Журнал_БР_2МБ_${dateStr}.xlsx`);
+            XLSX.writeFile(wb, `Журнал_БР_${dateStr}.xlsx`);
             showToast("Excel файл сформовано!");
         }
 
@@ -1826,9 +2100,10 @@
             openModal('changelogModal');
         }
 
-        // Esc key closes modals
+        // Esc key closes modals & drawer
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                closeDetailDrawer();
                 closeModal('brModal');
                 closeModal('importModal');
                 closeModal('changelogModal');
