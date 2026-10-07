@@ -36,7 +36,7 @@ military_suite_backup_*.mils.enc
 WARDROBE.md
 
 # Chat exports & confidential logs (OPSEC)
-Element - */
+Element - *
 
 # Local confidential agent rules (never commit)
 .agents/rules/

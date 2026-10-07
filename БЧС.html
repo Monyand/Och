@@ -5,16 +5,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Генератор звітів з таблиць БЧС</title>
-    <!-- SheetJS для читання Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- docx для створення Word файлів -->
-    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <!-- SheetJS для читання Excel (Локально + CDN) -->
+    <script src="v8/xlsx.js"></script>
+    <script>
+        if (typeof XLSX === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
+        }
+    </script>
+
+    <!-- docx для створення Word файлів (Повний Air-Gap Offline + CDN fallback) -->
+    <script src="v8/docx.js"></script>
+    <script>
+        if (typeof docx === 'undefined') {
+            document.write('<script src="docx.js"><\/script>');
+        }
+    </script>
+    <script>
+        if (typeof docx === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"><\/script>');
+        }
+    </script>
+    <script>
+        if (typeof docx === 'undefined') {
+            document.write('<script src="https://unpkg.com/docx@7.8.2/build/index.js"><\/script>');
+        }
+    </script>
+
     <!-- JSZip для створення архіву -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind CSS (Локально + CDN) -->
+    <script src="v8/tailwind.js"></script>
+    <script>
+        if (typeof tailwind === 'undefined') {
+            document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+        }
+    </script>
+
+    <!-- Lucide Icons (Локально + CDN) -->
+    <script src="v8/lucide.js"></script>
+    <script>
+        if (typeof lucide === 'undefined') {
+            document.write('<script src="https://unpkg.com/lucide@latest"><\/script>');
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -61,7 +95,7 @@
                     <div class="flex items-center gap-2.5">
                         <h1 class="text-2xl font-bold text-white tracking-tight">Генератор звітів з таблиць БЧС</h1>
                         <button onclick="openChangelogModal()" class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.1.1
+                            ⚡ v1.2.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Матричний парсер статусів особового складу та формування окремих Word-документів (.zip)</p>
@@ -254,15 +288,27 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.1.1 -->
+                <!-- v1.2.0 -->
                 <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.1.1 (Поточна)</span>
-                        <span class="text-[11px] font-mono text-slate-500">20.08.2026</span>
+                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.2.0 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">07.10.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Миттєве зіставлення колонок:</strong> Створено однопрохідний хеш-індекс колонок за 1 прохід O(M) замість багаторазового перебору шапки.</li>
-                        <li><strong class="text-white">Військова нормалізація:</strong> Інтегровано normalizeMilitaryText для стійкості до нерозривних пробілів та змішаної розкладки.</li>
+                        <li><strong class="text-white">Air-Gap Offline Fallback (Docx.js):</strong> Реалізовано повний каскад автономного завантаження бібліотеки генерації Word (<code>v8/docx.js</code> ➔ <code>docx.js</code> ➔ CDN) для стабільного створення .docx файлів без доступу до інтернету.</li>
+                        <li><strong class="text-white">Офлайн Tailwind & Lucide:</strong> Додано локальні резервні скрипти з папки v8/.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.1.1 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.1.1</span>
+                        <span class="text-[11px] font-mono text-slate-500">20.08.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
+                        <li><strong class="text-slate-300">Миттєве зіставлення колонок:</strong> Створено однопрохідний хеш-індекс колонок за 1 прохід O(M) замість багаторазового перебору шапки.</li>
+                        <li><strong class="text-slate-300">Військова нормалізація:</strong> Інтегровано normalizeMilitaryText для стійкості до нерозривних пробілів та змішаної розкладки.</li>
                     </ul>
                 </div>
 

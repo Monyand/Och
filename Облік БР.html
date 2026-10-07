@@ -13,8 +13,13 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (Локально + CDN) -->
+    <script src="v8/tailwind.js"></script>
+    <script>
+        if (typeof tailwind === 'undefined') {
+            document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+        }
+    </script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -36,11 +41,21 @@
         }
     </script>
 
-    <!-- SheetJS for Excel (.xlsx) export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- SheetJS for Excel (.xlsx) export (Локально + CDN) -->
+    <script src="v8/xlsx.js"></script>
+    <script>
+        if (typeof XLSX === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
+        }
+    </script>
 
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Lucide Icons (Локально + CDN) -->
+    <script src="v8/lucide.js"></script>
+    <script>
+        if (typeof lucide === 'undefined') {
+            document.write('<script src="https://unpkg.com/lucide@latest"><\/script>');
+        }
+    </script>
 
     <style>
         body {
@@ -164,7 +179,7 @@
                                 Облік бойових розпоряджень
                             </h1>
                             <button id="versionBadge" onclick="openChangelogModal()" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer flex items-center gap-1">
-                                <span>⚡ v1.2.0</span>
+                                <span>⚡ v1.3.0</span>
                             </button>
                         </div>
                         <p class="text-xs text-slate-400 font-medium hidden sm:block">Оперативний штаб • Реєстр та контроль виконання</p>
@@ -621,16 +636,22 @@
             </div>
             <div class="p-6 space-y-4 text-xs">
                 <p class="text-slate-300 leading-relaxed">
-                    Оберіть або перетягніть файли <code class="text-amber-300 font-mono">messages.html</code>, <code class="text-amber-300 font-mono">messages4.html</code> з папки експорту Element <strong>«ДОШКА ОГОЛОШЕНЬ»</strong>.
-                    Парсер автоматично нормалізує номери наказів, очистить сміття з тем та впорядкує статуси.
+                    Оберіть або перетягніть файл експорту Element <code class="text-amber-300 font-mono">Chat Export.json</code> або файли <code class="text-amber-300 font-mono">messages.html</code> з кімнати <strong>«ДОШКА ОГОЛОШЕНЬ»</strong>.
+                    Парсер автоматично розпізнає номери БР, вхідні індекси, точні дати, очистить теми та наповнить базу.
                 </p>
+
+                <!-- Quick Load Local Export -->
+                <button type="button" onclick="loadDefaultLocalExport()" id="quickLocalLoadBtn" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-600/25 via-slate-800 to-amber-600/15 border border-sky-500/40 hover:border-sky-400 text-sky-200 font-semibold flex items-center justify-center gap-2 transition cursor-pointer hover:bg-sky-600/35 shadow-sm">
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+                    <span>Швидке завантаження локального файлу (Export 07.10.2026)</span>
+                </button>
 
                 <!-- Drag & Drop Zone -->
                 <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
-                    class="border-2 border-dashed border-slate-700 hover:border-sky-400 rounded-2xl p-8 text-center transition cursor-pointer bg-[#111b2e]/60">
-                    <input type="file" id="importFileInput" multiple accept=".html,.htm" onchange="handleFileSelect(event)" class="hidden">
-                    <i data-lucide="upload-cloud" class="w-10 h-10 text-sky-400 mx-auto mb-2"></i>
-                    <p class="text-sm font-semibold text-white">Перетягніть файли messages.html сюди</p>
+                    class="border-2 border-dashed border-slate-700 hover:border-sky-400 rounded-2xl p-7 text-center transition cursor-pointer bg-[#111b2e]/60">
+                    <input type="file" id="importFileInput" multiple accept=".json,.html,.htm" onchange="handleFileSelect(event)" class="hidden">
+                    <i data-lucide="upload-cloud" class="w-9 h-9 text-sky-400 mx-auto mb-2"></i>
+                    <p class="text-sm font-semibold text-white">Перетягніть сюди файл .json або .html</p>
                     <p class="text-xs text-slate-500 mt-1">або натисніть для вибору на комп'ютері</p>
                 </div>
 
@@ -650,7 +671,7 @@
         <div class="bg-[#0c1322] border border-slate-700/80 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
                 <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.2.0</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.3.0</span>
                     <h3 class="text-base font-bold text-white">Історія оновлень</h3>
                 </div>
                 <button onclick="closeModal('changelogModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
@@ -660,7 +681,20 @@
             <div class="p-6 space-y-4 text-xs text-slate-300 max-h-[70vh] overflow-y-auto">
                 <div class="border-l-2 border-amber-400 pl-3 space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-white font-mono">Версія 1.2.0</span>
+                        <span class="font-bold text-white font-mono">Версія 1.3.0</span>
+                        <span class="text-[11px] text-slate-500">07.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300 text-xs">
+                        <li><strong>Імпорт Element JSON:</strong> підтримка прямих експортів чатів Element у форматі .json (<code>Chat Export.json</code>) із точним парсингом міток часу <code>origin_server_ts</code>.</li>
+                        <li><strong>Інтелектуальне вилучення БР:</strong> автоматичне розпізнавання номерів БР бригади, вхідних номерів батальйону, дедлайнів та категорій завдань.</li>
+                        <li><strong>Очищення тем:</strong> автоматичне формування лаконічного заголовка для карток і таблиць без багаторядкового полотна тексту.</li>
+                        <li><strong>Швидке завантаження:</strong> кнопка для завантаження виявленого локального файлу експорту Element.</li>
+                        <li><strong>Air-Gap автономність:</strong> локальне підключення бібліотек Tailwind, SheetJS та Lucide з каталогу <code>v8/</code>.</li>
+                    </ul>
+                </div>
+                <div class="border-l-2 border-slate-700 pl-3 space-y-1 text-slate-400">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono">Версія 1.2.0</span>
                         <span class="text-[11px] text-slate-500">06.10.2026</span>
                     </div>
                     <ul class="list-disc list-inside space-y-1 text-slate-300 text-xs">
@@ -842,16 +876,23 @@
             if (!raw) return '';
             let text = raw.trim();
 
-            // Strip "Отримано: БР № ... ( ... )"
-            text = text.replace(/^Отримано:\s*БР\s*№?\s*[^\s()]+\s*(\([^)]*\))?\s*/i, '').trim();
+            // Strip "Отримано: БР № ... ( ... )" or similar headers
+            text = text.replace(/^Отримано:\s*(?:БР|Розпорядження)\s*№?\s*[^\s()]+\s*(\([^)]*\))?\s*/i, '').trim();
 
-            if (/^щоденна\s*бро/i.test(text)) {
+            if (/^щоденна\s*бро/i.test(text) || /^б\/?р\s*№?\s*1626_6648/i.test(raw)) {
                 return 'Щоденна БРО (без змін)';
             }
 
+            // Extract first meaningful line
+            const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length > 0) {
+                text = lines[0];
+            }
+
             if (!text && raw) {
-                // If everything got stripped, take the original without "Отримано:"
-                text = raw.replace(/^Отримано:\s*/i, '').trim();
+                // If everything got stripped, take the first line of original without "Отримано:"
+                const rawLines = raw.replace(/^Отримано:\s*/i, '').split('\n').map(l => l.trim()).filter(Boolean);
+                text = rawLines[0] || raw.trim();
             }
 
             if (text.length > 0) {
@@ -1772,10 +1813,11 @@
             }
         }
 
-        // Element Matrix Import with Deep Data Hygiene
+        // Element Matrix Import with Deep Data Hygiene (JSON + HTML)
         function openImportModal() {
             document.getElementById('importStatusBox').classList.add('hidden');
             openModal('importModal');
+            lucide.createIcons();
         }
 
         function handleDragOver(e) {
@@ -1804,6 +1846,118 @@
             document.getElementById('importFileInput').click();
         });
 
+        // Quick fetch of default local Element export
+        async function loadDefaultLocalExport() {
+            const statusBox = document.getElementById('importStatusBox');
+            statusBox.classList.remove('hidden');
+            statusBox.innerHTML = `<div class="text-sky-400">⏳ Спроба завантаження локального файлу експорту...</div>`;
+
+            const defaultFileName = "Element - ДОШКА ОГОЛОШЕНЬ - Chat Export - 2026-10-07T09-30-06.890Z.json";
+            try {
+                const response = await fetch(encodeURIComponent(defaultFileName));
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const text = await response.text();
+                const fakeFile = new File([text], defaultFileName, { type: 'application/json' });
+                await processImportFiles([fakeFile]);
+            } catch (err) {
+                console.warn("Direct fetch not available (likely local file protocol):", err);
+                statusBox.innerHTML = `
+                    <div class="text-amber-400 font-semibold mb-1">⚠️ Браузер обмежив автоматичне читання з диска (політика безпеки file://)</div>
+                    <div class="text-slate-300">Будь ласка, перетягніть файл <span class="text-amber-300 font-mono">${defaultFileName}</span> в область нижче або оберіть його через провідник.</div>
+                `;
+            }
+        }
+
+        // Dedicated Parser for Single BR Message
+        function parseBrMessage(rawContent, dateStr, timeStr) {
+            if (!rawContent) return null;
+
+            // Extract brigade raw
+            let rawBrigade = 'БР';
+            const bMatch = rawContent.match(/(?:БР|Розпорядження)\s*№?\s*([0-9a-zA-Z_/-]+(?:_[дд]ск)?)/i);
+            if (bMatch) rawBrigade = bMatch[1].trim();
+
+            const parsedBrigade = sanitizeBrigadeNo(rawBrigade);
+
+            // Extract internal number
+            let internalNo = '';
+            const iMatch = rawContent.match(/\(([№#]?\s*[0-9a-zA-Z_/-]+(?:[/-][дд]ск)?)\)/i);
+            if (iMatch) {
+                internalNo = iMatch[1].trim();
+            } else {
+                const iMatch2 = rawContent.match(/(?:вх\.?|вхідний\s*(?:№)?)\s*([0-9a-zA-Z_/-]+(?:[/-][дд]ск)?)/i);
+                if (iMatch2) internalNo = iMatch2[1].trim();
+            }
+
+            // Clean subject
+            const cleanSubjectText = sanitizeSubject(rawContent);
+
+            // Category heuristic
+            let cat = 'Загальні';
+            const low = rawContent.toLowerCase();
+            if (low.includes('щоденна бро') || low.includes('район оборони') || low.includes('смузі оборони') || low.includes('бро (без змін)') || cleanSubjectText.includes('БРО')) {
+                cat = 'БРО';
+            } else if (low.includes('посадов') || low.includes('перевір') || low.includes('допуск') || low.includes('групи офіцерів') || low.includes('робочої групи') || low.includes('комісі') || low.includes('роботи групи')) {
+                cat = 'Посадові особи';
+            } else if (low.includes('підпорядкуван') || low.includes('передачі в') || low.includes('включення') || low.includes('вибуття') || low.includes('особового складу') || low.includes('солдат') || low.includes('сержант') || low.includes('підсилення')) {
+                cat = 'Сили та засоби';
+            } else if (low.includes('бпла') || low.includes('дрон') || low.includes('fpv') || low.includes('мавік') || low.includes('безпілот')) {
+                cat = 'БпЛА';
+            } else if (low.includes('зв\'яз') || low.includes('радіо') || low.includes('реб')) {
+                cat = 'Зв\'язок / РЕБ';
+            } else if (low.includes('інженер') || low.includes('облаштуван') || low.includes('фортифік')) {
+                cat = 'Інженерне';
+            } else if (low.includes('розвід') || low.includes('рр')) {
+                cat = 'Розвідка';
+            } else if (low.includes('мтз') || low.includes('логістик') || low.includes('пальн') || low.includes('підвезен')) {
+                cat = 'МТЗ / Логістика';
+            }
+
+            // Smart deadline extraction
+            let deadline = 'За планом';
+            if (cat === 'БРО' || cleanSubjectText.includes('Щоденна БРО')) {
+                deadline = 'Щоденно';
+            } else {
+                const dRangeMatch = rawContent.match(/(?:з\s*\d{1,2}[.]\d{1,2}(?:[.]\d{4})?\s*)?(?:до|по)\s*(\d{1,2}[.]\d{1,2}(?:[.]\d{4})?)/i);
+                if (dRangeMatch) {
+                    deadline = `до ${dRangeMatch[1]}`;
+                } else {
+                    const dSingleMatch = rawContent.match(/на\s*(\d{1,2}[.]\d{1,2}(?:[.]\d{4})?)/i);
+                    if (dSingleMatch) {
+                        deadline = dSingleMatch[1];
+                    } else {
+                        const timeMatch = rawContent.match(/Готовність[^\n]*з\s*([0-9:.\s]+)/i);
+                        if (timeMatch) deadline = timeMatch[1].trim().slice(0, 20);
+                    }
+                }
+            }
+
+            // Status: routine is "Щоденно", fresh month is "В роботі", older is "Виконано"
+            let status = 'В роботі';
+            if (cat === 'БРО') {
+                status = 'Щоденно';
+            } else if (dateStr.includes('.10.2026') || dateStr.includes('.11.2026')) {
+                status = 'В роботі';
+            } else {
+                status = 'Виконано';
+            }
+
+            return {
+                id: `br_imp_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+                date: dateStr,
+                time: timeStr || '12:00',
+                brigadeNo: parsedBrigade.display,
+                brigadePrefix: parsedBrigade.prefix,
+                internalNo: internalNo || '—',
+                category: cat,
+                subject: cleanSubjectText,
+                fullText: rawContent,
+                status: status,
+                deadline: deadline,
+                report: ''
+            };
+        }
+
         async function processImportFiles(fileList) {
             const statusBox = document.getElementById('importStatusBox');
             statusBox.classList.remove('hidden');
@@ -1821,115 +1975,168 @@
             for (let i = 0; i < fileList.length; i++) {
                 const file = fileList[i];
                 const text = await file.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/html');
+                const isJson = file.name.toLowerCase().endsWith('.json') || text.trim().startsWith('{') || text.trim().startsWith('[');
 
-                let currentDate = "03.10.2026";
-                const elements = doc.querySelectorAll('.mx_DateSeparator_dateHeading, .mx_EventTile_body');
+                if (isJson) {
+                    try {
+                        const data = JSON.parse(text);
 
-                elements.forEach(el => {
-                    if (el.classList.contains('mx_DateSeparator_dateHeading')) {
-                        const dateText = el.textContent || '';
-                        const m = dateText.match(/(\d{1,2})\s+([а-яіїє]+)\.?\s+(\d{4})/i);
-                        if (m) {
-                            const day = m[1].padStart(2, '0');
-                            const monWord = m[2].toLowerCase().substring(0, 4);
-                            let mon = '10';
-                            for (let k in monthMap) {
-                                if (monWord.includes(k)) { mon = monthMap[k]; break; }
-                            }
-                            currentDate = `${day}.${mon}.${m[3]}`;
-                        }
-                    } else if (el.classList.contains('mx_EventTile_body')) {
-                        const rawContent = (el.textContent || '').trim();
-                        if (rawContent.includes('БР №') || rawContent.startsWith('Отримано: БР') || rawContent.includes('щоденна БРО') || rawContent.includes('Щоденна БРО')) {
-                            totalFound++;
+                        // Branch A: Element Matrix Chat Export JSON
+                        if (data && Array.isArray(data.messages)) {
+                            for (const msg of data.messages) {
+                                if (!msg || !msg.content || typeof msg.content.body !== 'string') continue;
+                                const rawContent = msg.content.body.trim();
+                                if (!rawContent) continue;
 
-                            // Extract brigade raw
-                            let rawBrigade = 'БР';
-                            const bMatch = rawContent.match(/БР\s*№?\s*([0-9a-zA-Z_/-]+(?:_[дд]ск)?)/i);
-                            if (bMatch) rawBrigade = bMatch[1].trim();
+                                const isBr = rawContent.includes('БР №') || 
+                                             rawContent.includes('БР№') || 
+                                             rawContent.startsWith('Отримано: БР') || 
+                                             rawContent.includes('щоденна БРО') || 
+                                             rawContent.includes('Щоденна БРО') || 
+                                             rawContent.includes('Бойове розпорядження') || 
+                                             rawContent.includes('БОЙОВЕ РОЗПОРЯДЖЕННЯ') || 
+                                             /^Отримано:\s*Розпорядження/i.test(rawContent);
+                                
+                                if (!isBr) continue;
+                                totalFound++;
 
-                            const parsedBrigade = sanitizeBrigadeNo(rawBrigade);
+                                // Precise date & time from origin_server_ts
+                                let dateStr = "07.10.2026";
+                                let timeStr = "12:00";
+                                if (msg.origin_server_ts) {
+                                    const d = new Date(msg.origin_server_ts);
+                                    const dd = String(d.getDate()).padStart(2, '0');
+                                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                    const yyyy = d.getFullYear();
+                                    dateStr = `${dd}.${mm}.${yyyy}`;
+                                    const hh = String(d.getHours()).padStart(2, '0');
+                                    const min = String(d.getMinutes()).padStart(2, '0');
+                                    timeStr = `${hh}:${min}`;
+                                }
 
-                            // Extract internal number
-                            let internalNo = '';
-                            const iMatch = rawContent.match(/\(([№#]?\s*[0-9a-zA-Z_/-]+(?:[/-][дд]ск)?)\)/i);
-                            if (iMatch) {
-                                internalNo = iMatch[1].trim();
-                            } else {
-                                const iMatch2 = rawContent.match(/(?:вх\.?|вхідний\s*(?:№)?)\s*([0-9a-zA-Z_/-]+(?:[/-][дд]ск)?)/i);
-                                if (iMatch2) internalNo = iMatch2[1].trim();
-                            }
+                                const record = parseBrMessage(rawContent, dateStr, timeStr);
+                                if (!record) continue;
 
-                            // Clean subject
-                            const cleanSubjectText = sanitizeSubject(rawContent);
+                                // Duplicate check
+                                const bDigits = record.brigadeNo.replace(/\D+/g, '');
+                                const iDigits = (record.internalNo || '').replace(/\D+/g, '');
 
-                            // Category heuristic
-                            let cat = 'Загальні';
-                            const low = rawContent.toLowerCase();
-                            if (low.includes('щоденна бро') || low.includes('район оборони') || low.includes('оборон')) cat = 'БРО';
-                            else if (low.includes('посадов') || low.includes('перевір') || low.includes('допуск') || low.includes('групи офіцерів') || low.includes('робочої групи') || low.includes('комісі')) cat = 'Посадові особи';
-                            else if (low.includes('підпорядкуван') || low.includes('включення') || low.includes('вибуття') || low.includes('особового складу') || low.includes('солдат') || low.includes('сержант')) cat = 'Сили та засоби';
-                            else if (low.includes('інженер') || low.includes('облаштуван') || low.includes('фортифік')) cat = 'Інженерне';
-                            else if (low.includes('бпла') || low.includes('дрон') || low.includes('fpv') || low.includes('мавік')) cat = 'БпЛА';
-                            else if (low.includes('зв\'яз') || low.includes('радіо') || low.includes('реб')) cat = 'Зв\'язок / РЕБ';
+                                const isDup = brItems.some(item => {
+                                    if (item.date !== record.date) return false;
+                                    const itemBDigits = (item.brigadeNo || '').replace(/\D+/g, '');
+                                    const itemIDigits = (item.internalNo || '').replace(/\D+/g, '');
 
-                            // Timestamp
-                            let timeStr = '12:00';
-                            const parentTile = el.closest('.mx_EventTile') || el.closest('li');
-                            if (parentTile) {
-                                const timeEl = parentTile.querySelector('.mx_MessageTimestamp');
-                                if (timeEl) timeStr = timeEl.textContent.trim();
-                            }
-
-                            // Bulletproof duplicate check by pure numeric IDs and dates
-                            const bDigits = parsedBrigade.display.replace(/\D+/g, '');
-                            const iDigits = (internalNo || '').replace(/\D+/g, '');
-
-                            const isDup = brItems.some(item => {
-                                if (item.date !== currentDate) return false;
-                                const itemBDigits = (item.brigadeNo || '').replace(/\D+/g, '');
-                                const itemIDigits = (item.internalNo || '').replace(/\D+/g, '');
-
-                                if (bDigits && itemBDigits && bDigits === itemBDigits) return true;
-                                if (iDigits && itemIDigits && iDigits === itemIDigits) return true;
-                                return false;
-                            });
-
-                            if (!isDup) {
-                                brItems.push({
-                                    id: `br_imp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                                    date: currentDate,
-                                    time: timeStr,
-                                    brigadeNo: parsedBrigade.display,
-                                    brigadePrefix: parsedBrigade.prefix,
-                                    internalNo: internalNo || '—',
-                                    category: cat,
-                                    subject: cleanSubjectText,
-                                    fullText: rawContent,
-                                    status: currentDate.includes('10.2026') ? 'В роботі' : 'Виконано',
-                                    deadline: cat === 'БРО' ? 'Щоденно' : 'За планом',
-                                    report: ''
+                                    if (bDigits && itemBDigits && bDigits === itemBDigits) return true;
+                                    if (iDigits && itemIDigits && iDigits === itemIDigits) return true;
+                                    if (item.fullText && item.fullText === record.fullText) return true;
+                                    return false;
                                 });
-                                addedCount++;
-                            } else {
-                                dupCount++;
+
+                                if (!isDup) {
+                                    brItems.push(record);
+                                    addedCount++;
+                                } else {
+                                    dupCount++;
+                                }
+                            }
+                        } 
+                        // Branch B: Raw Array JSON Backup
+                        else if (Array.isArray(data)) {
+                            for (const item of data) {
+                                totalFound++;
+                                const isDup = brItems.some(ex => ex.id === item.id || (ex.date === item.date && ex.internalNo === item.internalNo && ex.internalNo !== '—'));
+                                if (!isDup) {
+                                    brItems.push(item);
+                                    addedCount++;
+                                } else {
+                                    dupCount++;
+                                }
                             }
                         }
+                    } catch (jsonErr) {
+                        console.error("JSON parse error:", jsonErr);
                     }
-                });
+                } else {
+                    // Branch C: Legacy HTML messages.html DOMParser
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+
+                    let currentDate = "03.10.2026";
+                    const elements = doc.querySelectorAll('.mx_DateSeparator_dateHeading, .mx_EventTile_body');
+
+                    elements.forEach(el => {
+                        if (el.classList.contains('mx_DateSeparator_dateHeading')) {
+                            const dateText = el.textContent || '';
+                            const m = dateText.match(/(\d{1,2})\s+([а-яіїє]+)\.?\s+(\d{4})/i);
+                            if (m) {
+                                const day = m[1].padStart(2, '0');
+                                const monWord = m[2].toLowerCase().substring(0, 4);
+                                let mon = '10';
+                                for (let k in monthMap) {
+                                    if (monWord.includes(k)) { mon = monthMap[k]; break; }
+                                }
+                                currentDate = `${day}.${mon}.${m[3]}`;
+                            }
+                        } else if (el.classList.contains('mx_EventTile_body')) {
+                            const rawContent = (el.textContent || '').trim();
+                            const isBr = rawContent.includes('БР №') || 
+                                         rawContent.includes('БР№') || 
+                                         rawContent.startsWith('Отримано: БР') || 
+                                         rawContent.includes('щоденна БРО') || 
+                                         rawContent.includes('Щоденна БРО') || 
+                                         rawContent.includes('Бойове розпорядження') || 
+                                         rawContent.includes('БОЙОВЕ РОЗПОРЯДЖЕННЯ') || 
+                                         /^Отримано:\s*Розпорядження/i.test(rawContent);
+
+                            if (isBr) {
+                                totalFound++;
+
+                                // Timestamp
+                                let timeStr = '12:00';
+                                const parentTile = el.closest('.mx_EventTile') || el.closest('li');
+                                if (parentTile) {
+                                    const timeEl = parentTile.querySelector('.mx_MessageTimestamp');
+                                    if (timeEl) timeStr = timeEl.textContent.trim();
+                                }
+
+                                const record = parseBrMessage(rawContent, currentDate, timeStr);
+                                if (!record) return;
+
+                                const bDigits = record.brigadeNo.replace(/\D+/g, '');
+                                const iDigits = (record.internalNo || '').replace(/\D+/g, '');
+
+                                const isDup = brItems.some(item => {
+                                    if (item.date !== record.date) return false;
+                                    const itemBDigits = (item.brigadeNo || '').replace(/\D+/g, '');
+                                    const itemIDigits = (item.internalNo || '').replace(/\D+/g, '');
+
+                                    if (bDigits && itemBDigits && bDigits === itemBDigits) return true;
+                                    if (iDigits && itemIDigits && iDigits === itemIDigits) return true;
+                                    return false;
+                                });
+
+                                if (!isDup) {
+                                    brItems.push(record);
+                                    addedCount++;
+                                } else {
+                                    dupCount++;
+                                }
+                            }
+                        }
+                    });
+                }
             }
 
             saveToStorage();
             applyFilters();
 
             statusBox.innerHTML = `
-                <div class="text-emerald-400 font-bold">✅ Імпорт та очищення завершено!</div>
-                <div class="text-slate-300">Виявлено БР у файлах: <span class="text-white">${totalFound}</span></div>
+                <div class="text-emerald-400 font-bold flex items-center gap-1.5"><i data-lucide="check-circle" class="w-4 h-4"></i> Імпорт та очищення завершено!</div>
+                <div class="text-slate-300 mt-1">Виявлено БР у файлах: <span class="text-white font-bold">${totalFound}</span></div>
                 <div class="text-slate-300">Додано нових записів: <span class="text-emerald-400 font-bold">${addedCount}</span></div>
                 <div class="text-slate-300">Пропущено дублікатів: <span class="text-slate-500">${dupCount}</span></div>
             `;
+            lucide.createIcons();
         }
 
         // Clean up database button
