@@ -167,7 +167,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v2.0.0</span>
+                    <span>🚀 v2.1.0</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -1480,6 +1480,16 @@
                         title="Завантажити налаштування із зашифрованого файлу .enc">
                         🔓 Імпорт .enc
                     </button>
+                    <button type="button" onclick="saveDod6SettingsToDisk(true)"
+                        class="bg-emerald-950/40 text-emerald-300 border border-emerald-800/60 hover:bg-emerald-900/50 font-bold py-1.5 px-3 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title="Зберегти поточні налаштування на жорсткий диск (Диспетчер)">
+                        💾 На диск
+                    </button>
+                    <button type="button" onclick="restoreDod6SettingsFromDisk(true)"
+                        class="bg-cyan-950/40 text-cyan-300 border border-cyan-800/60 hover:bg-cyan-900/50 font-bold py-1.5 px-3 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title="Відновити налаштування з жорсткого диска (Диспетчер)">
+                        🔄 З диска
+                    </button>
                     <input type="file" id="settingsFileInput" accept=".enc" class="hidden"
                         onchange="handleSettingsFileSelected(event)" />
                 </div>
@@ -1692,7 +1702,7 @@
                     <span
                         class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v1.9.6</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v2.1.0</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1723,9 +1733,25 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "2.1.0",
+                date: "08.10.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "🛡️ Авто-бекап налаштувань на диск та захист від очищення кешу",
+                        color: "blue",
+                        items: [
+                            "<b>Фоновий запис налаштувань на диск</b>: при кожному збереженні налаштувань повний пакет ключових слів (ВОП/БТГр/БРО/Заб. БД), правил автозаміни, ієрархії РОПів та шапки Word автоматично дублюється на жорсткий диск (<code>_backups/dod6_settings.json</code>) через Диспетчер.",
+                            "<b>Auto-Hydrate при старті</b>: автоматичне миттєве завантаження збережених налаштувань з диска при переході у Brave Browser або після повного скидання історії Chrome.",
+                            "<b>Кнопки ручного керування</b>: у вікні налаштувань додано кнопки «💾 На диск» та «🔄 З диска»."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "2.0.0",
                 date: "05.10.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "⚡ Дворежимна архітектура, консолідований місячний табель та динамічні дати",
@@ -2598,12 +2624,119 @@
             saveDocxSettings();
             closeSettings();
 
+            // Автоматичний бекап налаштувань на жорсткий диск через Диспетчер
+            saveDod6SettingsToDisk(false);
+
             if (vopData.length > 0 || btgrData.length > 0 || broData.length > 0 || zabData.length > 0) {
                 standardizeTasks(true);
                 reassignCategories();
                 checkInvalidTasks();
             }
             checkMissingFiles();
+        }
+
+        // ─── СИНХРОНІЗАЦІЯ НАЛАШТУВАНЬ З ЖОРСТКИМ ДИСКОМ (ДИСПЕТЧЕР) ──────────────
+        function getDod6SettingsPayload() {
+            return {
+                keywords_vop: localStorage.getItem('keywords_vop') || "воп",
+                keywords_btgr: localStorage.getItem('keywords_btgr') || "бтгр, роп, ксп, пв, сп",
+                keywords_bro: localStorage.getItem('keywords_bro') || "бро",
+                keywords_zab: localStorage.getItem('keywords_zab') || "заб, забезпечення, заб. бд",
+                valid_tasks: localStorage.getItem('valid_tasks') || 'ПВ "ПОМІДОР" (РОП)\nВОП "ОГІРОК"\nштаб бтгр',
+                replace_rules: localStorage.getItem('replace_rules') || 'помідор = ПВ "ПОМІДОР" (РОП)\nсп помідор = ПВ "ПОМІДОР" (РОП)\nогірок = ВОП "ОГІРОК"',
+                rop_hierarchy: localStorage.getItem('rop_hierarchy') || '',
+                required_units: localStorage.getItem('required_units') || '',
+                dod6_merge_rop_units: localStorage.getItem('dod6_merge_rop_units') || 'false',
+                docx_header_right: localStorage.getItem('docx_header_right') || '',
+                docx_title: localStorage.getItem('docx_title') || '',
+                docx_order_tier1: localStorage.getItem('docx_order_tier1') || '',
+                docx_order_tier2: localStorage.getItem('docx_order_tier2') || '',
+                docx_order_tier3: localStorage.getItem('docx_order_tier3') || '',
+                docx_signer_post: localStorage.getItem('docx_signer_post') || '',
+                docx_signer_rank: localStorage.getItem('docx_signer_rank') || '',
+                docx_signer_name: localStorage.getItem('docx_signer_name') || '',
+                docx_tech_notes: localStorage.getItem('docx_tech_notes') || '',
+                docx_author: localStorage.getItem('docx_author') || '',
+                docx_meta_title: localStorage.getItem('docx_meta_title') || '',
+                updatedAt: new Date().toISOString()
+            };
+        }
+
+        function applyDod6SettingsPayload(s) {
+            if (!s || typeof s !== 'object') return false;
+            for (const [k, v] of Object.entries(s)) {
+                if (k !== 'updatedAt' && v !== null && v !== undefined) {
+                    localStorage.setItem(k, v);
+                }
+            }
+            return true;
+        }
+
+        async function saveDod6SettingsToDisk(interactive = false) {
+            try {
+                const payload = JSON.stringify({
+                    app: 'dod6_settings',
+                    content: JSON.stringify(getDod6SettingsPayload(), null, 2)
+                });
+                const res = await fetch(`http://127.0.0.1:8765/api/backup/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload
+                });
+                if (res.ok) {
+                    if (interactive) showToast('Налаштування успішно збережено на жорсткий диск!', 'success');
+                } else if (interactive) {
+                    showToast('Помилка збереження налаштувань на диск', 'error');
+                }
+            } catch (e) {
+                if (interactive) showToast('Диспетчер офлайн: не вдалося зберегти на диск', 'error');
+            }
+        }
+
+        async function restoreDod6SettingsFromDisk(interactive = false) {
+            try {
+                const res = await fetch(`http://127.0.0.1:8765/api/backup/latest?app=dod6_settings`, { cache: 'no-cache' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data && data.exists && data.content) {
+                    const parsed = JSON.parse(data.content);
+                    if (applyDod6SettingsPayload(parsed)) {
+                        const modal = document.getElementById('settingsModal');
+                        if (modal && !modal.classList.contains('hidden')) {
+                            openSettings();
+                        }
+                        showToast(`Налаштування успішно відновлено з диска (${data.formatted_time || 'ОК'})!`, 'success');
+                        return true;
+                    }
+                } else if (interactive) {
+                    showToast('На диску ще немає збережених налаштувань Додатка 6', 'info');
+                }
+            } catch (e) {
+                if (interactive) showToast('Диспетчер офлайн: не вдалося зв\'язатися зі службою', 'error');
+            }
+            return false;
+        }
+
+        async function autoHydrateDod6SettingsFromDisk() {
+            // Якщо в LocalStorage порожньо (чистий браузер/Brave/скинутий кеш)
+            const hasExisting = localStorage.getItem('keywords_vop') || localStorage.getItem('valid_tasks');
+            if (!hasExisting) {
+                try {
+                    const res = await fetch(`http://127.0.0.1:8765/api/backup/latest?app=dod6_settings`, { cache: 'no-cache' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.exists && data.content) {
+                            const parsed = JSON.parse(data.content);
+                            if (applyDod6SettingsPayload(parsed)) {
+                                console.log("[Auto-Hydrate] Налаштування Додатка 6 успішно відновлено з диску:", data.formatted_time);
+                                showToast(`⚡ Налаштування Додатка 6 відновлено з диска (${data.formatted_time || 'ОК'})`, 'success');
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("[Auto-Hydrate] Диспетчер недоступний:", e);
+                }
+            }
         }
 
         // ─── НАЛАШТУВАННЯ ТА ГЕНЕРАТОР ОФІЦІЙНОГО ДОДАТКА 6 (.DOCX) ───────────────
@@ -8124,6 +8257,9 @@
             if (!_dispatcherHeartbeatTimer) {
                 _dispatcherHeartbeatTimer = setInterval(() => checkDispatcherStatus(false), _dispatcherPollInterval);
             }
+
+            // Автоматичне відновлення налаштувань Додатка 6 з диска (якщо в LocalStorage порожньо)
+            autoHydrateDod6SettingsFromDisk();
 
             // Захист від випадкового закриття вкладки або оновлення сторінки (F5/Ctrl+W)
             window.addEventListener('beforeunload', (e) => {

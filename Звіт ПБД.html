@@ -1064,7 +1064,7 @@
                 <span class="badge-tactical">PBD_REPORT</span>
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
-                    ⚡ v1.3.6
+                    ⚡ v1.3.7
                 </button>
             </h1>
         </div>
@@ -1222,6 +1222,12 @@
                         </button>
                         <button type="button" onclick="triggerSettingsImport()" class="btn-import" style="display: flex; align-items: center; gap: 8px;" title="Завантажити раніше збережені налаштування з файлу">
                             <span>📂 Імпорт налаштувань (.enc)</span>
+                        </button>
+                        <button type="button" onclick="saveZvitSettingsToDisk(true)" class="btn-export" style="display: flex; align-items: center; gap: 6px; background: rgba(6, 78, 59, 0.4); border-color: rgba(52, 211, 153, 0.4); color: #34d399;" title="Зберегти налаштування та словники на жорсткий диск (Диспетчер)">
+                            <span>💾 На диск</span>
+                        </button>
+                        <button type="button" onclick="restoreZvitSettingsFromDisk(true)" class="btn-import" style="display: flex; align-items: center; gap: 6px; background: rgba(14, 116, 144, 0.4); border-color: rgba(34, 211, 238, 0.4); color: #22d3ee;" title="Відновити налаштування та словники з диска (Диспетчер)">
+                            <span>🔄 З диска</span>
                         </button>
                         <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
                     </div>
@@ -3666,14 +3672,99 @@
 
             updateDictCounters();
 
-            uNameInput.addEventListener('input', function () { localStorage.setItem('saved-unit-name', this.value); });
+            let zvitDiskDebounceTimer = null;
+            function saveZvitSettingsToDisk(interactive = false) {
+                if (zvitDiskDebounceTimer) clearTimeout(zvitDiskDebounceTimer);
+                const delay = interactive ? 0 : 800;
+                zvitDiskDebounceTimer = setTimeout(async () => {
+                    try {
+                        const uName = document.getElementById('unit-name')?.value || '';
+                        const posDict = document.getElementById('pos-dict')?.value || '';
+                        const weaponDict = document.getElementById('weapon-dict')?.value || '';
+                        if (!uName && !posDict && !weaponDict) return;
+                        const payload = JSON.stringify({
+                            app: 'zvit_pbd_settings',
+                            content: JSON.stringify({
+                                "saved-unit-name": uName,
+                                "saved-pos-dict": posDict,
+                                "saved-weapon-dict": weaponDict,
+                                updatedAt: new Date().toISOString()
+                            }, null, 2)
+                        });
+                        const res = await fetch('http://127.0.0.1:8765/api/backup/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: payload
+                        });
+                        if (res.ok) {
+                            if (interactive) alert("Налаштування та словники Звіту ПБД успішно збережено на жорсткий диск!");
+                        }
+                    } catch (e) {
+                        if (interactive) alert("Диспетчер офлайн: не вдалося зберегти на диск.");
+                    }
+                }, delay);
+            }
+
+            async function restoreZvitSettingsFromDisk(interactive = false) {
+                try {
+                    const res = await fetch('http://127.0.0.1:8765/api/backup/latest?app=zvit_pbd_settings', { cache: 'no-cache' });
+                    if (!res.ok) throw new Error("HTTP error");
+                    const data = await res.json();
+                    if (data && data.exists && data.content) {
+                        const parsed = JSON.parse(data.content);
+                        const uNameInput = document.getElementById('unit-name');
+                        const posDictInput = document.getElementById('pos-dict');
+                        const weaponDictInput = document.getElementById('weapon-dict');
+                        if (parsed["saved-unit-name"] !== undefined && uNameInput) {
+                            uNameInput.value = parsed["saved-unit-name"];
+                            localStorage.setItem('saved-unit-name', parsed["saved-unit-name"]);
+                        }
+                        if (parsed["saved-pos-dict"] !== undefined && posDictInput) {
+                            posDictInput.value = parsed["saved-pos-dict"];
+                            localStorage.setItem('saved-pos-dict', parsed["saved-pos-dict"]);
+                        }
+                        if (parsed["saved-weapon-dict"] !== undefined && weaponDictInput) {
+                            weaponDictInput.value = parsed["saved-weapon-dict"];
+                            localStorage.setItem('saved-weapon-dict', parsed["saved-weapon-dict"]);
+                        }
+                        updateDictCounters();
+                        if (interactive) {
+                            alert(`Налаштування та словники успішно відновлено з диска (${data.formatted_time || 'ОК'})!`);
+                        }
+                        return true;
+                    } else if (interactive) {
+                        alert("На диску ще немає збережених налаштувань Звіту ПБД.");
+                    }
+                } catch (e) {
+                    if (interactive) alert("Диспетчер офлайн: не вдалося зв'язатися зі службою.");
+                }
+                return false;
+            }
+
+            window.saveZvitSettingsToDisk = saveZvitSettingsToDisk;
+            window.restoreZvitSettingsFromDisk = restoreZvitSettingsFromDisk;
+
+            async function autoHydrateZvitSettingsFromDisk() {
+                const hasExisting = localStorage.getItem('saved-unit-name') || localStorage.getItem('saved-pos-dict');
+                if (!hasExisting) {
+                    await restoreZvitSettingsFromDisk(false);
+                }
+            }
+            autoHydrateZvitSettingsFromDisk();
+
+            uNameInput.addEventListener('input', function () { 
+                localStorage.setItem('saved-unit-name', this.value); 
+                saveZvitSettingsToDisk(false);
+            });
             posDictInput.addEventListener('input', function () { 
                 localStorage.setItem('saved-pos-dict', this.value); 
                 updateDictCounters();
+                saveZvitSettingsToDisk(false);
             });
             weaponDictInput.addEventListener('input', function () { 
                 localStorage.setItem('saved-weapon-dict', this.value); 
                 updateDictCounters();
+                saveZvitSettingsToDisk(false);
             });
             
             
@@ -3875,9 +3966,24 @@
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.3.7",
+                date: "08.10.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "💾 Надійне збереження налаштувань на диск (Диспетчер)",
+                        items: [
+                            "<b>Автоматичний бекап на жорсткий диск</b>: Назва підрозділу, словник позицій та словник зброї ОВгП автоматично зберігаються на диск через локальний Диспетчер при кожному редагуванні.",
+                            "<b>Авто-відновлення при відкритті</b>: Якщо браузер очистив пам'ять або програму відкрито у новому браузері, налаштування миттєво підтягуються з диска.",
+                            "<b>Кнопки ручного керування</b>: У вкладку налаштувань додано кнопки «💾 На диск» та «🔄 З диска» для примусового збереження та завантаження."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.3.6",
                 date: "26.09.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "💥 Оновлення обліку обстрілів (Розділ 3.1.5)",
@@ -4120,7 +4226,7 @@
             <div class="tactical-modal-header">
                 <h3 style="margin: 0; font-size: 16px; color: #34d399; display: flex; align-items: center; gap: 8px;">
                     <span>📋 Історія оновлень (Звіт ПБД)</span>
-                    <span style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 9999px;">v1.3.6</span>
+                    <span style="font-size: 11px; font-family: 'JetBrains Mono', monospace; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 9999px;">v1.3.7</span>
                 </h3>
                 <button type="button" onclick="closeChangelogModal()" class="password-toggle-btn" title="Закрити">✕</button>
             </div>

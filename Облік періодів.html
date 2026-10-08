@@ -189,7 +189,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             Аналізатор періодів бойових завдань та ДВ
                         </h1>
                         <button onclick="openModal('modal-changelog')" class="text-[11px] bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(59,130,246,0.2)]" title="Історія оновлень">
-                            ⚡ v1.4.1
+                            ⚡ v1.5.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs mt-0.5">
@@ -216,9 +216,20 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     <span>Файли та фільтр</span>
                     <span id="files-processed-badge" class="bg-blue-500/20 text-cyan-300 border border-blue-500/30 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">0 шт.</span>
                 </button>
-                <div id="storageIndicator" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-slate-950/70 border border-slate-800 text-slate-400 shadow-inner" title="Дані автоматично зберігаються в локальному сховищі браузера (100% офлайн)">
-                    <span id="storageIndicatorDot" class="w-2 h-2 rounded-full bg-slate-600"></span>
-                    <span id="storageIndicatorText">Сховище порожнє</span>
+                <!-- Трьохрівневе сховище: IndexedDB + Диск Диспетчера -->
+                <div class="inline-flex items-center gap-1.5">
+                    <button id="diskSyncBtn" onclick="checkPeriodsDiskBackupStatus(true)" type="button"
+                        class="px-3 py-1.5 rounded-xl text-xs font-mono bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 shadow-inner flex items-center gap-2 cursor-pointer transition-all" 
+                        title="Статус збереження в IndexedDB та на фізичний диск Диспетчера. Натисніть для перевірки.">
+                        <span id="storageIndicatorDot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+                        <span id="storageIndicatorText">Сховище: Перевірка...</span>
+                    </button>
+                    <button onclick="forceSavePeriodsToDisk()" type="button" class="p-1.5 rounded-xl bg-slate-950/70 hover:bg-slate-900 border border-slate-800 text-emerald-400 hover:text-emerald-300 text-xs transition cursor-pointer" title="Зберегти копію на диск зараз">
+                        <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="restorePeriodsFromDisk()" type="button" class="p-1.5 rounded-xl bg-slate-950/70 hover:bg-slate-900 border border-slate-800 text-cyan-400 hover:text-cyan-300 text-xs transition cursor-pointer" title="Відновити копію з диска (Диспетчер)">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </button>
                 </div>
             </div>
         </header>
@@ -450,7 +461,19 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             <div class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs font-sans">
                 <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
                     <div class="font-bold text-white flex items-center justify-between font-mono">
-                        <span class="text-cyan-400">⚡ v1.4.1 — Виділення дублікатів в Excel та оптимізація розмітки</span>
+                        <span class="text-cyan-400">⚡ v1.5.0 — Трьохрівневе збереження (IndexedDB + Диск Диспетчера)</span>
+                        <span class="text-[10px] text-slate-500">08.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
+                        <li><b>Інтеграція IndexedDB (TacticalPeriodsDB_v1)</b>: подолано ліміт пам'яті 5 МБ LocalStorage (QuotaExceededError). База надійно вміщує десятки тисяч бойових діб та сотні файлів.</li>
+                        <li><b>Фоновий бекап на жорсткий диск</b>: автоматична синхронізація в <code>_backups/combat_periods_latest.json</code> через Диспетчер.</li>
+                        <li><b>Auto-Hydrate при старті</b>: автоматичне підтягування бази з диска за 0.1 секунди при відкритті в Brave Browser чи після очищення браузера.</li>
+                        <li><b>Індикатор та швидкі кнопки в шапці</b>: статус <code>🟢 Збережено (Диск: HH:MM:SS)</code> та кнопки збереження й відновлення з диска.</li>
+                    </ul>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
+                    <div class="font-bold text-slate-300 flex items-center justify-between font-mono">
+                        <span class="text-slate-400">⚡ v1.4.1 — Виділення дублікатів в Excel та оптимізація розмітки</span>
                         <span class="text-[10px] text-slate-500">05.10.2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
@@ -693,132 +716,395 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             return null;
         }
 
-        function saveToStorage() {
-            try {
-                if (database.size === 0) {
-                    localStorage.removeItem(STORAGE_KEY);
-                    updateStorageIndicator(false);
-                    return;
-                }
+        // ─── ТРЬОХРІВНЕВЕ ЗБЕРЕЖЕННЯ (LOCALSTORAGE + INDEXEDDB + ДИСПЕТЧЕР) ────────
+        const IDB_PERIODS_CONFIG = {
+            dbName: 'TacticalPeriodsDB_v1',
+            storeName: 'periods_state_store',
+            version: 1
+        };
 
-                const serializedDb = [];
-                for (const [key, personData] of database.entries()) {
-                    const recs = [];
-                    if (personData.records) {
-                        for (const [dateStr, rec] of personData.records.entries()) {
-                            recs.push({ date: dateStr, ...rec });
-                        }
+        function openPeriodsIndexedDB() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) return reject(new Error("IndexedDB не підтримується"));
+                const request = window.indexedDB.open(IDB_PERIODS_CONFIG.dbName, IDB_PERIODS_CONFIG.version);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(IDB_PERIODS_CONFIG.storeName)) {
+                        db.createObjectStore(IDB_PERIODS_CONFIG.storeName, { keyPath: 'id' });
                     }
-                    serializedDb.push({
-                        key: key,
-                        name: personData.name,
-                        records: recs
-                    });
-                }
-
-                const state = {
-                    database: serializedDb,
-                    successDates: Array.from(successDatesCount),
-                    uploadedFilesCount: uploadedFilesCount,
-                    uploadedFilesHistory: uploadedFilesHistory,
-                    globalMaxDateStr: globalMaxDateStr,
-                    selectedPersons: Array.from(selectedPersonNames),
-                    viewMode: currentViewMode,
-                    savedAt: new Date().toISOString()
                 };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
 
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-                updateStorageIndicator(true);
-            } catch (e) {
-                console.error("Помилка збереження в LocalStorage:", e);
+        async function saveToPeriodsIndexedDB(stateData) {
+            try {
+                const db = await openPeriodsIndexedDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction([IDB_PERIODS_CONFIG.storeName], 'readwrite');
+                    const store = tx.objectStore(IDB_PERIODS_CONFIG.storeName);
+                    store.put({ id: 'current_state', data: stateData, updatedAt: Date.now() });
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = (e) => reject(e.target.error);
+                });
+            } catch (err) {
+                console.warn("[IndexedDB] Помилка збереження періодів:", err);
             }
         }
 
-        function loadFromStorage() {
+        async function loadFromPeriodsIndexedDB() {
             try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (!raw) {
-                    updateStorageIndicator(false);
-                    return false;
-                }
-                const state = JSON.parse(raw);
-                if (!state || !state.database || state.database.length === 0) {
-                    updateStorageIndicator(false);
-                    return false;
-                }
-
-                database.clear();
-                successDatesCount.clear();
-                selectedPersonNames.clear();
-                uploadedFilesHistory = state.uploadedFilesHistory || [];
-
-                state.database.forEach(p => {
-                    const normKey = p.key || normalizePersonKey(p.name);
-                    const matchedKey = database.has(normKey) ? normKey : findExistingPersonKey(database, normKey, p.name, null);
-                    const targetKey = matchedKey || normKey;
-
-                    if (database.has(targetKey)) {
-                        const existing = database.get(targetKey);
-                        if (p.name && p.name.length > existing.name.length) {
-                            existing.name = p.name;
-                        }
-                        if (p.records && Array.isArray(p.records)) {
-                            p.records.forEach(r => {
-                                const { date, ...recData } = r;
-                                existing.records.set(date, recData);
-                            });
-                        }
-                    } else {
-                        const recordsMap = new Map();
-                        if (p.records && Array.isArray(p.records)) {
-                            p.records.forEach(r => {
-                                const { date, ...recData } = r;
-                                recordsMap.set(date, recData);
-                            });
-                        }
-                        database.set(targetKey, {
-                            key: targetKey,
-                            name: p.name,
-                            records: recordsMap
-                        });
-                    }
+                const db = await openPeriodsIndexedDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction([IDB_PERIODS_CONFIG.storeName], 'readonly');
+                    const store = tx.objectStore(IDB_PERIODS_CONFIG.storeName);
+                    const req = store.get('current_state');
+                    req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                    req.onerror = (e) => reject(e.target.error);
                 });
+            } catch (err) {
+                console.warn("[IndexedDB] Помилка завантаження періодів:", err);
+                return null;
+            }
+        }
 
-                if (state.successDates && Array.isArray(state.successDates)) {
-                    state.successDates.forEach(d => successDatesCount.add(d));
+        async function clearPeriodsIndexedDB() {
+            try {
+                const db = await openPeriodsIndexedDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction([IDB_PERIODS_CONFIG.storeName], 'readwrite');
+                    const store = tx.objectStore(IDB_PERIODS_CONFIG.storeName);
+                    store.clear();
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = (e) => reject(e.target.error);
+                });
+            } catch (err) {
+                console.warn("[IndexedDB] Помилка очищення періодів:", err);
+            }
+        }
+
+        // Рівень 3: Диспетчер дисковий бекап (_backups/combat_periods_latest.json)
+        const DISPATCHER_API_BASE = 'http://127.0.0.1:8765/api/backup';
+        let diskServiceOnline = false;
+        let lastDiskBackupTime = null;
+        let diskSaveDebounceTimer = null;
+
+        function updatePeriodsDiskStatusUI(status, customLabel) {
+            const dot = document.getElementById('storageIndicatorDot');
+            const text = document.getElementById('storageIndicatorText');
+            const btn = document.getElementById('diskSyncBtn');
+            if (!dot || !text) return;
+
+            if (status === 'synced') {
+                diskServiceOnline = true;
+                dot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]";
+                text.className = "text-emerald-400 font-semibold";
+                const timeStr = lastDiskBackupTime ? ` • Диск: ${lastDiskBackupTime.split(' ')[1] || lastDiskBackupTime}` : '';
+                text.innerText = customLabel || (database.size > 0 ? `Збережено: ${database.size} бійців${timeStr}` : 'Диск: Готовий');
+                if (btn) btn.className = "px-3 py-1.5 rounded-xl text-xs font-mono bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/50 text-emerald-300 shadow-inner flex items-center gap-2 cursor-pointer transition-all";
+            } else if (status === 'saving') {
+                dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+                text.className = "text-amber-400 font-medium";
+                text.innerText = customLabel || "Диск: Запис...";
+            } else if (status === 'checking') {
+                dot.className = "w-2 h-2 rounded-full bg-cyan-400 animate-pulse";
+                text.className = "text-cyan-400 font-medium";
+                text.innerText = customLabel || "Диск: Перевірка...";
+            } else {
+                diskServiceOnline = false;
+                dot.className = "w-2 h-2 rounded-full bg-slate-600";
+                text.className = "text-slate-400";
+                text.innerText = customLabel || (database.size > 0 ? `IDB (${database.size} бійців)` : "Сховище порожнє");
+                if (btn) btn.className = "px-3 py-1.5 rounded-xl text-xs font-mono bg-slate-950/70 hover:bg-slate-900 border border-slate-800 text-slate-400 shadow-inner flex items-center gap-2 cursor-pointer transition-all";
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        async function checkPeriodsDiskBackupStatus(interactive = false) {
+            try {
+                updatePeriodsDiskStatusUI('checking');
+                const res = await fetch(`${DISPATCHER_API_BASE}/latest?app=combat_periods`, { cache: 'no-cache' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                
+                if (data && data.exists) {
+                    lastDiskBackupTime = data.formatted_time || 'Збережено';
+                    const timeOnly = data.formatted_time ? data.formatted_time.split(' ')[1] : 'ОК';
+                    updatePeriodsDiskStatusUI('synced', `Диск: ${timeOnly} (${database.size} бійців)`);
+                    if (interactive) {
+                        alert(`Диск активний!\nОстанній бекап: ${data.formatted_time || data.filename}`);
+                    }
+                    return data;
+                } else {
+                    diskServiceOnline = true;
+                    updatePeriodsDiskStatusUI('synced', database.size > 0 ? `Збережено: ${database.size} бійців` : 'Диск: Готовий');
+                    if (database.size > 0) {
+                        savePeriodsToDisk(true);
+                    }
+                    if (interactive) {
+                        alert("Диспетчер активний. Бекап на диску готовий до запису.");
+                    }
+                    return { exists: false, online: true };
                 }
-
-                if (state.selectedPersons && Array.isArray(state.selectedPersons)) {
-                    state.selectedPersons.forEach(name => selectedPersonNames.add(name));
+            } catch (err) {
+                updatePeriodsDiskStatusUI('offline');
+                if (interactive) {
+                    alert("Диспетчер офлайн.\nЗапустіть Запустити_Диспетчер.bat для фонової синхронізації з жорстким диском.");
                 }
+                return { exists: false, online: false };
+            }
+        }
 
-                uploadedFilesCount = state.uploadedFilesCount || uploadedFilesHistory.length || successDatesCount.size;
-                globalMaxDateStr = state.globalMaxDateStr || null;
-
-                // Render file list
-                renderFileLogList();
-
-                const clearBtn = document.getElementById('clearBtn');
-                if (clearBtn) clearBtn.classList.remove('hidden');
-
-                const badgeProcessed = document.getElementById('files-processed-badge');
-                if (badgeProcessed) {
-                    badgeProcessed.innerText = `${uploadedFilesCount} шт. • ${successDatesCount.size} дат`;
+        function serializePeriodsState() {
+            const serializedDb = [];
+            for (const [key, personData] of database.entries()) {
+                const recs = [];
+                if (personData.records) {
+                    for (const [dateStr, rec] of personData.records.entries()) {
+                        recs.push({ date: dateStr, ...rec });
+                    }
                 }
+                serializedDb.push({
+                    key: key,
+                    name: personData.name,
+                    records: recs
+                });
+            }
 
-                if (state.viewMode && (state.viewMode === 'list' || state.viewMode === 'matrix')) {
-                    window.setViewMode(state.viewMode);
+            const filterInput = document.getElementById('fileNameFilterInput');
+            const savedFilter = filterInput ? filterInput.value : '';
+
+            return {
+                database: serializedDb,
+                successDates: Array.from(successDatesCount),
+                uploadedFilesCount: uploadedFilesCount,
+                uploadedFilesHistory: uploadedFilesHistory,
+                globalMaxDateStr: globalMaxDateStr,
+                selectedPersons: Array.from(selectedPersonNames),
+                viewMode: currentViewMode,
+                fileNameFilter: savedFilter,
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function savePeriodsToDisk(immediate = false) {
+            if (diskSaveDebounceTimer) clearTimeout(diskSaveDebounceTimer);
+            const delay = immediate ? 0 : 800;
+
+            diskSaveDebounceTimer = setTimeout(async () => {
+                if (database.size === 0) return;
+                try {
+                    updatePeriodsDiskStatusUI('saving');
+                    const payload = JSON.stringify({
+                        app: 'combat_periods',
+                        content: JSON.stringify(serializePeriodsState(), null, 2)
+                    });
+                    const res = await fetch(`${DISPATCHER_API_BASE}/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: payload
+                    });
+                    if (res.ok) {
+                        const now = new Date();
+                        lastDiskBackupTime = now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        updatePeriodsDiskStatusUI('synced');
+                    } else {
+                        updatePeriodsDiskStatusUI('offline');
+                    }
+                } catch (err) {
+                    updatePeriodsDiskStatusUI('offline');
                 }
+            }, delay);
+        }
 
-                window.renderTableFunc();
-                updateSelectionUI();
-                updateStorageIndicator(true);
-                return true;
+        function forceSavePeriodsToDisk() {
+            if (database.size === 0) {
+                alert("База періодів порожня, немає що зберігати на диск.");
+                return;
+            }
+            savePeriodsToDisk(true);
+            setTimeout(() => {
+                checkPeriodsDiskBackupStatus(true);
+            }, 500);
+        }
+
+        async function restorePeriodsFromDisk() {
+            const data = await checkPeriodsDiskBackupStatus(false);
+            if (!data || !data.exists || !data.content) {
+                alert("На диску ще немає збереженої копії періодів (або Диспетчер вимкнено).\n\nЗапустіть Диспетчер через «Запустити_Диспетчер.bat».");
+                return;
+            }
+            try {
+                const parsed = JSON.parse(data.content);
+                if (parsed && Array.isArray(parsed.database)) {
+                    if (confirm(`Знайдено збережену копію від ${data.formatted_time || 'нещодавно'} (${parsed.database.length} бійців).\n\nВідновити базу з диска?`)) {
+                        applyDeserializedState(parsed);
+                        saveToStorage();
+                        alert(`Базу успішно відновлено (${parsed.database.length} бійців)!`);
+                    }
+                } else {
+                    alert("Помилка структури файлу на диску.");
+                }
             } catch (e) {
-                console.error("Помилка відновлення з LocalStorage:", e);
+                alert("Помилка читання резервної копії з диска: " + e.message);
+            }
+        }
+
+        function applyDeserializedState(state) {
+            if (!state || !state.database || state.database.length === 0) {
                 updateStorageIndicator(false);
                 return false;
             }
+
+            database.clear();
+            successDatesCount.clear();
+            selectedPersonNames.clear();
+            uploadedFilesHistory = state.uploadedFilesHistory || [];
+
+            state.database.forEach(p => {
+                const normKey = p.key || normalizePersonKey(p.name);
+                const matchedKey = database.has(normKey) ? normKey : findExistingPersonKey(database, normKey, p.name, null);
+                const targetKey = matchedKey || normKey;
+
+                if (database.has(targetKey)) {
+                    const existing = database.get(targetKey);
+                    if (p.name && p.name.length > existing.name.length) {
+                        existing.name = p.name;
+                    }
+                    if (p.records && Array.isArray(p.records)) {
+                        p.records.forEach(r => {
+                            const { date, ...recData } = r;
+                            existing.records.set(date, recData);
+                        });
+                    }
+                } else {
+                    const recordsMap = new Map();
+                    if (p.records && Array.isArray(p.records)) {
+                        p.records.forEach(r => {
+                            const { date, ...recData } = r;
+                            recordsMap.set(date, recData);
+                        });
+                    }
+                    database.set(targetKey, {
+                        key: targetKey,
+                        name: p.name,
+                        records: recordsMap
+                    });
+                }
+            });
+
+            if (state.successDates && Array.isArray(state.successDates)) {
+                state.successDates.forEach(d => successDatesCount.add(d));
+            }
+
+            if (state.selectedPersons && Array.isArray(state.selectedPersons)) {
+                state.selectedPersons.forEach(name => selectedPersonNames.add(name));
+            }
+
+            if (state.fileNameFilter) {
+                const filterInput = document.getElementById('fileNameFilterInput');
+                const clearBtn = document.getElementById('clearFileNameFilterBtn');
+                if (filterInput && !filterInput.value) {
+                    filterInput.value = state.fileNameFilter;
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                }
+            }
+
+            uploadedFilesCount = state.uploadedFilesCount || uploadedFilesHistory.length || successDatesCount.size;
+            globalMaxDateStr = state.globalMaxDateStr || null;
+
+            renderFileLogList();
+
+            const clearBtn = document.getElementById('clearBtn');
+            if (clearBtn) clearBtn.classList.remove('hidden');
+
+            const badgeProcessed = document.getElementById('files-processed-badge');
+            if (badgeProcessed) {
+                badgeProcessed.innerText = `${uploadedFilesCount} шт. • ${successDatesCount.size} дат`;
+            }
+
+            if (state.viewMode && (state.viewMode === 'list' || state.viewMode === 'matrix')) {
+                window.setViewMode(state.viewMode);
+            }
+
+            window.renderTableFunc();
+            updateSelectionUI();
+            updateStorageIndicator(true);
+            return true;
+        }
+
+        function saveToStorage() {
+            if (database.size === 0) {
+                try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+                clearPeriodsIndexedDB();
+                updateStorageIndicator(false);
+                return;
+            }
+
+            const state = serializePeriodsState();
+
+            // Рівень 1: LocalStorage (швидкий кеш)
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.warn("LocalStorage переповнений, використовується IndexedDB:", e);
+            }
+
+            // Рівень 2: IndexedDB (безлімітне стійке сховище)
+            saveToPeriodsIndexedDB(state);
+
+            // Рівень 3: Фоновий бекап на жорсткий диск Диспетчера
+            savePeriodsToDisk(false);
+
+            updateStorageIndicator(true);
+        }
+
+        async function loadFromStorage() {
+            // 1. Спроба з LocalStorage
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const state = JSON.parse(raw);
+                    if (applyDeserializedState(state)) {
+                        checkPeriodsDiskBackupStatus(false);
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn("Помилка читання LocalStorage:", e);
+            }
+
+            // 2. Спроба з IndexedDB (якщо LocalStorage очищено або він переповнився)
+            try {
+                const idbState = await loadFromPeriodsIndexedDB();
+                if (idbState && applyDeserializedState(idbState)) {
+                    console.log("[Auto-Hydrate] Відновлено базу періодів з IndexedDB:", database.size);
+                    checkPeriodsDiskBackupStatus(false);
+                    return true;
+                }
+            } catch (e) {
+                console.warn("Помилка читання IndexedDB:", e);
+            }
+
+            // 3. Спроба з диску Диспетчера (якщо новий браузер, напр. Brave, або чистка всього сховища)
+            try {
+                const diskData = await checkPeriodsDiskBackupStatus(false);
+                if (diskData && diskData.exists && diskData.content) {
+                    const parsed = JSON.parse(diskData.content);
+                    if (applyDeserializedState(parsed)) {
+                        console.log("[Auto-Hydrate] Відновлено базу періодів з файлу диска:", database.size);
+                        saveToStorage();
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn("Помилка відновлення з диска:", e);
+            }
+
+            updateStorageIndicator(false);
+            checkPeriodsDiskBackupStatus(false);
+            return false;
         }
 
         function clearStorage() {
@@ -828,7 +1114,9 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             uploadedFilesHistory = [];
             uploadedFilesCount = 0;
             globalMaxDateStr = null;
-            localStorage.removeItem(STORAGE_KEY);
+            
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+            clearPeriodsIndexedDB();
 
             renderFileLogList();
             

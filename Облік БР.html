@@ -179,7 +179,7 @@
                                 Облік бойових розпоряджень
                             </h1>
                             <button id="versionBadge" onclick="openChangelogModal()" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer flex items-center gap-1">
-                                <span>⚡ v1.3.0</span>
+                                <span>⚡ v1.4.0</span>
                             </button>
                         </div>
                         <p class="text-xs text-slate-400 font-medium hidden sm:block">Оперативний штаб • Реєстр та контроль виконання</p>
@@ -189,6 +189,11 @@
 
             <!-- Right: Action Buttons -->
             <div class="flex items-center gap-2">
+                <!-- Disk Sync Status Indicator -->
+                <button id="diskSyncBtn" onclick="checkDiskBackupStatus(true)" title="Синхронізація з диском (натисніть для перевірки)" class="px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                    <span id="diskSyncDot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+                    <span id="diskSyncLabel" class="hidden sm:inline">Диск: Зв'язок...</span>
+                </button>
                 <button onclick="openImportModal()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-sky-400 border border-sky-500/30 hover:border-sky-500/50 shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                     <i data-lucide="folder-input" class="w-4 h-4"></i>
                     <span class="hidden md:inline">Імпорт з Element</span>
@@ -204,7 +209,14 @@
                         <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
                     </button>
                     <!-- Backup Dropdown Menu -->
-                    <div id="backupDropdown" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1 z-50">
+                    <div id="backupDropdown" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1 z-50">
+                        <button onclick="forceSaveToDisk()" class="w-full text-left px-4 py-2 text-xs text-emerald-300 hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
+                            <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-emerald-400"></i> Зберегти на диск зараз
+                        </button>
+                        <button onclick="restoreFromDiskBackup()" class="w-full text-left px-4 py-2 text-xs text-cyan-300 hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-cyan-400"></i> Відновити з диска (Диспетчер)
+                        </button>
+                        <div class="border-t border-slate-800 my-1"></div>
                         <button onclick="exportJsonBackup()" class="w-full text-left px-4 py-2 text-xs text-slate-200 hover:bg-slate-800 flex items-center gap-2 cursor-pointer">
                             <i data-lucide="download" class="w-3.5 h-3.5 text-sky-400"></i> Створити JSON бекап
                         </button>
@@ -671,7 +683,7 @@
         <div class="bg-[#0c1322] border border-slate-700/80 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
                 <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.3.0</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.4.0</span>
                     <h3 class="text-base font-bold text-white">Історія оновлень</h3>
                 </div>
                 <button onclick="closeModal('changelogModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
@@ -681,7 +693,19 @@
             <div class="p-6 space-y-4 text-xs text-slate-300 max-h-[70vh] overflow-y-auto">
                 <div class="border-l-2 border-amber-400 pl-3 space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-white font-mono">Версія 1.3.0</span>
+                        <span class="font-bold text-white font-mono">Версія 1.4.0</span>
+                        <span class="text-[11px] text-slate-500">08.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300 text-xs">
+                        <li><strong>Трьохрівневий захист даних (Triple-Tier Persistence):</strong> інтеграція браузерної бази IndexedDB (<code>TacticalBrDB_v1</code>) та захист від очищення сесії браузера.</li>
+                        <li><strong>Фонова авто-синхронізація на диск:</strong> автоматичний запис у файл <code>_backups/br_tracker_latest.json</code> через Диспетчер.</li>
+                        <li><strong>Auto-Hydrate:</strong> миттєве автоматичне відновлення бази при відкритті в іншому браузері (Brave/Edge) або після скидання кешу.</li>
+                        <li><strong>Індикатор статусу диска:</strong> віджет <code>🟢 Диск: HH:MM:SS</code> у шапці та ручне збереження/відновлення.</li>
+                    </ul>
+                </div>
+                <div class="border-l-2 border-slate-700 pl-3 space-y-1 text-slate-400">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono">Версія 1.3.0</span>
                         <span class="text-[11px] text-slate-500">07.10.2026</span>
                     </div>
                     <ul class="list-disc list-inside space-y-1 text-slate-300 text-xs">
@@ -999,42 +1023,289 @@
             }
         }
 
-        // Initialization
+        // =====================================================================
+        // TRIPLE-TIER PERSISTENCE: LocalStorage + IndexedDB + Physical Disk API
+        // =====================================================================
+
+        // Tier 2: Native IndexedDB (Zero Dependencies / Offline Resilience)
+        const IDB_CONFIG = {
+            dbName: 'TacticalBrDB_v1',
+            storeName: 'br_items_store',
+            version: 1
+        };
+
+        function openIndexedDB() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) {
+                    return reject(new Error("IndexedDB не підтримується"));
+                }
+                const request = window.indexedDB.open(IDB_CONFIG.dbName, IDB_CONFIG.version);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(IDB_CONFIG.storeName)) {
+                        db.createObjectStore(IDB_CONFIG.storeName, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function saveToIndexedDB(items) {
+            try {
+                const db = await openIndexedDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction([IDB_CONFIG.storeName], 'readwrite');
+                    const store = tx.objectStore(IDB_CONFIG.storeName);
+                    store.clear();
+                    for (const item of items) {
+                        store.put(item);
+                    }
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = (e) => reject(e.target.error);
+                });
+            } catch (err) {
+                console.warn("[IndexedDB] Помилка збереження:", err);
+            }
+        }
+
+        async function loadFromIndexedDB() {
+            try {
+                const db = await openIndexedDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction([IDB_CONFIG.storeName], 'readonly');
+                    const store = tx.objectStore(IDB_CONFIG.storeName);
+                    const req = store.getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            } catch (err) {
+                console.warn("[IndexedDB] Помилка завантаження:", err);
+                return [];
+            }
+        }
+
+        // Tier 3: Dispatcher Disk Sync Bridge (_backups/br_tracker_latest.json)
+        const DISPATCHER_API_BASE = 'http://127.0.0.1:8765/api/backup';
+        let diskServiceOnline = false;
+        let lastDiskBackupTime = null;
+        let diskSaveDebounceTimer = null;
+
+        function updateDiskStatusUI(status, labelText) {
+            const btn = document.getElementById('diskSyncBtn');
+            const dot = document.getElementById('diskSyncDot');
+            const label = document.getElementById('diskSyncLabel');
+            if (!btn || !dot || !label) return;
+
+            if (status === 'synced') {
+                diskServiceOnline = true;
+                dot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50";
+                label.innerText = labelText || (lastDiskBackupTime ? `Диск: ${lastDiskBackupTime}` : 'Диск: Збережено');
+                btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+                btn.title = `Фізичний диск: синхронізація активна (${lastDiskBackupTime || 'ОК'}). Натисніть для перевірки.`;
+            } else if (status === 'saving') {
+                dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+                label.innerText = labelText || 'Диск: Запис...';
+                btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium bg-amber-950/30 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+            } else {
+                diskServiceOnline = false;
+                dot.className = "w-2 h-2 rounded-full bg-slate-500";
+                label.innerText = labelText || 'Диск: Офлайн (IDB активна)';
+                btn.className = "px-2.5 py-1.5 rounded-xl text-xs font-mono font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-400 border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shadow-sm";
+                btn.title = "Диспетчер не активний. Дані захищені в IndexedDB + LocalStorage. Запустіть Запустити_Диспетчер.bat для збереження на жорсткий диск.";
+            }
+        }
+
+        async function checkDiskBackupStatus(interactive = false) {
+            if (interactive) updateDiskStatusUI('saving', 'Диск: Перевірка...');
+            try {
+                const res = await fetch(`${DISPATCHER_API_BASE}/latest?app=br_tracker`, { cache: 'no-cache' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                
+                if (data && data.exists) {
+                    lastDiskBackupTime = data.formatted_time || 'Збережено';
+                    const timeOnly = data.formatted_time ? data.formatted_time.split(' ')[1] : 'ОК';
+                    updateDiskStatusUI('synced', `Диск: ${timeOnly}`);
+                    if (interactive) {
+                        showToast(`Диск активний! Збережено: ${data.formatted_time || data.filename}`);
+                    }
+                    return data;
+                } else {
+                    diskServiceOnline = true;
+                    updateDiskStatusUI('synced', 'Диск: Готовий');
+                    if (brItems.length > 0) {
+                        saveToDiskBackup(brItems, true);
+                    }
+                    if (interactive) {
+                        showToast("Диспетчер активний. Бекап на диску готовий до запису.");
+                    }
+                    return { exists: false, online: true };
+                }
+            } catch (err) {
+                updateDiskStatusUI('offline');
+                if (interactive) {
+                    showToast("Диспетчер офлайн. Запустіть Запустити_Диспетчер.bat");
+                }
+                return { exists: false, online: false };
+            }
+        }
+
+        function saveToDiskBackup(items, immediate = false) {
+            if (diskSaveDebounceTimer) clearTimeout(diskSaveDebounceTimer);
+            const delay = immediate ? 0 : 800;
+
+            diskSaveDebounceTimer = setTimeout(async () => {
+                if (!items || items.length === 0) return;
+                try {
+                    updateDiskStatusUI('saving');
+                    const payload = JSON.stringify({
+                        app: 'br_tracker',
+                        content: JSON.stringify(items, null, 2)
+                    });
+                    const res = await fetch(`${DISPATCHER_API_BASE}/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: payload
+                    });
+                    if (res.ok) {
+                        const now = new Date();
+                        lastDiskBackupTime = now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        updateDiskStatusUI('synced');
+                    } else {
+                        updateDiskStatusUI('offline');
+                    }
+                } catch (err) {
+                    updateDiskStatusUI('offline');
+                }
+            }, delay);
+        }
+
+        async function forceSaveToDisk() {
+            toggleBackupMenu();
+            if (brItems.length === 0) {
+                showToast("База порожня, немає що зберігати на диск");
+                return;
+            }
+            showToast("⏳ Збереження на фізичний диск...");
+            saveToDiskBackup(brItems, true);
+            setTimeout(() => {
+                checkDiskBackupStatus(true);
+            }, 500);
+        }
+
+        async function restoreFromDiskBackup() {
+            toggleBackupMenu();
+            showToast("⏳ Перевірка найсвіжішої копії на диску...");
+            const data = await checkDiskBackupStatus(false);
+            if (!data || !data.exists || !data.content) {
+                alert("На диску ще немає збереженої копії бази БР (або Диспетчер вимкнено).\n\nЗапустіть Диспетчер через «Запустити_Диспетчер.bat».");
+                return;
+            }
+            try {
+                const parsed = JSON.parse(data.content);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    if (confirm(`Знайдено збережену копію від ${data.formatted_time || 'нещодавно'} (${parsed.length} БР).\n\nВідновити цю базу?`)) {
+                        brItems = parsed;
+                        sanitizeExistingDatabase();
+                        saveToStorage();
+                        applyFilters();
+                        showToast(`Успішно відновлено ${parsed.length} БР з жорсткого диска!`);
+                    }
+                } else {
+                    alert("Файл бекапу на диску порожній або пошкоджений.");
+                }
+            } catch (e) {
+                alert("Помилка читання даних бекапу з диска.");
+            }
+        }
+
+        // Consolidated Multi-Tier Persistence
+        function saveToStorage() {
+            // 1. LocalStorage
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(brItems));
+            } catch (e) {
+                console.error("LocalStorage save error:", e);
+            }
+
+            // 2. IndexedDB
+            saveToIndexedDB(brItems);
+
+            // 3. Physical Disk (Dispatcher)
+            saveToDiskBackup(brItems);
+        }
+
+        // Initialization & Auto-Hydration
         window.addEventListener('DOMContentLoaded', () => {
-            loadFromStorage();
-            sanitizeExistingDatabase();
-            lucide.createIcons();
-            applyFilters();
+            initStorageAndSync();
+            setInterval(() => checkDiskBackupStatus(false), 20000);
         });
 
-        function loadFromStorage() {
+        async function initStorageAndSync() {
+            let loadedCount = 0;
+
+            // Step 1: LocalStorage
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        // Purge legacy demo orders from previous sessions
+                    if (Array.isArray(parsed) && parsed.length > 0) {
                         brItems = parsed.filter(item => !LEGACY_DEMO_IDS.has(item.id));
-                        if (brItems.length !== parsed.length) {
-                            saveToStorage();
-                        }
-                    } else {
-                        brItems = [];
+                        loadedCount = brItems.length;
                     }
-                } else {
-                    brItems = [];
                 }
             } catch (e) {
-                console.error("Storage load error:", e);
-                brItems = [];
+                console.error("LocalStorage init error:", e);
             }
-        }
 
-        function saveToStorage() {
+            // Step 2: If LocalStorage is empty, check IndexedDB
+            if (loadedCount === 0) {
+                try {
+                    const idbItems = await loadFromIndexedDB();
+                    if (Array.isArray(idbItems) && idbItems.length > 0) {
+                        brItems = idbItems.filter(item => !LEGACY_DEMO_IDS.has(item.id));
+                        if (brItems.length > 0) {
+                            loadedCount = brItems.length;
+                            showToast(`📦 Відновлено ${brItems.length} БР з IndexedDB!`);
+                            try {
+                                localStorage.setItem(STORAGE_KEY, JSON.stringify(brItems));
+                            } catch (_) {}
+                        }
+                    }
+                } catch (e) {
+                    console.error("IndexedDB init error:", e);
+                }
+            }
+
+            // Immediate render with whatever local data is present
+            sanitizeExistingDatabase();
+            lucide.createIcons();
+            applyFilters();
+
+            // Step 3: Physical Disk Auto-Hydration via Dispatcher API
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(brItems));
-            } catch (e) {
-                console.error("Storage save error:", e);
+                const diskData = await checkDiskBackupStatus(false);
+                if (diskData && diskData.exists && diskData.content) {
+                    const parsedDisk = JSON.parse(diskData.content);
+                    if (Array.isArray(parsedDisk) && parsedDisk.length > 0) {
+                        // If browser memory was completely empty (e.g. freshly opened in Brave or Chrome cleared):
+                        if (brItems.length === 0) {
+                            brItems = parsedDisk.filter(item => !LEGACY_DEMO_IDS.has(item.id));
+                            sanitizeExistingDatabase();
+                            try {
+                                localStorage.setItem(STORAGE_KEY, JSON.stringify(brItems));
+                            } catch (_) {}
+                            saveToIndexedDB(brItems);
+                            applyFilters();
+                            showToast(`🛡️ Автоматично відновлено ${brItems.length} БР з жорсткого диска!`);
+                        }
+                    }
+                } else if (diskData && diskData.online && brItems.length > 0) {
+                    saveToDiskBackup(brItems, true);
+                }
+            } catch (err) {
+                console.warn("Disk auto-hydration error:", err);
             }
         }
 

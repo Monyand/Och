@@ -1008,6 +1008,18 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
             self.send_file_response(os.path.join(PROG_DIR, 'Облік втрат.html'))
             return
 
+        elif path in ['/br', '/oblik_br', '/oblik-br']:
+            self.send_file_response(os.path.join(PROG_DIR, 'Облік БР.html'))
+            return
+
+        elif path in ['/takt', '/v8', '/takt-oblik']:
+            self.send_file_response(os.path.join(PROG_DIR, 'v8', 'Такт-Облік.html'))
+            return
+
+        elif path in ['/periods', '/oblik_periodiv', '/oblik-periodiv']:
+            self.send_file_response(os.path.join(PROG_DIR, 'Облік періодів.html'))
+            return
+
         elif path == '/cleaner':
             self.send_response(302)
             self.send_header('Location', 'http://localhost:8766')
@@ -1050,6 +1062,10 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
         elif path == '/api/backup/latest':
             app_name = parse_qs(parsed.query).get('app', ['med_tactical'])[0]
             latest_file = os.path.join(BACKUP_DIR, f"{app_name}_latest.enc")
+            if not os.path.exists(latest_file):
+                latest_json = os.path.join(BACKUP_DIR, f"{app_name}_latest.json")
+                if os.path.exists(latest_json):
+                    latest_file = latest_json
             if os.path.exists(latest_file):
                 mtime = os.path.getmtime(latest_file)
                 dt_str = datetime.datetime.fromtimestamp(mtime).strftime("%d.%m.%Y %H:%M:%S")
@@ -1107,13 +1123,21 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
                 app_name = data.get("app", "med_tactical")
                 content = data.get("content", "")
                 if content:
-                    latest_file = os.path.join(BACKUP_DIR, f"{app_name}_latest.enc")
+                    is_raw_json = content.strip().startswith(("{", "["))
+                    ext = "json" if is_raw_json else "enc"
+                    latest_file = os.path.join(BACKUP_DIR, f"{app_name}_latest.{ext}")
                     with open(latest_file, 'w', encoding='utf-8') as bf:
                         bf.write(content)
+                    if is_raw_json:
+                        with open(os.path.join(BACKUP_DIR, f"{app_name}_latest.enc"), 'w', encoding='utf-8') as bf:
+                            bf.write(content)
                     day_str = datetime.date.today().strftime("%Y-%m-%d")
-                    daily_file = os.path.join(BACKUP_DIR, f"{app_name}_{day_str}.enc")
+                    daily_file = os.path.join(BACKUP_DIR, f"{app_name}_{day_str}.{ext}")
                     with open(daily_file, 'w', encoding='utf-8') as bf:
                         bf.write(content)
+                    if is_raw_json:
+                        with open(os.path.join(BACKUP_DIR, f"{app_name}_{day_str}.enc"), 'w', encoding='utf-8') as bf:
+                            bf.write(content)
                     self.send_json({
                         "success": True,
                         "saved_to": os.path.basename(latest_file),
