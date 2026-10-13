@@ -167,7 +167,7 @@
                 <button onclick="openChangelogModal()"
                     class="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-full flex items-center gap-1.5 font-bold transition-all shadow-sm cursor-pointer hover:scale-105 active:scale-95"
                     title="Натисніть, щоб переглянути історію оновлень">
-                    <span>🚀 v2.1.0</span>
+                    <span>🚀 v2.1.1</span>
                 </button>
             </div>
             <div class="flex items-center gap-2">
@@ -1702,7 +1702,7 @@
                     <span
                         class="p-1.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 rounded-lg">📋</span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v2.1.0</span>
+                    <span class="text-xs bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full ml-1">v2.1.1</span>
                 </h3>
                 <button onclick="closeChangelogModal()"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1733,9 +1733,26 @@
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "2.1.1",
+                date: "13.10.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "📄 Повна підтримка шаблону Word (.docx) у бекапах налаштувань",
+                        color: "blue",
+                        items: [
+                            "<b>Бекап шаблону Word у .enc</b>: функції експорту та імпорту зашифрованого файлу налаштувань розширено підтримкою повного пакета з 11 полів генератора бойового наказу / Додатка 6 (.docx) (шапка, назва, накази 1/2/3 ешелонів, підписант, тех. примітки, метадані).",
+                            "<b>Миттєва синхронізація на диск</b>: при збереженні на диск через Диспетчер («💾 На диск») поля шаблону Word гарантовано скидаються з форми в пам'ять перед формуванням зліпка.",
+                            "<b>Авто-заповнення форми при відновленні</b>: при імпорті з файлу або відновленні з диска («🔄 З диска») поля форми Word миттєво оновлюються відновленим текстом без перезавантаження сторінки.",
+                            "<b>Збереження категорій ВОП/БРО</b>: усунуто втрату ключових слів ВОП, БРО та прапорця об'єднання підрозділів РОП при експорті/імпорті файлу налаштувань."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "2.1.0",
                 date: "08.10.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "🛡️ Авто-бекап налаштувань на диск та захист від очищення кешу",
@@ -2637,6 +2654,20 @@
 
         // ─── СИНХРОНІЗАЦІЯ НАЛАШТУВАНЬ З ЖОРСТКИМ ДИСКОМ (ДИСПЕТЧЕР) ──────────────
         function getDod6SettingsPayload() {
+            if (document.getElementById('docx-cfg-header-right')) {
+                saveDocxSettings();
+            }
+            if (document.getElementById('kw-vop')) {
+                localStorage.setItem('keywords_vop', document.getElementById('kw-vop').value);
+                localStorage.setItem('keywords_btgr', document.getElementById('kw-btgr').value);
+                localStorage.setItem('keywords_bro', document.getElementById('kw-bro').value);
+                localStorage.setItem('keywords_zab', document.getElementById('kw-zab').value);
+                localStorage.setItem('valid_tasks', document.getElementById('kw-valid-tasks').value);
+                localStorage.setItem('replace_rules', document.getElementById('kw-replace-rules').value);
+                localStorage.setItem('rop_hierarchy', document.getElementById('kw-rop-hierarchy').value);
+                localStorage.setItem('required_units', document.getElementById('kw-required-units').value);
+            }
+            const docx = typeof getDocxConfig === 'function' ? getDocxConfig() : DOCX_CONFIG_DEFAULTS;
             return {
                 keywords_vop: localStorage.getItem('keywords_vop') || "воп",
                 keywords_btgr: localStorage.getItem('keywords_btgr') || "бтгр, роп, ксп, пв, сп",
@@ -2647,17 +2678,17 @@
                 rop_hierarchy: localStorage.getItem('rop_hierarchy') || '',
                 required_units: localStorage.getItem('required_units') || '',
                 dod6_merge_rop_units: localStorage.getItem('dod6_merge_rop_units') || 'false',
-                docx_header_right: localStorage.getItem('docx_header_right') || '',
-                docx_title: localStorage.getItem('docx_title') || '',
-                docx_order_tier1: localStorage.getItem('docx_order_tier1') || '',
-                docx_order_tier2: localStorage.getItem('docx_order_tier2') || '',
-                docx_order_tier3: localStorage.getItem('docx_order_tier3') || '',
-                docx_signer_post: localStorage.getItem('docx_signer_post') || '',
-                docx_signer_rank: localStorage.getItem('docx_signer_rank') || '',
-                docx_signer_name: localStorage.getItem('docx_signer_name') || '',
-                docx_tech_notes: localStorage.getItem('docx_tech_notes') || '',
-                docx_author: localStorage.getItem('docx_author') || '',
-                docx_meta_title: localStorage.getItem('docx_meta_title') || '',
+                docx_header_right: localStorage.getItem('docx_header_right') || docx.headerRight,
+                docx_title: localStorage.getItem('docx_title') || docx.title,
+                docx_order_tier1: localStorage.getItem('docx_order_tier1') || docx.orderTier1,
+                docx_order_tier2: localStorage.getItem('docx_order_tier2') || docx.orderTier2,
+                docx_order_tier3: localStorage.getItem('docx_order_tier3') || docx.orderTier3,
+                docx_signer_post: localStorage.getItem('docx_signer_post') || docx.signerPost,
+                docx_signer_rank: localStorage.getItem('docx_signer_rank') || docx.signerRank,
+                docx_signer_name: localStorage.getItem('docx_signer_name') || docx.signerName,
+                docx_tech_notes: localStorage.getItem('docx_tech_notes') || docx.techNotes,
+                docx_author: localStorage.getItem('docx_author') || docx.author,
+                docx_meta_title: localStorage.getItem('docx_meta_title') || docx.metaTitle,
                 updatedAt: new Date().toISOString()
             };
         }
@@ -2668,6 +2699,9 @@
                 if (k !== 'updatedAt' && v !== null && v !== undefined) {
                     localStorage.setItem(k, v);
                 }
+            }
+            if (typeof loadDocxSettings === 'function') {
+                loadDocxSettings();
             }
             return true;
         }
@@ -3596,19 +3630,39 @@
 
             if (typeof currentRopMode !== 'undefined' && currentRopMode === 'visual') {
                 syncTextFromRop();
+            } else if (typeof syncRopFromText === 'function') {
+                syncRopFromText();
+            }
+            if (typeof saveDocxSettings === 'function') {
+                saveDocxSettings();
             }
 
+            const docx = typeof getDocxConfig === 'function' ? getDocxConfig() : DOCX_CONFIG_DEFAULTS;
             const settingsPayload = {
                 app: "Додаток 6",
-                version: "1.2.2",
+                version: "1.2.3",
                 timestamp: new Date().toISOString(),
                 settings: {
-                    keywords_btgr: document.getElementById('kw-btgr').value,
-                    keywords_zab: document.getElementById('kw-zab').value,
-                    valid_tasks: document.getElementById('kw-valid-tasks').value,
-                    replace_rules: document.getElementById('kw-replace-rules').value,
-                    rop_hierarchy: document.getElementById('kw-rop-hierarchy').value,
-                    required_units: document.getElementById('kw-required-units').value
+                    keywords_vop: document.getElementById('kw-vop')?.value || localStorage.getItem('keywords_vop') || "воп",
+                    keywords_btgr: document.getElementById('kw-btgr')?.value || localStorage.getItem('keywords_btgr') || "бтгр, роп, ксп, пв, сп",
+                    keywords_bro: document.getElementById('kw-bro')?.value || localStorage.getItem('keywords_bro') || "бро",
+                    keywords_zab: document.getElementById('kw-zab')?.value || localStorage.getItem('keywords_zab') || "заб, забезпечення, заб. бд",
+                    valid_tasks: document.getElementById('kw-valid-tasks')?.value || localStorage.getItem('valid_tasks') || "",
+                    replace_rules: document.getElementById('kw-replace-rules')?.value || localStorage.getItem('replace_rules') || "",
+                    rop_hierarchy: document.getElementById('kw-rop-hierarchy')?.value || localStorage.getItem('rop_hierarchy') || "",
+                    required_units: document.getElementById('kw-required-units')?.value || localStorage.getItem('required_units') || "",
+                    dod6_merge_rop_units: localStorage.getItem('dod6_merge_rop_units') || 'false',
+                    docx_header_right: localStorage.getItem('docx_header_right') || docx.headerRight,
+                    docx_title: localStorage.getItem('docx_title') || docx.title,
+                    docx_order_tier1: localStorage.getItem('docx_order_tier1') || docx.orderTier1,
+                    docx_order_tier2: localStorage.getItem('docx_order_tier2') || docx.orderTier2,
+                    docx_order_tier3: localStorage.getItem('docx_order_tier3') || docx.orderTier3,
+                    docx_signer_post: localStorage.getItem('docx_signer_post') || docx.signerPost,
+                    docx_signer_rank: localStorage.getItem('docx_signer_rank') || docx.signerRank,
+                    docx_signer_name: localStorage.getItem('docx_signer_name') || docx.signerName,
+                    docx_tech_notes: localStorage.getItem('docx_tech_notes') || docx.techNotes,
+                    docx_author: localStorage.getItem('docx_author') || docx.author,
+                    docx_meta_title: localStorage.getItem('docx_meta_title') || docx.metaTitle
                 }
             };
 
@@ -3666,31 +3720,57 @@
                 if (!data.settings) throw new Error('NO_SETTINGS');
 
                 const s = data.settings;
+                if (s.keywords_vop !== undefined) {
+                    if (document.getElementById('kw-vop')) document.getElementById('kw-vop').value = s.keywords_vop;
+                    localStorage.setItem('keywords_vop', s.keywords_vop);
+                }
                 if (s.keywords_btgr !== undefined) {
-                    document.getElementById('kw-btgr').value = s.keywords_btgr;
+                    if (document.getElementById('kw-btgr')) document.getElementById('kw-btgr').value = s.keywords_btgr;
                     localStorage.setItem('keywords_btgr', s.keywords_btgr);
                 }
+                if (s.keywords_bro !== undefined) {
+                    if (document.getElementById('kw-bro')) document.getElementById('kw-bro').value = s.keywords_bro;
+                    localStorage.setItem('keywords_bro', s.keywords_bro);
+                }
                 if (s.keywords_zab !== undefined) {
-                    document.getElementById('kw-zab').value = s.keywords_zab;
+                    if (document.getElementById('kw-zab')) document.getElementById('kw-zab').value = s.keywords_zab;
                     localStorage.setItem('keywords_zab', s.keywords_zab);
                 }
                 if (s.valid_tasks !== undefined) {
-                    document.getElementById('kw-valid-tasks').value = s.valid_tasks;
+                    if (document.getElementById('kw-valid-tasks')) document.getElementById('kw-valid-tasks').value = s.valid_tasks;
                     localStorage.setItem('valid_tasks', s.valid_tasks);
                 }
                 if (s.replace_rules !== undefined) {
-                    document.getElementById('kw-replace-rules').value = s.replace_rules;
+                    if (document.getElementById('kw-replace-rules')) document.getElementById('kw-replace-rules').value = s.replace_rules;
                     localStorage.setItem('replace_rules', s.replace_rules);
                 }
                 if (s.rop_hierarchy !== undefined) {
-                    document.getElementById('kw-rop-hierarchy').value = s.rop_hierarchy;
+                    if (document.getElementById('kw-rop-hierarchy')) document.getElementById('kw-rop-hierarchy').value = s.rop_hierarchy;
                     localStorage.setItem('rop_hierarchy', s.rop_hierarchy);
                 }
                 if (s.required_units !== undefined) {
-                    document.getElementById('kw-required-units').value = s.required_units;
+                    if (document.getElementById('kw-required-units')) document.getElementById('kw-required-units').value = s.required_units;
                     localStorage.setItem('required_units', s.required_units);
                 }
+                if (s.dod6_merge_rop_units !== undefined) {
+                    localStorage.setItem('dod6_merge_rop_units', s.dod6_merge_rop_units);
+                }
 
+                // Шаблон Word (.docx)
+                const docxKeys = [
+                    'docx_header_right', 'docx_title', 'docx_order_tier1', 'docx_order_tier2',
+                    'docx_order_tier3', 'docx_signer_post', 'docx_signer_rank', 'docx_signer_name',
+                    'docx_tech_notes', 'docx_author', 'docx_meta_title'
+                ];
+                docxKeys.forEach(k => {
+                    if (s[k] !== undefined && s[k] !== null) {
+                        localStorage.setItem(k, s[k]);
+                    }
+                });
+
+                if (typeof loadDocxSettings === 'function') {
+                    loadDocxSettings();
+                }
                 syncRopFromText();
                 updateSettingsBadges();
                 closeSettingsImportModal();
@@ -3701,7 +3781,7 @@
                 }
                 checkMissingFiles();
 
-                alert('✅ Налаштування успішно розшифровано та застосовано!');
+                alert('✅ Налаштування (включно з шаблоном Word) успішно розшифровано та застосовано!');
             } catch (err) {
                 console.error(err);
                 if (err.message === 'FORMAT_ERROR') {

@@ -949,6 +949,16 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 """
 
 
+class SafeThreadingHTTPServer(ThreadingHTTPServer):
+    def handle_error(self, request, client_address):
+        cls, val, tb = sys.exc_info()
+        if cls in (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+            return
+        if isinstance(val, OSError) and getattr(val, 'winerror', None) == 10054:
+            return
+        super().handle_error(request, client_address)
+
+
 class DispatcherHTTPHandler(BaseHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -961,12 +971,15 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def send_dashboard_html(self):
-        body = DASHBOARD_HTML.encode('utf-8')
-        self.send_response(200)
-        self.send_header('Content-Type', 'text/html; charset=utf-8')
-        self.send_header('Content-Length', str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            body = DASHBOARD_HTML.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+            pass
 
     def send_file_response(self, filepath, content_type='text/html; charset=utf-8'):
         if not os.path.exists(filepath):
@@ -980,8 +993,13 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
             self.send_header('Content-Length', str(len(content)))
             self.end_headers()
             self.wfile.write(content)
+        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+            pass
         except Exception as e:
-            self.send_json({"error": str(e)}, code=500)
+            try:
+                self.send_json({"error": str(e)}, code=500)
+            except Exception:
+                pass
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -1108,10 +1126,13 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
             self.send_file_response(local_target, content_type)
             return
 
-        self.send_response(404)
-        self.send_header('Content-Type', 'application/json; charset=utf-8')
-        self.end_headers()
-        self.wfile.write(json.dumps({"error": "Not Found"}).encode('utf-8'))
+        try:
+            self.send_response(404)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Not Found"}).encode('utf-8'))
+        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+            pass
 
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -1181,17 +1202,23 @@ class DispatcherHTTPHandler(BaseHTTPRequestHandler):
                 pass
             self.send_json({"success": False, "error": "Invalid date"}, code=400)
         else:
-            self.send_response(404)
-            self.end_headers()
+            try:
+                self.send_response(404)
+                self.end_headers()
+            except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+                pass
 
 
     def send_json(self, data, code=200):
-        body = json.dumps(data, ensure_ascii=False).encode('utf-8')
-        self.send_response(code)
-        self.send_header('Content-Type', 'application/json; charset=utf-8')
-        self.send_header('Content-Length', str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            body = json.dumps(data, ensure_ascii=False).encode('utf-8')
+            self.send_response(code)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+            pass
 
     def log_message(self, format, *args):
         return
@@ -1274,7 +1301,7 @@ def main():
 
     server_address = ('127.0.0.1', SERVER_PORT)
     try:
-        httpd = ThreadingHTTPServer(server_address, DispatcherHTTPHandler)
+        httpd = SafeThreadingHTTPServer(server_address, DispatcherHTTPHandler)
         print(f"\n[🚀] Локальний API активний: http://127.0.0.1:{SERVER_PORT}")
         print(f"     Ендпоінти: /api/status  /api/bundle  /api/dates")
         print("[💡] Тепер відкрийте 'Додаток 6.html' або 'Звіт ПБД.html' у браузері.")
