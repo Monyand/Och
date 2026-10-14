@@ -46,6 +46,42 @@
             padding-left: calc(75px + 40px);
         }
 
+        /* Modern Web Guidance: Блокування скролу фонової сторінки під час відкриття модалок */
+        body.modal-open {
+            overflow: hidden !important;
+        }
+
+        /* Modern Web Guidance: Нативні плавні переходи вкладок (View Transitions API) */
+        .settings-panel.active {
+            view-transition-name: active-tab-panel;
+        }
+
+        ::view-transition-old(active-tab-panel) {
+            animation: 130ms cubic-bezier(0.4, 0, 1, 1) both m-fade-out;
+        }
+
+        ::view-transition-new(active-tab-panel) {
+            animation: 180ms cubic-bezier(0, 0, 0.2, 1) 20ms both m-fade-in;
+        }
+
+        @keyframes m-fade-out {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-4px); }
+        }
+
+        @keyframes m-fade-in {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*),
+            ::view-transition-old(*),
+            ::view-transition-new(*) {
+                animation: none !important;
+            }
+        }
+
         h1, h2, h3 {
             color: #fff;
             margin-top: 0;
@@ -1732,28 +1768,36 @@
             const btnFiles = document.getElementById('btn-tab-files');
             const btnSettings = document.getElementById('btn-tab-settings');
             
-            if (tabId === 'files-panel') {
-                if (filesPanel.classList.contains('active')) {
-                    filesPanel.classList.remove('active');
-                    if (btnFiles) btnFiles.classList.remove('active');
+            const updateTabs = () => {
+                if (tabId === 'files-panel') {
+                    if (filesPanel.classList.contains('active')) {
+                        filesPanel.classList.remove('active');
+                        if (btnFiles) btnFiles.classList.remove('active');
+                    } else {
+                        filesPanel.classList.add('active');
+                        settingsPanel.classList.remove('active');
+                        if (btnFiles) btnFiles.classList.add('active');
+                        if (btnSettings) btnSettings.classList.remove('active');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                 } else {
-                    filesPanel.classList.add('active');
-                    settingsPanel.classList.remove('active');
-                    if (btnFiles) btnFiles.classList.add('active');
-                    if (btnSettings) btnSettings.classList.remove('active');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    if (settingsPanel.classList.contains('active')) {
+                        settingsPanel.classList.remove('active');
+                        if (btnSettings) btnSettings.classList.remove('active');
+                    } else {
+                        settingsPanel.classList.add('active');
+                        filesPanel.classList.remove('active');
+                        if (btnSettings) btnSettings.classList.add('active');
+                        if (btnFiles) btnFiles.classList.remove('active');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                 }
+            };
+
+            if (!document.startViewTransition) {
+                updateTabs();
             } else {
-                if (settingsPanel.classList.contains('active')) {
-                    settingsPanel.classList.remove('active');
-                    if (btnSettings) btnSettings.classList.remove('active');
-                } else {
-                    settingsPanel.classList.add('active');
-                    filesPanel.classList.remove('active');
-                    if (btnSettings) btnSettings.classList.add('active');
-                    if (btnFiles) btnFiles.classList.remove('active');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
+                document.startViewTransition(updateTabs);
             }
         }
 
@@ -3851,18 +3895,44 @@
             return dec.decode(decrypted);
         }
 
+        let _lastActiveElement = null;
+
+        function syncModalScrollLock() {
+            const anyModalOpen = ['modal-changelog', 'modal-settings-export-pwd', 'modal-settings-import-pwd'].some(id => {
+                const el = document.getElementById(id);
+                return el && el.style.display && el.style.display !== 'none';
+            });
+            if (anyModalOpen) {
+                document.body.classList.add('modal-open');
+            } else {
+                document.body.classList.remove('modal-open');
+            }
+        }
+
         function openSettingsExportModal() {
-            document.getElementById('settings-export-pwd').value = '';
+            _lastActiveElement = document.activeElement;
+            const pwdInput = document.getElementById('settings-export-pwd');
+            pwdInput.value = '';
             document.getElementById('modal-settings-export-pwd').style.display = 'flex';
+            syncModalScrollLock();
+            setTimeout(() => pwdInput.focus(), 50);
         }
 
         function closeSettingsExportModal() {
             document.getElementById('modal-settings-export-pwd').style.display = 'none';
+            syncModalScrollLock();
+            if (_lastActiveElement && typeof _lastActiveElement.focus === 'function') {
+                _lastActiveElement.focus();
+            }
         }
 
         function closeSettingsImportModal() {
             pendingImportSettingsContent = '';
             document.getElementById('modal-settings-import-pwd').style.display = 'none';
+            syncModalScrollLock();
+            if (_lastActiveElement && typeof _lastActiveElement.focus === 'function') {
+                _lastActiveElement.focus();
+            }
         }
 
         async function executeSettingsExport(e) {
@@ -3917,8 +3987,12 @@
                     return;
                 }
                 pendingImportSettingsContent = content;
-                document.getElementById('settings-import-pwd').value = '';
+                _lastActiveElement = document.activeElement;
+                const pwdInput = document.getElementById('settings-import-pwd');
+                pwdInput.value = '';
                 document.getElementById('modal-settings-import-pwd').style.display = 'flex';
+                syncModalScrollLock();
+                setTimeout(() => pwdInput.focus(), 50);
             };
             reader.readAsText(file);
         }
@@ -4191,15 +4265,24 @@
         }
 
         function openChangelogModal() {
+            _lastActiveElement = document.activeElement;
             renderChangelogModal();
-            document.getElementById('modal-changelog').style.display = 'flex';
+            const modal = document.getElementById('modal-changelog');
+            modal.style.display = 'flex';
+            syncModalScrollLock();
+            const closeBtn = modal.querySelector('button[onclick*="closeChangelogModal"]');
+            if (closeBtn) closeBtn.focus();
         }
 
         function closeChangelogModal() {
             document.getElementById('modal-changelog').style.display = 'none';
+            syncModalScrollLock();
+            if (_lastActiveElement && typeof _lastActiveElement.focus === 'function') {
+                _lastActiveElement.focus();
+            }
         }
 
-        // Закриття модальних вікон за допомогою клавіші Escape (Esc) та кліку на фон (Backdrop)
+        // Закриття модальних вікон за допомогою клавіші Escape (Esc) та кліку на фон (Backdrop / Light-Dismiss)
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' || e.key === 'Esc') {
                 closeChangelogModal();
@@ -4212,7 +4295,9 @@
             ['modal-changelog', 'modal-settings-export-pwd', 'modal-settings-import-pwd'].forEach(id => {
                 const modal = document.getElementById(id);
                 if (modal && e.target === modal) {
-                    modal.style.display = 'none';
+                    if (id === 'modal-changelog') closeChangelogModal();
+                    else if (id === 'modal-settings-export-pwd') closeSettingsExportModal();
+                    else if (id === 'modal-settings-import-pwd') closeSettingsImportModal();
                 }
             });
         }); // Close window.addEventListener('click')

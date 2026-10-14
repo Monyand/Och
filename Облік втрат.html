@@ -51,6 +51,28 @@
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        body.modal-open {
+            overflow: hidden !important;
+        }
+
+        /* Modern View Transitions API cross-fade */
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 150ms;
+            animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Keyboard Accessibility & Focus-Visible */
+        :focus-visible {
+            outline: 2px solid #f59e0b !important;
+            outline-offset: 2px !important;
+        }
+
+        /* Prevent scroll chaining on modal containers */
+        .modal-scroll-container {
+            overscroll-behavior: contain;
+        }
         
         input[type="file"]::file-selector-button {
             border: none; background: #334155; color: #f8fafc; padding: 6px 12px;
@@ -1751,11 +1773,50 @@
                 return () => clearTimeout(timer);
             }, [soldiers, episodes, logs, settings, sessionPassword, backupPassword, isLoading]);
 
+            const lastActiveElementRef = useRef(null);
+            const hasOpenModal = isAddWoundedOpen || isEditOpen || isSettingsOpen || isBatchReplaceOpen || 
+                                 isBackupOpen || isClearDbConfirmOpen || isChangelogOpen || showAutoRestoreModal;
+
+            // Нативне блокування фонового скролу та відновлення фокусу (a11y)
+            useEffect(() => {
+                if (hasOpenModal) {
+                    if (!lastActiveElementRef.current && document.activeElement) {
+                        lastActiveElementRef.current = document.activeElement;
+                    }
+                    document.body.classList.add('modal-open');
+                } else {
+                    document.body.classList.remove('modal-open');
+                    if (lastActiveElementRef.current && typeof lastActiveElementRef.current.focus === 'function') {
+                        lastActiveElementRef.current.focus();
+                        lastActiveElementRef.current = null;
+                    }
+                }
+                return () => {
+                    document.body.classList.remove('modal-open');
+                };
+            }, [hasOpenModal]);
+
+            // Плавне перемикання вкладок за допомогою View Transitions API
+            const handleTabSwitch = useCallback((tab) => {
+                if (tab === activeTab) return;
+                if (document.startViewTransition) {
+                    document.startViewTransition(() => {
+                        startTransition(() => setActiveTab(tab));
+                    });
+                } else {
+                    startTransition(() => setActiveTab(tab));
+                }
+            }, [activeTab]);
+
             useEffect(() => {
                 const handleKeyDown = (e) => {
                     if (e.key === 'Escape') {
                         if (openDropdown) {
                             setOpenDropdown(null);
+                            return;
+                        }
+                        if (showAutoRestoreModal) {
+                            setShowAutoRestoreModal(false);
                             return;
                         }
                         if (isClearDbConfirmOpen) {
@@ -1792,7 +1853,7 @@
                 };
                 window.addEventListener('keydown', handleKeyDown);
                 return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [undoAction, openDropdown, isClearDbConfirmOpen, isBackupOpen, isBatchReplaceOpen, isSettingsOpen, isChangelogOpen, isAddWoundedOpen, isEditOpen]);
+            }, [undoAction, openDropdown, isClearDbConfirmOpen, isBackupOpen, isBatchReplaceOpen, isSettingsOpen, isChangelogOpen, isAddWoundedOpen, isEditOpen, showAutoRestoreModal]);
 
             const addLog = (action, details) => {
                 setLogs(prev => [{
@@ -5631,7 +5692,7 @@
                         <div className="flex items-center gap-1 bg-slate-950/90 border border-slate-800/90 p-1.5 rounded-xl shadow-inner overflow-x-auto self-start xl:self-center">
                             {/* Вкладка: Журнал */}
                             <button 
-                                onClick={() => startTransition(() => setActiveTab("list"))} 
+                                onClick={() => handleTabSwitch("list")} 
                                 className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-xs font-semibold cursor-pointer select-none ${
                                     activeTab === "list" 
                                         ? "bg-slate-800 text-white border border-slate-700 shadow-sm" 
@@ -5647,7 +5708,7 @@
 
                             {/* Вкладка: Черга евакуації */}
                             <button 
-                                onClick={() => startTransition(() => setActiveTab("triage"))} 
+                                onClick={() => handleTabSwitch("triage")} 
                                 className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-xs font-semibold cursor-pointer select-none ${
                                     activeTab === "triage" 
                                         ? "bg-slate-800 text-amber-300 border border-amber-500/50 shadow-sm" 
@@ -5679,7 +5740,7 @@
 
                             {/* Вкладка: Аналітика */}
                             <button 
-                                onClick={() => startTransition(() => setActiveTab("analytics"))} 
+                                onClick={() => handleTabSwitch("analytics")} 
                                 className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-xs font-semibold cursor-pointer select-none ${
                                     activeTab === "analytics" 
                                         ? "bg-slate-800 text-cyan-300 border border-cyan-500/50 shadow-sm" 
@@ -5692,7 +5753,7 @@
 
                             {/* Вкладка: Лог */}
                             <button 
-                                onClick={() => startTransition(() => setActiveTab("logs"))} 
+                                onClick={() => handleTabSwitch("logs")} 
                                 className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2 text-xs font-semibold cursor-pointer select-none ${
                                     activeTab === "logs" 
                                         ? "bg-slate-800 text-indigo-300 border border-indigo-500/50 shadow-sm" 
@@ -7377,7 +7438,7 @@
                                         <div className="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 space-y-3">
                                             <div>
                                                 <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider block mb-1.5">Час події</label>
-                                                <input type="datetime-local" value={episodeDate} onChange={(e) => setEpisodeDate(e.target.value)} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none transition" />
+                                                <input type="datetime-local" value={episodeDate} onChange={(e) => setEpisodeDate(e.target.value)} onClick={(e) => { try { e.target.showPicker(); } catch(err){} }} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none transition cursor-pointer" />
                                             </div>
                                             
                                             <label className={`flex items-center gap-2.5 text-xs font-bold p-3 rounded-xl border cursor-pointer select-none transition ${inUdp ? 'bg-red-950/60 border-red-800/80 text-red-300 shadow-sm' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'}`}>
@@ -7421,7 +7482,7 @@
                                                             <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">Дата евакуації</label>
                                                             <span className="text-[9px] text-slate-500 font-mono">за замовч. сьогодні</span>
                                                         </div>
-                                                        <input type="date" value={evacDate} onChange={(e) => setEvacDate(e.target.value)} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none transition" />
+                                                        <input type="date" value={evacDate} onChange={(e) => setEvacDate(e.target.value)} onClick={(e) => { try { e.target.showPicker(); } catch(err){} }} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none transition cursor-pointer" />
                                                     </div>
                                                 )}
                                             </div>
@@ -7442,7 +7503,7 @@
                                                             <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">Дата повернення</label>
                                                             <span className="text-[9px] text-slate-500 font-mono">за замовч. сьогодні</span>
                                                         </div>
-                                                        <input type="date" value={evacDate} onChange={(e) => setEvacDate(e.target.value)} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none transition" />
+                                                        <input type="date" value={evacDate} onChange={(e) => setEvacDate(e.target.value)} onClick={(e) => { try { e.target.showPicker(); } catch(err){} }} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none transition cursor-pointer" />
                                                     </div>
                                                 )}
                                             </div>
@@ -7463,7 +7524,7 @@
                                                             <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider">Дата рапорту</label>
                                                             <span className="text-[9px] text-slate-500 font-mono">за замовч. сьогодні</span>
                                                         </div>
-                                                        <input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none transition" />
+                                                        <input type="date" value={reportDate} onChange={(e) => setReportDate(e.target.value)} onClick={(e) => { try { e.target.showPicker(); } catch(err){} }} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/80 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none transition cursor-pointer" />
                                                     </div>
                                                     <div>
                                                         <label className="text-[10px] text-slate-400 font-bold uppercase font-mono tracking-wider block mb-1.5 flex items-center gap-1.5">

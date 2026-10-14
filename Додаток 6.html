@@ -142,6 +142,43 @@
             background-color: #1a233a;
             border-color: #60a5fa;
         }
+
+        /* Modern Web Guidance: Нативні плавні переходи режимів та вкладок (View Transitions API) */
+        #table-vop-container,
+        #table-btgr-container,
+        #table-bro-container,
+        #table-zab-container,
+        #table-utoch-container,
+        #dispatcherWidget,
+        #archive-date-filter-bar {
+            view-transition-name: d6-active-panel;
+        }
+
+        ::view-transition-old(d6-active-panel) {
+            animation: 160ms cubic-bezier(0.4, 0, 1, 1) both d6-fade-out;
+        }
+
+        ::view-transition-new(d6-active-panel) {
+            animation: 200ms cubic-bezier(0, 0, 0.2, 1) 30ms both d6-fade-in;
+        }
+
+        @keyframes d6-fade-out {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.99); }
+        }
+
+        @keyframes d6-fade-in {
+            from { opacity: 0; transform: scale(0.99); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*),
+            ::view-transition-old(*),
+            ::view-transition-new(*) {
+                animation: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -2275,13 +2312,26 @@
             document.getElementById('changelogModal').classList.add('hidden');
         }
 
-        // Закриття модальних вікон за допомогою клавіші Escape (Esc) та кліку на фон (Backdrop)
+        // Modern Web Guidance: Універсальне закриття модальних вікон за допомогою клавіші Escape (Esc) та кліку на фон (Backdrop)
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' || e.key === 'Esc') {
-                closeSettings();
-                closeChangelogModal();
-                closeEditModal();
-                closeDocxExportModal();
+                // Закриваємо модалки за пріоритетом від вкладених до батьківських
+                const pExport = document.getElementById('modal-settings-export-pwd');
+                const pImport = document.getElementById('modal-settings-import-pwd');
+                if (pExport && !pExport.classList.contains('hidden')) {
+                    if (typeof closeSettingsExportModal === 'function') closeSettingsExportModal();
+                    return;
+                }
+                if (pImport && !pImport.classList.contains('hidden')) {
+                    if (typeof closeSettingsImportModal === 'function') closeSettingsImportModal();
+                    return;
+                }
+
+                if (typeof closeSettings === 'function') closeSettings();
+                if (typeof closeChangelogModal === 'function') closeChangelogModal();
+                if (typeof closeEditModal === 'function') closeEditModal();
+                if (typeof closeDocxExportModal === 'function') closeDocxExportModal();
+                if (typeof closeDispatcherModal === 'function') closeDispatcherModal();
             }
         });
 
@@ -2290,12 +2340,46 @@
             const changelogModal = document.getElementById('changelogModal');
             const editRecordModal = document.getElementById('editRecordModal');
             const docxExportModal = document.getElementById('modal-docx-export');
+            const dispatcherModal = document.getElementById('dispatcherModal');
+            const pExport = document.getElementById('modal-settings-export-pwd');
+            const pImport = document.getElementById('modal-settings-import-pwd');
 
-            if (e.target === settingsModal) closeSettings();
-            if (e.target === changelogModal) closeChangelogModal();
-            if (e.target === editRecordModal) closeEditModal();
-            if (e.target === docxExportModal) closeDocxExportModal();
+            if (e.target === pExport && typeof closeSettingsExportModal === 'function') closeSettingsExportModal();
+            if (e.target === pImport && typeof closeSettingsImportModal === 'function') closeSettingsImportModal();
+            if (e.target === settingsModal && typeof closeSettings === 'function') closeSettings();
+            if (e.target === changelogModal && typeof closeChangelogModal === 'function') closeChangelogModal();
+            if (e.target === editRecordModal && typeof closeEditModal === 'function') closeEditModal();
+            if (e.target === docxExportModal && typeof closeDocxExportModal === 'function') closeDocxExportModal();
+            if (e.target === dispatcherModal && typeof closeDispatcherModal === 'function') closeDispatcherModal();
         });
+
+        // Modern Web Guidance: Автоматичний контроль блокування прокручування body при відкритті будь-якої модалки
+        const trackedModalIds = ['settingsModal', 'changelogModal', 'editRecordModal', 'modal-docx-export', 'dispatcherModal', 'modal-settings-export-pwd', 'modal-settings-import-pwd'];
+        const modalScrollObserver = new MutationObserver(() => {
+            const anyOpen = trackedModalIds.some(id => {
+                const el = document.getElementById(id);
+                return el && !el.classList.contains('hidden');
+            });
+            if (anyOpen) {
+                document.body.classList.add('modal-open');
+            } else {
+                document.body.classList.remove('modal-open');
+            }
+        });
+        window.addEventListener('DOMContentLoaded', () => {
+            trackedModalIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) modalScrollObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+            });
+        });
+        // Якщо DOM вже завантажено на момент виконання скрипту:
+        if (document.readyState === 'interactive' || document.readyState === 'complete') {
+            trackedModalIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) modalScrollObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+            });
+        }
+
         // Ініціалізація та керування темною темою
         function updateThemeIcon() {
             const isDark = document.documentElement.classList.contains('dark');
@@ -2970,44 +3054,52 @@
         let selectedDateFilter = 'all';
 
         function setAppMode(mode) {
-            currentAppMode = mode;
-            localStorage.setItem('dodatok6_app_mode', mode);
+            const updateDOM = () => {
+                currentAppMode = mode;
+                localStorage.setItem('dodatok6_app_mode', mode);
 
-            const btnPbd = document.getElementById('btn-mode-pbd');
-            const btnArchive = document.getElementById('btn-mode-archive');
-            const dropTitle = document.getElementById('drop-zone-title');
-            const dropSub = document.getElementById('drop-zone-sub');
-            const dispWidget = document.getElementById('dispatcherWidget');
-            const modeStatus = document.getElementById('mode-status-info');
+                const btnPbd = document.getElementById('btn-mode-pbd');
+                const btnArchive = document.getElementById('btn-mode-archive');
+                const dropTitle = document.getElementById('drop-zone-title');
+                const dropSub = document.getElementById('drop-zone-sub');
+                const dispWidget = document.getElementById('dispatcherWidget');
+                const modeStatus = document.getElementById('mode-status-info');
 
-            if (mode === 'archive') {
-                if (btnPbd) {
-                    btnPbd.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-bold text-gray-400 hover:text-gray-200 hover:bg-slate-800 transition-all cursor-pointer border border-transparent";
+                if (mode === 'archive') {
+                    if (btnPbd) {
+                        btnPbd.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-bold text-gray-400 hover:text-gray-200 hover:bg-slate-800 transition-all cursor-pointer border border-transparent";
+                    }
+                    if (btnArchive) {
+                        btnArchive.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-extrabold bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-400/50 transition-all cursor-pointer";
+                    }
+                    if (dropTitle) dropTitle.innerText = "Натисніть або перетягніть файли Додатків 6 сюди";
+                    if (dropSub) dropSub.innerText = "Крок 1: Завантажте готові Додатки 6 за місяць або період (.docx, .xlsx)";
+                    if (dispWidget) dispWidget.classList.add('hidden');
+                    if (modeStatus) modeStatus.innerHTML = `<span class="px-2.5 py-1 rounded bg-amber-950/80 text-amber-300 border border-amber-600/40 text-[11px] font-mono font-bold">📅 АРХІВ ДОДАТКІВ 6 АКТИВНО</span>`;
+                } else {
+                    if (btnPbd) {
+                        btnPbd.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)] border border-blue-400/50 transition-all cursor-pointer";
+                    }
+                    if (btnArchive) {
+                        btnArchive.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-bold text-gray-400 hover:text-gray-200 hover:bg-slate-800 transition-all cursor-pointer border border-transparent";
+                    }
+                    if (dropTitle) dropTitle.innerText = "Натисніть або перетягніть файли сюди";
+                    if (dropSub) dropSub.innerText = "Крок 1: Завантажте всі файли ПБД (.docx, .xlsx)";
+                    if (dispWidget) dispWidget.classList.remove('hidden');
+                    if (modeStatus) modeStatus.innerHTML = `<span class="px-2.5 py-1 rounded bg-blue-950/80 text-blue-300 border border-blue-600/40 text-[11px] font-mono font-bold">⚡ ДОБОВИЙ ЗБІР З РОТ АКТИВНО</span>`;
                 }
-                if (btnArchive) {
-                    btnArchive.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-extrabold bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-400/50 transition-all cursor-pointer";
-                }
-                if (dropTitle) dropTitle.innerText = "Натисніть або перетягніть файли Додатків 6 сюди";
-                if (dropSub) dropSub.innerText = "Крок 1: Завантажте готові Додатки 6 за місяць або період (.docx, .xlsx)";
-                if (dispWidget) dispWidget.classList.add('hidden');
-                if (modeStatus) modeStatus.innerHTML = `<span class="px-2.5 py-1 rounded bg-amber-950/80 text-amber-300 border border-amber-600/40 text-[11px] font-mono font-bold">📅 АРХІВ ДОДАТКІВ 6 АКТИВНО</span>`;
+
+                checkMissingFiles();
+                checkDuplicates();
+                renderArchiveDateButtons();
+                renderTables();
+            };
+
+            if (!document.startViewTransition) {
+                updateDOM();
             } else {
-                if (btnPbd) {
-                    btnPbd.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)] border border-blue-400/50 transition-all cursor-pointer";
-                }
-                if (btnArchive) {
-                    btnArchive.className = "px-3.5 py-1.5 rounded-md font-mono text-xs font-bold text-gray-400 hover:text-gray-200 hover:bg-slate-800 transition-all cursor-pointer border border-transparent";
-                }
-                if (dropTitle) dropTitle.innerText = "Натисніть або перетягніть файли сюди";
-                if (dropSub) dropSub.innerText = "Крок 1: Завантажте всі файли ПБД (.docx, .xlsx)";
-                if (dispWidget) dispWidget.classList.remove('hidden');
-                if (modeStatus) modeStatus.innerHTML = `<span class="px-2.5 py-1 rounded bg-blue-950/80 text-blue-300 border border-blue-600/40 text-[11px] font-mono font-bold">⚡ ДОБОВИЙ ЗБІР З РОТ АКТИВНО</span>`;
+                document.startViewTransition(updateDOM);
             }
-
-            checkMissingFiles();
-            checkDuplicates();
-            renderArchiveDateButtons();
-            renderTables();
         }
 
         function renderArchiveDateButtons() {
@@ -7352,28 +7444,36 @@
         let utochData = [];
 
         function switchTab(type) {
-            ['vop', 'btgr', 'bro', 'zab', 'utoch'].forEach(t => {
-                const btn = document.getElementById(`tab-${t}`);
-                const container = document.getElementById(`table-${t}-container`);
-                if (!btn || !container) return;
+            const updateDOM = () => {
+                ['vop', 'btgr', 'bro', 'zab', 'utoch'].forEach(t => {
+                    const btn = document.getElementById(`tab-${t}`);
+                    const container = document.getElementById(`table-${t}-container`);
+                    if (!btn || !container) return;
 
-                if (t === type) {
-                    btn.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
-                    btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-                    container.classList.remove('hidden');
-                    if (t === 'utoch') {
-                        container.classList.add('flex');
-                        updateUtochSoldierDatalist();
-                        updateUtochTasksDatalist();
-                        renderUtochTables();
+                    if (t === type) {
+                        btn.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+                        btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                        container.classList.remove('hidden');
+                        if (t === 'utoch') {
+                            container.classList.add('flex');
+                            updateUtochSoldierDatalist();
+                            updateUtochTasksDatalist();
+                            renderUtochTables();
+                        }
+                    } else {
+                        btn.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+                        btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                        container.classList.add('hidden');
+                        if (t === 'utoch') container.classList.remove('flex');
                     }
-                } else {
-                    btn.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
-                    btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-                    container.classList.add('hidden');
-                    if (t === 'utoch') container.classList.remove('flex');
-                }
-            });
+                });
+            };
+
+            if (!document.startViewTransition) {
+                updateDOM();
+            } else {
+                document.startViewTransition(updateDOM);
+            }
         }
 
         function toggleUtochTaskField() {

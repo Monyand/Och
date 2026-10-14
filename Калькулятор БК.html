@@ -53,6 +53,44 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #475569;
         }
+
+        /* Modern Web Guidance: Блокування скролу фонової сторінки під час відкриття модалок */
+        body.modal-open {
+            overflow: hidden !important;
+        }
+
+        /* Modern Web Guidance: Нативні плавні переходи (View Transitions API) */
+        #results-table,
+        #no-results,
+        #errors-container {
+            view-transition-name: results-panel;
+        }
+
+        ::view-transition-old(results-panel) {
+            animation: 130ms cubic-bezier(0.4, 0, 1, 1) both m-fade-out;
+        }
+
+        ::view-transition-new(results-panel) {
+            animation: 180ms cubic-bezier(0, 0, 0.2, 1) 20ms both m-fade-in;
+        }
+
+        @keyframes m-fade-out {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.99); }
+        }
+
+        @keyframes m-fade-in {
+            from { opacity: 0; transform: scale(0.99); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*),
+            ::view-transition-old(*),
+            ::view-transition-new(*) {
+                animation: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -946,83 +984,91 @@ GHO - 2
                 return nameMatch || catMatch;
             });
 
-            if (currentResults.length > 0) {
-                if (ammoSearchQuery) {
-                    resultsCountBadge.textContent = `${filtered.length} з ${currentResults.length} позиці${getPositionEnding(currentResults.length)}`;
+            const updateDOM = () => {
+                if (currentResults.length > 0) {
+                    if (ammoSearchQuery) {
+                        resultsCountBadge.textContent = `${filtered.length} з ${currentResults.length} позиці${getPositionEnding(currentResults.length)}`;
+                    } else {
+                        resultsCountBadge.textContent = `${currentResults.length} позиці${getPositionEnding(currentResults.length)}`;
+                    }
                 } else {
-                    resultsCountBadge.textContent = `${currentResults.length} позиці${getPositionEnding(currentResults.length)}`;
+                    resultsCountBadge.textContent = `0 позицій`;
                 }
-            } else {
-                resultsCountBadge.textContent = `0 позицій`;
-            }
 
-            if (filtered.length > 0) {
-                let html = '';
-                filtered.forEach(item => {
-                    const formattedCount = item.count.toLocaleString('uk-UA');
-                    const categoryBadge = getCategoryBadge(item.category);
-                    html += `
-                        <tr class="hover:bg-slate-800/40 transition-colors group">
-                            <td class="px-4 py-3 text-slate-200">
-                                <div class="flex items-center gap-2.5">
-                                    <span class="text-base select-none shrink-0">${item.icon || '📦'}</span>
-                                    <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
-                                        <span class="font-semibold text-slate-200 group-hover:text-white transition-colors truncate">${escapeHtml(item.name)}</span>
-                                        <div class="shrink-0">${categoryBadge}</div>
+                if (filtered.length > 0) {
+                    let html = '';
+                    filtered.forEach(item => {
+                        const formattedCount = item.count.toLocaleString('uk-UA');
+                        const categoryBadge = getCategoryBadge(item.category);
+                        html += `
+                            <tr class="hover:bg-slate-800/40 transition-colors group">
+                                <td class="px-4 py-3 text-slate-200">
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="text-base select-none shrink-0">${item.icon || '📦'}</span>
+                                        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
+                                            <span class="font-semibold text-slate-200 group-hover:text-white transition-colors truncate">${escapeHtml(item.name)}</span>
+                                            <div class="shrink-0">${categoryBadge}</div>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <span class="font-bold text-white text-sm bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 shadow-inner font-mono">${formattedCount}</span>
-                                    <span class="text-slate-500 font-normal text-xs">шт.</span>
-                                    <button onclick="copySingleRow('${escapeHtml(item.name)}', ${item.count}, this)" title="Скопіювати цю позицію" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-colors cursor-pointer active:scale-95 ml-1">
-                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-                resultsBody.innerHTML = html;
+                                </td>
+                                <td class="px-4 py-3 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <span class="font-bold text-white text-sm bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 shadow-inner font-mono">${formattedCount}</span>
+                                        <span class="text-slate-500 font-normal text-xs">шт.</span>
+                                        <button onclick="copySingleRow('${escapeHtml(item.name)}', ${item.count}, this)" title="Скопіювати цю позицію" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-colors cursor-pointer active:scale-95 ml-1">
+                                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    resultsBody.innerHTML = html;
 
-                // Footer summary row
-                const totalFilteredAmmo = filtered.reduce((acc, c) => acc + c.count, 0);
-                const resultsFooter = document.getElementById('results-footer');
-                if (resultsFooter) {
-                    resultsFooter.innerHTML = `
-                        <tr class="bg-slate-950/90 border-t-2 border-slate-800 text-xs font-mono">
-                            <td class="px-4 py-3 text-slate-300 font-bold uppercase tracking-wider flex items-center gap-2">
-                                <i data-lucide="sigma" class="w-4 h-4 text-emerald-400"></i>
-                                <span>Разом (${filtered.length} позиц.):</span>
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <span class="font-extrabold text-emerald-400 text-sm bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-800/50">${totalFilteredAmmo.toLocaleString('uk-UA')}</span>
-                                <span class="text-slate-500 text-xs ml-1">шт.</span>
-                            </td>
-                        </tr>
-                    `;
-                }
+                    // Footer summary row
+                    const totalFilteredAmmo = filtered.reduce((acc, c) => acc + c.count, 0);
+                    const resultsFooter = document.getElementById('results-footer');
+                    if (resultsFooter) {
+                        resultsFooter.innerHTML = `
+                            <tr class="bg-slate-950/90 border-t-2 border-slate-800 text-xs font-mono">
+                                <td class="px-4 py-3 text-slate-300 font-bold uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="sigma" class="w-4 h-4 text-emerald-400"></i>
+                                    <span>Разом (${filtered.length} позиц.):</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <span class="font-extrabold text-emerald-400 text-sm bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-800/50">${totalFilteredAmmo.toLocaleString('uk-UA')}</span>
+                                    <span class="text-slate-500 text-xs ml-1">шт.</span>
+                                </td>
+                            </tr>
+                        `;
+                    }
 
-                resultsTable.classList.remove('hidden');
-                noResults.classList.add('hidden');
-            } else {
-                resultsTable.classList.add('hidden');
-                noResults.classList.remove('hidden');
-                if (ammoSearchQuery && currentResults.length > 0) {
-                    noResults.innerHTML = `
-                        <i data-lucide="search-x" class="w-10 h-10 mb-2 opacity-40 text-slate-400"></i>
-                        <p class="text-xs text-slate-400">Нічого не знайдено за запитом "<span class="text-white">${escapeHtml(ammoSearchQuery)}</span>"</p>
-                        <button onclick="document.getElementById('ammo-search').value=''; filterResultsTable();" class="mt-2 text-xs text-blue-400 hover:underline cursor-pointer">Скинути пошук</button>
-                    `;
+                    resultsTable.classList.remove('hidden');
+                    noResults.classList.add('hidden');
                 } else {
-                    noResults.innerHTML = `
-                        <i data-lucide="inbox" class="w-12 h-12 mb-3 opacity-30 text-slate-400"></i>
-                        <p class="text-xs">Введіть текст донесень зліва для підрахунку</p>
-                    `;
+                    resultsTable.classList.add('hidden');
+                    noResults.classList.remove('hidden');
+                    if (ammoSearchQuery && currentResults.length > 0) {
+                        noResults.innerHTML = `
+                            <i data-lucide="search-x" class="w-10 h-10 mb-2 opacity-40 text-slate-400"></i>
+                            <p class="text-xs text-slate-400">Нічого не знайдено за запитом "<span class="text-white">${escapeHtml(ammoSearchQuery)}</span>"</p>
+                            <button onclick="document.getElementById('ammo-search').value=''; filterResultsTable();" class="mt-2 text-xs text-blue-400 hover:underline cursor-pointer">Скинути пошук</button>
+                        `;
+                    } else {
+                        noResults.innerHTML = `
+                            <i data-lucide="inbox" class="w-12 h-12 mb-3 opacity-30 text-slate-400"></i>
+                            <p class="text-xs">Введіть текст донесень зліва для підрахунку</p>
+                        `;
+                    }
                 }
+                if (window.lucide) lucide.createIcons();
+            };
+
+            if (!document.startViewTransition) {
+                updateDOM();
+            } else {
+                document.startViewTransition(updateDOM);
             }
-            lucide.createIcons();
         }
 
         /**
@@ -1341,20 +1387,42 @@ GHO - 2
         }
 
         // -------------------------------------------------------------------------
-        // 8. УПРАВЛІННЯ МОДАЛЬНИМ ВІКНОМ CHANGELOG
+        // 8. УПРАВЛІННЯ МОДАЛЬНИМ ВІКНОМ CHANGELOG (Modern Web Guidance & a11y)
         // -------------------------------------------------------------------------
+        let _lastActiveElement = null;
+
         function openChangelogModal() {
+            _lastActiveElement = document.activeElement;
             changelogModal.classList.remove('hidden');
             changelogModal.classList.add('flex');
+            document.body.classList.add('modal-open');
+
+            // Автофокус на кнопку закриття для доступності (a11y)
+            const closeBtn = changelogModal.querySelector('button[onclick*="closeChangelogModal"]');
+            if (closeBtn) closeBtn.focus();
         }
 
         function closeChangelogModal() {
             changelogModal.classList.add('hidden');
             changelogModal.classList.remove('flex');
+            document.body.classList.remove('modal-open');
+
+            // Повернення фокуса на кнопку виклику для зручності клавіатурної навігації
+            if (_lastActiveElement && typeof _lastActiveElement.focus === 'function') {
+                _lastActiveElement.focus();
+            }
         }
 
+        // Закриття по кліку на бекдроп (Light Dismiss)
         changelogModal.addEventListener('click', (e) => {
             if (e.target === changelogModal) closeChangelogModal();
+        });
+
+        // Нативне закриття по клавіші Escape
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !changelogModal.classList.contains('hidden')) {
+                closeChangelogModal();
+            }
         });
 
         // -------------------------------------------------------------------------
