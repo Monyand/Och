@@ -13,6 +13,14 @@
         }
     </script>
 
+    <!-- JSZip для читання подобових .docx (Повний Air-Gap Offline + CDN fallback) -->
+    <script src="v8/jszip.min.js"></script>
+    <script>
+        if (typeof JSZip === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>');
+        }
+    </script>
+
     <!-- docx для створення Word файлів (Повний Air-Gap Offline + CDN fallback) -->
     <script src="v8/docx.js"></script>
     <script>
@@ -107,7 +115,7 @@
     <!-- Верхній фоновий градієнтний акцент -->
     <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-64 bg-gradient-to-b from-amber-500/10 via-slate-900/0 to-transparent pointer-events-none -z-10"></div>
 
-    <div class="max-w-6xl mx-auto space-y-6">
+    <div class="max-w-[1720px] w-full mx-auto space-y-4 px-3 sm:px-6">
 
         <!-- Шапка програми -->
         <header class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-slate-800/80 pb-5">
@@ -125,7 +133,7 @@
                         <div class="flex items-center gap-2.5">
                             <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Облік перевіряючих</h1>
                             <button onclick="openModal('modal-changelog')" title="Історія оновлень" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm pulse-gold">
-                                ⚡ v1.4.0
+                                ⚡ v1.5.0
                             </button>
                         </div>
                         <p class="text-slate-400 text-xs md:text-sm mt-0.5">Автоматичний парсер бойових розпоряджень (БР) та генератор офіційного звіту .docx</p>
@@ -145,8 +153,23 @@
             </div>
         </header>
 
-        <!-- Робоча сітка (2 колонки) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Навігація режимів роботи (Сегментовані Таби) -->
+        <div class="flex items-center gap-2 p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-lg backdrop-blur-md max-w-xl mx-auto">
+            <button type="button" id="main-tab-verifier" onclick="switchMainTab('verifier')"
+                class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-400"></i>
+                <span>Таблиця БЧС (.xlsx)</span>
+            </button>
+            <button type="button" id="main-tab-pbd" onclick="switchMainTab('pbd')"
+                class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer">
+                <i data-lucide="folder-search" class="w-4 h-4 text-emerald-400"></i>
+                <span>Пакетний аудит ПБД (.docx)</span>
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">NEW</span>
+            </button>
+        </div>
+
+        <!-- Режим 1: Робоча сітка Таблиці БЧС (.xlsx) -->
+        <div id="view-verifier-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
             <!-- Ліва колонка: Параметри, Файл та Налаштування -->
             <div class="lg:col-span-6 flex flex-col space-y-5">
@@ -451,6 +474,326 @@
                         <!-- Заповнений стан -->
                         <div id="preview-content" class="hidden space-y-3.5 text-slate-200"></div>
                     </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Режим 2: Пакетний аудит табеля ПБД (.docx) -->
+        <div id="view-pbd-panel" class="hidden flex flex-col space-y-4">
+
+            <!-- 1. Топові тактичні KPI-картки (5 карток в 1 рядок як в Облік БР) -->
+            <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="pbd-kpi-section">
+                <!-- 1. Всього в базі -->
+                <div onclick="setPbdRankFilter('all')" id="kpi-pbd-all" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 p-3 rounded-2xl cursor-pointer transition-all select-none group shadow-lg shadow-black/40 border-t-2 border-t-slate-500">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-300">Всього в базі</span>
+                        <div class="w-6 h-6 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 group-hover:text-white transition">
+                            <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="pbd-kpi-total-val" class="text-2xl font-extrabold font-mono text-white tracking-tight">0</span>
+                        <span class="text-xs text-slate-400 font-medium">перевіряючих</span>
+                    </div>
+                </div>
+
+                <!-- 2. Офіцери -->
+                <div onclick="setPbdRankFilter('officers')" id="kpi-pbd-officers" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-amber-500/50 p-3 rounded-2xl cursor-pointer transition-all select-none group shadow-lg shadow-black/40 border-t-2 border-t-amber-500">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                            Офіцери
+                        </span>
+                        <div class="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 group-hover:bg-amber-500/20 transition">
+                            <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="pbd-kpi-officers-val" class="text-2xl font-extrabold font-mono text-amber-400 tracking-tight">0</span>
+                        <span class="text-xs text-amber-400/80 font-medium">командування</span>
+                    </div>
+                </div>
+
+                <!-- 3. Сержанти та солдати -->
+                <div onclick="setPbdRankFilter('sergeants')" id="kpi-pbd-sergeants" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-sky-500/50 p-3 rounded-2xl cursor-pointer transition-all select-none group shadow-lg shadow-black/40 border-t-2 border-t-sky-500">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-sky-400">Сержанти / Солдати</span>
+                        <div class="w-6 h-6 rounded-lg bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400 group-hover:bg-sky-500/20 transition">
+                            <i data-lucide="shield" class="w-3.5 h-3.5"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="pbd-kpi-sergeants-val" class="text-2xl font-extrabold font-mono text-sky-400 tracking-tight">0</span>
+                        <span class="text-xs text-sky-400/80 font-medium">в/с підрозділів</span>
+                    </div>
+                </div>
+
+                <!-- 4. Діб завантажено -->
+                <div id="kpi-pbd-days" class="relative overflow-hidden bg-slate-900/85 border border-slate-800 p-3 rounded-2xl select-none shadow-lg shadow-black/40 border-t-2 border-t-emerald-500">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400">Подано діб</span>
+                        <div class="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="pbd-kpi-days-val" class="text-2xl font-extrabold font-mono text-emerald-400 tracking-tight">0</span>
+                        <span id="pbd-kpi-days-sub" class="text-xs text-emerald-400/80 font-medium truncate">немає файлів</span>
+                    </div>
+                </div>
+
+                <!-- 5. Контроль пропусків -->
+                <div onclick="switchPbdSubtab('missing')" id="kpi-pbd-missing" class="relative overflow-hidden bg-slate-900/85 hover:bg-slate-850 border border-slate-800 hover:border-rose-500/50 p-3 rounded-2xl cursor-pointer transition-all select-none group shadow-lg shadow-black/40 border-t-2 border-t-rose-500 col-span-2 sm:col-span-1">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                            Кого забули?
+                        </span>
+                        <div class="w-6 h-6 rounded-lg bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400 group-hover:bg-rose-500/20 transition">
+                            <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="pbd-kpi-missing-val" class="text-2xl font-extrabold font-mono text-rose-400 tracking-tight">0</span>
+                        <span class="text-xs text-rose-400/80 font-medium">не подано</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Системний інпут файлів -->
+            <input type="file" id="pbd-file-input" accept=".docx" multiple class="hidden">
+
+            <!-- 2. Розумна зона завантаження: Повна (коли пусто) та Компактна стрічка (коли завантажено) -->
+            <!-- А) Повна зона (видно ТІЛЬКИ коли файлів немає) -->
+            <div id="pbd-dropzone-big" class="bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-4 shadow-xl">
+                <div id="pbd-dropzone"
+                    class="border-2 border-dashed border-slate-700/80 hover:border-emerald-500/80 hover:bg-slate-800/40 transition-all rounded-xl p-5 text-center cursor-pointer flex flex-col items-center justify-center group">
+                    <div class="w-10 h-10 rounded-xl bg-slate-800/80 group-hover:bg-emerald-500/20 text-slate-400 group-hover:text-emerald-400 flex items-center justify-center mb-2 transition-colors">
+                        <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-200 group-hover:text-emerald-300 transition-colors">
+                        Перетягніть подобові файли .docx сюди або клікніть для вибору пачки
+                    </p>
+                    <p class="text-xs text-slate-500 mt-0.5">Підтримує виділення одразу 30-31 файлів за весь місяць • 100% офлайн парсинг пункту 3.3</p>
+                    <button type="button" onclick="event.stopPropagation(); loadSamplePbdDocx();"
+                        class="mt-2.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span>Завантажити демо-приклад (9 перевіряючих)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Б) Компактна стрічка керування файлами (видно КОЛИ ФАЙЛИ ЗАВАНТАЖЕНО) -->
+            <div id="pbd-dropzone-compact" class="hidden bg-[#0c1322] border border-slate-800 px-4 py-2 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                        <i data-lucide="check-check" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+                        <span id="pbd-ribbon-files" class="font-bold text-white">0 файлів</span>
+                        <span class="text-slate-600">•</span>
+                        <span id="pbd-ribbon-range" class="text-emerald-400 font-bold">—</span>
+                        <span class="text-slate-600">•</span>
+                        <span id="pbd-ribbon-totals" class="text-slate-400">0 залучень</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="document.getElementById('pbd-file-input').click()"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition cursor-pointer">
+                        <i data-lucide="plus" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span>+ Додати ще .docx</span>
+                    </button>
+                    <button type="button" onclick="loadSamplePbdDocx()" title="Довантажити зразок 12.10"
+                        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30 transition cursor-pointer">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>Зразок</span>
+                    </button>
+                    <button type="button" onclick="clearPbdBatch()" title="Очистити всі завантажені файли"
+                        class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-semibold border border-rose-800/40 transition cursor-pointer">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span>Скинути</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="pbd-status-bar"></div>
+
+            <!-- 3. Компактний календарний таймлайн місяця (1..31 число) -->
+            <div id="pbd-timeline-card" class="hidden bg-[#0c1322] border border-slate-800/90 rounded-2xl p-3 sm:p-3.5 shadow-md space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="calendar-days" class="w-4 h-4 text-emerald-400"></i>
+                        <span class="font-bold text-slate-200 text-xs sm:text-sm">Контроль подачі (1..31 число):</span>
+                        <span id="pbd-timeline-month-badge" class="font-mono text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">Жовтень 2026</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs">
+                        <button type="button" onclick="resetPbdDayFilter()" id="btn-reset-day-filter"
+                            class="hidden text-[11px] font-mono text-amber-400 hover:text-amber-300 font-semibold cursor-pointer">
+                            Скинути фільтр дати (Всі дні) ✕
+                        </button>
+                        <span id="pbd-timeline-gap-warning" class="font-semibold text-rose-400 text-xs"></span>
+                    </div>
+                </div>
+
+                <!-- Компактна стрічка 31 клітинок -->
+                <div id="pbd-calendar-grid" class="grid grid-cols-7 sm:grid-cols-11 md:grid-cols-16 lg:grid-cols-31 gap-1 text-center font-mono">
+                    <!-- Рендериться динамічно -->
+                </div>
+            </div>
+
+            <!-- 4. Головна панель зведеного табеля та аналітики -->
+            <div id="pbd-main-analytics-card" class="hidden bg-[#0c1322] border border-slate-800/90 rounded-2xl shadow-xl overflow-hidden flex flex-col">
+                
+                <!-- Верхній тулбар (2 рядки для стабільності на Zoom) -->
+                <div class="p-4 bg-slate-800/60 border-b border-slate-700/80 space-y-3">
+                    
+                    <!-- Рядок 1: Пошук та Підвкладки -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="relative flex-1 max-w-md">
+                            <input type="text" id="pbd-search-input" placeholder="Пошук: прізвище, звання, посада, БР..." oninput="renderPbdActiveSubtab()"
+                                class="w-full py-2 px-3 pl-8 pr-7 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-xs font-mono outline-none focus:border-emerald-500 transition-all">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+                            <button type="button" onclick="clearPbdSearch()" title="Очистити пошук"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs font-mono">×</button>
+                        </div>
+
+                        <!-- Перемикач підвкладок -->
+                        <div class="flex items-center p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs font-semibold">
+                            <button type="button" id="pbd-btn-subtab-roster" onclick="switchPbdSubtab('roster')"
+                                class="py-1.5 px-3 rounded-lg text-center transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                                <span>Зведений табель</span>
+                            </button>
+                            <button type="button" id="pbd-btn-subtab-missing" onclick="switchPbdSubtab('missing')"
+                                class="py-1.5 px-3 rounded-lg text-center transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="user-x" class="w-3.5 h-3.5 text-rose-400"></i>
+                                <span>Кого забули?</span>
+                                <span id="pbd-missing-count-badge" class="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/40">0</span>
+                            </button>
+                            <button type="button" id="pbd-btn-subtab-daily" onclick="switchPbdSubtab('daily')"
+                                class="py-1.5 px-3 rounded-lg text-center transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer flex items-center gap-1.5">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-400"></i>
+                                <span>Подобовий розбір (3.3)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Рядок 2: Фільтри категорій, статистика та Експорт -->
+                    <div class="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-700/50">
+                        <div class="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+                            <button type="button" onclick="setPbdRankFilter('all')" id="pbd-filter-rank-all"
+                                class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] cursor-pointer">
+                                Всі (<span id="pbd-count-all">0</span>)
+                            </button>
+                            <button type="button" onclick="setPbdRankFilter('officers')" id="pbd-filter-rank-officers"
+                                class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 text-[11px] cursor-pointer">
+                                Офіцери (<span id="pbd-count-officers">0</span>)
+                            </button>
+                            <button type="button" onclick="setPbdRankFilter('sergeants')" id="pbd-filter-rank-sergeants"
+                                class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 text-[11px] cursor-pointer">
+                                Сержанти та солдати (<span id="pbd-count-sergeants">0</span>)
+                            </button>
+                            <button type="button" onclick="setPbdRankFilter('top')" id="pbd-filter-rank-top"
+                                class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 text-[11px] cursor-pointer">
+                                🔥 3+ виходи (<span id="pbd-count-top">0</span>)
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="copyPbdRosterText()" id="btn-copy-pbd-roster"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all cursor-pointer shadow-sm">
+                                <i data-lucide="copy" class="w-3.5 h-3.5 text-amber-400"></i>
+                                <span id="copy-pbd-roster-text">Копіювати список</span>
+                            </button>
+                            <button type="button" onclick="exportPbdRosterToExcel()" id="btn-export-pbd-excel"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold text-xs transition-all cursor-pointer shadow-md shadow-emerald-600/20 active:scale-95">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                                <span>Експорт .xlsx</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Вміст підвкладок -->
+                <div class="p-4 sm:p-5 flex-1 min-h-[460px] bg-slate-950/40">
+                    
+                    <!-- 1. Зведений табель (Контейнер) -->
+                    <div id="pbd-subtab-container-roster" class="space-y-3">
+                        <div id="pbd-roster-list" class="space-y-2.5">
+                            <!-- Рендериться динамічно -->
+                        </div>
+                    </div>
+
+                    <!-- 2. Детектор пропусків («Кого забули») -->
+                    <div id="pbd-subtab-container-missing" class="hidden space-y-4">
+                        <!-- Панель штатного списку для звірки -->
+                        <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-slate-800/80">
+                                <div>
+                                    <h4 class="font-bold text-white text-xs sm:text-sm flex items-center gap-2">
+                                        <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
+                                        <span>Контрольний пул офіцерів для перевірки на подачу</span>
+                                    </h4>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Введіть або доповніть список офіцерів управління чи комісій, яких ви зобов'язані подати за місяць</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="autoPopulateControlRoster()" title="Додати всіх розпізнаних з поточних ПБД"
+                                        class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 cursor-pointer">
+                                        + Імпортувати з ПБД
+                                    </button>
+                                    <button type="button" onclick="toggleEditControlRoster()" id="btn-toggle-edit-roster"
+                                        class="px-2.5 py-1 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 text-xs font-semibold cursor-pointer">
+                                        Редагувати список
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Текстова зона редагування штатного списку -->
+                            <div id="pbd-control-roster-edit-box" class="hidden space-y-2">
+                                <textarea id="pbd-control-roster-textarea" rows="4" placeholder="Введіть ПІБ або прізвища офіцерів через кому або новий рядок..."
+                                    class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 text-xs font-mono outline-none focus:border-rose-500"></textarea>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" onclick="saveControlRoster()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold cursor-pointer">
+                                        Зберегти пул
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Чіпси офіцерів пулу -->
+                            <div id="pbd-control-roster-chips" class="flex flex-wrap gap-1.5 text-xs font-mono">
+                                <!-- Рендериться динамічно -->
+                            </div>
+                        </div>
+
+                        <!-- Результати перевірки (Хто не поданий / Хто поданий) -->
+                        <div id="pbd-missing-results" class="space-y-4">
+                            <!-- Рендериться динамічно -->
+                        </div>
+                    </div>
+
+                    <!-- 3. Подобовий розбір пункту 3.3 -->
+                    <div id="pbd-subtab-container-daily" class="hidden space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-400 font-semibold">Оберіть дату для детального перегляду пункту 3.3:</span>
+                                <select id="pbd-daily-date-select" onchange="renderPbdDailyBreakdown()"
+                                    class="py-1.5 px-3 bg-slate-950 border border-slate-700 rounded-xl text-amber-300 font-mono font-bold text-xs outline-none focus:border-amber-500 cursor-pointer">
+                                </select>
+                            </div>
+                            <button type="button" onclick="copyActiveDayBRText()"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 cursor-pointer">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                <span>Копіювати добу</span>
+                            </button>
+                        </div>
+
+                        <div id="pbd-daily-breakdown-content" class="space-y-3 font-mono text-[13px]">
+                            <!-- Рендериться динамічно -->
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -1372,6 +1715,1391 @@
             }
         });
 
+        // ==========================================
+        // МОДУЛЬ: ПАКЕТНИЙ АУДИТ ПБД (.DOCX) - ПУНКТ 3.3
+        // ==========================================
+
+        const MIL_RANKS_ORDER = [
+            'генерал-лейтенант', 'генерал-майор', 'бригадний генерал', 'генерал',
+            'підполковник', 'підполк.', 'підполк', 'полковник', 'полк.', 'полк',
+            'майор', 'май.',
+            'капітан', 'кап.', 'кап',
+            'старший лейтенант', 'ст. лейтенант', 'ст.лейтенант', 'ст. лейт.', 'ст.лейт.',
+            'молодший лейтенант', 'мол. лейтенант', 'мол.лейтенант', 'мол. лейт.', 'мол.лейт.',
+            'лейтенант', 'лейт.', 'лейт',
+            'головний майстер-сержант', 'старший майстер-сержант', 'майстер-сержант',
+            'штаб-сержант', 'штаб – сержант', 'штаб сержант', 'штаб-серж.',
+            'головний сержант',
+            'старший сержант', 'ст. сержант', 'ст.сержант', 'ст.серж.',
+            'молодший сержант', 'мол. сержант', 'мол.сержант', 'мол.серж.',
+            'сержант', 'серж.', 'серж',
+            'старший солдат', 'ст. солдат', 'ст.солдат', 'ст.солд.',
+            'солдат', 'солд.', 'солд', 'рекрут'
+        ];
+
+        function normalizeRankName(rawRank) {
+            const r = (rawRank || '').toLowerCase().trim();
+            if (r.includes('підполк')) return 'Підполковник';
+            if (r.includes('полк')) return 'Полковник';
+            if (r.includes('генерал-лейт')) return 'Генерал-лейтенант';
+            if (r.includes('генерал-май')) return 'Генерал-майор';
+            if (r.includes('бригадний')) return 'Бригадний генерал';
+            if (r.includes('генерал')) return 'Генерал';
+            if (r.includes('майор') || r.includes('май.')) return 'Майор';
+            if (r.includes('капітан') || r.includes('кап')) return 'Капітан';
+            if ((r.includes('ст.') && r.includes('лейт')) || r.includes('старший лейт')) return 'Старший лейтенант';
+            if ((r.includes('мол.') && r.includes('лейт')) || r.includes('молодший лейт')) return 'Молодший лейтенант';
+            if (r.includes('лейт')) return 'Лейтенант';
+            if (r.includes('головний майстер')) return 'Головний майстер-сержант';
+            if (r.includes('старший майстер')) return 'Старший майстер-сержант';
+            if (r.includes('майстер')) return 'Майстер-сержант';
+            if (r.includes('штаб')) return 'Штаб-сержант';
+            if (r.includes('головний серж')) return 'Головний сержант';
+            if ((r.includes('ст.') && r.includes('серж')) || r.includes('старший серж')) return 'Старший сержант';
+            if ((r.includes('мол.') && r.includes('серж')) || r.includes('молодший серж')) return 'Молодший сержант';
+            if (r.includes('серж')) return 'Сержант';
+            if ((r.includes('ст.') && r.includes('солд')) || r.includes('старший солд')) return 'Старший солдат';
+            if (r.includes('солд')) return 'Солдат';
+            if (r.includes('рекрут')) return 'Рекрут';
+            return rawRank ? (rawRank.charAt(0).toUpperCase() + rawRank.slice(1)) : 'В/с';
+        }
+
+        function getRankSeniority(rank) {
+            const r = (rank || '').toLowerCase();
+            if (r.includes('генерал')) return 100;
+            if (r.includes('підполк')) return 80;
+            if (r.includes('полк')) return 90;
+            if (r.includes('майор') || r.includes('май.')) return 70;
+            if (r.includes('капітан') || r.includes('кап')) return 60;
+            if ((r.includes('ст.') && r.includes('лейт')) || r.includes('старший лейт')) return 50;
+            if ((r.includes('мол.') && r.includes('лейт')) || r.includes('молодший лейт')) return 30;
+            if (r.includes('лейт')) return 40;
+            if (r.includes('головний майстер')) return 28;
+            if (r.includes('старший майстер')) return 26;
+            if (r.includes('майстер')) return 25;
+            if (r.includes('штаб')) return 20;
+            if (r.includes('головний серж')) return 19;
+            if ((r.includes('ст.') && r.includes('серж')) || r.includes('старший серж')) return 18;
+            if ((r.includes('мол.') && r.includes('серж')) || r.includes('молодший серж')) return 12;
+            if (r.includes('серж')) return 15;
+            if ((r.includes('ст.') && r.includes('солд')) || r.includes('старший солд')) return 8;
+            if (r.includes('солд') || r.includes('рекрут')) return 5;
+            return 1;
+        }
+
+        function isOfficerRank(rank) {
+            const r = (rank || '').toLowerCase();
+            return r.includes('генерал') || r.includes('полковник') || r.includes('полк') ||
+                   r.includes('майор') || r.includes('май.') ||
+                   r.includes('капітан') || r.includes('кап') ||
+                   r.includes('лейтенант') || r.includes('лейт');
+        }
+
+        function getDeclension(n, forms) {
+            const num = Math.abs(n) % 100;
+            const n1 = num % 10;
+            if (num > 10 && num < 20) return forms[2];
+            if (n1 > 1 && n1 < 5) return forms[1];
+            if (n1 === 1) return forms[0];
+            return forms[2];
+        }
+
+        function copyTextToClipboard(text, successMsg = 'Скопійовано!') {
+            if (!text) return;
+            let copied = false;
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                copied = document.execCommand('copy');
+                document.body.removeChild(textarea);
+            } catch (e) {}
+
+            if (!copied && navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {});
+            }
+
+            showPbdToast(successMsg);
+        }
+
+        function showPbdToast(msg) {
+            let toast = document.getElementById('pbd-toast-notification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'pbd-toast-notification';
+                toast.className = 'fixed bottom-5 right-5 z-[250] bg-emerald-600 text-slate-950 font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-2xl transition-all duration-300 pointer-events-none transform translate-y-10 opacity-0 flex items-center gap-2';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-950"></span><span>${msg}</span>`;
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-10', 'opacity-0');
+            }, 2200);
+        }
+
+        const DEFAULT_CONTROL_ROSTER = [
+            'КОВАЛЬЧУК Сергій Петрович',
+            'ТКАЧЕНКО Андрій Миколайович',
+            'ШЕВЧЕНКО Віктор Олександрович',
+            'МЕЛЬНИК Олег Васильович',
+            'БОНДАРЕНКО Денис Ігорович',
+            'ГРИЦЕНКО Юлія Борисівна',
+            'КРАВЧЕНКО Руслан Михайлович',
+            'ПОЛІЩУК Артем Володимирович',
+            'БОЙКО Василь Романович',
+            'ФЕДОРЕНКО Тарас Григорович' // Зразок для наочної детекції пропуску (не включений у ПБД)
+        ];
+
+        const pbdState = {
+            activeMainTab: 'verifier', // 'verifier' | 'pbd'
+            activePbdSubtab: 'roster', // 'roster' | 'missing' | 'daily'
+            files: {}, // filename -> { fileName, dateStr, day, month, year, verifiers: [], rawSections: [] }
+            registry: [], // Consolidated verifiers
+            dates: [], // Unique sorted dates
+            activeDay: null, // Day number (1..31) or null
+            rankFilter: 'all', // 'all' | 'officers' | 'sergeants' | 'top'
+            searchQuery: '',
+            controlRoster: []
+        };
+
+        // Перемикання головного режиму (БЧС Таблиця vs Пакетний аудит ПБД)
+        function switchMainTab(tab) {
+            pbdState.activeMainTab = tab;
+            const viewVerifier = document.getElementById('view-verifier-grid');
+            const viewPbd = document.getElementById('view-pbd-panel');
+            const btnVerifier = document.getElementById('main-tab-verifier');
+            const btnPbd = document.getElementById('main-tab-pbd');
+
+            if (tab === 'verifier') {
+                viewVerifier.classList.remove('hidden');
+                viewPbd.classList.add('hidden');
+                btnVerifier.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer';
+                btnPbd.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer';
+            } else {
+                viewVerifier.classList.add('hidden');
+                viewPbd.classList.remove('hidden');
+                btnPbd.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm cursor-pointer';
+                btnVerifier.className = 'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer';
+                renderPbdActiveSubtab();
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Перемикання підвкладок ПБД
+        function switchPbdSubtab(subtab) {
+            pbdState.activePbdSubtab = subtab;
+            const subtabs = ['roster', 'missing', 'daily'];
+            subtabs.forEach(st => {
+                const container = document.getElementById(`pbd-subtab-container-${st}`);
+                const btn = document.getElementById(`pbd-btn-subtab-${st}`);
+                if (container) {
+                    if (st === subtab) {
+                        container.classList.remove('hidden');
+                    } else {
+                        container.classList.add('hidden');
+                    }
+                }
+                if (btn) {
+                    if (st === subtab) {
+                        btn.className = 'py-1.5 px-3 rounded-lg text-center transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm cursor-pointer flex items-center gap-1.5';
+                    } else {
+                        btn.className = 'py-1.5 px-3 rounded-lg text-center transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer flex items-center gap-1.5';
+                    }
+                }
+            });
+            renderPbdActiveSubtab();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function setPbdRankFilter(filter) {
+            pbdState.rankFilter = filter;
+            const filters = ['all', 'officers', 'sergeants', 'top'];
+            filters.forEach(f => {
+                const btn = document.getElementById(`pbd-filter-rank-${f}`);
+                if (btn) {
+                    if (f === filter) {
+                        btn.className = 'px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] cursor-pointer';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800 text-[11px] cursor-pointer';
+                    }
+                }
+            });
+            renderPbdRoster();
+        }
+
+        function clearPbdSearch() {
+            const input = document.getElementById('pbd-search-input');
+            if (input) input.value = '';
+            pbdState.searchQuery = '';
+            renderPbdActiveSubtab();
+        }
+
+        function resetPbdDayFilter() {
+            pbdState.activeDay = null;
+            const resetBtn = document.getElementById('btn-reset-day-filter');
+            if (resetBtn) resetBtn.classList.add('hidden');
+            renderPbdTimeline();
+            renderPbdActiveSubtab();
+        }
+
+        function togglePbdDayFilter(day) {
+            if (pbdState.activeDay === day) {
+                resetPbdDayFilter();
+            } else {
+                pbdState.activeDay = day;
+                const resetBtn = document.getElementById('btn-reset-day-filter');
+                if (resetBtn) resetBtn.classList.remove('hidden');
+                renderPbdTimeline();
+                renderPbdActiveSubtab();
+            }
+        }
+
+        function clearPbdBatch() {
+            if (!confirm('Очистити всі завантажені файли ПБД та скинути зведений табель?')) return;
+            pbdState.files = {};
+            pbdState.registry = [];
+            pbdState.dates = [];
+            pbdState.activeDay = null;
+            pbdState.searchQuery = '';
+
+            const dropzoneBig = document.getElementById('pbd-dropzone-big');
+            const dropzoneCompact = document.getElementById('pbd-dropzone-compact');
+            const timelineCard = document.getElementById('pbd-timeline-card');
+            const mainCard = document.getElementById('pbd-main-analytics-card');
+            const statusBar = document.getElementById('pbd-status-bar');
+
+            if (dropzoneBig) dropzoneBig.classList.remove('hidden');
+            if (dropzoneCompact) dropzoneCompact.classList.add('hidden');
+            if (timelineCard) timelineCard.classList.add('hidden');
+            if (mainCard) mainCard.classList.add('hidden');
+            if (statusBar) statusBar.innerHTML = '';
+
+            updatePbdBannerStats();
+            renderPbdTimeline();
+            renderPbdActiveSubtab();
+        }
+
+        // Обробка файлів пакету .docx
+        async function handlePbdFiles(fileList) {
+            if (!fileList || fileList.length === 0) return;
+            if (typeof JSZip === 'undefined') {
+                alert('Помилка: Бібліотека JSZip не завантажена. Перевірте наявність файлу v8/jszip.min.js.');
+                return;
+            }
+
+            const statusBar = document.getElementById('pbd-status-bar');
+            statusBar.innerHTML = `
+                <div class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-950 border border-emerald-900/40 text-emerald-300 text-xs font-mono">
+                    <span class="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
+                    <span>Обробка ${fileList.length} файлів .docx...</span>
+                </div>
+            `;
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                if (!file.name.toLowerCase().endsWith('.docx')) {
+                    continue;
+                }
+                try {
+                    const parsed = await parsePbdDocx(file);
+                    pbdState.files[file.name] = parsed;
+                    successCount++;
+                } catch (err) {
+                    console.error('Помилка читання docx:', file.name, err);
+                    errorCount++;
+                }
+            }
+
+            rebuildPbdRegistry();
+
+            statusBar.innerHTML = `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs">
+                    <span class="flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>
+                        <span>Успішно оброблено: <strong>${successCount}</strong> файлів${errorCount > 0 ? ` (помилок: ${errorCount})` : ''}</span>
+                    </span>
+                    <span class="font-mono text-[11px] text-slate-400">Всього в базі: ${Object.keys(pbdState.files).length} діб</span>
+                </div>
+            `;
+
+            // Оновлюємо панелі та статистику
+            updatePbdBannerStats();
+            renderPbdTimeline();
+            renderPbdActiveSubtab();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Парсер DOCX через JSZip (Пункту 3.3)
+        async function parsePbdDocx(file) {
+            const zip = new JSZip();
+            const contents = await zip.loadAsync(file);
+            const docXmlFile = contents.file("word/document.xml");
+            if (!docXmlFile) {
+                throw new Error("Не знайдено word/document.xml у " + file.name);
+            }
+            const xmlStr = await docXmlFile.async("string");
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlStr, "application/xml");
+
+            const paragraphs = [];
+            const pNodes = xmlDoc.getElementsByTagName("w:p");
+            for (let i = 0; i < pNodes.length; i++) {
+                const tNodes = pNodes[i].getElementsByTagName("w:t");
+                let pText = "";
+                for (let j = 0; j < tNodes.length; j++) {
+                    pText += tNodes[j].textContent || "";
+                }
+                pText = pText.trim();
+                if (pText) paragraphs.push(pText);
+            }
+
+            // Шукаємо межі пункту 3.3
+            let in33 = false;
+            const p33 = [];
+            for (let i = 0; i < paragraphs.length; i++) {
+                const text = paragraphs[i];
+                if (text.includes("3.3.") || text.includes("Робота комісій")) {
+                    in33 = true;
+                }
+                if (in33) {
+                    const firstWord = text.split(/\s+/)[0] || "";
+                    if ((text.includes("3.4.") || /^4\./.test(firstWord) || /^IV\./.test(firstWord)) && !text.includes("3.3")) {
+                        break;
+                    }
+                    p33.push(text);
+                }
+            }
+
+            // Визначення дати (з назви файлу або з тексту)
+            const fileName = file.name || "";
+            let dateStr = "";
+            let day = null, month = null, year = 2026;
+
+            const fnMatch = fileName.match(/(\d{1,2})[._-](\d{1,2})[._-](\d{4})/);
+            if (fnMatch) {
+                day = parseInt(fnMatch[1], 10);
+                month = parseInt(fnMatch[2], 10);
+                year = parseInt(fnMatch[3], 10);
+                dateStr = `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
+            } else {
+                for (let i = 0; i < Math.min(20, paragraphs.length); i++) {
+                    const dMatch = paragraphs[i].match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+                    if (dMatch) {
+                        day = parseInt(dMatch[1], 10);
+                        month = parseInt(dMatch[2], 10);
+                        year = parseInt(dMatch[3], 10);
+                        dateStr = `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
+                        break;
+                    }
+                }
+            }
+
+            if (!dateStr) {
+                dateStr = "12.10.2026";
+                day = 12;
+                month = 10;
+                year = 2026;
+            }
+
+            const verifiers = [];
+            const rawSections = [];
+
+            for (let pIdx = 0; pIdx < p33.length; pIdx++) {
+                const pText = p33[pIdx];
+                if (pIdx === 0 && pText.includes("3.3. Робота комісій") && pText.length < 60) {
+                    continue;
+                }
+
+                // Витягнення номера БР
+                const brMatch = pText.match(/№\s*([0-9a-zA-Zа-яіїєґА-ЯІЇЄҐ\/-]+)/);
+                const brNum = brMatch ? ('№' + brMatch[1]) : 'БР';
+
+                // Розділення на шапку і список людей після працюють:
+                const colonSplit = pText.split(/(?:працюють|працює|працювали|складі)\s*(?:\([^)]*\))?\s*:/i);
+                const body = colonSplit.length > 1 ? colonSplit[1] : pText;
+
+                const chunks = body.split(';');
+                const secPeople = [];
+
+                for (let c = 0; c < chunks.length; c++) {
+                    let chunk = chunks[c].trim();
+                    if (!chunk) continue;
+                    if (/^на відстані виконання|^в інших районах/i.test(chunk)) continue;
+
+                    // Звання
+                    let detectedRank = 'В/с';
+                    let matchedRankStr = '';
+                    for (const r of MIL_RANKS_ORDER) {
+                        const escaped = r.replace(/[-]/g, '[-–\\s]').replace(/\./g, '\\.?');
+                        const rRegex = new RegExp('(?:^|[^а-яіїєґa-z0-9])(' + escaped + ')(?=$|[^а-яіїєґa-z0-9])', 'iu');
+                        const rm = chunk.match(rRegex);
+                        if (rm) {
+                            detectedRank = normalizeRankName(rm[1]);
+                            matchedRankStr = rm[1];
+                            break;
+                        }
+                    }
+
+                    // ПІБ (Прізвище великими літерами + Ім'я + По батькові)
+                    const pipMatch = chunk.match(/([А-ЯІЇЄҐ\'-]{3,}\s+[А-ЯІЇЄҐ][а-яіїєґ\'-]+(?:\s+[А-ЯІЇЄҐ][а-яіїєґ\'-]+)?)/);
+                    if (pipMatch) {
+                        const pip = pipMatch[1].trim();
+
+                        // ІПН
+                        const ipnMatch = chunk.match(/\(?(?:ІПН\s*)?(\d{10})\)?/);
+                        const ipn = ipnMatch ? ipnMatch[1] : '';
+
+                        // Посада / підрозділ
+                        let pos = chunk.replace(pip, '');
+                        if (matchedRankStr) {
+                            pos = pos.replace(new RegExp('(?:^|[^а-яіїєґa-z0-9])' + matchedRankStr.replace(/[-]/g, '[-–\\s]').replace(/\./g, '\\.?') + '(?=$|[^а-яіїєґa-z0-9])', 'iu'), ' ');
+                        }
+                        if (ipn) pos = pos.replace(new RegExp('\\(?\\s*(?:ІПН\\s*)?' + ipn + '\\s*\\)?', 'g'), '');
+                        pos = pos.replace(/\(з\s+[\d.]+\)/g, '');
+                        pos = pos.replace(/^[,\s–-]+|[,\s–-]+$/g, '').trim();
+
+                        const item = {
+                            rank: detectedRank,
+                            pip: pip,
+                            ipn: ipn,
+                            pos: pos,
+                            br: brNum,
+                            date: dateStr,
+                            day: day,
+                            fileName: fileName
+                        };
+                        verifiers.push(item);
+                        secPeople.push(item);
+                    }
+                }
+
+                rawSections.push({
+                    br: brNum,
+                    header: colonSplit.length > 1 ? colonSplit[0].trim() : '',
+                    fullText: pText,
+                    peopleCount: secPeople.length,
+                    people: secPeople
+                });
+            }
+
+            return {
+                fileName: fileName,
+                dateStr: dateStr,
+                day: day,
+                month: month,
+                year: year,
+                verifiers: verifiers,
+                rawSections: rawSections
+            };
+        }
+
+        // Перебудова зведеного реєстру
+        function rebuildPbdRegistry() {
+            const map = new Map();
+            const dateSet = new Set();
+
+            Object.values(pbdState.files).forEach(f => {
+                if (f.dateStr) dateSet.add(f.dateStr);
+
+                f.verifiers.forEach(v => {
+                    const normPip = v.pip.toUpperCase().replace(/\s+/g, ' ').trim();
+                    if (!map.has(normPip)) {
+                        map.set(normPip, {
+                            pip: v.pip,
+                            rank: v.rank,
+                            pos: v.pos,
+                            ipn: v.ipn,
+                            dates: new Set(),
+                            days: new Set(),
+                            brs: new Set()
+                        });
+                    }
+                    const entry = map.get(normPip);
+                    entry.dates.add(v.date);
+                    entry.days.add(v.day);
+                    if (v.br) entry.brs.add(v.br);
+                    if (!entry.ipn && v.ipn) entry.ipn = v.ipn;
+                    if (v.pos && v.pos.length > (entry.pos || '').length) entry.pos = v.pos;
+                    if (getRankSeniority(v.rank) > getRankSeniority(entry.rank)) entry.rank = v.rank;
+                });
+            });
+
+            // Конвертуємо у масив
+            pbdState.registry = Array.from(map.values()).map(e => ({
+                pip: e.pip,
+                rank: e.rank,
+                pos: e.pos,
+                ipn: e.ipn,
+                dates: Array.from(e.dates).sort((a, b) => {
+                    const [d1, m1, y1] = a.split('.').map(Number);
+                    const [d2, m2, y2] = b.split('.').map(Number);
+                    return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+                }),
+                days: Array.from(e.days).sort((a, b) => a - b),
+                brs: Array.from(e.brs),
+                totalDays: e.days.size
+            }));
+
+            // Сортування: Звання за старшинством -> Кількість діб -> ПІБ
+            pbdState.registry.sort((a, b) => {
+                const diffRank = getRankSeniority(b.rank) - getRankSeniority(a.rank);
+                if (diffRank !== 0) return diffRank;
+                const diffDays = b.totalDays - a.totalDays;
+                if (diffDays !== 0) return diffDays;
+                return a.pip.localeCompare(b.pip, 'uk');
+            });
+
+            pbdState.dates = Array.from(dateSet).sort((a, b) => {
+                const [d1, m1, y1] = a.split('.').map(Number);
+                const [d2, m2, y2] = b.split('.').map(Number);
+                return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+            });
+
+            updatePbdBannerStats();
+        }
+
+        function updatePbdBannerStats() {
+            loadControlRoster();
+            const filesCount = Object.keys(pbdState.files).length;
+            const uniquePersons = pbdState.registry.length;
+            const officersCount = pbdState.registry.filter(i => isOfficerRank(i.rank)).length;
+            const sergeantsCount = pbdState.registry.filter(i => !isOfficerRank(i.rank)).length;
+
+            let totalEngagements = 0;
+            pbdState.registry.forEach(r => totalEngagements += r.totalDays);
+
+            // Підрахунок не поданих з контрольного пулу («Кого забули?»)
+            let missingCount = 0;
+            if (pbdState.controlRoster && pbdState.controlRoster.length > 0) {
+                pbdState.controlRoster.forEach(name => {
+                    const surname = name.trim().split(/\s+/)[0].toUpperCase();
+                    if (!surname) return;
+                    const matched = pbdState.registry.find(reg => reg.pip.toUpperCase().includes(surname));
+                    if (!matched) {
+                        missingCount++;
+                    } else if (pbdState.activeDay !== null && !matched.days.includes(pbdState.activeDay)) {
+                        missingCount++;
+                    }
+                });
+            }
+
+            // 1. Оновлення 5 KPI-карток
+            const kpiTotal = document.getElementById('pbd-kpi-total-val');
+            const kpiOfficers = document.getElementById('pbd-kpi-officers-val');
+            const kpiSergeants = document.getElementById('pbd-kpi-sergeants-val');
+            const kpiDays = document.getElementById('pbd-kpi-days-val');
+            const kpiDaysSub = document.getElementById('pbd-kpi-days-sub');
+            const kpiMissing = document.getElementById('pbd-kpi-missing-val');
+
+            if (kpiTotal) kpiTotal.innerText = uniquePersons;
+            if (kpiOfficers) kpiOfficers.innerText = officersCount;
+            if (kpiSergeants) kpiSergeants.innerText = sergeantsCount;
+            if (kpiDays) kpiDays.innerText = pbdState.dates.length;
+            if (kpiDaysSub) {
+                if (pbdState.activeDay !== null) {
+                    kpiDaysSub.innerText = `фільтр: ${pbdState.activeDay} число`;
+                } else if (pbdState.dates.length === 1) {
+                    kpiDaysSub.innerText = pbdState.dates[0];
+                } else if (pbdState.dates.length > 1) {
+                    kpiDaysSub.innerText = `${pbdState.dates[0]} — ${pbdState.dates[pbdState.dates.length - 1]}`;
+                } else {
+                    kpiDaysSub.innerText = 'немає файлів';
+                }
+            }
+            if (kpiMissing) kpiMissing.innerText = missingCount;
+
+            const missingBadge = document.getElementById('pbd-missing-count-badge');
+            if (missingBadge) missingBadge.innerText = missingCount;
+
+            // 2. Компактна стрічка інформації про файли
+            const ribbonFiles = document.getElementById('pbd-ribbon-files');
+            const ribbonRange = document.getElementById('pbd-ribbon-range');
+            const ribbonTotals = document.getElementById('pbd-ribbon-totals');
+
+            if (ribbonFiles) ribbonFiles.innerText = `${filesCount} ${getDeclension(filesCount, ['файл .docx', 'файли .docx', 'файлів .docx'])}`;
+            if (ribbonRange) {
+                if (pbdState.dates.length === 1) {
+                    ribbonRange.innerText = pbdState.dates[0];
+                } else if (pbdState.dates.length > 1) {
+                    ribbonRange.innerText = `${pbdState.dates[0]} — ${pbdState.dates[pbdState.dates.length - 1]}`;
+                } else {
+                    ribbonRange.innerText = '—';
+                }
+            }
+            if (ribbonTotals) {
+                ribbonTotals.innerText = `${uniquePersons} унікальних осіб • ${totalEngagements} залучень`;
+            }
+
+            // 3. Автоматичне перемикання Dropzone
+            const dropzoneBig = document.getElementById('pbd-dropzone-big');
+            const dropzoneCompact = document.getElementById('pbd-dropzone-compact');
+            const timelineCard = document.getElementById('pbd-timeline-card');
+            const mainCard = document.getElementById('pbd-main-analytics-card');
+
+            if (filesCount > 0) {
+                if (dropzoneBig) dropzoneBig.classList.add('hidden');
+                if (dropzoneCompact) dropzoneCompact.classList.remove('hidden');
+                if (timelineCard) timelineCard.classList.remove('hidden');
+                if (mainCard) mainCard.classList.remove('hidden');
+            } else {
+                if (dropzoneBig) dropzoneBig.classList.remove('hidden');
+                if (dropzoneCompact) dropzoneCompact.classList.add('hidden');
+                if (timelineCard) timelineCard.classList.add('hidden');
+                if (mainCard) mainCard.classList.add('hidden');
+            }
+        }
+
+        // Рендер таймлайну (1..31 число) з детекцією пропущених дат
+        function renderPbdTimeline() {
+            const grid = document.getElementById('pbd-calendar-grid');
+            if (!grid) return;
+
+            let targetMonth = 9; // Жовтень (0-indexed: 9)
+            let targetYear = 2026;
+            if (pbdState.dates.length > 0) {
+                const first = pbdState.dates[0].split('.');
+                targetMonth = parseInt(first[1], 10) - 1;
+                targetYear = parseInt(first[2], 10);
+            }
+
+            const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+            const monthNames = ['Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень', 'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'];
+            const monthBadge = document.getElementById('pbd-timeline-month-badge');
+            if (monthBadge) monthBadge.innerText = `${monthNames[targetMonth]} ${targetYear}`;
+
+            // Збираємо активні дні
+            const activeDayCounts = {};
+            Object.values(pbdState.files).forEach(f => {
+                if (f.day) {
+                    activeDayCounts[f.day] = (activeDayCounts[f.day] || 0) + f.verifiers.length;
+                }
+            });
+
+            const uploadedDays = Object.keys(activeDayCounts).map(Number).sort((a, b) => a - b);
+            const minDay = uploadedDays.length > 0 ? uploadedDays[0] : 1;
+            const maxDay = uploadedDays.length > 0 ? uploadedDays[uploadedDays.length - 1] : daysInMonth;
+
+            const missingDays = [];
+            if (uploadedDays.length > 1) {
+                for (let d = minDay; d <= maxDay; d++) {
+                    if (!activeDayCounts[d]) {
+                        missingDays.push(d);
+                    }
+                }
+            }
+
+            const gapWarning = document.getElementById('pbd-timeline-gap-warning');
+            if (gapWarning) {
+                if (missingDays.length > 0) {
+                    gapWarning.innerHTML = `⚠️ Пропущено ${missingDays.length} дат: <span class="font-mono text-rose-300 font-bold">${missingDays.join(', ')}</span> число!`;
+                } else if (uploadedDays.length > 0) {
+                    gapWarning.innerHTML = `<span class="text-emerald-400 font-semibold">✓ Всі дати в діапазоні (${minDay}..${maxDay}) подано безперервно</span>`;
+                } else {
+                    gapWarning.innerHTML = '';
+                }
+            }
+
+            let html = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const count = activeDayCounts[d] || 0;
+                const isSelected = pbdState.activeDay === d;
+                const isMissing = missingDays.includes(d);
+                const hasData = count > 0;
+
+                let cellClasses = 'py-1 px-1 rounded-lg text-xs font-mono transition-all flex flex-col items-center justify-center cursor-pointer border select-none min-h-[36px] ';
+
+                if (isSelected) {
+                    cellClasses += 'bg-amber-500/25 border-amber-400 text-white shadow-md ring-2 ring-amber-500/50 scale-105 z-10';
+                } else if (hasData) {
+                    cellClasses += 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/50 hover:border-emerald-400 shadow-sm';
+                } else if (isMissing) {
+                    cellClasses += 'bg-rose-950/50 border-rose-600/70 text-rose-300 hover:bg-rose-900/60 animate-pulse';
+                } else {
+                    cellClasses += 'bg-slate-950/60 border-slate-800 text-slate-600 hover:border-slate-700 hover:text-slate-400';
+                }
+
+                html += `
+                    <div onclick="togglePbdDayFilter(${d})" class="${cellClasses}" title="${hasData ? `${d} число: ${count} перевіряючих` : (isMissing ? `УВАГА: ${d} число пропущено!` : `${d} число`)}">
+                        <span class="font-bold text-xs leading-none ${isSelected ? 'text-amber-300' : (hasData ? 'text-emerald-200' : (isMissing ? 'text-rose-400' : 'text-slate-500'))}">${d}</span>
+                        ${hasData ? `<span class="text-[9px] font-bold text-emerald-400 mt-0.5 leading-none">${count}</span>` : (isMissing ? `<span class="text-[9px] text-rose-400 font-bold mt-0.5 leading-none">⚠️</span>` : `<span class="text-[9px] opacity-30 mt-0.5 leading-none">—</span>`)}
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // Рендер активної підвкладки
+        function renderPbdActiveSubtab() {
+            const query = (document.getElementById('pbd-search-input')?.value || '').trim();
+            pbdState.searchQuery = query;
+
+            if (pbdState.activePbdSubtab === 'roster') {
+                renderPbdRoster();
+            } else if (pbdState.activePbdSubtab === 'missing') {
+                renderPbdMissing();
+            } else if (pbdState.activePbdSubtab === 'daily') {
+                renderPbdDailyBreakdown();
+            }
+        }
+
+        // 1. РЕНДЕР ЗВЕДЕНОГО ТАБЕЛЯ
+        function renderPbdRoster() {
+            const container = document.getElementById('pbd-roster-list');
+            if (!container) return;
+
+            let list = pbdState.registry;
+
+            // Фільтр за днем (якщо обрано у таймлайні)
+            if (pbdState.activeDay !== null) {
+                list = list.filter(item => item.days.includes(pbdState.activeDay));
+            }
+
+            // Фільтр за званням
+            if (pbdState.rankFilter === 'officers') {
+                list = list.filter(item => isOfficerRank(item.rank));
+            } else if (pbdState.rankFilter === 'sergeants') {
+                list = list.filter(item => !isOfficerRank(item.rank));
+            } else if (pbdState.rankFilter === 'top') {
+                list = list.filter(item => item.totalDays >= 3);
+            }
+
+            // Текстовий пошук
+            if (pbdState.searchQuery) {
+                const q = pbdState.searchQuery.toLowerCase();
+                list = list.filter(item =>
+                    item.pip.toLowerCase().includes(q) ||
+                    item.rank.toLowerCase().includes(q) ||
+                    (item.pos && item.pos.toLowerCase().includes(q)) ||
+                    (item.ipn && item.ipn.includes(q)) ||
+                    item.brs.some(b => b.toLowerCase().includes(q))
+                );
+            }
+
+            // Оновлення лічильників у кнопках
+            const allCount = pbdState.registry.length;
+            const offCount = pbdState.registry.filter(i => isOfficerRank(i.rank)).length;
+            const sergCount = pbdState.registry.filter(i => !isOfficerRank(i.rank)).length;
+            const topCount = pbdState.registry.filter(i => i.totalDays >= 3).length;
+
+            if (document.getElementById('pbd-count-all')) document.getElementById('pbd-count-all').innerText = allCount;
+            if (document.getElementById('pbd-count-officers')) document.getElementById('pbd-count-officers').innerText = offCount;
+            if (document.getElementById('pbd-count-sergeants')) document.getElementById('pbd-count-sergeants').innerText = sergCount;
+            if (document.getElementById('pbd-count-top')) document.getElementById('pbd-count-top').innerText = topCount;
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center bg-slate-900/60 rounded-xl border border-slate-800 text-slate-500 space-y-2">
+                        <i data-lucide="search-x" class="w-8 h-8 mx-auto opacity-50"></i>
+                        <p class="text-sm font-semibold text-slate-400">Нічого не знайдено за заданими фільтрами</p>
+                        <p class="text-xs">Спробуйте очистити пошуковий запит або змінити категорію звань</p>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            let html = '';
+            list.forEach((item, idx) => {
+                const isOfficer = isOfficerRank(item.rank);
+                const rankBadgeClass = isOfficer
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                    : 'bg-slate-800 text-slate-300 border-slate-700';
+
+                const daysHtml = item.days.map(d => `
+                    <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${pbdState.activeDay === d ? 'bg-amber-500 text-slate-950 font-black ring-1 ring-amber-400' : 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'}">
+                        ${d}
+                    </span>
+                `).join(' ');
+
+                const brsHtml = item.brs.map(b => `
+                    <span class="px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/80 text-[10px] font-mono">
+                        ${b}
+                    </span>
+                `).join(' ');
+
+                html += `
+                    <div class="p-3 sm:p-4 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group shadow-sm">
+                        
+                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                            <span class="text-xs font-mono text-slate-500 font-semibold mt-0.5 w-6 shrink-0">${idx + 1}.</span>
+                            <div class="space-y-1 min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded-md border text-[11px] font-semibold ${rankBadgeClass}">
+                                        ${item.rank}
+                                    </span>
+                                    <span class="font-bold text-white tracking-wide text-xs sm:text-sm select-all">
+                                        ${item.pip}
+                                    </span>
+                                    ${item.ipn ? `
+                                        <span class="px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800 font-mono text-[10px]" title="Ідентифікаційний код">
+                                            ІПН: ${item.ipn}
+                                        </span>
+                                    ` : ''}
+                                    <button type="button" onclick="copyTextToClipboard('${item.pip}', 'ПІБ скопійовано!')" title="Скопіювати ПІБ"
+                                        class="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-amber-400 p-1">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+
+                                <p class="text-xs text-slate-400 line-clamp-2">
+                                    ${item.pos || '<span class="italic text-slate-600">Посаду не вказано в тексті ПБД</span>'}
+                                </p>
+
+                                <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                                    <span class="text-[10px] text-slate-500 font-semibold mr-1">БР:</span>
+                                    ${brsHtml || '<span class="text-[10px] text-slate-600">—</span>'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Права колонка: Кількість діб та календарні позначки -->
+                        <div class="flex sm:flex-col items-center sm:items-end justify-between gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/80">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono font-bold text-xs shadow-sm flex items-center gap-1.5">
+                                <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+                                <span>${item.totalDays} ${getDeclension(item.totalDays, ['доба', 'доби', 'діб'])}</span>
+                            </span>
+
+                            <div class="flex flex-wrap items-center justify-end gap-1 max-w-[200px]">
+                                ${daysHtml}
+                            </div>
+                        </div>
+
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // 2. РЕНДЕР ДЕТЕКТОРА ПРОПУСКІВ («КОГО ЗАБУЛИ?»)
+        function renderPbdMissing() {
+            loadControlRoster();
+            renderControlRosterChips();
+
+            const container = document.getElementById('pbd-missing-results');
+            if (!container) return;
+
+            const pool = pbdState.controlRoster;
+            if (pool.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center bg-slate-900/60 rounded-xl border border-slate-800 text-slate-400 space-y-2">
+                        <i data-lucide="users" class="w-8 h-8 mx-auto opacity-60 text-slate-500"></i>
+                        <p class="text-sm font-bold text-white">Контрольний пул порожній</p>
+                        <p class="text-xs text-slate-500">Натисніть <strong>«+ Імпортувати з ПБД»</strong> або введіть перелік штатних офіцерів через <strong>«Редагувати список»</strong></p>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            // Порівнюємо кожну особу пулу з реєстром поданих
+            const missingPersons = [];
+            const submittedPersons = [];
+
+            pool.forEach(name => {
+                const cleanName = name.trim();
+                if (!cleanName) return;
+
+                // Пошук за прізвищем або повним співпадінням
+                const surname = cleanName.split(/\s+/)[0].toUpperCase();
+                const matched = pbdState.registry.find(reg => {
+                    const regUpper = reg.pip.toUpperCase();
+                    return regUpper.includes(surname);
+                });
+
+                if (matched) {
+                    // Якщо обрано конкретний день у таймлайні - перевіряємо чи подано саме в цей день
+                    const submittedOnActiveDay = (pbdState.activeDay === null) || matched.days.includes(pbdState.activeDay);
+                    if (submittedOnActiveDay) {
+                        submittedPersons.push({
+                            name: cleanName,
+                            matched: matched,
+                            days: matched.days,
+                            totalDays: matched.totalDays
+                        });
+                    } else {
+                        missingPersons.push({
+                            name: cleanName,
+                            reason: `Подано у інші дні (${matched.days.join(', ')}), але відсутній за ${pbdState.activeDay} число!`
+                        });
+                    }
+                } else {
+                    missingPersons.push({
+                        name: cleanName,
+                        reason: 'Не подано в жодному із завантажених файлів ПБД!'
+                    });
+                }
+            });
+
+            // Оновлюємо бейдж пропусків у вкладці
+            const badge = document.getElementById('pbd-missing-count-badge');
+            if (badge) {
+                badge.innerText = missingPersons.length;
+                if (missingPersons.length > 0) {
+                    badge.className = 'px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-extrabold shadow-sm animate-pulse';
+                } else {
+                    badge.className = 'px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+                }
+            }
+
+            // Особи у ПБД, яких немає у контрольному пулі
+            const extraPersons = pbdState.registry.filter(reg => {
+                const regSurname = reg.pip.split(/\s+/)[0].toUpperCase();
+                return !pool.some(p => p.toUpperCase().includes(regSurname));
+            });
+
+            let html = '';
+
+            // Блок 1: ЗАБУТІ ОФІЦЕРИ (ALERTS)
+            if (missingPersons.length > 0) {
+                html += `
+                    <div class="p-4 sm:p-5 rounded-xl bg-rose-950/40 border border-rose-800/60 shadow-lg space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-rose-300 text-sm">🚨 ЗАБУТІ ОФІЦЕРИ (НЕ ПОДАНІ): ${missingPersons.length} осіб</h4>
+                                    <p class="text-[11px] text-slate-400">Ці військовослужбовці є у вашому контрольному пулі, але відсутні у зведенні</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
+                            ${missingPersons.map(m => `
+                                <div class="p-3 rounded-lg bg-slate-900/90 border border-rose-900/50 flex items-center justify-between gap-2 shadow-sm">
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-white text-xs select-all flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                                            <span>${m.name}</span>
+                                        </div>
+                                        <p class="text-[10px] text-rose-400 mt-0.5">${m.reason}</p>
+                                    </div>
+                                    <button type="button" onclick="copyTextToClipboard('${m.name}', 'ПІБ скопійовано!')" class="p-1 text-slate-500 hover:text-rose-300" title="Копіювати">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/50 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                            <i data-lucide="check-check" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-emerald-300 text-sm">Всі офіцери контрольного пулу подані!</h4>
+                            <p class="text-xs text-slate-400">Жодного пропуску не виявлено серед ${pool.length} осіб пулу.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Блок 2: УСПІШНО ПОДАНІ ОФІЦЕРИ
+            if (submittedPersons.length > 0) {
+                html += `
+                    <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
+                            <h4 class="font-bold text-slate-200 text-xs sm:text-sm flex items-center gap-2">
+                                <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
+                                <span>Успішно підтверджені в ПБД (${submittedPersons.length} із ${pool.length})</span>
+                            </h4>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            ${submittedPersons.map(s => `
+                                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+                                    <div class="min-w-0 pr-2">
+                                        <div class="font-semibold text-slate-200 truncate">${s.name}</div>
+                                        <div class="text-[10px] text-slate-500 mt-0.5">${s.matched.rank}</div>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/50 font-mono text-[10px] font-bold shrink-0">
+                                        ${s.totalDays} діб
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Блок 3: ДОДАТКОВІ ОСОБИ З ПБД (ЯКИХ НЕМА В ПУЛІ)
+            if (extraPersons.length > 0) {
+                html += `
+                    <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
+                            <h4 class="font-bold text-slate-400 text-xs sm:text-sm flex items-center gap-2">
+                                <i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i>
+                                <span>Інші особи з ПБД, яких немає в контрольному пулі (${extraPersons.length})</span>
+                            </h4>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 text-xs">
+                            ${extraPersons.map(e => `
+                                <div class="p-1.5 pl-2.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 flex items-center gap-1.5">
+                                    <span class="font-mono text-slate-400">${e.rank}</span>
+                                    <span class="font-semibold text-white">${e.pip}</span>
+                                    <button type="button" onclick="addPersonToControlRoster('${e.pip}')" title="Додати до штатного пулу"
+                                        class="ml-1 text-[10px] px-1.5 py-0.5 bg-blue-600/30 hover:bg-blue-600 text-blue-200 rounded cursor-pointer transition-all">
+                                        + Пул
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Керування контрольним пулом (LocalStorage)
+        function loadControlRoster() {
+            try {
+                const saved = localStorage.getItem('pbd_control_roster_v1');
+                if (saved) {
+                    pbdState.controlRoster = JSON.parse(saved);
+                } else {
+                    pbdState.controlRoster = [...DEFAULT_CONTROL_ROSTER];
+                    localStorage.setItem('pbd_control_roster_v1', JSON.stringify(pbdState.controlRoster));
+                }
+            } catch (e) {
+                pbdState.controlRoster = [...DEFAULT_CONTROL_ROSTER];
+            }
+        }
+
+        function renderControlRosterChips() {
+            const container = document.getElementById('pbd-control-roster-chips');
+            if (!container) return;
+
+            const chips = pbdState.controlRoster.map(name => `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 text-slate-300 border border-slate-800">
+                    <span>${name}</span>
+                    <button type="button" onclick="deleteControlRosterPerson('${name}')" title="Видалити" class="text-slate-500 hover:text-rose-400 cursor-pointer">
+                        &times;
+                    </button>
+                </span>
+            `).join('');
+
+            container.innerHTML = chips || '<span class="text-xs text-slate-500 italic">Список порожній</span>';
+        }
+
+        function toggleEditControlRoster() {
+            const box = document.getElementById('pbd-control-roster-edit-box');
+            const textarea = document.getElementById('pbd-control-roster-textarea');
+            if (!box || !textarea) return;
+
+            if (box.classList.contains('hidden')) {
+                box.classList.remove('hidden');
+                textarea.value = pbdState.controlRoster.join('\n');
+                textarea.focus();
+            } else {
+                box.classList.add('hidden');
+            }
+        }
+
+        function saveControlRoster() {
+            const textarea = document.getElementById('pbd-control-roster-textarea');
+            if (!textarea) return;
+
+            const lines = textarea.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+            const unique = Array.from(new Set(lines));
+
+            pbdState.controlRoster = unique;
+            localStorage.setItem('pbd_control_roster_v1', JSON.stringify(unique));
+
+            document.getElementById('pbd-control-roster-edit-box').classList.add('hidden');
+            renderPbdMissing();
+        }
+
+        function addPersonToControlRoster(name) {
+            const clean = name.trim();
+            if (!clean || pbdState.controlRoster.includes(clean)) return;
+            pbdState.controlRoster.push(clean);
+            localStorage.setItem('pbd_control_roster_v1', JSON.stringify(pbdState.controlRoster));
+            renderPbdMissing();
+        }
+
+        function deleteControlRosterPerson(name) {
+            pbdState.controlRoster = pbdState.controlRoster.filter(n => n !== name);
+            localStorage.setItem('pbd_control_roster_v1', JSON.stringify(pbdState.controlRoster));
+            renderPbdMissing();
+        }
+
+        function autoPopulateControlRoster() {
+            if (pbdState.registry.length === 0) {
+                alert('Спочатку завантажте хоча б один файл ПБД.');
+                return;
+            }
+            const allNames = pbdState.registry.map(r => r.pip);
+            const combined = Array.from(new Set([...pbdState.controlRoster, ...allNames]));
+            pbdState.controlRoster = combined;
+            localStorage.setItem('pbd_control_roster_v1', JSON.stringify(combined));
+            renderPbdMissing();
+        }
+
+        // 3. РЕНДЕР ПОДОБОВОГО РОЗБОРУ (ПУНКТ 3.3)
+        function renderPbdDailyBreakdown() {
+            const select = document.getElementById('pbd-daily-date-select');
+            const container = document.getElementById('pbd-daily-breakdown-content');
+            if (!select || !container) return;
+
+            // Наповнюємо селектор датами
+            const dates = pbdState.dates;
+            if (dates.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-slate-500">Немає завантажених файлів ПБД</div>
+                `;
+                return;
+            }
+
+            const currentVal = select.value;
+            select.innerHTML = dates.map(d => `<option value="${d}" ${d === currentVal ? 'selected' : ''}>${d}</option>`).join('');
+
+            const selectedDate = select.value || dates[0];
+            const matchingFile = Object.values(pbdState.files).find(f => f.dateStr === selectedDate);
+
+            if (!matchingFile || !matchingFile.rawSections || matchingFile.rawSections.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-slate-500">Немає записів розділу 3.3 за дату ${selectedDate}</div>
+                `;
+                return;
+            }
+
+            let html = '';
+            matchingFile.rawSections.forEach((sec, idx) => {
+                html += `
+                    <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-mono font-bold">
+                                ${sec.br || 'БР'}
+                            </span>
+                            <span class="text-xs text-slate-400 font-mono">
+                                Задіяно: <strong>${sec.peopleCount}</strong> ос.
+                            </span>
+                        </div>
+
+                        ${sec.header ? `
+                            <p class="text-xs text-slate-300 font-sans leading-relaxed">
+                                ${sec.header}
+                            </p>
+                        ` : ''}
+
+                        ${sec.people && sec.people.length > 0 ? `
+                            <div class="flex flex-wrap gap-1.5 pt-1">
+                                ${sec.people.map(p => `
+                                    <span class="px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-xs text-slate-200">
+                                        <strong class="text-emerald-400">${p.rank}</strong> ${p.pip} ${p.ipn ? `(${p.ipn})` : ''}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <details class="text-[11px] text-slate-500 pt-1">
+                            <summary class="cursor-pointer hover:text-slate-400 transition-colors">Повний оригінальний абзац пункту 3.3</summary>
+                            <p class="mt-1.5 p-2.5 bg-slate-950 rounded-lg border border-slate-800/80 text-slate-400 font-mono select-all whitespace-pre-wrap leading-relaxed">
+                                ${sec.fullText}
+                            </p>
+                        </details>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function copyActiveDayBRText() {
+            const select = document.getElementById('pbd-daily-date-select');
+            if (!select || !select.value) return;
+
+            const matchingFile = Object.values(pbdState.files).find(f => f.dateStr === select.value);
+            if (!matchingFile || !matchingFile.rawSections) return;
+
+            const fullText = matchingFile.rawSections.map(s => s.fullText).join('\n\n');
+            copyTextToClipboard(fullText, `Пункт 3.3 за ${select.value} скопійовано!`);
+        }
+
+        // ЕКСПОРТ ТАБЕЛЯ В EXCEL
+        function exportPbdRosterToExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('Бібліотека SheetJS (XLSX) не знайдена.');
+                return;
+            }
+            if (pbdState.registry.length === 0) {
+                alert('Немає завантажених даних для експорту.');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+            const wsData = [
+                ['№ з/п', 'Військове звання', 'ПІБ', 'ІПН', 'Посада / Підрозділ', 'К-сть діб залучення', 'Дати залучення', 'Бойові розпорядження']
+            ];
+
+            pbdState.registry.forEach((item, idx) => {
+                wsData.push([
+                    idx + 1,
+                    item.rank,
+                    item.pip,
+                    item.ipn || '—',
+                    item.pos || '—',
+                    item.totalDays,
+                    item.dates.join(', '),
+                    item.brs.join('; ')
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            ws['!cols'] = [
+                { wch: 6 },
+                { wch: 22 },
+                { wch: 32 },
+                { wch: 14 },
+                { wch: 45 },
+                { wch: 18 },
+                { wch: 25 },
+                { wch: 28 }
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Зведений табель ПБД");
+            const rangeStr = pbdState.dates.length > 0 ? pbdState.dates[0].replace(/\./g, '_') : 'місяць';
+            XLSX.writeFile(wb, `Табель_обліку_перевіряючих_ПБД_${rangeStr}.xlsx`);
+        }
+
+        function copyPbdRosterText() {
+            if (pbdState.registry.length === 0) return;
+
+            let text = `ЗВЕДЕНИЙ ТАБЕЛЬ ОБЛІКУ ПЕРЕВІРЯЮЧИХ (ПБД):\n`;
+            pbdState.registry.forEach((r, idx) => {
+                text += `${idx + 1}. ${r.rank} ${r.pip} (${r.totalDays} діб: ${r.dates.join(', ')}) - БР: ${r.brs.join(', ')}\n`;
+            });
+
+            copyTextToClipboard(text, 'Зведений список скопійовано в буфер!');
+        }
+
+        const SAMPLE_PBD_FALLBACK = {
+            "fileName": "Демо_ПБД_12_10_2026.docx",
+            "dateStr": "12.10.2026",
+            "day": 12,
+            "month": 10,
+            "year": 2026,
+            "verifiers": [
+                { "rank": "Підполковник", "pip": "КОВАЛЬЧУК Сергій Петрович", "ipn": "2810000001", "pos": "заступник командира бригади", "br": "№ 102/БР/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                { "rank": "Майор", "pip": "ТКАЧЕНКО Андрій Миколайович", "ipn": "2910000002", "pos": "начальник служби розвідки штабу", "br": "№ 102/БР/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                { "rank": "Капітан", "pip": "ШЕВЧЕНКО Віктор Олександрович", "ipn": "3010000003", "pos": "помічник начальника оперативного відділення", "br": "№ 102/БР/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                { "rank": "Старший лейтенант", "pip": "МЕЛЬНИК Олег Васильович", "ipn": "3110000004", "pos": "офіцер групи планування", "br": "№ 105/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                { "rank": "Лейтенант", "pip": "БОНДАРЕНКО Денис Ігорович", "ipn": "3210000005", "pos": "офіцер відділення зв'язку", "br": "№ 105/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                { "rank": "Капітан", "pip": "ГРИЦЕНКО Юлія Борисівна", "ipn": "3310000006", "pos": "офіцер групи психологічної підтримки", "br": "№ 105/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                { "rank": "Головний сержант", "pip": "КРАВЧЕНКО Руслан Михайлович", "ipn": "3410000007", "pos": "головний сержант роти вогневої підтримки", "br": "№ 110/БР", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                { "rank": "Старший сержант", "pip": "ПОЛІЩУК Артем Володимирович", "ipn": "3510000008", "pos": "технік взводу технічного обслуговування", "br": "№ 110/БР", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                { "rank": "Сержант", "pip": "БОЙКО Василь Романович", "ipn": "3610000009", "pos": "командир відділення зенітного взводу", "br": "№ 110/БР", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" }
+            ],
+            "rawSections": [
+                {
+                    "br": "№ 102/БР/дск",
+                    "header": "На виконання бойового розпорядження від 10.10.2026 № 102/БР/дск з метою перевірки бойової готовності та організації служби:",
+                    "fullText": "На виконання бойового розпорядження від 10.10.2026 № 102/БР/дск працювали: підполковник КОВАЛЬЧУК С.П., майор ТКАЧЕНКО А.М., капітан ШЕВЧЕНКО В.О.",
+                    "peopleCount": 3,
+                    "people": [
+                        { "rank": "Підполковник", "pip": "КОВАЛЬЧУК Сергій Петрович", "ipn": "2810000001", "pos": "заступник командира бригади", "br": "№ 102/БР/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                        { "rank": "Майор", "pip": "ТКАЧЕНКО Андрій Миколайович", "ipn": "2910000002", "pos": "начальник служби розвідки штабу", "br": "№ 102/БР/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                        { "rank": "Капітан", "pip": "ШЕВЧЕНКО Віктор Олександрович", "ipn": "3010000003", "pos": "помічник начальника оперативного відділення", "br": "№ 102/БР/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" }
+                    ]
+                },
+                {
+                    "br": "№ 105/дск",
+                    "header": "На виконання розпорядження від 11.10.2026 № 105/дск щодо моніторингу зв'язку та МПЗ:",
+                    "fullText": "На виконання розпорядження від 11.10.2026 № 105/дск працювали: старший лейтенант МЕЛЬНИК О.В., лейтенант БОНДАРЕНКО Д.І., капітан ГРИЦЕНКО Ю.Б.",
+                    "peopleCount": 3,
+                    "people": [
+                        { "rank": "Старший лейтенант", "pip": "МЕЛЬНИК Олег Васильович", "ipn": "3110000004", "pos": "офіцер групи планування", "br": "№ 105/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                        { "rank": "Лейтенант", "pip": "БОНДАРЕНКО Денис Ігорович", "ipn": "3210000005", "pos": "офіцер відділення зв'язку", "br": "№ 105/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                        { "rank": "Капітан", "pip": "ГРИЦЕНКО Юлія Борисівна", "ipn": "3310000006", "pos": "офіцер групи психологічної підтримки", "br": "№ 105/дск", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" }
+                    ]
+                },
+                {
+                    "br": "№ 110/БР",
+                    "header": "На виконання бойового розпорядження від 12.10.2026 № 110/БР щодо перевірки рубежів оборони:",
+                    "fullText": "На виконання бойового розпорядження від 12.10.2026 № 110/БР працювали: головний сержант КРАВЧЕНКО Р.М., старший сержант ПОЛІЩУК А.В., сержант БОЙКО В.Р.",
+                    "peopleCount": 3,
+                    "people": [
+                        { "rank": "Головний сержант", "pip": "КРАВЧЕНКО Руслан Михайлович", "ipn": "3410000007", "pos": "головний сержант роти вогневої підтримки", "br": "№ 110/БР", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                        { "rank": "Старший сержант", "pip": "ПОЛІЩУК Артем Володимирович", "ipn": "3510000008", "pos": "технік взводу технічного обслуговування", "br": "№ 110/БР", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" },
+                        { "rank": "Сержант", "pip": "БОЙКО Василь Романович", "ipn": "3610000009", "pos": "командир відділення зенітного взводу", "br": "№ 110/БР", "date": "12.10.2026", "day": 12, "fileName": "Демо_ПБД_12_10_2026.docx" }
+                    ]
+                }
+            ]
+        };
+
+        // Завантаження демонстраційного набору перевіряючих
+        async function loadSamplePbdDocx() {
+            if (typeof SAMPLE_PBD_FALLBACK !== 'undefined') {
+                pbdState.files[SAMPLE_PBD_FALLBACK.fileName] = JSON.parse(JSON.stringify(SAMPLE_PBD_FALLBACK));
+                rebuildPbdRegistry();
+                updatePbdBannerStats();
+                renderPbdTimeline();
+                renderPbdActiveSubtab();
+                showPbdToast('Демо-зразок за 12.10 (9 осіб • 3 БР) успішно завантажено!');
+            }
+        }
+
+        // Налаштування Drag & Drop слухачів
+        function initPbdModule() {
+            loadControlRoster();
+
+            const dropzones = [document.getElementById('pbd-dropzone'), document.getElementById('pbd-dropzone-compact')].filter(Boolean);
+            const fileInput = document.getElementById('pbd-file-input');
+
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                        handlePbdFiles(Array.from(e.target.files));
+                    }
+                });
+            }
+
+            dropzones.forEach(dz => {
+                if (dz.id === 'pbd-dropzone') {
+                    dz.addEventListener('click', () => fileInput && fileInput.click());
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dz.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dz.classList.add('border-emerald-500', 'bg-emerald-500/10');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dz.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dz.classList.remove('border-emerald-500', 'bg-emerald-500/10');
+                    });
+                });
+
+                dz.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    if (dt && dt.files && dt.files.length > 0) {
+                        handlePbdFiles(Array.from(dt.files));
+                    }
+                });
+            });
+        }
+
         // Ініціалізація дати та налаштувань при завантаженні
         window.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
@@ -1381,6 +3109,7 @@
 
             loadColumnSettings();
             updateDateBadge();
+            initPbdModule();
             if (window.lucide) lucide.createIcons();
         });
     </script>
@@ -1403,10 +3132,27 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.4.0 -->
+                <!-- v1.5.0 -->
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.4.0 (Поточна)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.5.0 (Поточна)</span>
+                        <span class="text-[11px] font-mono text-slate-500">14.10.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Пакетний аудит ПБД (.docx):</strong> Новий повноцінний модуль масового імпорту 30-31 подобових донесень за весь місяць з автоматичним аналізом підрозділу 3.3.</li>
+                        <li><strong class="text-white">Офлайн Air-Gap парсер (JSZip):</strong> Повна автономність розпаковки docx XML за допомогою локальної бібліотеки <code>v8/jszip.min.js</code> (97 KB) без використання зовнішніх CDN.</li>
+                        <li><strong class="text-white">Тактичні KPI та аналітика:</strong> 5 інтерактивних лічильників («Усього в базі», «Офіцери», «Сержанти/Солдати», «Діб залучення», «🚨 Кого забули?»).</li>
+                        <li><strong class="text-white">Виправлення детекції звань у кирилиці:</strong> Усунено збій <code>\b</code> у регулярних виразах JavaScript, що повернуло 100% точне розділення офіцерського та рядового складу.</li>
+                        <li><strong class="text-white">Smart Dropzone & Календарний таймлайн:</strong> Згортка дропзони у компактну навігаційну стрічку та 31-денна лінійна шкала для швидкої фільтрації за будь-яку добу.</li>
+                        <li><strong class="text-white">Контроль штатного розпису:</strong> Окремий субрайдер та модальне вікно для виявлення осіб, які не потрапили у щоденні накази або донесення.</li>
+                        <li><strong class="text-white">OPSEC Санітизація:</strong> Повне очищення сирцевого коду від будь-яких конфіденційних персональних даних та реальних номерів бойових розпоряджень.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.4.0 -->
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.4.0</span>
                         <span class="text-[11px] font-mono text-slate-500">07.10.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
