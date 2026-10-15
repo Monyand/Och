@@ -68,7 +68,8 @@
         }
 
         .row-expanded {
-            background-color: rgba(30, 41, 59, 0.5);
+            background-color: rgba(30, 41, 59, 0.7) !important;
+            border-left: 4px solid #c084fc !important;
         }
 
         .chevron {
@@ -92,6 +93,48 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
+        /* Tactical glow effects */
+        .glow-red {
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+        }
+        .glow-amber {
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+        }
+        .glow-purple {
+            box-shadow: 0 0 18px rgba(168, 85, 247, 0.3);
+        }
+
+        /* Tactical Stepper & Mini-Gantt Timeline for Accordion */
+        .stepper-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stepper-node {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .stepper-arrow {
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+            user-select: none;
+        }
+
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.7);
+        }
     </style>
 </head>
 
@@ -99,78 +142,157 @@
 
     <div class="w-full max-w-[1720px] space-y-4">
 
-        <!-- 1. ТАКТИЧНА ШАПКА ПРОГРАМИ -->
-        <header class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-xl flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3.5 backdrop-blur-md">
-            <div class="flex items-center gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-inner shrink-0">
-                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2.5 flex-wrap">
-                        <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Аналізатор безперервної ротації</h1>
-                        <span class="text-[11px] bg-slate-800 text-purple-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono font-bold">
-                            ДОДАТОК_6
-                        </span>
-                        <button onclick="openChangelogModal()" class="text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.4.0
-                        </button>
+        <!-- 1. ЄДИНИЙ КОМАНДНИЙ ЦЕНТР (UNIFIED COMMAND HEADER) -->
+        <header class="bg-slate-900/95 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4 shadow-2xl backdrop-blur-xl flex flex-col gap-3">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <!-- Ліва частина: Лого, Назва, Бейдж версії та Живий статус бази -->
+                <div class="flex items-center gap-3.5 flex-wrap">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500/25 to-indigo-500/10 border border-purple-500/35 flex items-center justify-center text-purple-400 shadow-md shrink-0">
+                        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
                     </div>
-                    <p class="text-slate-400 text-xs mt-0.5">
-                        Автоматичний аналіз списків за Додатком 6. Підрахунок безперервних діб бойового чергування та контроль строків ротації.
-                    </p>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-lg sm:text-xl font-bold text-white tracking-tight">Аналізатор безперервної ротації</h1>
+                            <span class="text-[10px] bg-slate-950 text-purple-400 border border-purple-500/40 px-2.5 py-0.5 rounded-full font-mono font-bold tracking-wider">
+                                ДОДАТОК 6
+                            </span>
+                            <button onclick="openChangelogModal()" class="text-[11px] bg-purple-500/15 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs" title="Історія оновлень та версій">
+                                ⚡ v1.5.0
+                            </button>
+                        </div>
+                        <!-- Інформаційні чіпи бази (показуються коли завантажені списки) -->
+                        <div id="headerStatusGroup" class="hidden items-center gap-1.5 font-mono text-xs mt-1.5 flex-wrap">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-950/90 border border-purple-900/50 text-purple-200 text-[11px]">
+                                <i data-lucide="calendar-range" class="w-3 h-3 text-purple-400"></i>
+                                <span class="text-slate-400">Період:</span>
+                                <strong id="compactBarPeriod" class="font-bold">не визначено</strong>
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 text-[11px] font-bold">
+                                <i data-lucide="calendar" class="w-3 h-3 text-emerald-400"></i>
+                                <span id="compactBarDates">0 діб</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-950/90 border border-slate-800 text-slate-200 text-[11px] font-bold">
+                                <i data-lucide="users" class="w-3 h-3 text-purple-400"></i>
+                                <span id="compactBarTitle">0 бійців</span>
+                            </span>
+                            <span id="storageStatusBadge" class="hidden items-center gap-1.5 px-2 py-0.5 rounded-lg bg-indigo-950/50 border border-indigo-800/60 text-indigo-300 text-[11px]">
+                                <i data-lucide="database" class="w-3 h-3 text-indigo-400"></i>
+                                <span id="storageStatusText">Пам'ять</span>
+                            </span>
+                        </div>
+                        <p id="headerEmptyDesc" class="text-slate-400 text-xs mt-0.5 font-sans">
+                            Автоматичний аналіз списків за Додатком 6 • Контроль безперервного бойового чергування
+                        </p>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Статистичні лічильники та кнопка налаштувань -->
-            <div class="flex items-center gap-2 flex-wrap w-full xl:w-auto justify-start xl:justify-end">
-                <!-- Лічильники статусу -->
-                <div class="flex items-center gap-1.5 font-mono text-xs flex-wrap">
-                    <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 border border-red-500/30 text-slate-300 shadow-sm" title="Бійці, які перебувають на позиціях понад 60 діб поспіль">
-                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-                        <span class="text-slate-400">60+ дн:</span>
-                        <strong id="badge-count-critical" class="text-red-400 font-extrabold">0</strong>
-                    </span>
-                    <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 border border-amber-500/30 text-slate-300 shadow-sm" title="Бійці у передкритичному діапазоні (50-59 діб)">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                        <span class="text-slate-400">50-59 дн:</span>
-                        <strong id="badge-count-warning" class="text-amber-300 font-extrabold">0</strong>
-                    </span>
-                    <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 shadow-sm" title="Активні бійці до 50 діб чергування">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                        <span>&lt;50 дн:</span>
-                        <strong id="badge-count-normal" class="text-emerald-300">0</strong>
-                    </span>
-                    <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 shadow-sm" title="Вибули з останніх списків">
-                        <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
-                        <span>Вибули:</span>
-                        <strong id="badge-count-inactive" class="text-slate-400">0</strong>
-                    </span>
+                <!-- Права частина: Тулбар швидких дій (Command Bar Tools) -->
+                <div class="flex items-center gap-2 flex-wrap justify-start lg:justify-end">
+                    <!-- 1-клік швидкий зріз до 60 діб -->
+                    <button type="button" onclick="batchKeepRecentDays(60)"
+                        class="px-3 py-1.5 bg-gradient-to-r from-red-600/30 via-amber-600/30 to-amber-500/25 hover:from-red-600/40 hover:to-amber-500/35 text-amber-200 text-xs font-bold rounded-xl border border-amber-500/40 transition-all flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-[1.02] active:scale-95"
+                        title="Автоматично зрізати старі дати і залишити крайні 60 діб від останнього зрізу">
+                        <i data-lucide="target" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <span>🎯 Крайні 60 діб</span>
+                    </button>
+
+                    <!-- База файлів / дат -->
+                    <button type="button" onclick="openModal('modal-files-manager')" id="batchManagerTopBtn"
+                        class="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-200 text-xs font-semibold rounded-xl border border-purple-500/40 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                        title="Керування завантаженими файлами та зрізом дат">
+                        <i data-lucide="folder-cog" class="w-3.5 h-3.5 text-purple-400"></i>
+                        <span>Керування базою (<span id="compactFilesCount">0</span>)</span>
+                    </button>
+
+                    <!-- Додати файли -->
+                    <button type="button" onclick="document.getElementById('fileInput').click()"
+                        class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                        <i data-lucide="plus" class="w-3.5 h-3.5 text-purple-400"></i>
+                        <span>+ Додати</span>
+                    </button>
+
+                    <!-- Перемикач дропзони -->
+                    <button type="button" onclick="toggleUploadPanel(!isUploadPanelOpen)" id="toggleDropzoneBtn"
+                        class="px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl border border-slate-700/80 transition cursor-pointer text-xs flex items-center gap-1.5 shadow-sm"
+                        title="Показати або згорнути зону завантаження файлів">
+                        <i data-lucide="upload-cloud" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="hidden sm:inline">Дропзона</span>
+                    </button>
+
+                    <!-- Фільтр виключень -->
+                    <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition-all border border-slate-700/80 cursor-pointer shadow-sm" title="Налаштування статусів виключення (ППД, Лікарня тощо)">
+                        <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-indigo-400"></i>
+                        <span>Виключення</span>
+                    </button>
+
+                    <!-- Меню експорту Excel (Dropdown) -->
+                    <div class="relative" id="exportDropdownContainer">
+                        <button id="exportDropdownToggleBtn" type="button" onclick="toggleExportMenu()"
+                            class="hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-xl border border-emerald-400/30 shadow-md shadow-emerald-950/50 flex items-center gap-2 transition-all active:scale-95 cursor-pointer shrink-0"
+                            title="Виберіть формат експорту в Excel">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-200"></i>
+                            <span id="exportDropdownBtnText">Експорт Excel</span>
+                            <i data-lucide="chevron-down" id="exportDropdownChevron" class="w-3.5 h-3.5 text-slate-200 transition-transform duration-200"></i>
+                        </button>
+
+                        <!-- Випадаюче меню (right-0 за AGENTS.md стандартом) -->
+                        <div id="exportMenuDropdown"
+                            class="hidden absolute right-0 top-full mt-2 w-80 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl shadow-black/80 z-50 overflow-hidden backdrop-blur-xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                            
+                            <div class="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1 flex items-center justify-between">
+                                <span>Формати вивантаження</span>
+                                <span class="text-purple-400 font-bold">XLSX</span>
+                            </div>
+
+                            <!-- Опція 1: Календарний табель -->
+                            <button id="exportExcelBtn" type="button" onclick="closeExportMenu()"
+                                class="w-full text-left p-2.5 rounded-xl hover:bg-slate-800/90 transition-all flex items-start gap-3 group cursor-pointer border border-transparent hover:border-emerald-500/30">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-inner">
+                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors flex items-center justify-between">
+                                        <span id="exportExcelBtnText">Табель Excel</span>
+                                        <span class="text-[10px] font-mono text-emerald-400/90 bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-800/60 font-semibold">Матриця</span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-400 leading-tight mt-1">
+                                        Календарна матриця діб чергування + зведений реєстр
+                                    </div>
+                                </div>
+                            </button>
+
+                            <!-- Опція 2: Зріз позицій -->
+                            <button id="exportPositionsListBtn" type="button" onclick="closeExportMenu()"
+                                class="w-full text-left p-2.5 rounded-xl hover:bg-slate-800/90 transition-all flex items-start gap-3 group cursor-pointer border border-transparent hover:border-indigo-500/30">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-inner">
+                                    <i data-lucide="list-checks" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors flex items-center justify-between">
+                                        <span id="exportPositionsListBtnText">Зріз позицій (Excel)</span>
+                                        <span class="text-[10px] font-mono text-indigo-400/90 bg-indigo-950/80 px-1.5 py-0.2 rounded border border-indigo-800/60 font-semibold">Список</span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-400 leading-tight mt-1">
+                                        Поіменний зріз особового складу за локаціями та ротами
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Очистити пам'ять -->
+                    <button id="clearBtn" class="hidden p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all border border-red-500/25 cursor-pointer shadow-sm" title="Очистити збережену базу та звільнити пам'ять">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
                 </div>
-
-                <!-- Кнопка налаштувань виключень -->
-                <button id="settingsBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 rounded-xl text-xs font-semibold transition-all border border-indigo-500/30 cursor-pointer shadow-sm">
-                    <i data-lucide="settings-2" class="w-3.5 h-3.5 text-indigo-400"></i>
-                    <span>Фільтр виключень</span>
-                </button>
-
-                <!-- Індикатор збереження в пам'ять -->
-                <span id="storageStatusBadge" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-950/40 border border-purple-800/60 text-purple-300 font-mono text-xs shadow-sm" title="Стан збереження у пам'яті браузера (IndexedDB)">
-                    <i data-lucide="database" class="w-3.5 h-3.5 text-purple-400"></i>
-                    <span id="storageStatusText">Пам'ять активна</span>
-                </span>
-
-                <!-- Кнопка очищення пам'яті -->
-                <button id="clearBtn" class="hidden flex items-center gap-1.5 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-xl text-xs font-semibold transition-all border border-red-500/30 cursor-pointer shadow-sm" title="Очистити збережену базу та звільнити пам'ять">
-                    <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
-                    <span>Очистити пам'ять</span>
-                </button>
             </div>
         </header>
 
-        <!-- 2. ВЕРХНІЙ БЛОК: ЗАВАНТАЖЕННЯ ТА ЖУРНАЛ ДАТ (Згортається для звільнення екрана) -->
+        <!-- 2. СЕКЦІЯ ЗАВАНТАЖЕННЯ (Згортається без залишку порожнього місця) -->
         <div id="uploadSection" class="transition-all duration-300">
+            <!-- Прихований елемент для зворотної сумісності -->
+            <div id="uploadCompactBar" class="hidden"></div>
             
-            <!-- Розгорнутий стан: 2 картки -->
             <div id="uploadCards" class="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
                 <!-- Ліва картка: Завантаження файлів (6 cols) -->
@@ -184,7 +306,7 @@
                             <span class="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
                                 .xlsx, .xls, .docx
                             </span>
-                            <button onclick="toggleUploadPanel(false)" class="text-[11px] text-slate-400 hover:text-white bg-slate-950 border border-slate-800 hover:border-slate-700 px-2 py-0.5 rounded-lg flex items-center gap-1 transition cursor-pointer" title="Згорнути цей блок для збільшення таблиці">
+                            <button onclick="toggleUploadPanel(false)" class="text-[11px] text-slate-400 hover:text-white bg-slate-950 border border-slate-800 hover:border-slate-700 px-2 py-0.5 rounded-lg flex items-center gap-1 transition cursor-pointer" title="Згорнути цей блок для збільшення простору таблиці">
                                 <i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
                                 <span>Згорнути</span>
                             </button>
@@ -236,21 +358,46 @@
                     </div>
                 </div>
 
-                <!-- Права картка: Журнал опрацьованих дат (6 cols) -->
+                <!-- Права картка: Завантажені файли та логи (6 cols) -->
                 <div class="lg:col-span-6 bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl p-4 flex flex-col justify-between space-y-2.5">
-                    <div class="flex justify-between items-center pb-2 border-b border-slate-800/80">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="calendar-check" class="w-4 h-4 text-emerald-400"></i>
-                            <h2 class="text-xs font-bold text-white tracking-wide uppercase">Опрацьовані дати та логи</h2>
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-800/80 flex-wrap gap-2">
+                        <!-- Вкладки Файли vs Лог -->
+                        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                            <button type="button" id="tab-btn-files" onclick="switchRightPanelTab('files')"
+                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all bg-purple-600 text-white shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="folder-check" class="w-3.5 h-3.5"></i>
+                                <span>Файли</span>
+                                <span id="files-list-badge" class="px-1.5 py-0.2 rounded-md bg-purple-950/90 text-purple-200 text-[10px] border border-purple-500/30">0</span>
+                            </button>
+                            <button type="button" id="tab-btn-logs" onclick="switchRightPanelTab('logs')"
+                                class="px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
+                                <span>Лог</span>
+                                <span id="log-count" class="px-1.5 py-0.2 rounded-md bg-slate-900 text-slate-400 text-[10px] border border-slate-800">0</span>
+                            </button>
                         </div>
-                        <div class="flex items-center gap-2 font-mono text-[11px]">
-                            <span id="files-processed-badge" class="bg-emerald-950/70 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded-md font-bold">0 дат</span>
-                            <span id="log-count" class="text-slate-400 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">0 записів</span>
+                        <div class="flex items-center gap-1.5 font-mono text-[11px]">
+                            <button type="button" onclick="openModal('modal-files-manager')" id="openBatchManagerBtn1"
+                                class="px-2 py-0.5 rounded-lg bg-purple-950/70 hover:bg-purple-900/90 text-purple-200 border border-purple-700/60 font-bold flex items-center gap-1 transition cursor-pointer shadow-sm" title="Відкрити пакетне керування та зріз дат">
+                                <i data-lucide="sliders-horizontal" class="w-3 h-3 text-purple-400"></i>
+                                <span>Пакетне керування</span>
+                            </button>
+                            <span id="files-processed-badge" onclick="openModal('modal-files-manager')"
+                                class="bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded-md font-bold cursor-pointer transition" title="Натисніть для перегляду та пакетного видалення дат">0 дат</span>
                         </div>
                     </div>
 
-                    <!-- Список логів -->
-                    <div id="logContainer" class="flex-1 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/90 p-2.5 max-h-[140px]">
+                    <!-- Панель 1: Список файлів з можливістю видалення -->
+                    <div id="filesListContainer" class="flex-1 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/90 p-2 max-h-[140px] space-y-1.5">
+                        <div id="filesListEmpty" class="text-slate-500 italic text-center py-6 text-xs font-mono flex flex-col items-center justify-center gap-1.5">
+                            <i data-lucide="files" class="w-6 h-6 opacity-30 text-slate-400"></i>
+                            <span>Завантажте файли зліва — тут з'явиться список з можливістю видалення</span>
+                        </div>
+                        <div id="filesListItems" class="space-y-1.5"></div>
+                    </div>
+
+                    <!-- Панель 2: Список логів -->
+                    <div id="logContainer" class="hidden flex-1 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/90 p-2.5 max-h-[140px]">
                         <ul id="fileLog" class="space-y-1 font-mono text-[11px]">
                             <li class="text-slate-500 italic flex items-center gap-2">
                                 <i data-lucide="info" class="w-3.5 h-3.5 text-slate-500"></i>
@@ -267,88 +414,50 @@
 
             </div>
 
-            <!-- Компактний згорнутий стан: 1 акуратний рядок (авто-активується після завантаження) -->
-            <div id="uploadCompactBar" class="hidden bg-slate-900/90 border border-slate-800/90 rounded-2xl p-2.5 px-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl backdrop-blur-md">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                    </div>
-                    <div class="font-mono text-xs">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-white" id="compactBarTitle">Опрацьовано файли</span>
-                            <span class="text-slate-600">|</span>
-                            <span class="text-purple-300 font-semibold" id="compactBarDates">0 дат</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400" id="compactBarPeriod">Період обліку: не визначено</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="document.getElementById('fileInput').click()"
-                        class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-                        <i data-lucide="plus" class="w-3.5 h-3.5 text-purple-400"></i>
-                        <span>Додати файли</span>
-                    </button>
-                    <button type="button" onclick="toggleUploadPanel(true)"
-                        class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-                        <i data-lucide="folder-open" class="w-3.5 h-3.5 text-slate-400"></i>
-                        <span>Дропзона та логи</span>
-                    </button>
-                </div>
-            </div>
-
         </div>
 
         <!-- 3. ОСНОВНИЙ БЛОК: ЗВЕДЕНА ТАБЛИЦЯ РОТАЦІЙ (FULL-WIDTH 100%) -->
         <main class="bg-slate-900/90 rounded-2xl border border-slate-800/90 shadow-2xl overflow-hidden flex flex-col backdrop-blur-md">
             
-            <!-- Панель керування: Рядок 1 (Пошук, Фільтри, Експорт) -->
-            <div class="p-3.5 border-b border-slate-800 bg-slate-900/95 space-y-2.5">
-                <div class="flex flex-col lg:flex-row items-center justify-between gap-2.5">
+            <!-- Панель керування: Рядок 1 (Пошук + Єдині сегментовані фільтри) -->
+            <div class="p-3 sm:p-3.5 border-b border-slate-800 bg-slate-900/95 space-y-2.5">
+                <div class="flex flex-col xl:flex-row items-center justify-between gap-3">
                     
                     <!-- Пошуковий рядок (розгортається на всю доступну ширину) -->
-                    <div class="relative w-full lg:flex-1 min-w-[280px]">
+                    <div class="relative w-full xl:w-96 min-w-[280px]">
                         <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                        <input type="text" id="searchInput" placeholder="Пошук за ПІБ (через кому), званням, посадою, локацією..."
-                            class="w-full bg-slate-950 text-slate-200 border border-slate-700 rounded-xl pl-10 pr-8 py-2 text-xs font-mono placeholder:text-slate-500 focus:border-purple-500 outline-none transition-all shadow-inner">
-                        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs">
+                        <input type="text" id="searchInput" placeholder="Пошук за ПІБ, званням, посадою, локацією..."
+                            class="w-full bg-slate-950 text-slate-200 border border-slate-700/80 rounded-xl pl-10 pr-9 py-2 text-xs font-mono placeholder:text-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/40 outline-none transition-all shadow-inner">
+                        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs p-1 rounded-md transition-colors cursor-pointer" title="Очистити пошук">
                             ✕
                         </button>
                     </div>
 
-                    <!-- Сегментовані фільтри -->
-                    <div class="flex items-center gap-1.5 flex-wrap w-full lg:w-auto justify-start lg:justify-center">
+                    <!-- Єдині сегментовані фільтри (Жодного дублювання!) -->
+                    <div class="flex items-center gap-1.5 flex-wrap w-full xl:w-auto justify-start xl:justify-end">
                         <button type="button" onclick="setFilter('all')" id="filter-all"
-                            class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-purple-600 text-white border border-purple-500 transition-all cursor-pointer shadow-sm">
+                            class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-purple-600 text-white border border-purple-500 shadow-md shadow-purple-950/40 transition-all cursor-pointer">
                             Всі (<span id="count-filter-all">0</span>)
                         </button>
                         <button type="button" onclick="setFilter('60plus')" id="filter-60plus"
-                            class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950 text-red-400 hover:bg-red-950/30 border border-slate-800 transition-all cursor-pointer">
-                            🚨 60+ діб (<span id="count-filter-60plus">0</span>)
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-red-400 hover:bg-red-950/30 border border-red-900/40 transition-all cursor-pointer">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            <span>🚨 60+ діб (<span id="count-filter-60plus">0</span>)</span>
                         </button>
                         <button type="button" onclick="setFilter('50to59')" id="filter-50to59"
-                            class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950 text-amber-400 hover:bg-amber-950/30 border border-slate-800 transition-all cursor-pointer">
-                            ⚠️ 50-59 діб (<span id="count-filter-50to59">0</span>)
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-amber-400 hover:bg-amber-950/30 border border-amber-900/40 transition-all cursor-pointer">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            <span>⚠️ 50-59 діб (<span id="count-filter-50to59">0</span>)</span>
                         </button>
                         <button type="button" onclick="setFilter('active')" id="filter-active"
-                            class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950 text-emerald-400 hover:bg-emerald-950/30 border border-slate-800 transition-all cursor-pointer">
-                            🟢 Активні (<span id="count-filter-active">0</span>)
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-emerald-400 hover:bg-emerald-950/30 border border-emerald-900/40 transition-all cursor-pointer">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <span>🟢 Активні (<span id="count-filter-active">0</span>)</span>
                         </button>
                         <button type="button" onclick="setFilter('inactive')" id="filter-inactive"
-                            class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer">
-                            ⚪ Вибули (<span id="count-filter-inactive">0</span>)
-                        </button>
-                    </div>
-
-                    <!-- Кнопки експорту Excel -->
-                    <div class="flex items-center gap-2 w-full lg:w-auto">
-                        <button id="exportPositionsListBtn" class="hidden flex-1 lg:flex-initial bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-md shadow-indigo-900/30 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0" title="Експорт зрізу бойового чергування за підрозділом у форматі списку">
-                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                            <span id="exportPositionsListBtnText">Зріз позицій (Excel)</span>
-                        </button>
-                        <button id="exportExcelBtn" class="hidden flex-1 lg:flex-initial bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-md shadow-emerald-900/30 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0" title="Календарний табель чергування по днях">
-                            <i data-lucide="calendar" class="w-4 h-4"></i>
-                            <span id="exportExcelBtnText">Табель Excel</span>
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-slate-400 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer">
+                            <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                            <span>⚪ Вибули (<span id="count-filter-inactive">0</span>)</span>
                         </button>
                     </div>
                 </div>
@@ -368,44 +477,44 @@
             </div>
 
             <!-- Сама таблиця ротацій на 100% ширини з високою щільністю рядків -->
-            <div class="overflow-x-auto custom-scrollbar">
+            <div class="overflow-x-auto custom-scrollbar border-t border-slate-800/60">
                 <table class="w-full text-left border-collapse text-xs">
-                    <thead class="bg-slate-950 sticky top-0 border-b border-slate-800 shadow-md z-10 font-mono text-[11px] text-slate-400">
+                    <thead class="bg-slate-950/95 sticky top-0 border-b border-slate-800 shadow-md z-10 font-mono text-[11px] text-slate-300 backdrop-blur-md select-none">
                         <tr>
                             <!-- Чекбокс вибору всіх -->
-                            <th class="py-2.5 px-3 text-center w-10 border-r border-slate-800/80">
+                            <th class="py-2.5 px-3 text-center w-10 border-r border-slate-800/80 shrink-0">
                                 <input type="checkbox" id="masterCheckbox" onclick="toggleSelectAll(this.checked)"
                                     class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-purple-600 focus:ring-0 focus:ring-offset-0 cursor-pointer">
                             </th>
-                            <th class="py-2.5 px-2.5 text-center w-12 border-r border-slate-800/80">№</th>
-                            <th class="py-2.5 px-3 w-32 border-r border-slate-800/80">Звання</th>
+                            <th class="py-2.5 px-2 text-center w-11 border-r border-slate-800/80 shrink-0">№</th>
+                            <th class="py-2.5 px-3 border-r border-slate-800/80 whitespace-nowrap">Звання</th>
                             
                             <!-- Сортування ПІБ -->
-                            <th class="py-2.5 px-3 w-64 border-r border-slate-800/80 cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('name')">
+                            <th class="py-2.5 px-3.5 min-w-[220px] border-r border-slate-800/80 cursor-pointer hover:bg-slate-900/80 hover:text-white transition-colors" onclick="window.handleSort('name')">
                                 <div class="flex items-center justify-between">
                                     <span>ПІБ</span>
                                     <span id="sort-name" class="text-slate-500 font-bold ml-1">↕</span>
                                 </div>
                             </th>
                             
-                            <th class="py-2.5 px-3 w-64 border-r border-slate-800/80">Посада</th>
+                            <th class="py-2.5 px-3.5 min-w-[240px] max-w-[420px] border-r border-slate-800/80">Посада</th>
                             
                             <!-- Сортування Локацій -->
-                            <th class="py-2.5 px-3 border-r border-slate-800/80 cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('locations')">
+                            <th class="py-2.5 px-3.5 min-w-[200px] border-r border-slate-800/80 cursor-pointer hover:bg-slate-900/80 hover:text-white transition-colors" onclick="window.handleSort('locations')">
                                 <div class="flex items-center justify-between">
-                                    <span>Локації / Позиції чергування</span>
+                                    <span>Локації / Позиції</span>
                                     <span id="sort-locations" class="text-slate-500 font-bold ml-1">↕</span>
                                 </div>
                             </th>
                             
                             <!-- Сортування Днів -->
-                            <th class="py-2.5 px-3 w-32 text-center cursor-pointer hover:bg-slate-900 transition-colors border-r border-slate-800/80" onclick="window.handleSort('days')">
+                            <th class="py-2.5 px-3 text-center cursor-pointer hover:bg-slate-900/80 hover:text-white transition-colors border-r border-slate-800/80 whitespace-nowrap" onclick="window.handleSort('days')">
                                 <div class="flex items-center justify-center gap-1">
                                     <span>Безперервно</span>
                                     <span id="sort-days" class="text-purple-400 font-bold ml-1">↓</span>
                                 </div>
                             </th>
-                            <th class="w-10 text-center"></th>
+                            <th class="w-10 text-center shrink-0"></th>
                         </tr>
                     </thead>
                     <tbody id="resultTableBody" class="divide-y divide-slate-800/60 font-sans">
@@ -426,6 +535,130 @@
             Штабний комплекс оперативних програм • Аналізатор безперервної ротації • Inter Standard
         </footer>
 
+    </div>
+
+    <!-- 3.1. МОДАЛЬНЕ ВІКНО: ПАКЕТНЕ КЕРУВАННЯ ТА ВИДАЛЕННЯ ДАТ І ФАЙЛІВ -->
+    <div id="modal-files-manager" onclick="if(event.target === this) closeModal('modal-files-manager')"
+        class="fixed inset-0 z-[200] bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4">
+        <div class="bg-slate-900 border border-slate-700/90 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            <!-- Шапка модалки -->
+            <div class="p-3.5 sm:p-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/40 flex-wrap gap-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
+                        <i data-lucide="folder-cog" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
+                            <span>Керування базою дат та файлів списків</span>
+                            <span id="modal-files-total-count" class="bg-purple-950/80 text-purple-300 border border-purple-800/60 px-2 py-0.5 rounded-full text-[10px] font-mono">0 файлів</span>
+                            <span id="modal-dates-total-count" class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded-full text-[10px] font-mono">0 дат</span>
+                        </h2>
+                        <p class="text-[11px] text-slate-400 font-mono">Швидкі пресети очищення, вибір за діапазоном та пакетне вилучення за місяцями</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('modal-files-manager')"
+                    class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Верхній блок швидких пресетів та інструментів пакетного видалення -->
+            <div class="p-3 bg-slate-950/70 border-b border-slate-800 space-y-2.5 font-mono text-xs">
+                
+                <!-- Рядок 1: Швидкі пресети ротації (1 клік) -->
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-1.5 text-slate-300 font-bold text-[11px]">
+                        <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <span>Швидкі пресети ротації:</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <button type="button" onclick="batchKeepRecentDays(60)" class="px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shadow-sm" title="Залишити тільки крайні 60 діб від останнього зрізу, видаливши весь старий хвіст">
+                            <span>🎯 Залишити крайні 60 діб</span>
+                        </button>
+                        <button type="button" onclick="batchKeepRecentDays(30)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-[11px] transition flex items-center gap-1 cursor-pointer" title="Залишити тільки крайні 30 діб">
+                            <span>Залишити 30 діб</span>
+                        </button>
+                        <button type="button" onclick="batchKeepRecentDays(90)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-[11px] transition flex items-center gap-1 cursor-pointer" title="Залишити тільки крайні 90 діб">
+                            <span>Залишити 90 діб</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Рядок 2: Видалення до дати або за діапазоном -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 border-t border-slate-800/60">
+                    
+                    <!-- Інструмент: Видалити все до певної дати -->
+                    <div class="flex items-center gap-1.5 bg-slate-900/90 p-1.5 px-2.5 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 text-[11px] shrink-0">Видалити все до:</span>
+                        <input type="date" id="batchCutoffDateInput" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-0.5 text-slate-200 text-xs focus:outline-none focus:border-purple-500 flex-1">
+                        <button type="button" onclick="batchDeleteOlderThanCutoff()" class="px-2.5 py-1 bg-red-950/70 hover:bg-red-900 text-red-200 border border-red-800/70 rounded-lg text-[11px] font-bold transition shrink-0 cursor-pointer">
+                            Зрізати старі
+                        </button>
+                    </div>
+
+                    <!-- Інструмент: Видалити діапазон дат -->
+                    <div class="flex items-center gap-1.5 bg-slate-900/90 p-1.5 px-2.5 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 text-[11px] shrink-0">Діапазон з:</span>
+                        <input type="date" id="batchRangeFromInput" class="bg-slate-950 border border-slate-700 rounded-lg px-1.5 py-0.5 text-slate-200 text-[11px] focus:outline-none focus:border-purple-500 w-28">
+                        <span class="text-slate-400 text-[11px] shrink-0">по:</span>
+                        <input type="date" id="batchRangeToInput" class="bg-slate-950 border border-slate-700 rounded-lg px-1.5 py-0.5 text-slate-200 text-[11px] focus:outline-none focus:border-purple-500 w-28">
+                        <button type="button" onclick="batchDeleteRange()" class="px-2.5 py-1 bg-red-950/70 hover:bg-red-900 text-red-200 border border-red-800/70 rounded-lg text-[11px] font-bold transition shrink-0 cursor-pointer">
+                            Видалити
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Рядок 3: Живий пошук + мультиселект керування -->
+                <div class="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-slate-800/60">
+                    <div class="relative flex-1 min-w-[200px]">
+                        <input type="text" id="batchSearchFilesInput" oninput="onBatchSearchInput(this.value)" placeholder="🔍 Фільтр дат, місяців (напр. 2025 або 08.2026)..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1 text-slate-200 text-xs focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <button type="button" onclick="batchSelectAllDates(true)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-[11px] font-medium transition cursor-pointer">
+                            ☑️ Вибрати всі
+                        </button>
+                        <button type="button" onclick="batchSelectAllDates(false)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg text-[11px] font-medium transition cursor-pointer">
+                            ⬜ Зняти вибір
+                        </button>
+                        <button type="button" onclick="batchInvertSelection()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-[11px] font-medium transition cursor-pointer">
+                            🔄 Інвертувати
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Список файлів та дат (акордеони за місяцями) -->
+            <div class="p-3.5 overflow-y-auto custom-scrollbar flex-1 space-y-2.5 text-xs font-mono bg-slate-950/40">
+                <div id="modalFilesBatchEmpty" class="hidden text-slate-500 italic text-center py-10 flex flex-col items-center justify-center gap-2">
+                    <i data-lucide="folder-search" class="w-8 h-8 opacity-40 text-slate-400"></i>
+                    <span>Немає завантажених дат або нічого не знайдено за фільтром</span>
+                </div>
+                <div id="modalFilesGroupedContainer" class="space-y-2.5"></div>
+            </div>
+
+            <!-- Нижня фіксована панель дій з лічильником обраного -->
+            <div class="p-3 px-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">Обрано для видалення:</span>
+                    <span id="batchSelectedSummaryBadge" class="bg-purple-950 text-purple-300 border border-purple-800/80 px-2 py-0.5 rounded-lg font-bold">0 дат</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeModal('modal-files-manager')"
+                        class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition cursor-pointer font-semibold">
+                        Закрити
+                    </button>
+                    <button type="button" id="batchConfirmDeleteBtn" onclick="executeBatchDeleteSelected()" disabled
+                        class="px-4 py-1.5 bg-red-600 hover:bg-red-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:border-slate-800 disabled:cursor-not-allowed text-white rounded-xl transition cursor-pointer font-bold border border-red-500/60 shadow-lg flex items-center gap-1.5">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span id="batchConfirmDeleteBtnText">Видалити вибрані</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <!-- 4. МОДАЛЬНЕ ВІКНО: ФІЛЬТР ВИКЛЮЧЕНЬ (ІГНОР-СТАТУСИ) -->
@@ -488,10 +721,23 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
-                <!-- v1.4.0 -->
+                <!-- v1.5.0 -->
                 <div class="relative pl-4 border-l-2 border-purple-500 space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-purple-400 font-mono text-sm">⚡ v1.4.0 (Поточна версія)</span>
+                        <span class="font-bold text-purple-400 font-mono text-sm">⚡ v1.5.0 (Поточна версія)</span>
+                        <span class="text-[11px] font-mono text-slate-500">15.10.2026</span>
+                    </div>
+                    <ul class="space-y-1 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Ультракомпактна лінійна стрічка досьє (~75px):</strong> Радикальне 4-кратне скорочення висоти розгорнутого акордеона замість громіздкого 350px 2-колонкового блоку. Чистий 2-рядковий вивід: мета-паспорт військовослужбовця + горизонтальний маршрут позицій.</li>
+                        <li><strong class="text-white">Штабний ланцюжок бойового чергування:</strong> Горизонтальний таймлайн етапів утримання позицій із кольоровою диференціацією активного стріку (60+ діб, 50-59 діб, норма), маркером «Скидання» для періодів переривання ліку та посадовими мітками 📌.</li>
+                        <li><strong class="text-white">Відновлення природних пропорцій таблиці:</strong> Ліквідовано штучний `table-fixed` та звуження стовпців: військові звання («Старший солдат») та повні імена бійців більше не обрізаються; повна читабельність довгих посад.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.4.0 -->
+                <div class="relative pl-4 border-l-2 border-slate-700 space-y-1.5 opacity-80">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.4.0</span>
                         <span class="text-[11px] font-mono text-slate-500">18.09.2026</span>
                     </div>
                     <ul class="space-y-1 text-slate-300 list-disc list-inside">
@@ -779,11 +1025,94 @@
             return clean.charAt(0).toUpperCase() + clean.slice(1);
         }
 
+        function getRankBadge(rank) {
+            if (!rank || rank === 'Не вказано') {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded-md border border-slate-800 bg-slate-950/60 text-slate-500 text-[11px] font-mono">Не вказано</span>';
+            }
+            const clean = rank.trim().toLowerCase();
+            const formatted = clean.charAt(0).toUpperCase() + clean.slice(1);
+
+            // Офіцерський склад (amber)
+            if (/генерал|полковник|підполковник|майор|капітан|лейтенант/.test(clean)) {
+                return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-300 text-[11px] font-mono font-bold shadow-xs whitespace-nowrap" title="Офіцерський склад: ${escapeHtml(formatted)}"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>${escapeHtml(formatted)}</span>`;
+            }
+            // Сержантсько-старшинський склад (indigo)
+            if (/сержант|старшина|капрал/.test(clean)) {
+                return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-indigo-500/40 bg-indigo-500/10 text-indigo-300 text-[11px] font-mono font-semibold shadow-xs whitespace-nowrap" title="Сержантський склад: ${escapeHtml(formatted)}"><span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>${escapeHtml(formatted)}</span>`;
+            }
+            // Рядовий склад (slate)
+            return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-slate-700/80 bg-slate-800/80 text-slate-300 text-[11px] font-mono whitespace-nowrap" title="Рядовий склад: ${escapeHtml(formatted)}"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>${escapeHtml(formatted)}</span>`;
+        }
+
+        // Семантичні тактичні бейджі позицій (Tactical High-Contrast UI)
+        function getPositionBadge(pos, options = {}) {
+            if (!pos || pos === 'Не вказано') {
+                return '<span class="inline-flex items-center px-1.5 py-0.5 rounded border border-slate-800 bg-slate-950/70 text-slate-500 font-mono text-[10px]">Не вказано</span>';
+            }
+            const clean = pos.trim();
+            const upper = clean.toUpperCase();
+            const isTruncate = options.truncate !== false;
+            const truncClass = isTruncate ? 'max-w-[140px] truncate' : '';
+
+            // 1. РОП / КСП / Командні пункти (Фіолетово-синій акцент)
+            if (/РОП|КСП|АЯКС|БУК|КЕДР|КЛЕН|МАГНУС/.test(upper)) {
+                return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-purple-500/50 bg-purple-950/60 text-purple-200 font-mono text-[10px] font-bold shadow-xs transition-all hover:border-purple-400" title="${escapeHtml(clean)}"><span class="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0 shadow-sm shadow-purple-400/50"></span><span class="${truncClass}">${escapeHtml(clean)}</span></span>`;
+            }
+            // 2. ВОП / ВП / СП / ОП (Бойові позиції: Смарагдовий акцент)
+            if (/ВОП|ВП|СП|ОП|КАШТАН|БЕРІЗКА|ГЛЯНЕЦЬ|ОРЕЛ|СОКІЛ|СКЕЛЯ|ГРІМ|ПЛАМЯ|УТЬОС|МОЛОТ|ДЖМІЛЬ|КРИЛА|АРГОН|НЕОН|ВІКІНГ/.test(upper)) {
+                return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-emerald-500/50 bg-emerald-950/60 text-emerald-200 font-mono text-[10px] font-semibold shadow-xs transition-all hover:border-emerald-400" title="${escapeHtml(clean)}"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-sm shadow-emerald-400/50"></span><span class="${truncClass}">${escapeHtml(clean)}</span></span>`;
+            }
+            // 3. БРО / Райони оборони / РО (Бурштиновий акцент)
+            if (/БРО|ОБОРОН|РАЙОН/.test(upper)) {
+                return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-amber-500/50 bg-amber-950/60 text-amber-200 font-mono text-[10px] font-bold shadow-xs transition-all hover:border-amber-400" title="${escapeHtml(clean)}"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 shadow-sm shadow-amber-400/50"></span><span class="${truncClass}">${escapeHtml(clean)}</span></span>`;
+            }
+            // 4. Тил / Інженерні роботи / Резерв / ППД / Відпустка / Лікування (Стриманий слейт)
+            if (/ІНЖЕНЕР|ТИЛ|РЕЗЕРВ|ППД|ВІДПУСТКА|ШПИТАЛЬ|ЛІКУВАННЯ|БАЗА/.test(upper)) {
+                return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-700/80 bg-slate-900/80 text-slate-400 font-mono text-[10px] transition-all hover:border-slate-600" title="${escapeHtml(clean)}"><span class="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0"></span><span class="${truncClass}">${escapeHtml(clean)}</span></span>`;
+            }
+            // 5. За замовчуванням (Ціаново-синій)
+            return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-cyan-500/40 bg-cyan-950/50 text-cyan-200 font-mono text-[10px] transition-all hover:border-cyan-400" title="${escapeHtml(clean)}"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0 shadow-sm shadow-cyan-400/50"></span><span class="${truncClass}">${escapeHtml(clean)}</span></span>`;
+        }
+
         function formatDateDisplay(dateStr) {
             if (!dateStr) return '—';
             const parts = dateStr.split('-');
             if (parts.length !== 3) return dateStr;
             return `${parts[2]}.${parts[1]}.${parts[0]}`;
+        }
+
+        function formatPositionDisplay(pos) {
+            if (!pos || pos === 'Не вказано') return '<span class="text-slate-500 italic text-[11px]">Не вказано</span>';
+            const clean = pos.trim().replace(/;$/, '');
+            return `<div class="text-slate-200 text-xs leading-snug line-clamp-2 break-words font-normal" title="${escapeHtml(clean)}">${escapeHtml(clean)}</div>`;
+        }
+
+        function formatLocationsBadges(locs) {
+            if (!locs || locs.length === 0) {
+                return '<span class="text-slate-600 italic text-[11px]">Не вказано</span>';
+            }
+
+            // Розумна дедуплікація повторів однакових робіт (наприклад: "Інженерні роботи на РОП" та "Інженерні роботи в РОП")
+            const seenNorm = new Set();
+            const deduplicated = [];
+            for (const loc of locs) {
+                const simplified = loc.toLowerCase().replace(/\s+(на|в|у|біля|до)\s+/g, ' ').replace(/[«»"']/g, '').trim();
+                if (!seenNorm.has(simplified)) {
+                    seenNorm.add(simplified);
+                    deduplicated.push(loc);
+                }
+            }
+
+            const maxShow = 3;
+            const visible = deduplicated.slice(0, maxShow);
+            const remainder = deduplicated.length - maxShow;
+
+            const badgesHtml = visible.map(s => getPositionBadge(s)).join(' ');
+            const extraHtml = remainder > 0 
+                ? `<span class="bg-purple-950/70 border border-purple-800/60 rounded px-1.5 py-0.5 text-[9px] font-mono text-purple-300 font-bold cursor-help" title="Всі позиції: ${escapeHtml(locs.join(', '))}">+${remainder} ще</span>`
+                : '';
+
+            return `<div class="flex items-center gap-1.5 flex-wrap">${badgesHtml} ${extraHtml}</div>`;
         }
 
         // Локальна база пам'яті браузера (IndexedDB)
@@ -873,7 +1202,7 @@
         }
 
         async function persistCurrentState() {
-            if (database.size === 0) {
+            if (uploadedFiles.length === 0 && database.size === 0) {
                 await clearStateFromDB();
                 hideStorageStatus();
                 return;
@@ -889,6 +1218,7 @@
                 ]);
             }
             const state = {
+                uploadedFiles: uploadedFiles,
                 database: serializedDb,
                 successDates: Array.from(successDatesCount),
                 globalMinDateStr,
@@ -896,12 +1226,13 @@
                 timestamp: Date.now()
             };
             await saveStateToDB(state);
-            showStorageStatus(`Пам'ять: ${successDatesCount.size} дат`);
+            showStorageStatus(`Пам'ять: ${uploadedFiles.length} ф. (${successDatesCount.size} дат)`);
         }
 
         // Глобальний стан
         let database = new Map();
         let successDatesCount = new Set();
+        let uploadedFiles = []; // Реєстр завантажених файлів { id, name, date, count, size, timestamp, entries }
         let tableDataForExport = [];
         let globalMaxDateStr = null;
         let globalMinDateStr = null;
@@ -914,26 +1245,702 @@
         function toggleUploadPanel(show) {
             isUploadPanelOpen = show;
             const cards = document.getElementById('uploadCards');
-            const bar = document.getElementById('uploadCompactBar');
+            const toggleBtn = document.getElementById('toggleDropzoneBtn');
 
-            if (show) {
-                cards.classList.remove('hidden');
-                bar.classList.add('hidden');
-            } else {
-                cards.classList.add('hidden');
-                bar.classList.remove('hidden');
-                updateCompactBarInfo();
+            if (cards) {
+                if (show) {
+                    cards.classList.remove('hidden');
+                    if (toggleBtn) {
+                        toggleBtn.classList.add('bg-purple-600/30', 'text-purple-200', 'border-purple-500/50');
+                        toggleBtn.classList.remove('bg-slate-800/80', 'text-slate-300');
+                    }
+                } else {
+                    cards.classList.add('hidden');
+                    if (toggleBtn) {
+                        toggleBtn.classList.remove('bg-purple-600/30', 'text-purple-200', 'border-purple-500/50');
+                        toggleBtn.classList.add('bg-slate-800/80', 'text-slate-300');
+                    }
+                }
             }
-            lucide.createIcons();
+            updateCompactBarInfo();
+            if (window.lucide) lucide.createIcons();
         }
 
         function updateCompactBarInfo() {
             const periodText = (globalMinDateStr && globalMaxDateStr)
                 ? `${formatDateDisplay(globalMinDateStr)} — ${formatDateDisplay(globalMaxDateStr)}`
-                : 'Не визначено';
-            document.getElementById('compactBarTitle').innerText = `Опрацьовано: ${successDatesCount.size} дат (${database.size} бійців)`;
-            document.getElementById('compactBarDates').innerText = `${successDatesCount.size} файлів`;
-            document.getElementById('compactBarPeriod').innerText = `Період обліку: ${periodText}`;
+                : 'не визначено';
+            const fileCount = uploadedFiles.length || successDatesCount.size;
+            const soldiersCount = database.size;
+
+            const elTitle = document.getElementById('compactBarTitle');
+            if (elTitle) elTitle.innerText = `${soldiersCount} бійців`;
+            const elDates = document.getElementById('compactBarDates');
+            if (elDates) elDates.innerText = `${successDatesCount.size} діб (${fileCount} ф.)`;
+            const elPeriod = document.getElementById('compactBarPeriod');
+            if (elPeriod) elPeriod.innerText = periodText;
+            const cmpFiles = document.getElementById('compactFilesCount');
+            if (cmpFiles) cmpFiles.innerText = fileCount;
+
+            const statusGroup = document.getElementById('headerStatusGroup');
+            const emptyDesc = document.getElementById('headerEmptyDesc');
+            if (statusGroup && emptyDesc) {
+                if (soldiersCount > 0) {
+                    statusGroup.classList.remove('hidden');
+                    statusGroup.classList.add('flex');
+                    emptyDesc.classList.add('hidden');
+                } else {
+                    statusGroup.classList.add('hidden');
+                    statusGroup.classList.remove('flex');
+                    emptyDesc.classList.remove('hidden');
+                }
+            }
+        }
+
+        function switchRightPanelTab(tab) {
+            const btnFiles = document.getElementById('tab-btn-files');
+            const btnLogs = document.getElementById('tab-btn-logs');
+            const panelFiles = document.getElementById('filesListContainer');
+            const panelLogs = document.getElementById('logContainer');
+
+            if (tab === 'files') {
+                btnFiles.className = 'px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all bg-purple-600 text-white shadow-sm flex items-center gap-1.5 cursor-pointer';
+                btnLogs.className = 'px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer';
+                panelFiles.classList.remove('hidden');
+                panelLogs.classList.add('hidden');
+            } else {
+                btnLogs.className = 'px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all bg-purple-600 text-white shadow-sm flex items-center gap-1.5 cursor-pointer';
+                btnFiles.className = 'px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer';
+                panelLogs.classList.remove('hidden');
+                panelFiles.classList.add('hidden');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        const UKR_MONTHS_NAMES = [
+            'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
+            'Липень', 'Серпень', 'Вересень', 'Жовтень', 'Листопад', 'Грудень'
+        ];
+
+        function formatMonthYearDisplay(yearMonthStr) {
+            if (!yearMonthStr || !yearMonthStr.includes('-')) return yearMonthStr || '';
+            const parts = yearMonthStr.split('-');
+            const y = parts[0];
+            const m = parseInt(parts[1], 10);
+            const mName = UKR_MONTHS_NAMES[m - 1] || parts[1];
+            return `${mName} ${y}`;
+        }
+
+        let selectedBatchDates = new Set();
+        let batchSearchQuery = '';
+        let collapsedMonths = new Set();
+
+        function renderUploadedFilesList() {
+            renderUploadCardFilesList();
+            renderBatchModalFilesList();
+        }
+
+        function renderUploadCardFilesList() {
+            const container = document.getElementById('filesListItems');
+            const emptyNotice = document.getElementById('filesListEmpty');
+            const badge1 = document.getElementById('files-list-badge');
+            const badge2 = document.getElementById('compactFilesCount');
+
+            const totalCount = uploadedFiles.length;
+            if (badge1) badge1.innerText = totalCount;
+            if (badge2) badge2.innerText = totalCount;
+
+            if (emptyNotice) {
+                if (totalCount === 0) {
+                    emptyNotice.classList.remove('hidden');
+                } else {
+                    emptyNotice.classList.add('hidden');
+                }
+            }
+
+            if (!container) return;
+            if (totalCount === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // Сортуємо файли: свіжі дати згори
+            const sorted = [...uploadedFiles].sort((a, b) => b.date.localeCompare(a.date));
+
+            // Групуємо за датами
+            const byDate = new Map();
+            for (const f of sorted) {
+                if (!byDate.has(f.date)) byDate.set(f.date, []);
+                byDate.get(f.date).push(f);
+            }
+
+            let html = '';
+
+            // Якщо файлів багато, показуємо зручну плашку з переходом на пакетне видалення
+            if (byDate.size > 5) {
+                html += `
+                <div class="p-2 mb-2 rounded-xl bg-purple-950/40 border border-purple-800/60 flex items-center justify-between text-xs font-mono shadow-sm">
+                    <span class="text-purple-300">Всього: <strong>${byDate.size} дат</strong> (${totalCount} ф.)</span>
+                    <button type="button" onclick="openModal('modal-files-manager')" class="px-2 py-0.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold transition cursor-pointer flex items-center gap-1 shadow">
+                        <i data-lucide="sliders-horizontal" class="w-3 h-3"></i>
+                        <span>Пакетне керування</span>
+                    </button>
+                </div>
+                `;
+            }
+
+            for (const [dateStr, files] of byDate.entries()) {
+                const totalPeopleInDate = files.reduce((sum, f) => sum + (f.count || 0), 0);
+                html += `
+                <div class="rounded-xl border border-slate-800 bg-slate-900/70 p-2 space-y-1.5 transition-all hover:border-slate-700/80">
+                    <div class="flex items-center justify-between text-xs font-mono pb-1 border-b border-slate-800/60">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
+                            <span class="font-bold text-purple-300">📅 ${formatDateDisplay(dateStr)}</span>
+                            <span class="text-[10px] text-slate-500">(${files.length} ${files.length === 1 ? 'файл' : 'файли'}, ~${totalPeopleInDate} осіб)</span>
+                        </div>
+                        <button type="button" onclick="removeFilesByDate('${dateStr}')" class="text-[10px] text-red-400 hover:text-red-300 hover:underline cursor-pointer flex items-center gap-1 font-mono transition-colors">
+                            <i data-lucide="trash" class="w-3 h-3"></i>
+                            <span>Видалити дату</span>
+                        </button>
+                    </div>
+                    <div class="space-y-1">
+                `;
+
+                for (const file of files) {
+                    const ext = (file.name || '').split('.').pop().toLowerCase();
+                    const isDocx = ext === 'docx';
+                    const iconBg = isDocx ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                    const iconName = isDocx ? 'file-text' : 'file-spreadsheet';
+
+                    html += `
+                        <div class="flex items-center justify-between p-1.5 px-2 rounded-lg bg-slate-950/80 border border-slate-800/90 hover:border-slate-700 transition group text-xs font-mono">
+                            <div class="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                                <div class="w-5 h-5 rounded flex items-center justify-center shrink-0 border ${iconBg}">
+                                    <i data-lucide="${iconName}" class="w-3 h-3"></i>
+                                </div>
+                                <span class="truncate text-slate-200 font-medium text-[11px]" title="${escapeHtml(file.name)}">
+                                    ${escapeHtml(file.name)}
+                                </span>
+                                <span class="text-[10px] text-slate-500 shrink-0 font-normal">
+                                    ${file.count} осіб
+                                </span>
+                            </div>
+                            <button type="button" onclick="removeUploadedFile('${file.id}')" title="Видалити файл «${escapeHtml(file.name)}»" class="p-1 rounded bg-slate-800/60 hover:bg-red-950/80 text-slate-400 hover:text-red-300 border border-slate-700 hover:border-red-800/60 transition cursor-pointer active:scale-95 shrink-0">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    </div>
+                </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function getFilteredBatchDates() {
+            const allDates = Array.from(successDatesCount);
+            if (!batchSearchQuery) return allDates;
+            return allDates.filter(dateStr => {
+                const displayDate = formatDateDisplay(dateStr).toLowerCase();
+                const monthKey = dateStr.slice(0, 7);
+                const monthDisplay = formatMonthYearDisplay(monthKey).toLowerCase();
+                const matchingFiles = uploadedFiles.filter(f => f.date === dateStr && f.name && f.name.toLowerCase().includes(batchSearchQuery));
+                return dateStr.includes(batchSearchQuery) || 
+                       displayDate.includes(batchSearchQuery) || 
+                       monthDisplay.includes(batchSearchQuery) || 
+                       matchingFiles.length > 0;
+            });
+        }
+
+        function onBatchSearchInput(val) {
+            batchSearchQuery = (val || '').trim().toLowerCase();
+            renderBatchModalFilesList();
+        }
+
+        function batchSelectAllDates(select) {
+            if (select) {
+                const allMatchingDates = getFilteredBatchDates();
+                allMatchingDates.forEach(d => selectedBatchDates.add(d));
+            } else {
+                selectedBatchDates.clear();
+            }
+            renderBatchModalFilesList();
+        }
+
+        function batchInvertSelection() {
+            const allMatchingDates = getFilteredBatchDates();
+            for (const d of allMatchingDates) {
+                if (selectedBatchDates.has(d)) {
+                    selectedBatchDates.delete(d);
+                } else {
+                    selectedBatchDates.add(d);
+                }
+            }
+            renderBatchModalFilesList();
+        }
+
+        function toggleBatchMonth(monthKey, isChecked) {
+            const monthDates = uploadedFiles
+                .filter(f => f.date && f.date.startsWith(monthKey))
+                .map(f => f.date);
+            for (const d of monthDates) {
+                if (isChecked) {
+                    selectedBatchDates.add(d);
+                } else {
+                    selectedBatchDates.delete(d);
+                }
+            }
+            renderBatchModalFilesList();
+        }
+
+        function toggleBatchDate(dateStr, isChecked) {
+            if (isChecked) {
+                selectedBatchDates.add(dateStr);
+            } else {
+                selectedBatchDates.delete(dateStr);
+            }
+            renderBatchModalFilesList();
+        }
+
+        function toggleMonthCollapse(monthKey) {
+            if (collapsedMonths.has(monthKey)) {
+                collapsedMonths.delete(monthKey);
+            } else {
+                collapsedMonths.add(monthKey);
+            }
+            renderBatchModalFilesList();
+        }
+
+        function renderBatchModalFilesList() {
+            const container = document.getElementById('modalFilesGroupedContainer');
+            const emptyEl = document.getElementById('modalFilesBatchEmpty');
+            const summaryBadge = document.getElementById('batchSelectedSummaryBadge');
+            const confirmBtn = document.getElementById('batchConfirmDeleteBtn');
+            const confirmBtnText = document.getElementById('batchConfirmDeleteBtnText');
+            const datesTotalCount = document.getElementById('modal-dates-total-count');
+            const filesTotalCount = document.getElementById('modal-files-total-count');
+
+            if (!container) return;
+
+            const allDates = Array.from(successDatesCount);
+            if (datesTotalCount) datesTotalCount.innerText = `${allDates.length} дат`;
+            if (filesTotalCount) filesTotalCount.innerText = `${uploadedFiles.length} файлів`;
+
+            // Налаштування початкових значень для полів дат
+            const cutoffInput = document.getElementById('batchCutoffDateInput');
+            const rangeFrom = document.getElementById('batchRangeFromInput');
+            const rangeTo = document.getElementById('batchRangeToInput');
+            if (globalMinDateStr && globalMaxDateStr) {
+                if (cutoffInput && !cutoffInput.value) cutoffInput.value = globalMinDateStr;
+                if (rangeFrom && !rangeFrom.value) {
+                    rangeFrom.min = globalMinDateStr; rangeFrom.max = globalMaxDateStr; rangeFrom.value = globalMinDateStr;
+                }
+                if (rangeTo && !rangeTo.value) {
+                    rangeTo.min = globalMinDateStr; rangeTo.max = globalMaxDateStr; rangeTo.value = globalMaxDateStr;
+                }
+            }
+
+            const filteredDates = getFilteredBatchDates();
+
+            if (filteredDates.length === 0) {
+                container.innerHTML = '';
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                if (summaryBadge) summaryBadge.innerText = '0 дат';
+                if (confirmBtn) confirmBtn.disabled = true;
+                if (confirmBtnText) confirmBtnText.innerText = 'Видалити вибрані';
+                return;
+            }
+
+            if (emptyEl) emptyEl.classList.add('hidden');
+
+            // Групуємо дати за місяцями (YYYY-MM)
+            const byMonth = new Map();
+            for (const d of filteredDates) {
+                const monthKey = d.slice(0, 7);
+                if (!byMonth.has(monthKey)) byMonth.set(monthKey, []);
+                byMonth.get(monthKey).push(d);
+            }
+
+            // Сортуємо місяці від найсвіжіших до старіших
+            const sortedMonths = Array.from(byMonth.keys()).sort((a, b) => b.localeCompare(a));
+
+            let html = '';
+
+            for (const monthKey of sortedMonths) {
+                const datesInMonth = byMonth.get(monthKey).sort((a, b) => b.localeCompare(a));
+                const allMonthSelected = datesInMonth.every(d => selectedBatchDates.has(d));
+                const isCollapsed = collapsedMonths.has(monthKey);
+
+                const monthFiles = uploadedFiles.filter(f => f.date && f.date.startsWith(monthKey));
+                const monthPeopleTotal = monthFiles.reduce((sum, f) => sum + (f.count || 0), 0);
+
+                html += `
+                <div class="rounded-xl border border-slate-800 bg-slate-900/80 overflow-hidden shadow-sm transition hover:border-slate-700/80">
+                    <div class="p-2.5 px-3 bg-slate-800/50 flex items-center justify-between flex-wrap gap-2 text-xs font-mono">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <input type="checkbox" id="month_chk_${monthKey}" ${allMonthSelected ? 'checked' : ''}
+                                onchange="toggleBatchMonth('${monthKey}', this.checked)"
+                                class="w-4 h-4 rounded border-slate-700 text-purple-600 focus:ring-purple-500 bg-slate-950 cursor-pointer"
+                                title="Вибрати всі дати місяця">
+                            <label for="month_chk_${monthKey}" class="font-bold text-slate-100 flex items-center gap-2 cursor-pointer select-none">
+                                <span>📅 ${formatMonthYearDisplay(monthKey)}</span>
+                                <span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-purple-300 border border-slate-700/80">
+                                    ${datesInMonth.length} дат • ${monthFiles.length} ф. (~${monthPeopleTotal} ос.)
+                                </span>
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="batchDeleteMonth('${monthKey}')"
+                                class="text-[11px] text-red-400 hover:text-red-300 hover:bg-red-950/50 px-2 py-0.5 rounded border border-transparent hover:border-red-800/50 transition cursor-pointer flex items-center gap-1 font-bold"
+                                title="Видалити весь місяць ${formatMonthYearDisplay(monthKey)}">
+                                <i data-lucide="trash" class="w-3 h-3"></i>
+                                <span>Видалити місяць</span>
+                            </button>
+                            <button type="button" onclick="toggleMonthCollapse('${monthKey}')"
+                                class="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition cursor-pointer"
+                                title="${isCollapsed ? 'Розгорнути місяць' : 'Згорнути місяць'}">
+                                <i data-lucide="${isCollapsed ? 'chevron-down' : 'chevron-up'}" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                if (!isCollapsed) {
+                    html += `
+                    <div class="p-2.5 bg-slate-950/60 border-t border-slate-800/70 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    `;
+
+                    for (const dateStr of datesInMonth) {
+                        const isDateSelected = selectedBatchDates.has(dateStr);
+                        const filesForDate = uploadedFiles.filter(f => f.date === dateStr);
+                        const totalPeople = filesForDate.reduce((sum, f) => sum + (f.count || 0), 0);
+
+                        html += `
+                        <div class="flex items-center justify-between p-2 rounded-lg border transition text-xs font-mono ${isDateSelected ? 'bg-purple-950/30 border-purple-500/60 shadow-sm' : 'bg-slate-900/90 border-slate-800 hover:border-slate-700'}">
+                            <label class="flex items-center gap-2 cursor-pointer flex-1 min-w-0 pr-1 select-none">
+                                <input type="checkbox" ${isDateSelected ? 'checked' : ''}
+                                    onchange="toggleBatchDate('${dateStr}', this.checked)"
+                                    class="w-3.5 h-3.5 rounded border-slate-700 text-purple-600 focus:ring-purple-500 bg-slate-950 cursor-pointer shrink-0">
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-bold text-slate-200 text-[11px] truncate flex items-center gap-1.5">
+                                        <span>${formatDateDisplay(dateStr)}</span>
+                                        ${filesForDate.length > 1 ? `<span class="text-[9px] px-1 rounded bg-slate-800 text-slate-400">${filesForDate.length} ф.</span>` : ''}
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 font-normal truncate">
+                                        ${totalPeople} осіб
+                                    </div>
+                                </div>
+                            </label>
+                            <button type="button" onclick="removeFilesByDate('${dateStr}')"
+                                class="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-950/50 transition cursor-pointer shrink-0"
+                                title="Видалити дату ${formatDateDisplay(dateStr)}">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        `;
+                    }
+
+                    html += `</div>`;
+                }
+
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
+
+            // Оновлення нижньої плашки
+            const selectedFilesCount = uploadedFiles.filter(f => selectedBatchDates.has(f.date)).length;
+            if (summaryBadge) {
+                summaryBadge.innerText = `${selectedBatchDates.size} дат (${selectedFilesCount} файлів)`;
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = (selectedBatchDates.size === 0);
+            }
+            if (confirmBtnText) {
+                confirmBtnText.innerText = selectedBatchDates.size > 0 
+                    ? `Видалити вибрані (${selectedBatchDates.size} дат)` 
+                    : 'Видалити вибрані';
+            }
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function batchKeepRecentDays(days) {
+            if (!globalMaxDateStr || successDatesCount.size === 0) {
+                alert("У базі немає завантажених дат.");
+                return;
+            }
+            const maxParts = globalMaxDateStr.split('-').map(Number);
+            const maxDate = new Date(maxParts[0], maxParts[1] - 1, maxParts[2]);
+            const cutoffTime = maxDate.getTime() - (days - 1) * 24 * 60 * 60 * 1000;
+            const cutoffDate = new Date(cutoffTime);
+            const cutoffStr = cutoffDate.toISOString().slice(0, 10);
+
+            const datesToDelete = Array.from(successDatesCount).filter(d => d < cutoffStr);
+            if (datesToDelete.length === 0) {
+                alert(`Усі наявні дати (${formatDateDisplay(globalMinDateStr)} — ${formatDateDisplay(globalMaxDateStr)}) вже входять у крайні ${days} діб.`);
+                return;
+            }
+
+            const filesToDelete = uploadedFiles.filter(f => datesToDelete.includes(f.date));
+            if (!confirm(`⚡ ЗАЛИШИТИ КРАЙНІ ${days} ДІБ?\n\nПеріод, що залишиться: ${formatDateDisplay(cutoffStr)} — ${formatDateDisplay(globalMaxDateStr)}\n\nБУДЕ ПАКЕТНО ВИДАЛЕНО: ${datesToDelete.length} застарілих дат (${filesToDelete.length} файлів).\nРозрахунок безперервної ротації буде миттєво оптимізовано.`)) {
+                return;
+            }
+
+            uploadedFiles = uploadedFiles.filter(f => f.date >= cutoffStr);
+            datesToDelete.forEach(d => selectedBatchDates.delete(d));
+            rebuildDatabaseFromFiles();
+            await persistCurrentState();
+
+            if (typeof logMessage === 'function') {
+                logMessage(`🎯 Пакетне очищення: залишено крайні ${days} діб (${formatDateDisplay(cutoffStr)} — ${formatDateDisplay(globalMaxDateStr)}). Видалено ${datesToDelete.length} дат (${filesToDelete.length} файлів)`, 'text-amber-400 font-bold');
+            }
+
+            if (uploadedFiles.length === 0) {
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                toggleUploadPanel(true);
+            }
+        }
+
+        async function batchDeleteOlderThanCutoff() {
+            const cutoffInput = document.getElementById('batchCutoffDateInput');
+            const cutoff = cutoffInput ? cutoffInput.value : null;
+            if (!cutoff) {
+                alert("Вкажіть дату зрізу в полі 'Видалити все до'.");
+                return;
+            }
+
+            const datesToDelete = Array.from(successDatesCount).filter(d => d < cutoff);
+            if (datesToDelete.length === 0) {
+                alert(`Не знайдено дат старіших за ${formatDateDisplay(cutoff)}.`);
+                return;
+            }
+
+            const filesToDelete = uploadedFiles.filter(f => datesToDelete.includes(f.date));
+            if (!confirm(`Видалити ВСІ дати до ${formatDateDisplay(cutoff)}?\n\nБуде видалено: ${datesToDelete.length} дат (${filesToDelete.length} файлів).`)) {
+                return;
+            }
+
+            uploadedFiles = uploadedFiles.filter(f => f.date >= cutoff);
+            datesToDelete.forEach(d => selectedBatchDates.delete(d));
+            rebuildDatabaseFromFiles();
+            await persistCurrentState();
+
+            if (typeof logMessage === 'function') {
+                logMessage(`🗑️ Зрізано все старіше за ${formatDateDisplay(cutoff)}: видалено ${datesToDelete.length} дат (${filesToDelete.length} файлів)`, 'text-amber-400 font-bold');
+            }
+
+            if (uploadedFiles.length === 0) {
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                toggleUploadPanel(true);
+            }
+        }
+
+        async function batchDeleteRange() {
+            const fromInput = document.getElementById('batchRangeFromInput');
+            const toInput = document.getElementById('batchRangeToInput');
+            const from = fromInput ? fromInput.value : null;
+            const to = toInput ? toInput.value : null;
+
+            if (!from || !to) {
+                alert("Вкажіть обидві дати діапазону (З та По).");
+                return;
+            }
+
+            const start = from <= to ? from : to;
+            const end = from <= to ? to : from;
+
+            const datesToDelete = Array.from(successDatesCount).filter(d => d >= start && d <= end);
+            if (datesToDelete.length === 0) {
+                alert(`Не знайдено дат у діапазоні ${formatDateDisplay(start)} — ${formatDateDisplay(end)}.`);
+                return;
+            }
+
+            const filesToDelete = uploadedFiles.filter(f => datesToDelete.includes(f.date));
+            if (!confirm(`Видалити діапазон дат з ${formatDateDisplay(start)} по ${formatDateDisplay(end)}?\n\nБуде видалено: ${datesToDelete.length} дат (${filesToDelete.length} файлів).`)) {
+                return;
+            }
+
+            uploadedFiles = uploadedFiles.filter(f => f.date < start || f.date > end);
+            datesToDelete.forEach(d => selectedBatchDates.delete(d));
+            rebuildDatabaseFromFiles();
+            await persistCurrentState();
+
+            if (typeof logMessage === 'function') {
+                logMessage(`🗑️ Видалено діапазон ${formatDateDisplay(start)} — ${formatDateDisplay(end)}: ${datesToDelete.length} дат (${filesToDelete.length} файлів)`, 'text-amber-400 font-bold');
+            }
+
+            if (uploadedFiles.length === 0) {
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                toggleUploadPanel(true);
+            }
+        }
+
+        async function batchDeleteMonth(monthKey) {
+            const monthDates = Array.from(successDatesCount).filter(d => d.startsWith(monthKey));
+            if (monthDates.length === 0) return;
+
+            const monthFiles = uploadedFiles.filter(f => f.date && f.date.startsWith(monthKey));
+            if (!confirm(`Видалити весь місяць ${formatMonthYearDisplay(monthKey)}?\n\nБуде видалено: ${monthDates.length} дат (${monthFiles.length} файлів).`)) {
+                return;
+            }
+
+            uploadedFiles = uploadedFiles.filter(f => !f.date || !f.date.startsWith(monthKey));
+            monthDates.forEach(d => selectedBatchDates.delete(d));
+            rebuildDatabaseFromFiles();
+            await persistCurrentState();
+
+            if (typeof logMessage === 'function') {
+                logMessage(`🗑️ Видалено весь місяць ${formatMonthYearDisplay(monthKey)}: ${monthDates.length} дат (${monthFiles.length} файлів)`, 'text-amber-400 font-bold');
+            }
+
+            if (uploadedFiles.length === 0) {
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                toggleUploadPanel(true);
+            }
+        }
+
+        async function executeBatchDeleteSelected() {
+            if (selectedBatchDates.size === 0) return;
+
+            const datesToDelete = Array.from(selectedBatchDates);
+            const filesToDelete = uploadedFiles.filter(f => datesToDelete.includes(f.date));
+
+            if (!confirm(`ПАКЕТНЕ ВИДАЛЕННЯ:\n\nВидалити обрані ${datesToDelete.length} дат (${filesToDelete.length} файлів)?\nДані цих дат буде вилучено з табеля ротацій.`)) {
+                return;
+            }
+
+            uploadedFiles = uploadedFiles.filter(f => !datesToDelete.includes(f.date));
+            selectedBatchDates.clear();
+            rebuildDatabaseFromFiles();
+            await persistCurrentState();
+
+            if (typeof logMessage === 'function') {
+                logMessage(`🗑️ Пакетно видалено: <strong class="text-white">${datesToDelete.length} обраних дат</strong> (${filesToDelete.length} файлів)`, 'text-amber-400 font-bold');
+            }
+
+            if (uploadedFiles.length === 0) {
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                toggleUploadPanel(true);
+            }
+        }
+
+        function rebuildDatabaseFromFiles() {
+            database.clear();
+            successDatesCount.clear();
+            globalMinDateStr = null;
+            globalMaxDateStr = null;
+
+            // Сортуємо файли хронологічно за датою (від старих до нових)
+            const sortedFiles = [...uploadedFiles].sort((a, b) => a.date.localeCompare(b.date));
+
+            for (const f of sortedFiles) {
+                const fileDate = f.date;
+                if (!fileDate) continue;
+
+                if (!globalMaxDateStr || fileDate > globalMaxDateStr) globalMaxDateStr = fileDate;
+                if (!globalMinDateStr || fileDate < globalMinDateStr) globalMinDateStr = fileDate;
+
+                for (const entry of (f.entries || [])) {
+                    const { normalizedKey, name, rank, position, status } = entry;
+                    if (!database.has(normalizedKey)) {
+                        database.set(normalizedKey, { name: name, records: new Map() });
+                    }
+                    const person = database.get(normalizedKey);
+                    const existing = person.records.get(fileDate);
+                    let finalStatus = status;
+
+                    if (existing && existing.status !== status && !existing.status.includes(status)) {
+                        finalStatus = existing.status + ' + ' + status;
+                    }
+
+                    person.records.set(fileDate, {
+                        status: finalStatus,
+                        rank: (rank && rank !== 'Не вказано') ? rank : (existing?.rank || 'Не вказано'),
+                        position: (position && position !== 'Не вказано') ? position : (existing?.position || 'Не вказано')
+                    });
+                }
+
+                if (f.entries && f.entries.length > 0) {
+                    successDatesCount.add(fileDate);
+                }
+            }
+
+            const badge = document.getElementById('files-processed-badge');
+            if (badge) badge.innerText = `${successDatesCount.size} дат`;
+
+            const note = document.getElementById('latestDateNote');
+            if (note) {
+                note.innerText = globalMaxDateStr ? `Крайній зріз: ${formatDateDisplay(globalMaxDateStr)}` : '';
+            }
+
+            renderUploadedFilesList();
+            updateCompactBarInfo();
+            if (typeof window.renderTableFunc === 'function') {
+                window.renderTableFunc();
+            }
+        }
+
+        async function removeUploadedFile(fileId) {
+            const fileIdx = uploadedFiles.findIndex(f => f.id === fileId);
+            if (fileIdx === -1) return;
+            const removed = uploadedFiles[fileIdx];
+
+            if (!confirm(`Видалити файл "${removed.name}" (${formatDateDisplay(removed.date)}) з аналізу?\nДані цього файлу будуть вилучені, а табель перераховано.`)) {
+                return;
+            }
+
+            uploadedFiles.splice(fileIdx, 1);
+            rebuildDatabaseFromFiles();
+            await persistCurrentState();
+
+            if (typeof logMessage === 'function') {
+                logMessage(`🗑️ Видалено файл: <strong class="text-white">${escapeHtml(removed.name)}</strong> (<span class="text-purple-300">${formatDateDisplay(removed.date)}</span>, ${removed.count} осіб)`, 'text-amber-400');
+            }
+
+            if (uploadedFiles.length === 0) {
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                toggleUploadPanel(true);
+            }
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function removeFilesByDate(dateStr) {
+            const matching = uploadedFiles.filter(f => f.date === dateStr);
+            if (matching.length === 0) return;
+
+            if (!confirm(`Видалити ВСІ файли (${matching.length} шт.) за дату ${formatDateDisplay(dateStr)} з аналізу?\nВсі записи за цей день буде скинуто.`)) {
+                return;
+            }
+
+            uploadedFiles = uploadedFiles.filter(f => f.date !== dateStr);
+            rebuildDatabaseFromFiles();
+            await persistCurrentState();
+
+            if (typeof logMessage === 'function') {
+                logMessage(`🗑️ Видалено всі файли за дату: <strong class="text-purple-300">${formatDateDisplay(dateStr)}</strong> (${matching.length} файлів)`, 'text-amber-400');
+            }
+
+            if (uploadedFiles.length === 0) {
+                const clearBtn = document.getElementById('clearBtn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+                toggleUploadPanel(true);
+            }
+
+            if (window.lucide) lucide.createIcons();
         }
 
         function openModal(id) {
@@ -941,7 +1948,8 @@
             if (!m) return;
             m.classList.remove('hidden');
             m.classList.add('flex');
-            lucide.createIcons();
+            if (id === 'modal-files-manager') renderUploadedFilesList();
+            if (window.lucide) lucide.createIcons();
         }
 
         function closeModal(id) {
@@ -958,19 +1966,111 @@
                 closeModal('modal-changelog');
                 closeModal('settingsModal');
                 closeModal('exportPositionsModal');
+                closeModal('modal-files-manager');
             }
         });
 
+        function showCopyToast(msg) {
+            let toast = document.getElementById('copyToastNotification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'copyToastNotification';
+                toast.className = 'fixed bottom-6 right-6 z-[220] flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-slate-900/95 border border-purple-500/60 shadow-2xl shadow-purple-950/80 text-white font-mono text-xs backdrop-blur-xl transition-all duration-300 opacity-0 translate-y-3 pointer-events-none';
+                toast.innerHTML = '<span class="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0"><i data-lucide="check" class="w-3.5 h-3.5"></i></span><span id="copyToastText" class="font-medium text-slate-100"></span>';
+                document.body.appendChild(toast);
+            }
+            const textEl = document.getElementById('copyToastText');
+            if (textEl) textEl.textContent = msg;
+            if (window.lucide) lucide.createIcons();
+            toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+            }, 2500);
+        }
+
         window.toggleDetails = function(personId) {
-            const row = document.getElementById(`row-${personId}`);
-            const details = document.getElementById(`details-${personId}`);
-            if (!row || !details) return;
-            if (details.classList.contains('hidden')) {
-                details.classList.remove('hidden');
-                row.classList.add('row-expanded');
+            const targetRow = document.getElementById(`row-${personId}`);
+            const targetDetails = document.getElementById(`details-${personId}`);
+            if (!targetRow || !targetDetails) return;
+
+            const isCurrentlyOpen = !targetDetails.classList.contains('hidden');
+
+            // Режим одного активного досьє: закриваємо всі інші відкриті рядки
+            document.querySelectorAll('[id^="details-p-"]').forEach(el => {
+                if (!el.classList.contains('hidden')) {
+                    el.classList.add('hidden');
+                }
+            });
+            document.querySelectorAll('[id^="row-p-"]').forEach(el => {
+                el.classList.remove('row-expanded');
+            });
+
+            // Якщо вибраний рядок був закритий — відкриваємо його
+            if (!isCurrentlyOpen) {
+                targetDetails.classList.remove('hidden');
+                targetRow.classList.add('row-expanded');
+                if (window.lucide) lucide.createIcons();
+            }
+        };
+
+        window.copySoldierDossierByKey = function(key, btnElement) {
+            let row = (typeof tableDataForExport !== 'undefined') ? tableDataForExport.find(r => r.key === key) : null;
+            if (!row && database.has(key)) {
+                const personData = database.get(key);
+                const sortedDates = Array.from(personData.records.keys()).sort();
+                const latestDate = sortedDates[sortedDates.length - 1];
+                const latestRecord = personData.records.get(latestDate);
+                const ignoreTextArea = document.getElementById('ignoreTextArea');
+                const ignoredKeywords = ignoreTextArea ? ignoreTextArea.value.split(/[\n,;]+/).map(s => s.trim().toLowerCase()).filter(s => s.length > 0) : [];
+                const details = buildDetailedPeriods(personData.records, ignoredKeywords);
+                row = {
+                    key: key,
+                    name: personData.name,
+                    latestRank: latestRecord.rank,
+                    latestPosition: latestRecord.position,
+                    details: details
+                };
+            }
+            if (!row) return;
+
+            const formattedRank = (typeof formatRank === 'function') ? formatRank(row.latestRank) : row.latestRank;
+            const cleanRank = formattedRank && formattedRank !== 'Не вказано' ? formattedRank : 'військовослужбовець';
+            const cleanPos = row.latestPosition && row.latestPosition !== 'Не вказано' ? ` (${row.latestPosition})` : '';
+            const locs = row.details?.uniqueStatuses || [];
+            const curPos = locs.length > 0 ? locs[locs.length - 1] : '';
+            const curPosText = curPos && curPos !== 'Не вказано' ? ` Поточна позиція: ${curPos}.` : '';
+
+            // Якщо боєць вибув зі списків — фіксуємо його крайню дату присутності в базі
+            const sortedDates = Array.from(database.get(row.key)?.records.keys() || []).sort();
+            const soldierLatestDate = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : globalMaxDateStr;
+            const formattedDate = (row.details?.isGloballyInactive && soldierLatestDate)
+                ? formatDateDisplay(soldierLatestDate)
+                : (globalMaxDateStr ? formatDateDisplay(globalMaxDateStr) : new Date().toLocaleDateString('uk-UA'));
+
+            const statusNote = row.details?.isGloballyInactive ? " (вибув зі списків)" : "";
+            const streak = row.details?.currentStreak || 0;
+            const text = `Довідка: ${cleanRank} ${row.name}${cleanPos}. Безперервний термін бойового чергування: ${streak} діб (станом на ${formattedDate})${statusNote}.${curPosText}`;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyToast("Довідку бійця скопійовано в буфер обміну");
+                    if (btnElement) {
+                        const originalHtml = btnElement.innerHTML;
+                        btnElement.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span class="text-emerald-300 font-bold">Скопійовано!</span>';
+                        if (window.lucide) lucide.createIcons();
+                        setTimeout(() => {
+                            btnElement.innerHTML = originalHtml;
+                            if (window.lucide) lucide.createIcons();
+                        }, 2000);
+                    }
+                }).catch(() => {
+                    prompt("Скопіюйте довідку вручну:", text);
+                });
             } else {
-                details.classList.add('hidden');
-                row.classList.remove('row-expanded');
+                prompt("Скопіюйте довідку вручну:", text);
             }
         };
 
@@ -986,14 +2086,32 @@
 
         function setFilter(filterType) {
             currentFilter = filterType;
+            const filterStyles = {
+                all: {
+                    active: 'px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-purple-600 text-white border border-purple-500 shadow-md shadow-purple-950/40 transition-all cursor-pointer',
+                    inactive: 'px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-slate-400 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer'
+                },
+                '60plus': {
+                    active: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-red-600 text-white border border-red-500 shadow-md shadow-red-950/40 transition-all cursor-pointer',
+                    inactive: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-red-400 hover:bg-red-950/30 border border-red-900/40 transition-all cursor-pointer'
+                },
+                '50to59': {
+                    active: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-amber-600 text-white border border-amber-500 shadow-md shadow-amber-950/40 transition-all cursor-pointer',
+                    inactive: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-amber-400 hover:bg-amber-950/30 border border-amber-900/40 transition-all cursor-pointer'
+                },
+                active: {
+                    active: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-emerald-600 text-white border border-emerald-500 shadow-md shadow-emerald-950/40 transition-all cursor-pointer',
+                    inactive: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-emerald-400 hover:bg-emerald-950/30 border border-emerald-900/40 transition-all cursor-pointer'
+                },
+                inactive: {
+                    active: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-600 text-white border border-slate-500 shadow-md transition-all cursor-pointer',
+                    inactive: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950/80 text-slate-400 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer'
+                }
+            };
             ['all', '60plus', '50to59', 'active', 'inactive'].forEach(f => {
                 const btn = document.getElementById(`filter-${f}`);
-                if (btn) {
-                    if (f === filterType) {
-                        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-purple-600 text-white border border-purple-500 transition-all cursor-pointer shadow-sm';
-                    } else {
-                        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-950 text-slate-400 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer';
-                    }
+                if (btn && filterStyles[f]) {
+                    btn.className = (f === filterType) ? filterStyles[f].active : filterStyles[f].inactive;
                 }
             });
             if (database.size > 0) window.renderTableFunc();
@@ -1044,23 +2162,60 @@
             if (database.size > 0) window.renderTableFunc();
         }
 
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenuDropdown');
+            const chevron = document.getElementById('exportDropdownChevron');
+            if (!menu) return;
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        }
+
+        function closeExportMenu() {
+            const menu = document.getElementById('exportMenuDropdown');
+            const chevron = document.getElementById('exportDropdownChevron');
+            if (menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('exportDropdownContainer');
+            if (container && !container.contains(e.target)) {
+                closeExportMenu();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeExportMenu();
+        });
+
         function updateSelectionUI() {
             const banner = document.getElementById('selectionBanner');
             const countSpan = document.getElementById('selected-count');
+            const exportDropdownBtnText = document.getElementById('exportDropdownBtnText');
             const exportBtnText = document.getElementById('exportExcelBtnText');
+            const exportPosBtnText = document.getElementById('exportPositionsListBtnText');
             const selCount = selectedSoldiers.size;
 
-            const exportPosBtnText = document.getElementById('exportPositionsListBtnText');
             if (selCount > 0) {
                 banner.classList.remove('hidden');
                 banner.classList.add('flex');
                 countSpan.textContent = selCount;
-                exportBtnText.textContent = `Табель Excel (${selCount} обр.)`;
+                if (exportDropdownBtnText) exportDropdownBtnText.textContent = `Експорт Excel (${selCount} обр.)`;
+                if (exportBtnText) exportBtnText.textContent = `Табель Excel (${selCount} обр.)`;
                 if (exportPosBtnText) exportPosBtnText.textContent = `Зріз позицій (${selCount} обр.)`;
             } else {
                 banner.classList.add('hidden');
                 banner.classList.remove('flex');
-                exportBtnText.textContent = `Табель Excel`;
+                if (exportDropdownBtnText) exportDropdownBtnText.textContent = `Експорт Excel`;
+                if (exportBtnText) exportBtnText.textContent = `Табель Excel`;
                 if (exportPosBtnText) exportPosBtnText.textContent = `Зріз позицій (Excel)`;
             }
 
@@ -1143,6 +2298,7 @@
 
             clearBtn.addEventListener('click', async () => {
                 if (confirm("Очистити збережену базу ротацій з пам'яті браузера?\nВсі завантажені списки та історію дат буде скинуто.")) {
+                    uploadedFiles = [];
                     database.clear();
                     successDatesCount.clear();
                     selectedSoldiers.clear();
@@ -1157,10 +2313,11 @@
                     clearBtn.classList.add('hidden');
                     fileInput.value = '';
                     folderInput.value = '';
+                    renderUploadedFilesList();
                     toggleUploadPanel(true);
                     updateSelectionUI();
                     window.renderTableFunc();
-                    lucide.createIcons();
+                    if (window.lucide) lucide.createIcons();
                 }
             });
 
@@ -2266,16 +3423,12 @@
                     await processSingleFile(file);
                 }
 
+                // Перебудовуємо базу з усіх завантажених файлів
+                rebuildDatabaseFromFiles();
+
                 loadingIndicator.classList.add('hidden');
                 fileInput.value = '';
                 folderInput.value = '';
-                document.getElementById('files-processed-badge').innerText = `${successDatesCount.size} дат`;
-                if (globalMaxDateStr) {
-                    document.getElementById('latestDateNote').innerText = `Крайній зріз: ${formatDateDisplay(globalMaxDateStr)}`;
-                }
-
-                // Спочатку гарантовано будуємо таблицю
-                window.renderTableFunc();
 
                 // Автоматично зберігаємо стан у IndexedDB
                 await persistCurrentState();
@@ -2285,24 +3438,17 @@
                     toggleUploadPanel(false);
                 }
 
-                lucide.createIcons();
+                if (window.lucide) lucide.createIcons();
             }
 
             function processSingleFile(file) {
                 return new Promise((resolve) => {
                     const extractedDate = extractDateFromFilename(file.name);
-                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    const fileExtension = (file.name.split('.').pop() || '').toLowerCase();
 
                     if (!extractedDate) {
                         logMessage(`❌ "${file.name}" — дату в назві не виявлено`, 'text-amber-400');
                         return resolve();
-                    }
-
-                    if (!globalMaxDateStr || extractedDate > globalMaxDateStr) {
-                        globalMaxDateStr = extractedDate;
-                    }
-                    if (!globalMinDateStr || extractedDate < globalMinDateStr) {
-                        globalMinDateStr = extractedDate;
                     }
 
                     const reader = new FileReader();
@@ -2341,7 +3487,7 @@
                                 else { colMap.name = 0; }
                             }
 
-                            let namesFound = 0;
+                            let fileEntriesMap = new Map();
                             for (let i = 0; i < rows.length; i++) {
                                 if (!rows[i] || rows[i].length === 0) continue;
                                 const cellName = String(rows[i][colMap.name] || '').trim();
@@ -2365,31 +3511,46 @@
                                             return word.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-');
                                         }).join(' ').replace(/['’‘`ʼ]/g, "'");
 
-                                        if (!database.has(normalizedKey)) {
-                                            database.set(normalizedKey, { name: displayFullName, records: new Map() });
+                                        if (!fileEntriesMap.has(normalizedKey)) {
+                                            fileEntriesMap.set(normalizedKey, {
+                                                normalizedKey,
+                                                name: displayFullName,
+                                                rank: rank,
+                                                position: position,
+                                                status: status
+                                            });
+                                        } else {
+                                            const ent = fileEntriesMap.get(normalizedKey);
+                                            if (status && !ent.status.includes(status)) {
+                                                ent.status = ent.status + ' + ' + status;
+                                            }
+                                            if (rank && rank !== 'Не вказано') ent.rank = rank;
+                                            if (position && position !== 'Не вказано') ent.position = position;
                                         }
-
-                                        const person = database.get(normalizedKey);
-                                        const existing = person.records.get(extractedDate);
-                                        let finalStatus = status;
-
-                                        if (existing && existing.status !== status && !existing.status.includes(status)) {
-                                            finalStatus = existing.status + ' + ' + status;
-                                        }
-
-                                        person.records.set(extractedDate, {
-                                            status: finalStatus,
-                                            rank: rank,
-                                            position: position
-                                        });
-                                        namesFound++;
                                     }
                                 }
                             }
 
-                            if (namesFound > 0) {
-                                successDatesCount.add(extractedDate);
-                                logMessage(`✅ ${formatDateDisplay(extractedDate)} — ${namesFound} осіб (${file.name})`, 'text-emerald-400');
+                            const fileEntries = Array.from(fileEntriesMap.values());
+                            if (fileEntries.length > 0) {
+                                const existingIdx = uploadedFiles.findIndex(f => f.name === file.name && f.date === extractedDate);
+                                const fileRecord = {
+                                    id: existingIdx !== -1 ? uploadedFiles[existingIdx].id : ('f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)),
+                                    name: file.name,
+                                    date: extractedDate,
+                                    count: fileEntries.length,
+                                    size: file.size || 0,
+                                    timestamp: Date.now(),
+                                    entries: fileEntries
+                                };
+
+                                if (existingIdx !== -1) {
+                                    uploadedFiles[existingIdx] = fileRecord;
+                                } else {
+                                    uploadedFiles.push(fileRecord);
+                                }
+
+                                logMessage(`✅ ${formatDateDisplay(extractedDate)} — ${fileEntries.length} осіб (${file.name})`, 'text-emerald-400');
                             } else {
                                 logMessage(`⚠️ "${file.name}" — ПІБ бійців не виявлено`, 'text-slate-400');
                             }
@@ -2564,17 +3725,20 @@
                         </tr>
                     `;
                     document.getElementById('statsSummary').textContent = 'Очікування завантаження списків...';
-                    exportExcelBtn.classList.add('hidden');
+                    const exportToggleBtn = document.getElementById('exportDropdownToggleBtn');
+                    if (exportToggleBtn) exportToggleBtn.classList.add('hidden');
+                    closeExportMenu();
+                    if (exportExcelBtn) exportExcelBtn.classList.add('hidden');
                     if (exportPositionsListBtn) exportPositionsListBtn.classList.add('hidden');
-                    document.getElementById('badge-count-warning').innerText = '0';
-                    document.getElementById('badge-count-critical').innerText = '0';
-                    document.getElementById('badge-count-normal').innerText = '0';
-                    document.getElementById('badge-count-inactive').innerText = '0';
-                    document.getElementById('count-filter-all').innerText = '0';
-                    document.getElementById('count-filter-60plus').innerText = '0';
-                    document.getElementById('count-filter-50to59').innerText = '0';
-                    document.getElementById('count-filter-active').innerText = '0';
-                    document.getElementById('count-filter-inactive').innerText = '0';
+                    const elBadgeWarn0 = document.getElementById('badge-count-warning'); if (elBadgeWarn0) elBadgeWarn0.innerText = '0';
+                    const elBadgeCrit0 = document.getElementById('badge-count-critical'); if (elBadgeCrit0) elBadgeCrit0.innerText = '0';
+                    const elBadgeNorm0 = document.getElementById('badge-count-normal'); if (elBadgeNorm0) elBadgeNorm0.innerText = '0';
+                    const elBadgeInact0 = document.getElementById('badge-count-inactive'); if (elBadgeInact0) elBadgeInact0.innerText = '0';
+                    const cfAll0 = document.getElementById('count-filter-all'); if (cfAll0) cfAll0.innerText = '0';
+                    const cfCrit0 = document.getElementById('count-filter-60plus'); if (cfCrit0) cfCrit0.innerText = '0';
+                    const cfWarn0 = document.getElementById('count-filter-50to59'); if (cfWarn0) cfWarn0.innerText = '0';
+                    const cfAct0 = document.getElementById('count-filter-active'); if (cfAct0) cfAct0.innerText = '0';
+                    const cfInact0 = document.getElementById('count-filter-inactive'); if (cfInact0) cfInact0.innerText = '0';
                     lucide.createIcons();
                     return;
                 }
@@ -2610,16 +3774,16 @@
                     });
                 }
 
-                document.getElementById('badge-count-warning').innerText = countWarning;
-                document.getElementById('badge-count-critical').innerText = countCritical;
-                document.getElementById('badge-count-normal').innerText = countNormal;
-                document.getElementById('badge-count-inactive').innerText = countInactive;
+                const elBadgeWarn = document.getElementById('badge-count-warning'); if (elBadgeWarn) elBadgeWarn.innerText = countWarning;
+                const elBadgeCrit = document.getElementById('badge-count-critical'); if (elBadgeCrit) elBadgeCrit.innerText = countCritical;
+                const elBadgeNorm = document.getElementById('badge-count-normal'); if (elBadgeNorm) elBadgeNorm.innerText = countNormal;
+                const elBadgeInact = document.getElementById('badge-count-inactive'); if (elBadgeInact) elBadgeInact.innerText = countInactive;
 
-                document.getElementById('count-filter-all').innerText = allRows.length;
-                document.getElementById('count-filter-60plus').innerText = countCritical;
-                document.getElementById('count-filter-50to59').innerText = countWarning;
-                document.getElementById('count-filter-active').innerText = allRows.length - countInactive;
-                document.getElementById('count-filter-inactive').innerText = countInactive;
+                const cfAll = document.getElementById('count-filter-all'); if (cfAll) cfAll.innerText = allRows.length;
+                const cfCrit = document.getElementById('count-filter-60plus'); if (cfCrit) cfCrit.innerText = countCritical;
+                const cfWarn = document.getElementById('count-filter-50to59'); if (cfWarn) cfWarn.innerText = countWarning;
+                const cfAct = document.getElementById('count-filter-active'); if (cfAct) cfAct.innerText = allRows.length - countInactive;
+                const cfInact = document.getElementById('count-filter-inactive'); if (cfInact) cfInact.innerText = countInactive;
 
                 // Фільтрація
                 let filtered = allRows.filter(row => {
@@ -2664,39 +3828,20 @@
                     const formattedRank = formatRank(row.latestRank);
                     const isSelected = selectedSoldiers.has(row.key);
 
-                    // Компактний вивід локацій: максимум 3 плашки + індикатор "+N ще"
-                    let statusHtml = '';
+                    // Компактний вивід локацій: максимум 4 плашки + індикатор "+N ще"
                     const locs = details.uniqueStatuses;
-                    if (locs.length > 0) {
-                        const maxShow = 3;
-                        const visibleLocs = locs.slice(0, maxShow);
-                        const remainder = locs.length - maxShow;
+                    const statusHtml = formatLocationsBadges(locs);
 
-                        const badgesHtml = visibleLocs.map(s => 
-                            `<span class="bg-slate-950/90 border border-slate-800 rounded px-1.5 py-0.5 text-[10px] font-mono text-slate-300 max-w-[140px] truncate inline-block" title="${escapeHtml(s)}">${escapeHtml(s)}</span>`
-                        ).join(' ');
-
-                        const extraHtml = remainder > 0 
-                            ? `<span class="bg-purple-950/70 border border-purple-800/60 rounded px-1.5 py-0.5 text-[9px] font-mono text-purple-300 font-bold cursor-help" title="Всі локації: ${escapeHtml(locs.join(', '))}">+${remainder} ще</span>`
-                            : '';
-
-                        statusHtml = `<div class="flex items-center gap-1 flex-wrap">${badgesHtml} ${extraHtml}</div>`;
-                    } else {
-                        statusHtml = '<span class="text-slate-600 italic text-[11px]">Не вказано</span>';
-                    }
-
-                    // Компактний бейдж діб
-                    let daysClass = "text-slate-300 font-mono font-bold bg-slate-950 border-slate-800";
-                    let daysPulse = "";
-                    if (details.currentStreak >= 60) {
-                        daysClass = "text-red-400 bg-red-950/70 border-red-500/50 font-black shadow-lg shadow-red-950/40";
-                        daysPulse = "animate-pulse";
+                    // Компактний бейдж діб у таблиці
+                    let daysBadgeHtml = '';
+                    if (details.isGloballyInactive) {
+                        daysBadgeHtml = `<span class="inline-flex items-center justify-center gap-1 min-w-[70px] px-2.5 py-1 rounded-xl border border-slate-800 bg-slate-950/80 text-slate-400 text-xs font-mono whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>вибув</span>`;
+                    } else if (details.currentStreak >= 60) {
+                        daysBadgeHtml = `<span class="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl border border-red-500/70 bg-red-950/90 text-red-200 text-xs font-mono font-bold glow-red shadow-md shadow-red-950/60 whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>${details.currentStreak} дн. <span class="text-[9px] uppercase px-1 py-0.2 rounded bg-red-900/90 border border-red-500/50 text-red-200">60+</span></span>`;
                     } else if (details.currentStreak >= 50) {
-                        daysClass = "text-amber-300 bg-amber-950/70 border-amber-500/50 font-bold shadow-sm";
-                    } else if (details.isGloballyInactive) {
-                        daysClass = "text-slate-500 bg-slate-950/40 border-slate-800 opacity-60";
+                        daysBadgeHtml = `<span class="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl border border-amber-500/70 bg-amber-950/90 text-amber-200 text-xs font-mono font-bold glow-amber shadow-sm shadow-amber-950/50 whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-amber-400"></span>${details.currentStreak} дн. <span class="text-[9px] uppercase px-1 py-0.2 rounded bg-amber-900/90 border border-amber-500/50 text-amber-200">50+</span></span>`;
                     } else {
-                        daysClass = "text-emerald-300 bg-emerald-950/60 border-emerald-500/40 font-bold";
+                        daysBadgeHtml = `<span class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl border border-emerald-600/50 bg-emerald-950/70 text-emerald-300 text-xs font-mono font-semibold shadow-xs whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>${details.currentStreak} дн.</span>`;
                     }
 
                     const trMain = document.createElement('tr');
@@ -2706,36 +3851,55 @@
 
                     trMain.innerHTML = `
                         <!-- Чекбокс вибору -->
-                        <td class="py-2 px-3 text-center border-r border-slate-800/60" onclick="event.stopPropagation()">
+                        <td class="py-2.5 px-3 text-center border-r border-slate-800/60" onclick="event.stopPropagation()">
                             <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectRow('${row.key}', event)"
                                 class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-purple-600 focus:ring-0 focus:ring-offset-0 cursor-pointer">
                         </td>
-                        <td class="py-2 px-2.5 text-slate-500 font-mono text-center border-r border-slate-800/60 text-[11px]">${idx + 1}</td>
-                        <td class="py-2 px-3 text-slate-300 font-medium border-r border-slate-800/60 leading-tight text-xs">${escapeHtml(formattedRank)}</td>
-                        <td class="py-2 px-3 font-bold text-white border-r border-slate-800/60 break-word-safe">
-                            <span class="group-hover:text-purple-400 transition-colors text-xs font-bold">${escapeHtml(row.name)}</span>
-                            ${details.isGloballyInactive ? '<span class="inline-flex items-center gap-1 ml-1 px-1.5 py-0.2 text-[9px] font-mono text-slate-400 bg-slate-950 border border-slate-800 rounded font-normal">⚠️ Вибув</span>' : ''}
+                        <td class="py-2.5 px-2 text-slate-500 font-mono text-center border-r border-slate-800/60 text-[11px]">${idx + 1}</td>
+                        <td class="py-2.5 px-3 border-r border-slate-800/60 leading-tight whitespace-nowrap">${getRankBadge(row.latestRank)}</td>
+                        <td class="py-2.5 px-3.5 font-bold text-white border-r border-slate-800/60">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="group-hover:text-purple-400 transition-colors text-xs font-bold">${escapeHtml(row.name)}</span>
+                                ${details.isGloballyInactive ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-mono text-slate-400 bg-slate-950 border border-slate-800 rounded font-normal shrink-0">⚠️ Вибув</span>' : ''}
+                            </div>
                         </td>
-                        <td class="py-2 px-3 text-slate-400 text-[11px] border-r border-slate-800/60 leading-tight max-w-[260px]" title="${escapeHtml(row.latestPosition)}">
-                            <span class="line-clamp-2">${escapeHtml(row.latestPosition || '—')}</span>
+                        <td class="py-2.5 px-3.5 border-r border-slate-800/60 max-w-[420px]">
+                            ${formatPositionDisplay(row.latestPosition)}
                         </td>
-                        <td class="py-2 px-3 border-r border-slate-800/60">${statusHtml}</td>
-                        <td class="py-2 px-2.5 text-center border-r border-slate-800/60">
-                            <span class="inline-flex items-center justify-center min-w-[46px] px-2 py-0.5 rounded-lg border text-xs ${daysClass} ${daysPulse}">
-                                ${details.currentStreak} дн.
-                            </span>
+                        <td class="py-2.5 px-3.5 border-r border-slate-800/60">${statusHtml}</td>
+                        <td class="py-2.5 px-3 text-center border-r border-slate-800/60 whitespace-nowrap">
+                            ${daysBadgeHtml}
                         </td>
-                        <td class="py-2 px-2 text-center text-slate-500 group-hover:text-purple-400 transition-colors">
+                        <td class="py-2.5 px-2 text-center text-slate-500 group-hover:text-purple-400 transition-colors">
                             <i data-lucide="chevron-down" class="chevron w-3.5 h-3.5 mx-auto"></i>
                         </td>
                     `;
 
-                    // Розгортка акордеону
+                    // Розгортка акордеону: Преміальне тактичне досьє (2-колонковий Command Center)
                     const trDetails = document.createElement('tr');
                     trDetails.id = `details-${personId}`;
-                    trDetails.className = 'hidden bg-slate-950/80 border-b border-slate-800/90 shadow-inner';
+                    trDetails.className = 'hidden bg-slate-950/95 border-b border-slate-800/90 shadow-inner';
 
-                    let periodsHtml = details.periods.map((p, pIdx) => {
+                    const personRecordDates = Array.from(database.get(row.key)?.records.keys() || []).sort();
+                    const firstDate = personRecordDates[0] || details.periods[0]?.start;
+                    const lastDate = personRecordDates[personRecordDates.length - 1] || details.periods[details.periods.length - 1]?.end;
+                    const filesCountWithSoldier = personRecordDates.length;
+                    const totalDaysInBase = details.periods.reduce((acc, p) => acc + p.days, 0);
+
+                    // Статусний бейдж у шапці
+                    let statusBadgePill = '';
+                    if (details.isGloballyInactive) {
+                        statusBadgePill = '<span class="px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400 font-mono text-[11px] font-semibold">⚪ Вибув зі списків</span>';
+                    } else if (details.currentStreak >= 60) {
+                        statusBadgePill = `<span class="px-2.5 py-0.5 rounded-lg bg-red-950/90 border border-red-500/70 text-red-200 font-mono text-[11px] font-bold glow-red shadow-sm flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>🚨 Безперервно: ${details.currentStreak} діб (КРИТИЧНО)</span>`;
+                    } else if (details.currentStreak >= 50) {
+                        statusBadgePill = `<span class="px-2.5 py-0.5 rounded-lg bg-amber-950/90 border border-amber-500/70 text-amber-200 font-mono text-[11px] font-bold glow-amber shadow-sm flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span>⚠️ Безперервно: ${details.currentStreak} діб (ПІДГОТОВКА)</span>`;
+                    } else {
+                        statusBadgePill = `<span class="px-2.5 py-0.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-mono text-[11px] font-bold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>🟢 Безперервно: ${details.currentStreak} діб</span>`;
+                    }
+
+                    // Генерація ультракомпактних чіпів маршруту
+                    const timelineChipsHtml = details.periods.map((p, pIdx) => {
                         let isPartOfStreak = false;
                         if (!p.isIgnored && !details.isGloballyInactive) {
                             let gapFound = false;
@@ -2749,48 +3913,103 @@
                             isPartOfStreak = !gapFound;
                         }
 
-                        let cardBorder = p.isIgnored
-                            ? 'bg-slate-900/40 border-slate-800/60 opacity-60'
-                            : (isPartOfStreak ? 'bg-purple-950/20 border-purple-800/50 shadow-sm' : 'bg-slate-900/80 border-slate-800');
+                        const isLast = (pIdx === details.periods.length - 1);
+                        const isSingleDay = (p.start === p.end);
+                        const dateRangeText = isSingleDay 
+                            ? formatDateDisplay(p.start) 
+                            : `${formatDateDisplay(p.start)} — ${formatDateDisplay(p.end)}`;
+                        const daysText = `${p.days} ${p.days === 1 ? 'доба' : (p.days >= 2 && p.days <= 4 ? 'доби' : 'діб')}`;
 
-                        // Показуємо посаду/звання лише якщо вони відрізняються від основного рядка
-                        const hasDifferentPosition = (p.position && p.position !== 'Не вказано' && p.position !== row.latestPosition);
-                        const hasDifferentRank = (p.rank && p.rank !== 'Не вказано' && p.rank !== row.latestRank);
-                        let subInfoHtml = '';
-                        if (hasDifferentPosition || hasDifferentRank) {
-                            subInfoHtml = `<div class="text-[10px] text-amber-400/80 mt-0.5">В цей період: ${escapeHtml(formatRank(p.rank))} &bull; ${escapeHtml(p.position)}</div>`;
+                        let chipBg = 'bg-slate-900/90 border-slate-800 text-slate-300';
+                        let dotColor = 'bg-slate-500';
+                        let badgeTag = '';
+
+                        if (p.isIgnored) {
+                            chipBg = 'bg-red-950/30 border-red-800/60 text-red-200';
+                            dotColor = 'bg-red-500';
+                            badgeTag = '<span class="text-[9px] font-mono font-bold text-red-400 uppercase bg-red-950/90 px-1.5 py-0.2 rounded border border-red-800/80 shrink-0">Скидання</span>';
+                        } else if (isPartOfStreak) {
+                            if (details.currentStreak >= 60) {
+                                chipBg = 'bg-red-950/30 border-red-500/60 text-red-100 shadow-xs shadow-red-950';
+                                dotColor = 'bg-red-400';
+                            } else if (details.currentStreak >= 50) {
+                                chipBg = 'bg-amber-950/30 border-amber-500/60 text-amber-100 shadow-xs shadow-amber-950';
+                                dotColor = 'bg-amber-400';
+                            } else {
+                                chipBg = 'bg-purple-950/40 border-purple-500/50 text-purple-100 shadow-xs shadow-purple-950';
+                                dotColor = 'bg-purple-400';
+                            }
+                            badgeTag = '<span class="text-[9px] font-mono font-bold text-purple-300 uppercase bg-purple-950/90 px-1.5 py-0.2 rounded border border-purple-500/50 shrink-0">Стрік</span>';
                         }
 
+                        const hasDiffPos = (p.position && p.position !== 'Не вказано' && p.position !== row.latestPosition);
+                        const diffNotice = hasDiffPos 
+                            ? `<span class="text-[9px] font-mono text-amber-300/90 max-w-[150px] truncate shrink-0" title="Посада за період: ${escapeHtml(p.position)}">📌 ${escapeHtml(p.position)}</span>`
+                            : '';
+
+                        const arrowHtml = !isLast 
+                            ? '<div class="flex items-center justify-center text-slate-600 shrink-0 px-0.5"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></div>' 
+                            : '';
+
                         return `
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 px-3 ${cardBorder} rounded-xl border mb-1.5 text-xs font-mono transition-colors">
-                            <div class="flex-1 min-w-0 pr-2">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="${isPartOfStreak ? 'text-purple-300 font-bold' : 'text-slate-400'}">
-                                        📅 ${formatDateDisplay(p.start)} — ${formatDateDisplay(p.end)}
-                                    </span>
-                                    <span class="${p.isIgnored ? 'line-through text-slate-500' : 'font-bold text-white bg-slate-950 px-2 py-0.5 rounded border border-slate-800'}">
-                                        ${escapeHtml(p.status)}
-                                    </span>
-                                    ${p.isIgnored ? '<span class="px-1.5 py-0.5 bg-red-950/80 text-red-300 border border-red-800/60 rounded text-[9px] uppercase font-bold">❌ Скидання ліку</span>' : ''}
-                                    ${isPartOfStreak ? '<span class="px-1.5 py-0.5 bg-purple-950 text-purple-300 border border-purple-800/80 rounded text-[9px] font-bold">⚡ Активний стрік</span>' : ''}
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border ${chipBg} font-mono text-xs transition-colors hover:border-slate-600 shadow-xs whitespace-nowrap">
+                                    <span class="w-1.5 h-1.5 rounded-full ${dotColor} shrink-0"></span>
+                                    <span class="font-bold text-white text-[11px]">${dateRangeText}</span>
+                                    <span class="text-slate-300 text-[10px] font-semibold bg-slate-950/80 px-1.5 py-0.5 rounded border border-slate-800 shrink-0">${daysText}</span>
+                                    ${getPositionBadge(p.status, { truncate: false })}
+                                    ${badgeTag}
+                                    ${diffNotice}
                                 </div>
-                                ${subInfoHtml}
+                                ${arrowHtml}
                             </div>
-                            <span class="${isPartOfStreak ? 'text-purple-300 font-bold' : 'text-slate-400'} self-end sm:self-auto mt-1 sm:mt-0 text-xs px-2 py-0.5 bg-slate-950 border border-slate-800 rounded shrink-0">
-                                ${p.days} ${p.days === 1 ? 'доба' : (p.days >= 2 && p.days <= 4 ? 'доби' : 'діб')}
-                            </span>
-                        </div>
                         `;
                     }).join('');
 
                     trDetails.innerHTML = `
-                        <td colspan="8" class="p-3 pl-8 md:pl-14">
-                            <div class="max-w-5xl space-y-1.5">
-                                <div class="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                    <i data-lucide="clock" class="w-3 h-3 text-purple-400"></i>
-                                    <span>Хронологія бойового чергування: ${escapeHtml(row.name)}</span>
+                        <td colspan="8" class="p-3 bg-gradient-to-b from-slate-950 via-slate-900/90 to-slate-950 border-b border-purple-900/30 shadow-inner">
+                            <div class="flex flex-col gap-2.5">
+                                
+                                <!-- Рядок 1: Компактна мета-інформація та дія -->
+                                <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-800/80 flex-wrap">
+                                    <div class="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap">
+                                        <div class="w-6 h-6 rounded-lg bg-purple-950/80 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0">
+                                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                                        </div>
+                                        <span class="text-sm font-bold text-white tracking-tight">${escapeHtml(row.name)}</span>
+                                        ${getRankBadge(row.latestRank)}
+                                        ${statusBadgePill}
+                                        <span class="text-xs text-slate-400 font-sans truncate max-w-xl 2xl:max-w-3xl" title="${escapeHtml(row.latestPosition || '')}">
+                                            ${escapeHtml(row.latestPosition || 'Посаду не вказано')}
+                                        </span>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span class="text-[11px] font-mono text-slate-400 bg-slate-900/90 px-2.5 py-1 rounded-xl border border-slate-800 flex items-center gap-1.5 shadow-xs">
+                                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-purple-400"></i>
+                                            <span>Облік: <strong class="text-slate-200">${formatDateDisplay(firstDate)} — ${formatDateDisplay(lastDate)}</strong> (${totalDaysInBase} дн.)</span>
+                                        </span>
+
+                                        <button type="button" onclick="event.stopPropagation(); copySoldierDossierByKey('${row.key}', this)"
+                                            class="px-3 py-1 bg-gradient-to-r from-purple-600/30 to-indigo-600/30 hover:from-purple-600/50 hover:to-indigo-600/50 text-purple-200 hover:text-white border border-purple-500/50 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                                            title="Скопіювати готову штабну довідку">
+                                            <i data-lucide="copy" class="w-3.5 h-3.5 text-purple-300"></i>
+                                            <span>Копіювати довідку</span>
+                                        </button>
+                                    </div>
                                 </div>
-                                ${periodsHtml}
+
+                                <!-- Рядок 2: Хронологічний маршрут позицій -->
+                                <div class="flex items-center gap-2 overflow-x-auto py-0.5 custom-scrollbar">
+                                    <div class="flex items-center gap-1 text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+                                        <i data-lucide="route" class="w-3.5 h-3.5 text-purple-400"></i>
+                                        <span>Маршрут (${details.periods.length}):</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 flex-nowrap">
+                                        ${timelineChipsHtml}
+                                    </div>
+                                </div>
+
                             </div>
                         </td>
                     `;
@@ -2811,7 +4030,9 @@
                     <span>Опрацьовано дат: <strong class="text-emerald-400">${successDatesCount.size}</strong></span>
                 `;
 
-                exportExcelBtn.classList.remove('hidden');
+                const exportToggleBtn = document.getElementById('exportDropdownToggleBtn');
+                if (exportToggleBtn) exportToggleBtn.classList.remove('hidden');
+                if (exportExcelBtn) exportExcelBtn.classList.remove('hidden');
                 if (exportPositionsListBtn) exportPositionsListBtn.classList.remove('hidden');
                 updateSelectionUI();
                 updateCompactBarInfo();
@@ -2832,39 +4053,72 @@
             async function restoreFromMemory() {
                 try {
                     const state = await loadStateFromDB();
-                    if (!state || !state.database || state.database.length === 0) {
+                    if (!state) {
                         window.renderTableFunc();
-                        lucide.createIcons();
+                        if (window.lucide) lucide.createIcons();
                         return;
                     }
 
-                    database.clear();
-                    for (let [key, val] of state.database) {
-                        database.set(key, {
-                            name: val.name,
-                            records: new Map(val.records)
-                        });
-                    }
+                    if (state.uploadedFiles && Array.isArray(state.uploadedFiles) && state.uploadedFiles.length > 0) {
+                        uploadedFiles = state.uploadedFiles;
+                        rebuildDatabaseFromFiles();
+                    } else if (state.database && state.database.length > 0) {
+                        // Фолбек для існуючих записів у пам'яті: синтезуємо файли за кожною датою
+                        database.clear();
+                        const byDateEntries = new Map();
 
-                    successDatesCount = new Set(state.successDates || []);
-                    globalMinDateStr = state.globalMinDateStr || null;
-                    globalMaxDateStr = state.globalMaxDateStr || null;
+                        for (let [key, val] of state.database) {
+                            database.set(key, {
+                                name: val.name,
+                                records: new Map(val.records)
+                            });
 
-                    document.getElementById('files-processed-badge').innerText = `${successDatesCount.size} дат`;
-                    if (globalMaxDateStr) {
-                        document.getElementById('latestDateNote').innerText = `Крайній зріз: ${formatDateDisplay(globalMaxDateStr)}`;
+                            for (let [dateStr, rec] of val.records) {
+                                if (!byDateEntries.has(dateStr)) byDateEntries.set(dateStr, []);
+                                byDateEntries.get(dateStr).push({
+                                    normalizedKey: key,
+                                    name: val.name,
+                                    rank: rec.rank || 'Не вказано',
+                                    position: rec.position || 'Не вказано',
+                                    status: rec.status || 'Не вказано'
+                                });
+                            }
+                        }
+
+                        uploadedFiles = [];
+                        for (let [dateStr, entries] of byDateEntries.entries()) {
+                            uploadedFiles.push({
+                                id: 'legacy_' + dateStr,
+                                name: `Список_${dateStr}.xlsx`,
+                                date: dateStr,
+                                count: entries.length,
+                                size: 0,
+                                timestamp: Date.now(),
+                                entries: entries
+                            });
+                        }
+
+                        successDatesCount = new Set(state.successDates || Array.from(byDateEntries.keys()));
+                        globalMinDateStr = state.globalMinDateStr || null;
+                        globalMaxDateStr = state.globalMaxDateStr || null;
+
+                        rebuildDatabaseFromFiles();
+                    } else {
+                        window.renderTableFunc();
+                        if (window.lucide) lucide.createIcons();
+                        return;
                     }
 
                     clearBtn.classList.remove('hidden');
                     toggleUploadPanel(false);
-                    window.renderTableFunc();
-                    showStorageStatus(`Пам'ять: ${successDatesCount.size} дат`);
-                    logMessage(`💾 Базу успішно відновлено з локальної пам'яті (${successDatesCount.size} дат, ${database.size} бійців)`, 'text-purple-300 font-bold');
-                    lucide.createIcons();
+                    renderUploadedFilesList();
+                    showStorageStatus(`Пам'ять: ${uploadedFiles.length} ф.`);
+                    logMessage(`💾 Базу успішно відновлено з локальної пам'яті (${uploadedFiles.length} файлів, ${successDatesCount.size} дат, ${database.size} бійців)`, 'text-purple-300 font-bold');
+                    if (window.lucide) lucide.createIcons();
                 } catch(err) {
                     console.error("Error restoring from memory:", err);
                     window.renderTableFunc();
-                    lucide.createIcons();
+                    if (window.lucide) lucide.createIcons();
                 }
             }
 
