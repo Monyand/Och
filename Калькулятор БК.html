@@ -114,7 +114,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> OFFLINE ENGINE
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.3.0
+                            ⚡ v1.4.0
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-1">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -348,7 +348,18 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.3.0 (Набої 12 калібру ТАХО / 12/76 Магнум & захист від дробів)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.4.0 (Димові засоби РДГ-М83, РДГ-55Б, РДГ-2 & категорія Smoke)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">17.10.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Повна підтримка димових гранат та шашок (РДГ):</strong> Впроваджено розпізнавання номенклатур <code>РДГ-М83</code> (<code>AN/M83</code>), <code>РДГ-55Б</code> / <code>РДГ-55</code>, <code>РДГ-2</code> (<code>РДГ-2б</code>, <code>РДГ-2ч</code>), а також загальних записів <code>РДГ</code> / <code>димова граната</code>.</li>
+                        <li><strong class="text-white">Нова категорія боєприпасів «Димові» (Smoke):</strong> Введено окрему тактичну категорію з кольоровим бейджем <code>cyan-400</code> та іконкою 🌫️.</li>
+                        <li><strong class="text-white">Одиничний облік та безпечний парсинг:</strong> Номенклатури РДГ додано до списку одиничного обліку, що дозволяє коректно зараховувати записи типу <code>РДГ-М83 - 1 шт</code> або <code>2 шт РДГ-55Б</code> без колізій із суміжними числами.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.3.0 (Набої 12 калібру ТАХО / 12/76 Магнум & захист від дробів)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">05.10.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -601,7 +612,9 @@
 GHO - 2
 1 шт М67
 РГН - 1
-РГТ-27С 2 шт`,
+РГТ-27С 2 шт
+РДГ-М83 - 1 шт
+2 шт РДГ-55Б`,
             heavy: `200 12.7х99
 150 12.7х108
 50 шт 14.5х114
@@ -677,7 +690,13 @@ GHO - 2
             { id: 'RGT27S', name: 'Граната РГТ-27С', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' },
 
             // Сигнальні засоби: РСП (реактивні сигнальні патрони всіх вогнів, 30мм/40мм/50мм, РСП-30, РОП)
-            { id: 'RSP', name: 'РСП (сигнальний патрон)', icon: '🚨', category: 'signal', idPattern: '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])(?:(?:30|40|50)[\\s\\-_]*(?:мм|mm)[\\s\\-_]*)?(?:[рp][сc][пn]|[рp][оo][пn]|ракета\\s*сигнальн[а-яіїєґ]*|реактивн[а-яіїєґ]*\\s*(?:сигнальн[а-яіїєґ]*|освітлювальн[а-яіїєґ]*)\\s*патрон[а-яіїєґ]*)(?:[\\s\\-_]*(?:бв|чв|зв|жв|дв))?(?:[\\s\\-_]*(?:30|40|50)(?:[\\s\\-_]*(?:мм|mm))?)?(?:[\\s\\-_]*(?:бв|чв|зв|жв|дв))?(?:[\\s\\-_]*\\(?(?:(?:[з3]|ч|б|ж)[\\s._/\\-]*(?:[вb]|в[оо]г[ое]?[на-яіїєґ]*)\\.?|(?:зелен|червон|біл|жовт|освітлювальн)[а-яіїєґ]*(?:\\s*в[оо]г[ое]?[на-яіїєґ]*)?)\\)?)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ])' }
+            { id: 'RSP', name: 'РСП (сигнальний патрон)', icon: '🚨', category: 'signal', idPattern: '(?<![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])(?:(?:30|40|50)[\\s\\-_]*(?:мм|mm)[\\s\\-_]*)?(?:[рp][сc][пn]|[рp][оo][пn]|ракета\\s*сигнальн[а-яіїєґ]*|реактивн[а-яіїєґ]*\\s*(?:сигнальн[а-яіїєґ]*|освітлювальн[а-яіїєґ]*)\\s*патрон[а-яіїєґ]*)(?:[\\s\\-_]*(?:бв|чв|зв|жв|дв))?(?:[\\s\\-_]*(?:30|40|50)(?:[\\s\\-_]*(?:мм|mm))?)?(?:[\\s\\-_]*(?:бв|чв|зв|жв|дв))?(?:[\\s\\-_]*\\(?(?:(?:[з3]|ч|б|ж)[\\s._/\\-]*(?:[вb]|в[оо]г[ое]?[на-яіїєґ]*)\\.?|(?:зелен|червон|біл|жовт|освітлювальн)[а-яіїєґ]*(?:\\s*в[оо]г[ое]?[на-яіїєґ]*)?)\\)?)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ])' },
+
+            // Димові засоби: РДГ (РДГ-М83, РДГ-55Б, РДГ-2, неуточнені)
+            { id: 'RDG_M83', name: 'РДГ-М83 (димова)', icon: '🌫️', category: 'smoke', idPattern: '(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:[рp][дd][гg])[\\s\\-_]*(?:[мm][\\s\\-_]*)?83|(?:an[\\s\\-_/]*|[мm][\\s\\-_]*)83)' },
+            { id: 'RDG_55', name: 'РДГ-55Б / РДГ-55 (димова)', icon: '🌫️', category: 'smoke', idPattern: '(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[рp][дd][гg])[\\s\\-_]*55(?:[\\s\\-_]*[бbмmчch])?' },
+            { id: 'RDG_2', name: 'РДГ-2 (димова)', icon: '🌫️', category: 'smoke', idPattern: '(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[рp][дd][гg])[\\s\\-_]*0?2(?:[\\s\\-_]*[бbчchпp])?' },
+            { id: 'RDG_GEN', name: 'РДГ (неуточнена димова)', icon: '🌫️', category: 'smoke', idPattern: '(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)|[рp][дd][гg](?:[\\s\\-_]*[пp])?)(?![\\s\\-_]*(?:55|83|0?2|[мm]\\s*83|[aа][nн]))(?![0-9a-zA-Zа-яА-ЯіІїЇєЄґҐ])' }
         ];
 
         // Прекомпільовані регулярні вирази для високої швидкодії O(1) (без перекомпіляції на кожен рядок)
@@ -691,7 +710,8 @@ GHO - 2
             'GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'RGT27S', 
             'VOG', '40x46', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'RHEAT7MA', 'BULLSPIKE', 
             'RPV16', 'VPR20', 'AT4', 'MATADOR', 'RPG75', 'RPG18', 'RPG22', 'RPG26', 'RPG76',
-            'RSP', '12x70'
+            'RSP', '12x70',
+            'RDG_M83', 'RDG_55', 'RDG_2', 'RDG_GEN'
         ]);
         const implicitConfigsList = ammoConfigs.filter(c => implicitIds.has(c.id));
 
@@ -930,6 +950,8 @@ GHO - 2
                     return '<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/25">РПГ/Важке</span>';
                 case 'signal':
                     return '<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400 border border-yellow-500/25">Сигнальні</span>';
+                case 'smoke':
+                    return '<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/25">Димові</span>';
                 default:
                     return '<span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">БК</span>';
             }
