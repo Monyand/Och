@@ -143,7 +143,7 @@
     <div class="w-full max-w-[1720px] space-y-4">
 
         <!-- 1. ЄДИНИЙ КОМАНДНИЙ ЦЕНТР (UNIFIED COMMAND HEADER) -->
-        <header class="bg-slate-900/95 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4 shadow-2xl backdrop-blur-xl flex flex-col gap-3">
+        <header class="relative z-30 bg-slate-900/95 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4 shadow-2xl backdrop-blur-xl flex flex-col gap-3">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <!-- Ліва частина: Лого, Назва, Бейдж версії та Живий статус бази -->
                 <div class="flex items-center gap-3.5 flex-wrap">
@@ -157,7 +157,7 @@
                                 ДОДАТОК 6
                             </span>
                             <button onclick="openChangelogModal()" class="text-[11px] bg-purple-500/15 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs" title="Історія оновлень та версій">
-                                ⚡ v1.5.1
+                                ⚡ v1.5.2
                             </button>
                         </div>
                         <!-- Інформаційні чіпи бази (показуються коли завантажені списки) -->
@@ -226,7 +226,7 @@
                     </button>
 
                     <!-- Меню експорту Excel (Dropdown) -->
-                    <div class="relative" id="exportDropdownContainer">
+                    <div class="relative z-40" id="exportDropdownContainer">
                         <button id="exportDropdownToggleBtn" type="button" onclick="toggleExportMenu()"
                             class="hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-xl border border-emerald-400/30 shadow-md shadow-emerald-950/50 flex items-center gap-2 transition-all active:scale-95 cursor-pointer shrink-0"
                             title="Виберіть формат експорту в Excel">
@@ -417,7 +417,7 @@
         </div>
 
         <!-- 3. ОСНОВНИЙ БЛОК: ЗВЕДЕНА ТАБЛИЦЯ РОТАЦІЙ (FULL-WIDTH 100%) -->
-        <main class="bg-slate-900/90 rounded-2xl border border-slate-800/90 shadow-2xl overflow-hidden flex flex-col backdrop-blur-md">
+        <main class="relative z-10 bg-slate-900/90 rounded-2xl border border-slate-800/90 shadow-2xl overflow-hidden flex flex-col backdrop-blur-md">
             
             <!-- Панель керування: Рядок 1 (Пошук + Єдині сегментовані фільтри) -->
             <div class="p-3 sm:p-3.5 border-b border-slate-800 bg-slate-900/95 space-y-2.5">
@@ -721,10 +721,21 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
-                <!-- v1.5.1 -->
+                <!-- v1.5.2 -->
                 <div class="relative pl-4 border-l-2 border-purple-500 space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-purple-400 font-mono text-sm">⚡ v1.5.1 (Поточна версія)</span>
+                        <span class="font-bold text-purple-400 font-mono text-sm">⚡ v1.5.2 (Поточна версія)</span>
+                        <span class="text-[11px] font-mono text-slate-500">19.10.2026</span>
+                    </div>
+                    <ul class="space-y-1 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Виправлення CSS Stacking Context (Випадаюче меню експорту):</strong> Усунуто баг перекриття випадаючого меню «Експорт Excel» основною таблицею ротацій. Контейнеру <code>&lt;header&gt;</code> присвоєно <code>relative z-30</code>, блоку кнопки <code>relative z-40</code>, а <code>&lt;main&gt;</code> переведено в <code>relative z-10</code>, що гарантує бездоганне відображення всіх форматів експорту поверх карток і фільтрів без зрізання.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.5.1 -->
+                <div class="relative pl-4 border-l-2 border-slate-700 space-y-1.5 opacity-80">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.5.1</span>
                         <span class="text-[11px] font-mono text-slate-500">17.10.2026</span>
                     </div>
                     <ul class="space-y-1 text-slate-300 list-disc list-inside">
