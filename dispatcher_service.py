@@ -37,7 +37,7 @@ except Exception:
 
 # Базовий шлях до сховища завантажених звітів
 BASE_DOWNLOADS_DIR = r"D:\ОЧ\гусь\Завантажені"
-SERVER_PORT = 8765
+SERVER_PORT = 8780
 PROG_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKUP_DIR = os.path.join(PROG_DIR, "_backups")
 os.makedirs(BACKUP_DIR, exist_ok=True)
@@ -624,7 +624,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                     </span>
-                    <span>127.0.0.1:8765 • АКТИВНИЙ</span>
+                    <span>127.0.0.1:8780 • АКТИВНИЙ</span>
                 </div>
                 <button onclick="reloadDispatcher()" id="btnReload" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-2 transition-all">
                     <i data-lucide="refresh-cw" class="w-4 h-4"></i>

@@ -2796,7 +2796,7 @@
                     app: 'dod6_settings',
                     content: JSON.stringify(getDod6SettingsPayload(), null, 2)
                 });
-                const res = await fetch(`http://127.0.0.1:8765/api/backup/save`, {
+                const res = await fetch(`http://127.0.0.1:8780/api/backup/save`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: payload
@@ -2813,7 +2813,7 @@
 
         async function restoreDod6SettingsFromDisk(interactive = false) {
             try {
-                const res = await fetch(`http://127.0.0.1:8765/api/backup/latest?app=dod6_settings`, { cache: 'no-cache' });
+                const res = await fetch(`http://127.0.0.1:8780/api/backup/latest?app=dod6_settings`, { cache: 'no-cache' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 if (data && data.exists && data.content) {
@@ -2840,7 +2840,7 @@
             const hasExisting = localStorage.getItem('keywords_vop') || localStorage.getItem('valid_tasks');
             if (!hasExisting) {
                 try {
-                    const res = await fetch(`http://127.0.0.1:8765/api/backup/latest?app=dod6_settings`, { cache: 'no-cache' });
+                    const res = await fetch(`http://127.0.0.1:8780/api/backup/latest?app=dod6_settings`, { cache: 'no-cache' });
                     if (res.ok) {
                         const data = await res.json();
                         if (data && data.exists && data.content) {
@@ -7944,7 +7944,7 @@
         // ==========================================
         // ШТАБНИЙ ДИСПЕТЧЕР // AUTO-INGEST AGENT
         // ==========================================
-        const DISPATCHER_API_BASE = 'http://127.0.0.1:8765';
+        const DISPATCHER_API_BASE = 'http://127.0.0.1:8780';
         let _dispatcherBundle = null;
         let _dispatcherStatusData = null;
         let _dispatcherHeartbeatTimer = null;

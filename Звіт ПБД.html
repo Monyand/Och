@@ -3735,7 +3735,7 @@
                                 updatedAt: new Date().toISOString()
                             }, null, 2)
                         });
-                        const res = await fetch('http://127.0.0.1:8765/api/backup/save', {
+                        const res = await fetch('http://127.0.0.1:8780/api/backup/save', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: payload
@@ -3751,7 +3751,7 @@
 
             async function restoreZvitSettingsFromDisk(interactive = false) {
                 try {
-                    const res = await fetch('http://127.0.0.1:8765/api/backup/latest?app=zvit_pbd_settings', { cache: 'no-cache' });
+                    const res = await fetch('http://127.0.0.1:8780/api/backup/latest?app=zvit_pbd_settings', { cache: 'no-cache' });
                     if (!res.ok) throw new Error("HTTP error");
                     const data = await res.json();
                     if (data && data.exists && data.content) {

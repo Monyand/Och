@@ -1459,7 +1459,7 @@
 
                         // Перевірка наявності локального бекапу на диску через службу диспетчера
                         try {
-                            fetch('http://127.0.0.1:8765/api/backup/latest?app=med_tactical')
+                            fetch('http://127.0.0.1:8780/api/backup/latest?app=med_tactical')
                                 .then(res => res.json())
                                 .then(data => {
                                     if (data) {
@@ -1734,7 +1734,7 @@
             // Періодичний моніторинг служби локального бекапу
             useEffect(() => {
                 const checkService = () => {
-                    fetch('http://127.0.0.1:8765/api/backup/latest?app=med_tactical')
+                    fetch('http://127.0.0.1:8780/api/backup/latest?app=med_tactical')
                         .then(res => res.json())
                         .then(data => {
                             setDiskServiceOnline(true);
@@ -1758,7 +1758,7 @@
                     try {
                         const rawJson = JSON.stringify({ soldiers, episodes, logs, settings });
                         const encrypted = CryptoJS.AES.encrypt(rawJson, pwd).toString();
-                        const res = await fetch('http://127.0.0.1:8765/api/backup/save', {
+                        const res = await fetch('http://127.0.0.1:8780/api/backup/save', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -5103,7 +5103,7 @@
                 try {
                     let encContent = diskBackupInfo?.content;
                     if (!encContent) {
-                        const res = await fetch('http://127.0.0.1:8765/api/backup/latest?app=med_tactical');
+                        const res = await fetch('http://127.0.0.1:8780/api/backup/latest?app=med_tactical');
                         const data = await res.json();
                         if (!data || !data.exists) throw new Error("Бекап на диску не знайдено");
                         encContent = data.content;
@@ -5159,7 +5159,7 @@
                 try {
                     const rawJson = JSON.stringify({ soldiers, episodes, logs, settings });
                     const encrypted = CryptoJS.AES.encrypt(rawJson, pwd).toString();
-                    const res = await fetch('http://127.0.0.1:8765/api/backup/save', {
+                    const res = await fetch('http://127.0.0.1:8780/api/backup/save', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -5177,7 +5177,7 @@
                         addLog("Автобекап", "Створено резервну копію на локальному диску");
                         triggerNotification("✅ Базу надійно збережено на локальний диск!", "success");
                         // Оновити інформацію про бекап
-                        fetch('http://127.0.0.1:8765/api/backup/latest?app=med_tactical')
+                        fetch('http://127.0.0.1:8780/api/backup/latest?app=med_tactical')
                             .then(r => r.json())
                             .then(d => { if (d && d.exists) setDiskBackupInfo(d); })
                             .catch(() => {});
@@ -8790,7 +8790,7 @@
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">09.09.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
-                                            <li><strong className="text-white">Автономний бекап на локальний диск (_backups):</strong> Повна інтеграція зі службою диспетчера (порт 8765) — будь-яка зміна бійця чи епізоду автоматично та безшумно шифрується AES-256 і зберігається в захищений каталог на ПК.</li>
+                                            <li><strong className="text-white">Автономний бекап на локальний диск (_backups):</strong> Повна інтеграція зі службою диспетчера (порт 8780) — будь-яка зміна бійця чи епізоду автоматично та безшумно шифрується AES-256 і зберігається в захищений каталог на ПК.</li>
                                             <li><strong className="text-white">Розумне 1-клік відновлення (Auto-Restore Modal):</strong> При порожній базі браузера (після очищення кешу) додаток миттєво знаходить останній бекап на диску та відкриває зручне вікно відновлення.</li>
                                             <li><strong className="text-white">Індикатор статусу в шапці:</strong> Анімований статус «🟢 Диск: OK» (або час збереження) поруч з бейджем версії з можливістю швидкого переходу до панелі бекапів.</li>
                                             <li><strong className="text-white">Пряме керування в модалці бекапів:</strong> Новий блок «Локальний диск (Автозахист)» для збереження та відновлення бази в 1 клік без діалогових вікон провідника.</li>
