@@ -41,11 +41,11 @@
         }
     </script>
 
-    <!-- SheetJS for Excel (.xlsx) export (Локально + CDN) -->
+    <!-- SheetJS (xlsx-js-style) для читання та стилізованого експорту Excel (Локально + CDN) -->
     <script src="v8/xlsx.js"></script>
     <script>
         if (typeof XLSX === 'undefined') {
-            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
+            document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"><\/script>');
         }
     </script>
 
@@ -179,7 +179,7 @@
                                 Облік бойових розпоряджень
                             </h1>
                             <button id="versionBadge" onclick="openChangelogModal()" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer flex items-center gap-1">
-                                <span>⚡ v1.5.0</span>
+                                <span>⚡ v1.5.1</span>
                             </button>
                         </div>
                         <p class="text-xs text-slate-400 font-medium hidden sm:block">Оперативний штаб • Реєстр та контроль виконання</p>
@@ -505,9 +505,11 @@
         </section>
 
         <!-- Cards View (Hidden by default) -->
-        <section id="cardsViewContainer" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-            <!-- Cards dynamically rendered -->
-        </section>
+        <div id="cardsViewWrapper" class="hidden">
+            <section id="cardsViewContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                <!-- Cards dynamically rendered -->
+            </section>
+        </div>
 
     </main>
 
@@ -678,12 +680,12 @@
         </div>
     </div>
 
-    <!-- Modal 3: Changelog Modal (⚡ v1.1.0) -->
+    <!-- Modal 3: Changelog Modal (⚡ v1.5.1) -->
     <div id="changelogModal" class="fixed inset-0 z-[210] hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
         <div class="bg-[#0c1322] border border-slate-700/80 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
                 <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.4.0</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">⚡ v1.5.1</span>
                     <h3 class="text-base font-bold text-white">Історія оновлень</h3>
                 </div>
                 <button onclick="closeModal('changelogModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
@@ -693,10 +695,24 @@
             <div class="p-6 space-y-4 text-xs text-slate-300 max-h-[70vh] overflow-y-auto">
                 <div class="border-l-2 border-amber-400 pl-3 space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-white font-mono">Версія 1.5.0</span>
-                        <span class="text-[11px] text-slate-500">22.10.2026</span>
+                        <span class="font-bold text-white font-mono">Версія 1.5.1</span>
+                        <span class="text-[11px] text-slate-500">24.10.2026</span>
                     </div>
                     <ul class="list-disc list-inside space-y-1 text-slate-300 text-xs">
+                        <li><strong>Преміальний штабний Excel:</strong> інтегровано бібліотеку <code>xlsx-js-style</code> для створення стилізованих електронних таблиць із графітовою шапкою Slate-800 (висота 26pt, білий жирний текст).</li>
+                        <li><strong>Роздільний облік номерів БР:</strong> додано окрему колонку <em>«Номер БР (бригада)»</em> поруч із вхідним номером батальйону для бездоганної звітності.</li>
+                        <li><strong>Автоперенос та межі комірок:</strong> увімкнено <code>wrapText</code> і тонкі рамки — теми, доповіді та повний текст БР більше не налізають на сусідні колонки та читаються чисто.</li>
+                        <li><strong>Кольорове маркування статусів:</strong> м'які фонові заливки статусів (зелений — «Виконано», бурштиновий — «В роботі», блакитний — «Щоденно»).</li>
+                        <li><strong>Закріплення шапки та автофільтри:</strong> закріплено рядок заголовків (Freeze Header) та підключено нативні фільтри Excel по всіх колонках.</li>
+                        <li><strong>Адаптивний картковий вигляд:</strong> усунуто колізію Tailwind CSS-стилів відображення через структурну ізоляцію контейнера <code>cardsViewWrapper</code>.</li>
+                    </ul>
+                </div>
+                <div class="border-l-2 border-slate-700 pl-3 space-y-1.5 text-slate-400">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono">Версія 1.5.0</span>
+                        <span class="text-[11px] text-slate-500">22.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-slate-400 text-xs">
                         <li><strong>Розпізнавання багаточастинних БР:</strong> префікси частин розпоряджень (наприклад <code>01_1626_7454_дск</code> та <code>02_1626_7454_дск</code>) тепер маркуються як <code>№ 01/7454</code> та <code>№ 02/7454</code>, запобігаючи злиттю під один номер.</li>
                         <li><strong>Пріоритет вхідного номера батальйону:</strong> документи з різними вхідними номерами (<code>2258/дск</code> !== <code>2259/дск</code>) гарантовано імпортуються як окремі бойові розпорядження без помилкового відсіювання як дублікатів.</li>
                         <li><strong>Синхронізація з Диспетчером на порт 8780:</strong> автономний автобекап переведено на новий вільний порт для усунення конфліктів зі стороннім софтом.</li>
@@ -1874,18 +1890,18 @@
         function setViewMode(mode) {
             currentView = mode;
             const tContainer = document.getElementById('tableViewContainer');
-            const cContainer = document.getElementById('cardsViewContainer');
+            const cWrapper = document.getElementById('cardsViewWrapper');
             const tBtn = document.getElementById('viewTableBtn');
             const cBtn = document.getElementById('viewCardsBtn');
 
             if (mode === 'table') {
                 tContainer.classList.remove('hidden');
-                cContainer.classList.add('hidden');
+                cWrapper?.classList.add('hidden');
                 tBtn.className = "p-1.5 rounded-lg text-amber-400 bg-slate-800 shadow-sm transition";
                 cBtn.className = "p-1.5 rounded-lg text-slate-400 hover:text-white transition";
             } else {
                 tContainer.classList.add('hidden');
-                cContainer.classList.remove('hidden');
+                cWrapper?.classList.remove('hidden');
                 tBtn.className = "p-1.5 rounded-lg text-slate-400 hover:text-white transition";
                 cBtn.className = "p-1.5 rounded-lg text-amber-400 bg-slate-800 shadow-sm transition";
             }
@@ -2526,7 +2542,7 @@
             reader.readAsText(file);
         }
 
-        // Export to Excel (.xlsx)
+        // Export to Excel (.xlsx) with professional styling (xlsx-js-style)
         function exportToExcel() {
             if (filteredItems.length === 0) {
                 alert('Немає записів для експорту.');
@@ -2538,6 +2554,7 @@
                 'Дата': item.date,
                 'Час': item.time || '',
                 'Вхідний номер': (item.internalNo && item.internalNo !== '—') ? formatInternalDisplay(item.internalNo) : 'б/н',
+                'Номер БР (бригада)': item.brigadeNo || '—',
                 'Категорія': item.category,
                 'Короткий зміст': item.subject,
                 'Термін дії': item.deadline || '',
@@ -2547,18 +2564,115 @@
             }));
 
             const ws = XLSX.utils.json_to_sheet(rows);
+
+            // Оптимізована ширина стовпчиків
             ws['!cols'] = [
-                { wch: 6 },
-                { wch: 14 },
-                { wch: 8 },
-                { wch: 16 },
-                { wch: 20 },
-                { wch: 50 },
-                { wch: 18 },
-                { wch: 16 },
-                { wch: 32 },
-                { wch: 50 }
+                { wch: 6 },  // № з/п
+                { wch: 13 }, // Дата
+                { wch: 8 },  // Час
+                { wch: 16 }, // Вхідний номер
+                { wch: 16 }, // Номер БР (бригада)
+                { wch: 18 }, // Категорія
+                { wch: 50 }, // Короткий зміст
+                { wch: 18 }, // Термін дії
+                { wch: 14 }, // Статус
+                { wch: 32 }, // Відмітка про виконання / Доповідь
+                { wch: 65 }  // Повний текст
             ];
+
+            // Висота рядків (шапка вища, дані з запасом)
+            ws['!rows'] = [{ hpt: 26 }];
+            for (let r = 1; r <= filteredItems.length; r++) {
+                ws['!rows'].push({ hpt: 22 });
+            }
+
+            // Стилізація комірок (Штабна темна шапка, рамки, центрування та автоперенос)
+            if (ws['!ref']) {
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    const isHeader = (R === 0);
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+                        if (!ws[cellRef]) continue;
+
+                        if (isHeader) {
+                            ws[cellRef].s = {
+                                fill: { fgColor: { rgb: "1E293B" } }, // Slate-800 Dark Graphite
+                                font: {
+                                    name: "Calibri",
+                                    sz: 11,
+                                    bold: true,
+                                    color: { rgb: "FFFFFF" }
+                                },
+                                alignment: {
+                                    vertical: "center",
+                                    horizontal: (C === 6 || C === 9 || C === 10) ? "left" : "center",
+                                    wrapText: true
+                                },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "475569" } },
+                                    bottom: { style: "medium", color: { rgb: "0F172A" } },
+                                    left: { style: "thin", color: { rgb: "475569" } },
+                                    right: { style: "thin", color: { rgb: "475569" } }
+                                }
+                            };
+                        } else {
+                            const isEven = (R % 2 === 0);
+                            const isCenterCol = (C === 0 || C === 1 || C === 2 || C === 3 || C === 4 || C === 5 || C === 7 || C === 8);
+                            const shouldWrap = (C === 6 || C === 9 || C === 10);
+
+                            let fillRgb = isEven ? "F8FAFC" : "FFFFFF"; // легка зебра
+                            let fontRgb = "0F172A";
+                            let isBold = false;
+
+                            // М'яке підсвічування статусів
+                            if (C === 8) {
+                                const val = String(ws[cellRef].v || '').toLowerCase();
+                                if (val.includes('виконано')) {
+                                    fillRgb = "DCFCE7"; // зелений
+                                    fontRgb = "166534";
+                                    isBold = true;
+                                } else if (val.includes('в роботі')) {
+                                    fillRgb = "FEF3C7"; // бурштиновий
+                                    fontRgb = "92400E";
+                                    isBold = true;
+                                } else if (val.includes('щоденно')) {
+                                    fillRgb = "E0F2FE"; // блакитний
+                                    fontRgb = "075985";
+                                    isBold = true;
+                                }
+                            }
+
+                            ws[cellRef].s = {
+                                fill: { fgColor: { rgb: fillRgb } },
+                                font: {
+                                    name: "Calibri",
+                                    sz: 10,
+                                    bold: isBold,
+                                    color: { rgb: fontRgb }
+                                },
+                                alignment: {
+                                    vertical: "center",
+                                    horizontal: isCenterCol ? "center" : "left",
+                                    wrapText: shouldWrap
+                                },
+                                border: {
+                                    top: { style: "thin", color: { rgb: "CBD5E1" } },
+                                    bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+                                    left: { style: "thin", color: { rgb: "CBD5E1" } },
+                                    right: { style: "thin", color: { rgb: "CBD5E1" } }
+                                }
+                            };
+                        }
+                    }
+                }
+
+                // Закріплення першого рядка (Freeze Header)
+                ws['!freeze'] = { ySplit: 1, topLeftCell: 'A2' };
+
+                // Увімкнення автофільтрів Excel
+                ws['!autofilter'] = { ref: `A1:K${filteredItems.length + 1}` };
+            }
 
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Журнал БР");
