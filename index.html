@@ -61,6 +61,7 @@
             background-color: #0c1322;
             border: 1px solid #1e293b;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
         }
 
         .app-card:hover {
@@ -136,12 +137,21 @@
             </div>
 
             <!-- Header Controls -->
-            <div class="flex items-center gap-3 self-end md:self-auto">
+            <div class="flex items-center gap-3 self-end md:self-auto flex-wrap">
+                <!-- Live Dispatcher Status Badge -->
+                <div id="dispatcher-status-badge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-[11px] font-mono shadow-sm transition-all" title="Статус штабного диспетчера (автобекапи порт 8780)">
+                    <span id="dispatcher-status-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+                    <span id="dispatcher-status-text" class="text-slate-400">8780: Перевірка...</span>
+                </div>
+
                 <div class="relative w-48 sm:w-64">
-                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none"></i>
                     <input type="text" id="appSearch" oninput="filterApps()"
-                        placeholder="Пошук програми..."
-                        class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors">
+                        placeholder="Пошук програми... (Ctrl+K)"
+                        class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-9 pr-8 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors">
+                    <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-white transition-colors cursor-pointer" title="Очистити пошук (Esc)">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
                 </div>
                 <a href="audit_dashboard.html" target="_blank" title="Відкрити Дашборд Цілісності (Suite QA Guard)"
                     class="px-3 py-1.5 bg-slate-800/80 hover:bg-amber-950/60 text-slate-300 hover:text-amber-300 border border-slate-700 hover:border-amber-800 rounded-xl transition-all cursor-pointer shadow-sm flex items-center gap-1.5 text-xs font-semibold">
@@ -292,7 +302,7 @@
             </div>
 
             <!-- Card 5: Калькулятор БК -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="калькулятор бк витрата боєприпасів патрони вог рпг гранати">
+            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="калькулятор бк витрата боєприпасів патрони вог рпг гранати рдг excel tsv">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-2.5">
@@ -307,8 +317,8 @@
                     Інтелектуальне розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями (5.45, 7.62, ВОГ, РПГ, ручні та димові гранати РДГ, РСП).
                 </p>
                 <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-amber-400"></i> v1.4.0</span>
-                    <span>17.10.2026</span>
+                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-amber-400"></i> v1.4.1</span>
+                    <span>26.10.2026</span>
                 </div>
                 <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
                     <a href="Калькулятор БК.html" target="_blank"
@@ -755,10 +765,30 @@
         }
 
         /**
+         * Очищає поле пошуку та скидає фільтри
+         */
+        function clearSearch() {
+            const input = document.getElementById('appSearch');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (input) {
+                input.value = '';
+                filterApps();
+            }
+            if (clearBtn) clearBtn.classList.add('hidden');
+        }
+
+        /**
          * Жива фільтрація карток програм за ключовими словами та метаданими (data-title)
          */
         function filterApps() {
-            const query = (document.getElementById('appSearch').value || '').toLowerCase().trim();
+            const input = document.getElementById('appSearch');
+            const query = (input?.value || '').toLowerCase().trim();
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) {
+                if (query) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+
             const items = document.querySelectorAll('.app-item');
             let visibleCount = 0;
 
@@ -779,6 +809,71 @@
                 noRes.classList.add('hidden');
             }
         }
+
+        /**
+         * Перевіряє доступність локального бекенд-сервісу Диспетчера (порт 8780)
+         */
+        async function checkDispatcherStatus() {
+            const badge = document.getElementById('dispatcher-status-badge');
+            const dot = document.getElementById('dispatcher-status-dot');
+            const text = document.getElementById('dispatcher-status-text');
+            if (!badge || !dot || !text) return;
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 1500);
+                const res = await fetch('http://127.0.0.1:8780/health', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    dot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]';
+                    text.className = 'text-emerald-300 font-bold';
+                    text.innerText = '8780: Онлайн';
+                    badge.title = 'Штабний диспетчер активний (порт 8780). Автоматичні бекапи на диск доступні.';
+                    return;
+                }
+            } catch (e) {}
+
+            dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+            text.className = 'text-slate-400 font-normal';
+            text.innerText = '8780: Офлайн';
+            badge.title = 'Штабний диспетчер недоступний на 127.0.0.1:8780 (фонові бекапи на диск тимчасово не працюють).';
+        }
+
+        // Делегування кліку: клік по всій площі картки запускає модуль, якщо клік не припав на кнопку скачування .html
+        document.getElementById('apps-grid')?.addEventListener('click', (e) => {
+            const downloadBtn = e.target.closest('a[download]');
+            if (downloadBtn) return; // Скачування файлу працює штатно
+            const card = e.target.closest('.app-card');
+            if (!card) return;
+            const openBtn = card.querySelector('a:not([download])');
+            if (openBtn && openBtn.href && !e.target.closest('a')) {
+                window.open(openBtn.href, openBtn.target || '_blank');
+            }
+        });
+
+        // Глобальні клавіатурні скорочення (Ctrl+K, '/', Esc)
+        window.addEventListener('keydown', (e) => {
+            const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+            if ((e.key === '/' && !isInput) || ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K'))) {
+                e.preventDefault();
+                const searchInput = document.getElementById('appSearch');
+                if (searchInput) {
+                    searchInput.focus();
+                    searchInput.select();
+                }
+            }
+            if (e.key === 'Escape') {
+                const searchInput = document.getElementById('appSearch');
+                if (document.activeElement === searchInput) {
+                    clearSearch();
+                    searchInput.blur();
+                }
+            }
+        });
+
+        // Запуск моніторингу статусу Диспетчера
+        checkDispatcherStatus();
+        setInterval(checkDispatcherStatus, 30000);
 
         // Автоматичне відновлення сесії при оновленні сторінки (F5 / Ctrl+R)
         window.addEventListener('DOMContentLoaded', () => {

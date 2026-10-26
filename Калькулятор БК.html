@@ -111,10 +111,10 @@
                         </a>
                         <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Калькулятор БК</h1>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-mono font-medium">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> OFFLINE ENGINE
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> OFFLINE ENGINE
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.4.0
+                            ⚡ v1.4.1
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-1">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -130,6 +130,10 @@
                 </button>
                 <button id="btn-clear" class="px-3 py-2 bg-slate-800 hover:bg-red-950/60 text-slate-300 hover:text-red-300 border border-slate-700 hover:border-red-800/60 rounded-xl transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm">
                     <i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i> Очистити
+                </button>
+                <button id="btn-copy-tsv" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-300 hover:text-emerald-200 border border-emerald-500/30 hover:border-emerald-500/50 rounded-xl transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-95" title="Скопіювати у буфер обміну для вставки в Excel (2 стовпчики: Калібр та Кількість)">
+                    <i data-lucide="sheet" class="w-4 h-4 text-emerald-400"></i>
+                    <span id="copy-tsv-text">Для Excel</span>
                 </button>
                 <button id="btn-copy" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-emerald-900/40 transition-all flex items-center gap-2 text-xs cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">
                     <i data-lucide="clipboard-copy" class="w-4 h-4" id="copy-icon"></i>
@@ -199,6 +203,7 @@
                             <button onclick="insertSamplePreset('small_arms')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-[11px] font-mono transition cursor-pointer">5.45 / 7.62</button>
                             <button onclick="insertSamplePreset('grenades')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-[11px] font-mono transition cursor-pointer">Гранати (Ф1, GHO)</button>
                             <button onclick="insertSamplePreset('heavy')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-[11px] font-mono transition cursor-pointer">РПГ / ВОГ / 12.7</button>
+                            <button onclick="insertSamplePreset('smoke')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-800 text-[11px] font-mono transition cursor-pointer">Димові (РДГ)</button>
                         </div>
                     </div>
                 </div>
@@ -257,10 +262,13 @@
                                 0 позицій
                             </span>
                         </div>
-                        <div class="relative">
-                            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2"></i>
-                            <input type="text" id="ammo-search" oninput="filterResultsTable()" placeholder="Пошук калібру..." 
-                                class="bg-slate-900 border border-slate-700/80 rounded-lg pl-8 pr-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors w-36 sm:w-44 font-mono">
+                        <div class="relative flex items-center">
+                            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 pointer-events-none"></i>
+                            <input type="text" id="ammo-search" oninput="filterResultsTable()" onkeydown="handleAmmoSearchKey(event)" placeholder="Пошук калібру..." 
+                                class="bg-slate-900 border border-slate-700/80 rounded-lg pl-8 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors w-36 sm:w-48 font-mono">
+                            <button id="ammo-search-clear" onclick="clearAmmoSearch()" class="hidden absolute right-2 text-slate-400 hover:text-white p-0.5 rounded cursor-pointer" title="Очистити пошук (Esc)">
+                                <i data-lucide="x" class="w-3 h-3"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -324,6 +332,7 @@
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">40х46 (NR338, M433, ВОГ)</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Гранати (Ф1, GHO, M67, РГД-5, РГН, РГО, РГТ-27С)</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">РПГ / ВОГ / Bullspike (AT/TB) / АТ4 / RHEAT</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Димові (РДГ-М83, РДГ-55Б, РДГ-2)</span>
         </div>
 
     </div>
@@ -346,9 +355,21 @@
                 </button>
             </div>
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <div class="relative pl-5 border-l-2 border-amber-500 space-y-2">
+                <div class="relative pl-5 border-l-2 border-emerald-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.4.0 (Димові засоби РДГ-М83, РДГ-55Б, РДГ-2 & категорія Smoke)</span>
+                        <span class="font-bold text-emerald-400 font-mono text-sm">⚡ v1.4.1 (Експорт для Excel TSV, швидке скидання пошуку & РДГ)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">26.10.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Швидке копіювання для Excel (TSV):</strong> Додано кнопку <code>📋 Для Excel</code>, яка копіює підсумок БК у форматі значень, розділених табуляцією (калібр та кількість). При вставці <code>Ctrl+V</code> у Microsoft Excel або Google Таблиці дані миттєво вкладаються у 2 окремі стовпчики без ручного розбиття.</li>
+                        <li><strong class="text-white">Швидке очищення пошуку:</strong> Інпут пошуку калібру отримав інтерактивну кнопку очищення <code>x</code> та підтримку скидання фільтра клавішею <code>Escape</code>.</li>
+                        <li><strong class="text-white">Пресет димових засобів & підвал:</strong> Додано зразок <code>Димові (РДГ)</code> у панель швидких прикладів та відображення РДГ у переліку підтримуваних калібрів.</li>
+                        <li><strong class="text-white">Спокійний індикатор системи:</strong> Прибрано миготіння точки <code>OFFLINE ENGINE</code> для зниження візуальної втоми при тривалій роботі з цифрами.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.4.0 (Димові засоби РДГ-М83, РДГ-55Б, РДГ-2 & категорія Smoke)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">17.10.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -568,10 +589,12 @@
         const statTotalTypes = document.getElementById('stat-total-types');     // Статистика: Кількість типів
         const statLinesRatio = document.getElementById('stat-lines-ratio');     // Статистика: Співвідношення розпізнаних рядків
         const btnCopy = document.getElementById('btn-copy');                     // Кнопка копіювання звіту
+        const btnCopyTsv = document.getElementById('btn-copy-tsv');             // Кнопка копіювання для Excel (TSV)
         const btnDownload = document.getElementById('btn-download');             // Кнопка експорту .txt
         const btnClear = document.getElementById('btn-clear');                   // Кнопка очищення
         const btnInsertSample = document.getElementById('btn-insert-sample');   // Кнопка завантаження зразка
         const copyText = document.getElementById('copy-text');                   // Текст кнопки копіювання
+        const copyTsvText = document.getElementById('copy-tsv-text');           // Текст кнопки копіювання TSV
         const changelogModal = document.getElementById('changelog-modal');       // Модальне вікно історії змін
 
         // -------------------------------------------------------------------------
@@ -624,7 +647,12 @@ GHO - 2
 4 шт ВОГ-25
 2 шт 40х46
 1 шт Bullspike AT
-РПВ-16 1 шт`
+РПВ-16 1 шт`,
+            smoke: `РДГ-М83 - 2 шт
+1 шт РДГ-55Б
+РДГ-2 - 4 шт
+2 шт РДГ (димова)
+3 шт РСП З.В.`
         };
 
         // -------------------------------------------------------------------------
@@ -991,8 +1019,37 @@ GHO - 2
          */
         function filterResultsTable() {
             const input = document.getElementById('ammo-search');
+            const clearBtn = document.getElementById('ammo-search-clear');
             ammoSearchQuery = (input ? input.value : '').toLowerCase().trim();
+            if (clearBtn) {
+                if (ammoSearchQuery) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
             renderTableRows();
+        }
+
+        /**
+         * Обробка клавіші Escape у пошуку калібру
+         */
+        function handleAmmoSearchKey(e) {
+            if (e.key === 'Escape') {
+                clearAmmoSearch();
+            }
+        }
+
+        /**
+         * Очищає поле пошуку калібру та повертає повний список результатів
+         */
+        function clearAmmoSearch() {
+            const input = document.getElementById('ammo-search');
+            if (input) {
+                input.value = '';
+                filterResultsTable();
+                input.focus();
+            }
         }
 
         /**
@@ -1280,6 +1337,7 @@ GHO - 2
         function renderUI(results, unparsed, parsedCount, totalCount) {
             // Активація / деактивація кнопок експорту
             btnCopy.disabled = results.length === 0;
+            if (btnCopyTsv) btnCopyTsv.disabled = results.length === 0;
             btnDownload.disabled = results.length === 0;
 
             // Підрахунок загальної кількості боєприпасів
@@ -1487,7 +1545,18 @@ GHO - 2
             }, 2000);
         }
 
-        // Копіювання згенерованого підсумку в буфер обміну
+        let _copyTsvResetTimer = null;
+        function setCopyTsvSuccessState() {
+            if (copyTsvText) copyTsvText.textContent = "Скопійовано!";
+            if (btnCopyTsv) btnCopyTsv.classList.add('bg-emerald-900/60', 'border-emerald-400');
+            clearTimeout(_copyTsvResetTimer);
+            _copyTsvResetTimer = setTimeout(() => {
+                if (copyTsvText) copyTsvText.textContent = "Для Excel";
+                if (btnCopyTsv) btnCopyTsv.classList.remove('bg-emerald-900/60', 'border-emerald-400');
+            }, 2000);
+        }
+
+        // Копіювання згенерованого підсумку в буфер обміну (текстовий звіт)
         btnCopy.addEventListener('click', () => {
             if (currentResults.length === 0) return;
             let textToCopy = "Витрата БК:\n";
@@ -1500,21 +1569,46 @@ GHO - 2
                 navigator.clipboard.writeText(textToCopy).then(() => {
                     setCopySuccessState();
                 }).catch(() => {
-                    fallbackCopy(textToCopy);
+                    fallbackCopy(textToCopy, setCopySuccessState);
                 });
             } else {
-                fallbackCopy(textToCopy);
+                fallbackCopy(textToCopy, setCopySuccessState);
             }
         });
 
-        function fallbackCopy(textToCopy) {
+        // Копіювання у форматі TSV (для швидкої вставки в Excel / Таблиці у 2 колонки)
+        if (btnCopyTsv) {
+            btnCopyTsv.addEventListener('click', () => {
+                if (currentResults.length === 0) return;
+                let tsv = "Калібр / Номенклатура\tКількість\n";
+                currentResults.forEach(r => {
+                    tsv += `${r.name}\t${r.count}\n`;
+                });
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(tsv).then(() => {
+                        setCopyTsvSuccessState();
+                    }).catch(() => {
+                        fallbackCopy(tsv, setCopyTsvSuccessState);
+                    });
+                } else {
+                    fallbackCopy(tsv, setCopyTsvSuccessState);
+                }
+            });
+        }
+
+        function fallbackCopy(textToCopy, onSuccess) {
             const textArea = document.createElement("textarea");
             textArea.value = textToCopy;
             document.body.appendChild(textArea);
             textArea.select();
             try {
                 document.execCommand('copy');
-                setCopySuccessState();
+                if (typeof onSuccess === 'function') {
+                    onSuccess();
+                } else {
+                    setCopySuccessState();
+                }
             } catch (err) {
                 console.warn('Fallback copy failed:', err);
             }
@@ -1535,7 +1629,7 @@ GHO - 2
                 const formattedCount = r.count.toLocaleString('uk-UA');
                 textToSave += `${r.name}: ${formattedCount} шт.\n`;
             });
-            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично (Калькулятор БК v1.2.9)";
+            textToSave += "\n" + "=".repeat(30) + "\nЗгенеровано автоматично (Калькулятор БК v1.4.1)";
 
             const blob = new Blob(["\uFEFF" + textToSave], { type: "text/plain;charset=utf-8" });
             const url = URL.createObjectURL(blob);
@@ -1550,6 +1644,7 @@ GHO - 2
 
         // Первинний запуск парсингу при завантаженні сторінки
         parseData();
+        lucide.createIcons();
     </script>
 </body>
 
