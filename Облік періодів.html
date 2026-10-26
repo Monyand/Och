@@ -170,6 +170,11 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         .chevron { transition: transform 0.2s ease; }
         .row-expanded .chevron { transform: rotate(180deg); color: #38bdf8; }
         .break-word-safe { word-break: break-word; overflow-wrap: break-word; }
+        #clearSelectionBtn:not(.hidden),
+        #exportExcelBtn:not(.hidden),
+        #clearBtn:not(.hidden) {
+            display: flex;
+        }
     </style>
 </head>
 
@@ -189,7 +194,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             Аналізатор періодів бойових завдань та ДВ
                         </h1>
                         <button onclick="openModal('modal-changelog')" class="text-[11px] bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(59,130,246,0.2)]" title="Історія оновлень">
-                            ⚡ v1.5.0
+                            ⚡ v1.5.1
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs mt-0.5">
@@ -279,13 +284,13 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         </div>
 
                         <!-- Кнопка скидання вибору -->
-                        <button id="clearSelectionBtn" onclick="clearSelection()" class="hidden px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-blue-950/60 hover:bg-blue-900/80 text-blue-200 border border-blue-500/50 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Скинути вибір бійців">
+                        <button id="clearSelectionBtn" onclick="clearSelection()" class="hidden px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-blue-950/60 hover:bg-blue-900/80 text-blue-200 border border-blue-500/50 items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Скинути вибір бійців">
                             <span id="clearSelectionCount">✓ Обрано: 0</span>
                             <i data-lucide="x" class="w-3.5 h-3.5 text-blue-400 hover:text-rose-400"></i>
                         </button>
 
                         <!-- Завантажити Excel -->
-                        <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2 transition-all active:scale-95 cursor-pointer">
+                        <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.3)] items-center gap-2 transition-all active:scale-95 cursor-pointer">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             <span id="exportExcelBtnText">Завантажити Excel</span>
                         </button>
@@ -461,7 +466,19 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             <div class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs font-sans">
                 <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
                     <div class="font-bold text-white flex items-center justify-between font-mono">
-                        <span class="text-cyan-400">⚡ v1.5.0 — Трьохрівневе збереження (IndexedDB + Диск Диспетчера)</span>
+                        <span class="text-cyan-400">⚡ v1.5.1 — Інтелектуальний захист однофамільців та ІПН</span>
+                        <span class="text-[10px] text-slate-500">26.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
+                        <li><b>Захист від колізій ІПН</b>: при різному РНОКПП (>= 8 цифр) бійці з однаковими прізвищами категорично не склеюються (100% різні люди).</li>
+                        <li><b>Перевірка повних імен та по батькові</b>: однофамільці зі схожими ініціалами (наприклад, Ковальчук Віталій vs Ковальчук Володимир) більше не перезаписують один одного.</li>
+                        <li><b>Захист мутації імен при дозавантаженні</b>: повне ім'я зберігається і не мутує від вхідних записів іншого бійця.</li>
+                        <li><b>Чиста CSS-розмітка кнопок</b>: усунено конфлікти Tailwind класів <code>hidden</code> та <code>flex</code>.</li>
+                    </ul>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
+                    <div class="font-bold text-slate-300 flex items-center justify-between font-mono">
+                        <span class="text-slate-400">⚡ v1.5.0 — Трьохрівневе збереження (IndexedDB + Диск Диспетчера)</span>
                         <span class="text-[10px] text-slate-500">08.10.2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
@@ -581,7 +598,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Список файлів у пам'яті:</span>
-                        <button id="clearBtn" class="hidden flex items-center gap-1.5 px-2.5 py-1 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-lg text-xs font-semibold transition-all border border-rose-500/40 cursor-pointer shadow-sm" title="Очистити всі завантажені файли з пам'яті">
+                        <button id="clearBtn" class="hidden items-center gap-1.5 px-2.5 py-1 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-lg text-xs font-semibold transition-all border border-rose-500/40 cursor-pointer shadow-sm" title="Очистити всі завантажені файли з пам'яті">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i>
                             <span>Скинути всі дані</span>
                         </button>
@@ -680,36 +697,80 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             const cleanIpn = ipn ? String(ipn).replace(/\D/g, '') : '';
 
             const words1 = key.split(' ').filter(Boolean);
+            if (words1.length === 0) return null;
             const surname1 = words1[0];
+            const first1 = words1.length > 1 ? words1[1] : '';
+            const patr1 = words1.length > 2 ? words1[2] : '';
 
             for (const [k, p] of db.entries()) {
                 const words2 = k.split(' ').filter(Boolean);
+                if (words2.length === 0) continue;
                 const surname2 = words2[0];
-                const sameSurnameFirstChar = (surname1 && surname2 && surname1[0] === surname2[0]);
+                const first2 = words2.length > 1 ? words2[1] : '';
+                const patr2 = words2.length > 2 ? words2[2] : '';
 
-                if (cleanIpn && cleanIpn.length >= 8) {
-                    if (p.records) {
-                        for (const rec of p.records.values()) {
-                            const recIpn = rec.ipn ? String(rec.ipn).replace(/\D/g, '') : '';
-                            // Only match if IPN matches AND surname begins with the same letter
-                            // (Prevents accidental merge of two completely different people with copy-pasted IPNs)
-                            if (recIpn && recIpn === cleanIpn && sameSurnameFirstChar) return k;
+                const sameSurnameFirstChar = (surname1[0] === surname2[0]);
+
+                // 1. Перевірка ІПН (РНОКПП)
+                let pHasValidIpn = false;
+                let pMatchesIpn = false;
+                if (p.records) {
+                    for (const rec of p.records.values()) {
+                        const recIpn = rec.ipn ? String(rec.ipn).replace(/\D/g, '') : '';
+                        if (recIpn.length >= 8) {
+                            pHasValidIpn = true;
+                            if (cleanIpn.length >= 8 && recIpn === cleanIpn) {
+                                pMatchesIpn = true;
+                                break;
+                            }
                         }
                     }
                 }
-                if (surname1 === surname2) {
-                    if (words1.length >= 2 && words2.length >= 2) {
-                        const init1_1 = words1[1][0];
-                        const init2_1 = words2[1][0];
-                        if (init1_1 === init2_1) {
-                            if (words1.length >= 3 && words2.length >= 3) {
-                                const init1_2 = words1[2][0];
-                                const init2_2 = words2[2][0];
-                                if (init1_2 === init2_2) return k;
-                            } else if (words1.length === 2 || words2.length === 2) {
-                                return k;
-                            }
-                        }
+
+                // Збіг за валідним ІПН (найнадійніший критерій)
+                if (cleanIpn.length >= 8 && pMatchesIpn && sameSurnameFirstChar) {
+                    return k;
+                }
+
+                // ЗАХИСТ ВІД КОНФЛІКТУ ІПН: Якщо в обох бійців є валідні ІПН і вони РІЗНІ — це 100% різні люди!
+                if (cleanIpn.length >= 8 && pHasValidIpn && !pMatchesIpn) {
+                    continue; // Пропускаємо кандидата, категорично не склеювати!
+                }
+
+                // 2. Збіг прізвища (однакове прізвище)
+                if (surname1 !== surname2) continue;
+
+                // 3. Перевірка імені
+                if (first1 && first2) {
+                    // Якщо в обох бійців вказано повне ім'я (>1 букви) і воно РІЗНЕ (напр. Володимир != Віталій)
+                    if (first1.length > 1 && first2.length > 1 && first1 !== first2) {
+                        continue; // Різні повні імена -> це різні люди!
+                    }
+                    // Якщо перші літери імені різні
+                    if (first1[0] !== first2[0]) {
+                        continue;
+                    }
+                }
+
+                // 4. Перевірка по батькові
+                if (patr1 && patr2) {
+                    // Якщо в обох бійців вказано повне по батькові (>1 букви) і воно РІЗНЕ (напр. Володимирович != Вікторович)
+                    if (patr1.length > 1 && patr2.length > 1 && patr1 !== patr2) {
+                        continue; // Різні по батькові -> це різні люди!
+                    }
+                    // Якщо перші літери по батькові різні (напр. Є != В)
+                    if (patr1[0] !== patr2[0]) {
+                        continue;
+                    }
+                }
+
+                // 5. Зіставлення ініціалів
+                if (first1 && first2 && first1[0] === first2[0]) {
+                    if (patr1 && patr2 && patr1[0] === patr2[0]) {
+                        return k;
+                    } else if (!patr1 || !patr2) {
+                        // Одне з імен без по батькові, але прізвище та перша літера імені співпадають
+                        return k;
                     }
                 }
             }
@@ -964,13 +1025,24 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
             state.database.forEach(p => {
                 const normKey = p.key || normalizePersonKey(p.name);
-                const matchedKey = database.has(normKey) ? normKey : findExistingPersonKey(database, normKey, p.name, null);
+                let pIpn = null;
+                if (p.records && Array.isArray(p.records)) {
+                    const recWithIpn = p.records.find(r => r.ipn && String(r.ipn).replace(/\D/g, '').length >= 8);
+                    if (recWithIpn) pIpn = recWithIpn.ipn;
+                }
+                const matchedKey = database.has(normKey) ? normKey : findExistingPersonKey(database, normKey, p.name, pIpn);
                 const targetKey = matchedKey || normKey;
 
                 if (database.has(targetKey)) {
                     const existing = database.get(targetKey);
                     if (p.name && p.name.length > existing.name.length) {
-                        existing.name = p.name;
+                        const exWords = normalizePersonKey(existing.name).split(' ').filter(Boolean);
+                        const newWords = normalizePersonKey(p.name).split(' ').filter(Boolean);
+                        const exHasFullFirst = exWords.length > 1 && exWords[1].length > 1;
+                        const newHasFullFirst = newWords.length > 1 && newWords[1].length > 1;
+                        if (!exHasFullFirst || (newHasFullFirst && exWords[1] === newWords[1])) {
+                            existing.name = p.name;
+                        }
                     }
                     if (p.records && Array.isArray(p.records)) {
                         p.records.forEach(r => {
@@ -1997,7 +2069,13 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
                             // Prefer fuller / longer full name (e.g. "Шевченко Тарас Григорович" over "Шевченко Т.Г.")
                             if (item.name && item.name.length > person.name.length) {
-                                person.name = item.name;
+                                const pWords = normalizePersonKey(person.name).split(' ').filter(Boolean);
+                                const iWords = normalizePersonKey(item.name).split(' ').filter(Boolean);
+                                const pHasFullFirst = pWords.length > 1 && pWords[1].length > 1;
+                                const iHasFullFirst = iWords.length > 1 && iWords[1].length > 1;
+                                if (!pHasFullFirst || (iHasFullFirst && pWords[1] === iWords[1])) {
+                                    person.name = item.name;
+                                }
                             }
 
                             person.records.set(item.date, {
