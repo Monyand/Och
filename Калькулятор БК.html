@@ -114,7 +114,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> OFFLINE ENGINE
                         </span>
                         <button onclick="openChangelogModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" title="Історія оновлень">
-                            ⚡ v1.4.1
+                            ⚡ v1.4.2
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs sm:text-sm mt-1">Швидкий аналіз, розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями</p>
@@ -330,7 +330,7 @@
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12.7 (x99, x108)</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">14.5x114</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">40х46 (NR338, M433, ВОГ)</span>
-            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Гранати (Ф1, GHO, M67, РГД-5, РГН, РГО, РГТ-27С)</span>
+            <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Гранати (Ф1, GHO, M67, М52П3, РГД-5, РГН, РГО, РГТ-27С)</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">РПГ / ВОГ / Bullspike (AT/TB) / АТ4 / RHEAT</span>
             <span class="font-mono text-[11px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Димові (РДГ-М83, РДГ-55Б, РДГ-2)</span>
         </div>
@@ -357,7 +357,18 @@
             <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
                 <div class="relative pl-5 border-l-2 border-emerald-500 space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-emerald-400 font-mono text-sm">⚡ v1.4.1 (Експорт для Excel TSV, швидке скидання пошуку & РДГ)</span>
+                        <span class="font-bold text-emerald-400 font-mono text-sm">⚡ v1.4.2 (Розпізнавання ручних осколкових гранат М52П3 / M52)</span>
+                        <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">27.10.2026</span>
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Граната М52П3:</strong> Додано повну підтримку югославської серії ручних осколкових гранат <code>М52П3</code> (<code>M52P3</code>, <code>M-52P3</code>, <code>М52-П3</code>, <code>М52</code>).</li>
+                        <li><strong class="text-white">Стійкість до синтаксису:</strong> Безпомилковий парсинг дефісів без пробілів (<code>М52П3-2 шт</code>, <code>М52П3 -2 шт</code>), розкладок (кирилиця/латиниця), одруківок (буква <code>З</code> замість <code>3</code>) та зворотного порядку (<code>2 шт М52П3</code>).</li>
+                        <li><strong class="text-white">Одиничний облік (Implicit 1):</strong> Включено до списку автоматичного зарахування як 1 шт за згадкою при увімкненому чекбоксі.</li>
+                    </ul>
+                </div>
+                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-75">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-300 font-mono text-sm">v1.4.1 (Експорт для Excel TSV, швидке скидання пошуку & РДГ)</span>
                         <span class="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">26.10.2026</span>
                     </div>
                     <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -631,6 +642,7 @@
 25 шт ТАХО 12/70
 15 шт 12х70`,
             grenades: `ручна граната Ф1 - 2 шт
+М52П3-2 шт
 3 шт РГД-5
 GHO - 2
 1 шт М67
@@ -708,6 +720,7 @@ GHO - 2
             { id: 'VOG', name: 'ВОГ (17/25)', icon: '💣', category: 'grenade', idPattern: '(?:(?:40[\\s\\-_]*(?:мм|mm)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])[\\s\\-_]*)?(?:вог|vog|гп|gp)[а-яіїєґa-z]*(?:[\\s\\-_]*(?:17|25|30)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]))?|40[\\s\\-_]*(?:мм|mm)?(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])(?![\\s\\-_]*46))' },
 
             // Ручні осколкові та термобаричні гранати
+            { id: 'M52P3', name: 'Граната М52П3', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[mм][\\s\\-_]*52(?:[\\s\\-_]*[pп][\\s\\-_]*(?:3|[зЗ]))?|[mм][\\s\\-_]*52)(?![a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9])' },
             { id: 'GHO', name: 'GHO', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[gг][hх][oо0]|[gг][oо0][hх])(?:[\\s\\-_]*[12])?(?:[\\s\\-_]*(?:rdx|рдеікс|рдекс))?\\.?' },
             { id: 'F1', name: 'Граната Ф-1', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:mle[\\s\\-]*)?(?:ф|f)[- ]?1[aа]?' },
             { id: 'M67', name: 'Граната М67', icon: '💣', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*|grenade[\\s,:-]*)?(?:hand[\\s\\-_]*frag(?:mentation)?(?:[\\s\\-_]*(?:m|м)[- ]?67)?|m[- ]?67|м[- ]?67)' },
@@ -735,7 +748,7 @@ GHO - 2
         });
         const akMagsRegex = new RegExp(`${numPrefix}(30|60|90|120|150|180|210|240|270|300)\\b\\s*${unit}`, 'gi');
         const implicitIds = new Set([
-            'GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'RGT27S', 
+            'M52P3', 'GHO', 'F1', 'M67', 'RGN', 'RGO', 'RGD5', 'RG42', 'RGT27S', 
             'VOG', '40x46', 'OG7V', 'PG7V', 'PG9V', 'RHEW9MA', 'RHEAT7MA', 'BULLSPIKE', 
             'RPV16', 'VPR20', 'AT4', 'MATADOR', 'RPG75', 'RPG18', 'RPG22', 'RPG26', 'RPG76',
             'RSP', '12x70',
