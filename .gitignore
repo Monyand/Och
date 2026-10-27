@@ -38,6 +38,10 @@ WARDROBE.md
 
 # Chat exports & confidential logs (OPSEC)
 Element - *
+*.xlsx
+*.xls
+*.docx
+*.doc
 
 # Local confidential agent rules & third-party agent skills (never commit)
 .agents/rules/

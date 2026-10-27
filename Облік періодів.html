@@ -165,36 +165,43 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
         .drop-zone { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-        .drop-zone.dragover { transform: scale(1.01); border-color: #38bdf8; background-color: rgba(56, 189, 248, 0.12); box-shadow: 0 0 25px rgba(56, 189, 248, 0.2); }
+        .drop-zone { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        .drop-zone.dragover { transform: scale(1.01); border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.08); }
         .row-expanded { background-color: rgba(30, 41, 59, 0.8) !important; }
         .chevron { transition: transform 0.2s ease; }
-        .row-expanded .chevron { transform: rotate(180deg); color: #38bdf8; }
+        .row-expanded .chevron { transform: rotate(180deg); color: #f59e0b; }
         .break-word-safe { word-break: break-word; overflow-wrap: break-word; }
         #clearSelectionBtn:not(.hidden),
         #exportExcelBtn:not(.hidden),
         #clearBtn:not(.hidden) {
             display: flex;
         }
+
+        /* Hardware boost for large tables on weak laptops */
+        .hardware-accelerated-row {
+            content-visibility: auto;
+            contain-intrinsic-size: 38px;
+        }
     </style>
 </head>
 
-<body class="bg-[#0b101e] text-slate-200 min-h-screen p-3 sm:p-5 selection:bg-blue-500/30 flex flex-col items-center antialiased">
+<body class="bg-[#0b101e] text-slate-200 min-h-screen p-3 sm:p-5 selection:bg-amber-500/30 selection:text-amber-200 flex flex-col items-center antialiased">
 
     <div class="w-full max-w-[1600px] space-y-4">
 
         <!-- Шапка програми -->
-        <header class="bg-slate-900/80 backdrop-blur-md border border-slate-800/90 rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <header class="bg-slate-900 border border-slate-800/90 rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 border border-blue-400/40 shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700/80 flex items-center justify-center text-slate-300 shadow-inner shrink-0">
                     <i data-lucide="calendar-range" class="w-5 h-5"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <h1 class="text-lg sm:text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300">
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">
                             Аналізатор періодів бойових завдань та ДВ
                         </h1>
-                        <button onclick="openModal('modal-changelog')" class="text-[11px] bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-[0_0_12px_rgba(59,130,246,0.2)]" title="Історія оновлень">
-                            ⚡ v1.5.1
+                        <button onclick="openModal('modal-changelog')" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs" title="Історія оновлень">
+                            ⚡ v1.5.3
                         </button>
                     </div>
                     <p class="text-slate-400 text-xs mt-0.5">
@@ -204,22 +211,22 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             </div>
             <div class="flex items-center gap-2 shrink-0 flex-wrap">
                 <button type="button" onclick="document.getElementById('fileInput').click()" 
-                    class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 hover:border-slate-500 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 group" title="Вибрати окремі файли (.xlsx, .docx)">
-                    <i data-lucide="file-plus" class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform"></i>
+                    class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 hover:border-slate-600 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 group" title="Вибрати окремі файли (.xlsx, .docx)">
+                    <i data-lucide="file-plus" class="w-4 h-4 text-slate-400 group-hover:scale-110 transition-transform"></i>
                     <span>Файли</span>
                 </button>
                 <button type="button" onclick="document.getElementById('folderInput').click()" 
-                    class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-blue-600/30 active:scale-95 group" title="Вибрати цілу папку зі списками">
-                    <i data-lucide="folder-up" class="w-4 h-4 text-cyan-200 group-hover:scale-110 transition-transform"></i>
+                    class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 border border-slate-700 hover:border-amber-500/50 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 group" title="Вибрати цілу папку зі списками">
+                    <i data-lucide="folder-up" class="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform"></i>
                     <span>Папка</span>
                 </button>
                 <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .docx" multiple>
                 <input type="file" id="folderInput" class="hidden" webkitdirectory directory multiple>
                 <button type="button" onclick="openModal('modal-files')" 
-                    class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 hover:border-cyan-400/60 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm group">
-                    <i data-lucide="folder-check" class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform"></i>
+                    class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 hover:border-slate-600 text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm group">
+                    <i data-lucide="folder-check" class="w-4 h-4 text-slate-400 group-hover:scale-110 transition-transform"></i>
                     <span>Файли та фільтр</span>
-                    <span id="files-processed-badge" class="bg-blue-500/20 text-cyan-300 border border-blue-500/30 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">0 шт.</span>
+                    <span id="files-processed-badge" class="bg-slate-950 text-slate-300 border border-slate-700/80 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">0 шт.</span>
                 </button>
                 <!-- Трьохрівневе сховище: IndexedDB + Диск Диспетчера -->
                 <div class="inline-flex items-center gap-1.5">
@@ -232,7 +239,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     <button onclick="forceSavePeriodsToDisk()" type="button" class="p-1.5 rounded-xl bg-slate-950/70 hover:bg-slate-900 border border-slate-800 text-emerald-400 hover:text-emerald-300 text-xs transition cursor-pointer" title="Зберегти копію на диск зараз">
                         <i data-lucide="hard-drive" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="restorePeriodsFromDisk()" type="button" class="p-1.5 rounded-xl bg-slate-950/70 hover:bg-slate-900 border border-slate-800 text-cyan-400 hover:text-cyan-300 text-xs transition cursor-pointer" title="Відновити копію з диска (Диспетчер)">
+                    <button onclick="restorePeriodsFromDisk()" type="button" class="p-1.5 rounded-xl bg-slate-950/70 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-300 text-xs transition cursor-pointer" title="Відновити копію з диска (Диспетчер)">
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -243,18 +250,18 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         <div id="loadingIndicator" class="hidden p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 shadow-md">
             <div class="flex items-center justify-between text-xs font-mono">
                 <span class="text-slate-300 flex items-center gap-2">
-                    <span class="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
+                    <span class="w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></span>
                     <span id="loadingText" class="truncate max-w-[500px]">Обробка...</span>
                 </span>
-                <span id="loadingPercent" class="text-cyan-400 font-bold">0%</span>
+                <span id="loadingPercent" class="text-amber-400 font-bold">0%</span>
             </div>
             <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+                <div id="progressBar" class="bg-sky-500 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
             </div>
         </div>
 
         <!-- Повнорозмірна таблиця результатів (100% ширини екрану, максимальна висота) -->
-        <div id="dropZone" class="drop-zone bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-[calc(100vh-95px)] min-h-[640px] overflow-hidden transition-all relative">
+        <div id="dropZone" class="drop-zone bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-[calc(100vh-95px)] min-h-[640px] overflow-hidden transition-all relative">
                 
             <!-- Rock-Solid 2-рядковий Toolbar -->
             <div class="p-3 sm:p-3.5 border-b border-slate-800/90 bg-slate-900/95 space-y-2.5">
@@ -272,7 +279,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         <!-- Перемикач режимів перегляду -->
                         <div class="flex items-center bg-slate-950 p-0.5 rounded-xl border border-slate-800 shadow-inner">
                             <button type="button" onclick="setViewMode('list')" id="view-mode-list"
-                                class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md">
+                                class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer bg-slate-800 text-white border border-slate-700 shadow-sm">
                                 <i data-lucide="list" class="w-3.5 h-3.5"></i>
                                 <span>Список</span>
                             </button>
@@ -284,13 +291,13 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         </div>
 
                         <!-- Кнопка скидання вибору -->
-                        <button id="clearSelectionBtn" onclick="clearSelection()" class="hidden px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-blue-950/60 hover:bg-blue-900/80 text-blue-200 border border-blue-500/50 items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Скинути вибір бійців">
+                        <button id="clearSelectionBtn" onclick="clearSelection()" class="hidden px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 items-center gap-1.5 transition-all cursor-pointer shadow-sm" title="Скинути вибір бійців">
                             <span id="clearSelectionCount">✓ Обрано: 0</span>
-                            <i data-lucide="x" class="w-3.5 h-3.5 text-blue-400 hover:text-rose-400"></i>
+                            <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400 hover:text-rose-400"></i>
                         </button>
 
                         <!-- Завантажити Excel -->
-                        <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.3)] items-center gap-2 transition-all active:scale-95 cursor-pointer">
+                        <button id="exportExcelBtn" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-3.5 rounded-xl border border-emerald-400/30 shadow-md shadow-emerald-950/50 items-center gap-2 transition-all active:scale-95 cursor-pointer">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             <span id="exportExcelBtnText">Завантажити Excel</span>
                         </button>
@@ -303,13 +310,13 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     <div class="relative flex-1 w-full">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
                         <input type="text" id="searchInput" placeholder="Пошук за ПІБ, званням, посадою (можна через кому)..."
-                            class="w-full bg-slate-950/90 text-slate-100 border border-slate-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs font-sans placeholder:text-slate-500 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner">
+                            class="w-full bg-slate-950/90 text-slate-100 border border-slate-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs font-sans placeholder:text-slate-500 focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 outline-none transition-all shadow-inner">
                     </div>
 
                     <!-- Фільтри -->
                     <div class="flex items-center gap-1.5 flex-wrap w-full lg:w-auto shrink-0">
                         <button type="button" onclick="setFilter('all')" id="filter-all"
-                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-600 text-white border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all cursor-pointer">
+                            class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-800 text-white border border-slate-600 shadow-xs transition-all cursor-pointer">
                             Всі
                         </button>
                         <button type="button" onclick="setFilter('bro')" id="filter-bro"
@@ -346,7 +353,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
             <!-- Контейнер банера дублікатів -->
             <div id="duplicateBannerContainer" class="hidden px-3 pt-2.5 pb-1">
-                <div class="p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-amber-200 shadow-md">
+                <div class="p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-amber-200 shadow-md">
                     <div class="flex items-center gap-2 text-xs">
                         <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold shrink-0">⚠️</span>
                         <span id="duplicateBannerText">Увага: виявлено можливі дублікати (однаковий ІПН або схоже ПІБ у бійців)</span>
@@ -400,7 +407,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             <tr>
                                 <td colspan="7" class="py-28 text-center">
                                     <div class="max-w-md mx-auto flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-slate-800 bg-slate-950/40">
-                                        <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-cyan-400 mb-3 shadow-inner">
+                                        <div class="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 mb-3 shadow-inner">
                                             <i data-lucide="folder-up" class="w-6 h-6"></i>
                                         </div>
                                         <h3 class="text-sm font-bold text-white mb-1">Немає завантажених списків</h3>
@@ -410,12 +417,12 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                                         <div class="flex items-center gap-2">
                                             <button type="button" onclick="document.getElementById('fileInput').click()" 
                                                 class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95">
-                                                <i data-lucide="file-plus" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                                <i data-lucide="file-plus" class="w-3.5 h-3.5 text-slate-400"></i>
                                                 <span>Додати файли</span>
                                             </button>
                                             <button type="button" onclick="document.getElementById('folderInput').click()" 
-                                                class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-blue-600/30 active:scale-95">
-                                                <i data-lucide="folder-up" class="w-3.5 h-3.5 text-cyan-200"></i>
+                                                class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 hover:border-amber-500/50 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95">
+                                                <i data-lucide="folder-up" class="w-3.5 h-3.5 text-amber-400"></i>
                                                 <span>Додати папку</span>
                                             </button>
                                         </div>
@@ -437,6 +444,9 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         <tbody id="matrixTableBody" class="divide-y divide-slate-800/80 font-sans">
                             <!-- Динамічні рядки табеля -->
                         </tbody>
+                        <tfoot id="matrixTableFoot" class="bg-slate-950 font-mono text-xs border-t-2 border-slate-700 sticky bottom-0 z-30 shadow-lg">
+                            <!-- Закріплений підсумок табеля -->
+                        </tfoot>
                     </table>
                 </div>
 
@@ -444,14 +454,12 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
     </div>
 
-    </div>
-
     <!-- MODAL: CHANGELOG -->
-    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-[200] bg-slate-950/85 hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                    <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
                         <i data-lucide="history" class="w-4 h-4"></i>
                     </div>
                     <div>
@@ -463,10 +471,34 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
-            <div class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs font-sans">
+                <!-- v1.5.3 -->
                 <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
                     <div class="font-bold text-white flex items-center justify-between font-mono">
-                        <span class="text-cyan-400">⚡ v1.5.1 — Інтелектуальний захист однофамільців та ІПН</span>
+                        <span class="text-amber-400">⚡ v1.5.3 — Захист однофамільців та ізоляція колізій ДВ (100/30)</span>
+                        <span class="text-[10px] text-slate-500">27.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-300 space-y-1 pt-1">
+                        <li><b>Жорсткий бар'єр несумісності імен</b>: усунено критичну колізію однофамільців з однаковими ініціалами (наприклад, «Ковальчук Володимир Володимирович» та «Ковальчук Віталій Вікторович», обидва «В. В.»). Алгоритм блокує склеювання, якщо повні імена чи по батькові відрізняються.</li>
+                        <li><b>Ізоляція записів з однаковою датою</b>: ліквідовано ризик перезапису записів за одну дату (наприклад, 18.10.2026 при одночасному завантаженні ДВ 100 та ДВ 30) — кожен боєць формує окремий унікальний запис.</li>
+                        <li><b>Канонічний ІПН у базі та Excel</b>: податковий номер надійно закріплюється за карткою військовослужбовця (<code>person.ipn</code>) і не губиться в таблицях експорту.</li>
+                    </ul>
+                </div>
+                <!-- v1.5.2 -->
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
+                    <div class="font-bold text-slate-300 flex items-center justify-between font-mono">
+                        <span class="text-slate-400">⚡ v1.5.2 — Chunked Rendering (75 рядків) та Tactical Slate & Steel</span>
+                        <span class="text-[10px] text-slate-500">27.10.2026</span>
+                    </div>
+                    <ul class="list-disc list-inside text-slate-300 space-y-1 pt-1">
+                        <li><b>Chunked Rendering (Ледачий рендер по 75 рядків)</b>: усунено фризи при роботі з базами на 2000+ бійців та 60+ файлів. Таблиця плавно довантажується через <code>IntersectionObserver</code> під час скролу.</li>
+                        <li><b>Динамічні досьє на льоту</b>: ліквідовано тисячі прихованих DOM-елементів. Детальний таймлайн бійця генерується виключно при кліку на рядок.</li>
+                        <li><b>Zero-Reflow чекбокси</b>: мультиселект бійців оновлює стилі напряму без важкого перемальовування всієї таблиці.</li>
+                        <li><b>Tactical Slate & Steel редизайн (Operate Mode)</b>: ліквідовано градієнтний текст, неонові підсвічування та вкладені рамки відповідно до стандарту Impeccable.</li>
+                    </ul>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-850 space-y-1 opacity-75">
+                    <div class="font-bold text-slate-300 flex items-center justify-between font-mono">
+                        <span class="text-slate-400">⚡ v1.5.1 — Інтелектуальний захист однофамільців та ІПН</span>
                         <span class="text-[10px] text-slate-500">26.10.2026</span>
                     </div>
                     <ul class="list-disc list-inside text-slate-400 space-y-1 pt-1">
@@ -555,11 +587,11 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
     </div>
 
     <!-- MODAL: ОПРАЦЬОВАНІ ФАЙЛИ ТА ФІЛЬТР -->
-    <div id="modal-files" onclick="if(event.target === this) closeModal('modal-files')" class="fixed inset-0 z-[200] bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div id="modal-files" onclick="if(event.target === this) closeModal('modal-files')" class="fixed inset-0 z-[200] bg-slate-950/85 hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div class="p-4 sm:p-5 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-cyan-400">
+                    <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
                         <i data-lucide="folder-check" class="w-4 h-4"></i>
                     </div>
                     <div>
@@ -577,14 +609,14 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 <div class="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2">
                     <div class="flex items-center justify-between gap-2">
                         <label for="fileNameFilterInput" class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                            <i data-lucide="filter" class="w-3.5 h-3.5 text-cyan-400"></i>
+                            <i data-lucide="filter" class="w-3.5 h-3.5 text-slate-400"></i>
                             <span>Фільтр ключових слів у назвах файлів:</span>
                         </label>
                         <span class="text-[11px] text-slate-500 font-mono">(через кому)</span>
                     </div>
                     <div class="relative">
                         <input type="text" id="fileNameFilterInput" placeholder="напр.: списки, відомість, воп (якщо порожньо — беруться всі файли з датами)..."
-                            class="w-full bg-slate-900 text-cyan-300 border border-slate-700/80 rounded-xl pl-3 pr-8 py-2 text-xs font-mono placeholder:text-slate-500 placeholder:font-sans focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition-all shadow-inner">
+                            class="w-full bg-slate-900 text-slate-200 border border-slate-700/80 rounded-xl pl-3 pr-8 py-2 text-xs font-mono placeholder:text-slate-500 placeholder:font-sans focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 outline-none transition-all shadow-inner">
                         <button type="button" id="clearFileNameFilterBtn" onclick="clearFileNameFilter()" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-rose-400 p-0.5 rounded cursor-pointer" title="Очистити фільтр">
                             <i data-lucide="x" class="w-3.5 h-3.5"></i>
                         </button>
@@ -598,7 +630,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Список файлів у пам'яті:</span>
-                        <button id="clearBtn" class="hidden items-center gap-1.5 px-2.5 py-1 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 rounded-lg text-xs font-semibold transition-all border border-rose-500/40 cursor-pointer shadow-sm" title="Очистити всі завантажені файли з пам'яті">
+                        <button id="clearBtn" class="hidden items-center gap-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-rose-300 rounded-lg text-xs font-semibold transition-all border border-slate-700 hover:border-rose-500/40 cursor-pointer shadow-sm" title="Очистити всі завантажені файли з пам'яті">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i>
                             <span>Скинути всі дані</span>
                         </button>
@@ -637,6 +669,20 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         let currentFilter = 'all';
         let currentSort = { col: 'name', asc: true };
         let currentViewMode = 'list'; // 'list' | 'matrix'
+        const CHUNK_SIZE = 75;
+        let currentlyRenderedCount = 0;
+        let activeFilteredRows = [];
+        let tableObserver = null;
+        let sortedDatesForMatrix = [];
+        let isAnalysisCacheValid = false;
+        let cachedAllRows = [];
+        let cachedSums = { bro: 0, rop: 0, vop: 0, dv30: 0 };
+        let searchDebounceTimer = null;
+
+        function invalidateAnalysisCache() {
+            isAnalysisCacheValid = false;
+            cachedAllRows = [];
+        }
 
         window.database = database;
         window.successDatesCount = successDatesCount;
@@ -702,6 +748,8 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             const first1 = words1.length > 1 ? words1[1] : '';
             const patr1 = words1.length > 2 ? words1[2] : '';
 
+            const candidateMatches = [];
+
             for (const [k, p] of db.entries()) {
                 const words2 = k.split(' ').filter(Boolean);
                 if (words2.length === 0) continue;
@@ -714,7 +762,16 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 // 1. Перевірка ІПН (РНОКПП)
                 let pHasValidIpn = false;
                 let pMatchesIpn = false;
-                if (p.records) {
+                if (p.ipn) {
+                    const cleanP = String(p.ipn).replace(/\D/g, '');
+                    if (cleanP.length >= 8) {
+                        pHasValidIpn = true;
+                        if (cleanIpn.length >= 8 && cleanP === cleanIpn) {
+                            pMatchesIpn = true;
+                        }
+                    }
+                }
+                if (!pMatchesIpn && p.records) {
                     for (const rec of p.records.values()) {
                         const recIpn = rec.ipn ? String(rec.ipn).replace(/\D/g, '') : '';
                         if (recIpn.length >= 8) {
@@ -764,15 +821,22 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     }
                 }
 
-                // 5. Зіставлення ініціалів
+                // 5. Зіставлення кандидата
                 if (first1 && first2 && first1[0] === first2[0]) {
                     if (patr1 && patr2 && patr1[0] === patr2[0]) {
-                        return k;
+                        candidateMatches.push(k);
                     } else if (!patr1 || !patr2) {
-                        // Одне з імен без по батькові, але прізвище та перша літера імені співпадають
-                        return k;
+                        candidateMatches.push(k);
                     }
                 }
+            }
+
+            if (candidateMatches.length === 1) {
+                return candidateMatches[0];
+            } else if (candidateMatches.length > 1) {
+                // Неоднозначний збіг: в базі є декілька різних бійців з однаковими ініціалами (напр. Ковальчук В. В. проти Володимира та Віталія).
+                // Без точного ІПН не склеюємо наосліп, щоб не пошкодити записи жодного з них!
+                return null;
             }
             return null;
         }
@@ -929,6 +993,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 serializedDb.push({
                     key: key,
                     name: personData.name,
+                    ipn: personData.ipn || '',
                     records: recs
                 });
             }
@@ -1024,17 +1089,63 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             uploadedFilesHistory = state.uploadedFilesHistory || [];
 
             state.database.forEach(p => {
-                const normKey = p.key || normalizePersonKey(p.name);
-                let pIpn = null;
+                // АВТО-ЛІКУВАННЯ: перевірка, чи не злилися в одного бійця записи з різними валідними ІПН
+                const ipnGroups = new Map();
                 if (p.records && Array.isArray(p.records)) {
+                    p.records.forEach(r => {
+                        const rIpn = r.ipn ? String(r.ipn).replace(/\D/g, '') : '';
+                        if (rIpn.length >= 8) {
+                            if (!ipnGroups.has(rIpn)) ipnGroups.set(rIpn, []);
+                            ipnGroups.get(rIpn).push(r);
+                        }
+                    });
+                }
+
+                // Якщо всередині однієї персони виявлено записи з 2+ різними валідними ІПН — це склеєний мутант, розщеплюємо!
+                if (ipnGroups.size > 1) {
+                    for (const [validIpn, recs] of ipnGroups.entries()) {
+                        const recsMap = new Map();
+                        let bestName = p.name;
+                        recs.forEach(r => {
+                            const { date, ...recData } = r;
+                            recsMap.set(date, recData);
+                        });
+                        const splitKey = `${normalizePersonKey(bestName)}_${validIpn}`;
+                        database.set(splitKey, {
+                            key: splitKey,
+                            name: bestName,
+                            ipn: validIpn,
+                            records: recsMap
+                        });
+                    }
+                    return;
+                }
+
+                const normKey = p.key || normalizePersonKey(p.name);
+                let pIpn = p.ipn || null;
+                if (!pIpn && p.records && Array.isArray(p.records)) {
                     const recWithIpn = p.records.find(r => r.ipn && String(r.ipn).replace(/\D/g, '').length >= 8);
                     if (recWithIpn) pIpn = recWithIpn.ipn;
                 }
-                const matchedKey = database.has(normKey) ? normKey : findExistingPersonKey(database, normKey, p.name, pIpn);
-                const targetKey = matchedKey || normKey;
+                let matchedKey = null;
+                if (database.has(normKey)) {
+                    const existing = database.get(normKey);
+                    const cleanP = pIpn ? String(pIpn).replace(/\D/g, '') : '';
+                    const cleanEx = existing.ipn ? String(existing.ipn).replace(/\D/g, '') : '';
+                    if (cleanP.length >= 8 && cleanEx.length >= 8 && cleanP !== cleanEx) {
+                        matchedKey = null; // Конфлікт ІПН -> різні люди з однаковим ПІБ!
+                    } else {
+                        matchedKey = normKey;
+                    }
+                }
+                if (!matchedKey) {
+                    matchedKey = findExistingPersonKey(database, normKey, p.name, pIpn);
+                }
+                let targetKey = matchedKey || (database.has(normKey) && pIpn ? `${normKey}_${String(pIpn).replace(/\D/g, '')}` : normKey);
 
                 if (database.has(targetKey)) {
                     const existing = database.get(targetKey);
+                    if (pIpn && !existing.ipn) existing.ipn = pIpn;
                     if (p.name && p.name.length > existing.name.length) {
                         const exWords = normalizePersonKey(existing.name).split(' ').filter(Boolean);
                         const newWords = normalizePersonKey(p.name).split(' ').filter(Boolean);
@@ -1061,6 +1172,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     database.set(targetKey, {
                         key: targetKey,
                         name: p.name,
+                        ipn: pIpn || '',
                         records: recordsMap
                     });
                 }
@@ -1100,6 +1212,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 window.setViewMode(state.viewMode);
             }
 
+            invalidateAnalysisCache();
             window.renderTableFunc();
             updateSelectionUI();
             updateStorageIndicator(true);
@@ -1130,6 +1243,14 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             savePeriodsToDisk(false);
 
             updateStorageIndicator(true);
+        }
+
+        let saveToStorageTimer = null;
+        function debouncedSaveToStorage(delay = 600) {
+            if (saveToStorageTimer) clearTimeout(saveToStorageTimer);
+            saveToStorageTimer = setTimeout(() => {
+                saveToStorage();
+            }, delay);
         }
 
         async function loadFromStorage() {
@@ -1186,6 +1307,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             uploadedFilesHistory = [];
             uploadedFilesCount = 0;
             globalMaxDateStr = null;
+            invalidateAnalysisCache();
             
             try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
             clearPeriodsIndexedDB();
@@ -1217,7 +1339,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 selectedPersonNames.add(name);
             }
             updateSelectionUI();
-            saveToStorage();
+            debouncedSaveToStorage(600);
         };
 
         window.toggleSelectAll = function(checked) {
@@ -1228,13 +1350,13 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 tableDataForExport.forEach(r => selectedPersonNames.delete(r.name));
             }
             updateSelectionUI();
-            saveToStorage();
+            debouncedSaveToStorage(600);
         };
 
         window.clearSelection = function() {
             selectedPersonNames.clear();
             updateSelectionUI();
-            saveToStorage();
+            debouncedSaveToStorage(600);
         };
 
         function updateSelectionUI() {
@@ -1258,12 +1380,12 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     exportBtnText.innerText = `Завантажити Excel (${selCount} обр.)`;
                     if (exportBtn) {
                         exportBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
-                        exportBtn.classList.add('bg-blue-600', 'hover:bg-blue-500', 'ring-2', 'ring-blue-400/50');
+                        exportBtn.classList.add('bg-slate-800', 'hover:bg-slate-700', 'text-amber-300', 'border', 'border-amber-500/50');
                     }
                 } else {
                     exportBtnText.innerText = `Завантажити Excel`;
                     if (exportBtn) {
-                        exportBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500', 'ring-2', 'ring-blue-400/50');
+                        exportBtn.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'text-amber-300', 'border', 'border-amber-500/50');
                         exportBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
                     }
                 }
@@ -1277,9 +1399,10 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 const rowEl = cb.closest('tr');
                 if (rowEl) {
                     if (isChecked) {
-                        rowEl.classList.add('bg-blue-950/40');
-                    } else {
+                        rowEl.classList.add('bg-slate-800/80', 'border-l-2', 'border-l-amber-500/80');
                         rowEl.classList.remove('bg-blue-950/40');
+                    } else {
+                        rowEl.classList.remove('bg-slate-800/80', 'border-l-2', 'border-l-amber-500/80', 'bg-blue-950/40');
                     }
                 }
             });
@@ -1301,10 +1424,26 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             const clearBtn = document.getElementById('clearBtn');
             const exportExcelBtn = document.getElementById('exportExcelBtn');
 
-            // Пошук
-            searchInput.addEventListener('input', (e) => {
-                searchQuery = e.target.value.toLowerCase().trim();
-                if (database.size > 0) window.renderTableFunc();
+            // Пошук з ультрашвидким debounce (80 мс) та обробкою Enter/Escape
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    searchQuery = searchInput.value.toLowerCase().trim();
+                    if (database.size > 0) window.renderTableFunc();
+                }, 80);
+            });
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    clearTimeout(searchDebounceTimer);
+                    searchQuery = searchInput.value.toLowerCase().trim();
+                    if (database.size > 0) window.renderTableFunc();
+                } else if (e.key === 'Escape') {
+                    clearTimeout(searchDebounceTimer);
+                    searchInput.value = '';
+                    searchQuery = '';
+                    if (database.size > 0) window.renderTableFunc();
+                }
             });
 
             // Drag & Drop
@@ -1409,18 +1548,18 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             const matrixCont = document.getElementById('matrixViewContainer');
 
             if (mode === 'list') {
-                btnList.className = "px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer bg-blue-600 text-white shadow-sm";
+                btnList.className = "px-2.5 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer bg-slate-800 text-white border border-slate-700 shadow-sm";
                 btnMatrix.className = "px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer text-slate-400 hover:text-slate-200";
                 listCont.classList.remove('hidden');
                 matrixCont.classList.add('hidden');
             } else {
-                btnMatrix.className = "px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer bg-blue-600 text-white shadow-sm";
+                btnMatrix.className = "px-2.5 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer bg-slate-800 text-white border border-slate-700 shadow-sm";
                 btnList.className = "px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer text-slate-400 hover:text-slate-200";
                 matrixCont.classList.remove('hidden');
                 listCont.classList.add('hidden');
             }
             if (database.size > 0) window.renderTableFunc();
-            saveToStorage();
+            debouncedSaveToStorage(1000);
         };
 
         function setFilter(filterType) {
@@ -1435,14 +1574,14 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 inactive: 'text-slate-400 hover:bg-slate-800',
                 duplicates: 'text-amber-300 hover:bg-amber-900/40'
             };
-            ['all', 'bro', 'rop', 'vop', 'dv30', 'active', 'inactive', 'duplicates'].forEach(f => {
+            ['all', 'brod', 'rop', 'vop', 'dv30', 'active', 'inactive', 'duplicates'].forEach(f => {
                 const btn = document.getElementById(`filter-${f}`);
                 if (!btn) return;
                 if (f === filterType) {
                     if (f === 'duplicates') {
-                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-amber-500 text-slate-950 border border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition-all cursor-pointer";
+                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-amber-500 text-slate-950 border border-amber-400 shadow-xs transition-all cursor-pointer";
                     } else {
-                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-500 text-white border border-blue-400 transition-all cursor-pointer";
+                        btn.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-800 text-white border border-slate-600 shadow-xs transition-all cursor-pointer";
                     }
                 } else {
                     const c = colorMap[f] || 'text-slate-400 hover:bg-slate-800';
@@ -1721,6 +1860,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             }
 
             updateSelectionUI();
+            invalidateAnalysisCache();
             window.renderTableFunc();
             saveToStorage();
         };
@@ -1884,7 +2024,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 loadingText.textContent = `Обробка ${current}/${total}: ${file.name}`;
                 progressBar.style.width = `${pct}%`;
                 loadingPercent.textContent = `${pct}%`;
-                await sleep(3);
+                await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
                 await processSingleFile(file);
             }
 
@@ -1895,6 +2035,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             if (folderInput) folderInput.value = '';
 
             renderFileLogList();
+            invalidateAnalysisCache();
             window.renderTableFunc();
             saveToStorage();
         }
@@ -2056,16 +2197,34 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         // Commit valid records to database (with intelligent person matching & full name preference)
                         for (const item of pendingRecords) {
                             const matchedKey = findExistingPersonKey(database, item.key, item.name, item.ipn);
-                            const targetKey = matchedKey || item.key;
+                            let targetKey = matchedKey;
+                            if (!targetKey) {
+                                const cleanItemIpn = item.ipn ? String(item.ipn).replace(/\D/g, '') : '';
+                                if (database.has(item.key) && cleanItemIpn.length >= 8) {
+                                    const ex = database.get(item.key);
+                                    const cleanExIpn = ex.ipn ? String(ex.ipn).replace(/\D/g, '') : '';
+                                    if (cleanExIpn.length >= 8 && cleanExIpn !== cleanItemIpn) {
+                                        targetKey = `${item.key}_${cleanItemIpn}`;
+                                    } else {
+                                        targetKey = item.key;
+                                    }
+                                } else {
+                                    targetKey = item.key;
+                                }
+                            }
 
                             if (!database.has(targetKey)) {
                                 database.set(targetKey, {
                                     key: targetKey,
                                     name: item.name,
+                                    ipn: (item.ipn && String(item.ipn).replace(/\D/g, '').length >= 8) ? String(item.ipn).trim() : '',
                                     records: new Map()
                                 });
                             }
                             const person = database.get(targetKey);
+                            if (item.ipn && String(item.ipn).replace(/\D/g, '').length >= 8) {
+                                person.ipn = String(item.ipn).trim();
+                            }
 
                             // Prefer fuller / longer full name (e.g. "Шевченко Тарас Григорович" over "Шевченко Т.Г.")
                             if (item.name && item.name.length > person.name.length) {
@@ -2352,7 +2511,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 const el = document.getElementById(`sort-${col}`);
                 if (el) {
                     el.textContent = currentSort.col === col ? (currentSort.asc ? '↑' : '↓') : '↕';
-                    el.className = currentSort.col === col ? 'text-blue-400 font-bold ml-1' : 'text-slate-600 ml-1';
+                    el.className = currentSort.col === col ? 'text-amber-400 font-bold ml-1' : 'text-slate-600 ml-1';
                 }
             });
 
@@ -2366,7 +2525,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                     <tr>
                         <td colspan="7" class="py-28 text-center">
                             <div class="max-w-md mx-auto flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-slate-800 bg-slate-950/40">
-                                <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-cyan-400 mb-3 shadow-inner">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 mb-3 shadow-inner">
                                     <i data-lucide="folder-up" class="w-6 h-6"></i>
                                 </div>
                                 <h3 class="text-sm font-bold text-slate-200 mb-1">Немає завантажених списків</h3>
@@ -2375,13 +2534,13 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                                 </p>
                                 <div class="flex items-center gap-2">
                                     <button type="button" onclick="document.getElementById('fileInput').click()" 
-                                        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm">
-                                        <i data-lucide="file-plus" class="w-3.5 h-3.5 text-blue-400"></i>
+                                        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95">
+                                        <i data-lucide="file-plus" class="w-3.5 h-3.5 text-slate-400"></i>
                                         <span>Додати файли</span>
                                     </button>
                                     <button type="button" onclick="document.getElementById('folderInput').click()" 
-                                        class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-blue-600/30">
-                                        <i data-lucide="folder" class="w-3.5 h-3.5 text-cyan-200"></i>
+                                        class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 hover:border-amber-500/50 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95">
+                                        <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i>
                                         <span>Додати папку</span>
                                     </button>
                                 </div>
@@ -2409,46 +2568,63 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 return;
             }
 
-            let allRows = [];
-            let sumBro = 0;
-            let sumRop = 0;
-            let sumVop = 0;
-            let sumDv30 = 0;
+            if (!isAnalysisCacheValid || cachedAllRows.length === 0) {
+                cachedAllRows = [];
+                cachedSums = { bro: 0, rop: 0, vop: 0, dv30: 0 };
 
-            for (let [normalizedKey, personData] of database) {
-                const sortedDates = Array.from(personData.records.keys()).sort();
-                const latestDate = sortedDates[sortedDates.length - 1];
-                const latestRecord = personData.records.get(latestDate);
-                const details = buildDetailedPeriods(personData.records);
+                for (let [normalizedKey, personData] of database) {
+                    const sortedDates = Array.from(personData.records.keys()).sort();
+                    const latestDate = sortedDates[sortedDates.length - 1];
+                    const latestRecord = personData.records.get(latestDate);
+                    const details = buildDetailedPeriods(personData.records);
 
-                sumBro += details.broDays;
-                sumRop += details.ropDays;
-                sumVop += details.vopDays;
-                sumDv30 += details.dv30Days;
+                    cachedSums.bro += details.broDays;
+                    cachedSums.rop += details.ropDays;
+                    cachedSums.vop += details.vopDays;
+                    cachedSums.dv30 += details.dv30Days;
 
-                allRows.push({
-                    name: personData.name,
-                    latestRank: latestRecord.rank,
-                    latestPosition: latestRecord.pos,
-                    latestIpn: latestRecord.ipn,
-                    details: details,
-                    records: personData.records
-                });
+                    let canonicalIpn = (latestRecord.ipn && String(latestRecord.ipn).replace(/\D/g, '').length >= 8)
+                        ? latestRecord.ipn
+                        : (personData.ipn || '');
+
+                    if (!canonicalIpn && personData.records) {
+                        for (const rec of personData.records.values()) {
+                            const cIpn = rec.ipn ? String(rec.ipn).replace(/\D/g, '') : '';
+                            if (cIpn.length >= 8) {
+                                canonicalIpn = rec.ipn;
+                                break;
+                            }
+                        }
+                    }
+
+                    const cleanRank = (latestRecord.rank || '—').replace(/\n|\r/g, ' ').trim();
+                    const cleanPos = (latestRecord.pos || '—').replace(/\n|\r/g, ' ').trim();
+                    const searchIndex = `${personData.name} ${cleanRank} ${cleanPos} ${canonicalIpn || ''} ${details.uniqueLocations.join(' ')}`.toLowerCase();
+
+                    cachedAllRows.push({
+                        name: personData.name,
+                        latestRank: latestRecord.rank,
+                        latestPosition: latestRecord.pos,
+                        latestIpn: canonicalIpn,
+                        details: details,
+                        records: personData.records,
+                        searchIndex: searchIndex
+                    });
+                }
+
+                // Детекція дублікатів (ІПН та ПІБ) рахується лише раз при зміні бази
+                detectDuplicates(cachedAllRows);
+
+                isAnalysisCacheValid = true;
             }
 
             ['bro', 'rop', 'vop', 'dv30'].forEach(k => {
                 const el = document.getElementById(`badge-count-${k}`);
-                if (el) {
-                    if (k === 'bro') el.innerText = sumBro;
-                    else if (k === 'rop') el.innerText = sumRop;
-                    else if (k === 'vop') el.innerText = sumVop;
-                    else if (k === 'dv30') el.innerText = sumDv30;
-                }
+                if (el) el.innerText = cachedSums[k];
             });
 
-            // Детекція дублікатів (ІПН та ПІБ)
-            const duplicateRows = detectDuplicates(allRows);
-            const duplicateCount = duplicateRows.length;
+            // Детекція дублікатів
+            const duplicateCount = cachedAllRows.filter(r => r.duplicateInfo && r.duplicateInfo.isDuplicate).length;
 
             const dupBanner = document.getElementById('duplicateBannerContainer');
             const dupText = document.getElementById('duplicateBannerText');
@@ -2466,8 +2642,13 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 if (currentFilter === 'duplicates') currentFilter = 'all';
             }
 
+            // Підготовка слів запиту 1 раз перед фільтрацією
+            const searchTerms = searchQuery
+                ? searchQuery.split(/[,;\n]+/).map(t => t.trim().toLowerCase()).filter(Boolean)
+                : [];
+
             // Фільтрація
-            let filtered = allRows.filter(row => {
+            let filtered = cachedAllRows.filter(row => {
                 if (currentFilter === 'bro' && row.details.broDays === 0) return false;
                 if (currentFilter === 'rop' && row.details.ropDays === 0) return false;
                 if (currentFilter === 'vop' && row.details.vopDays === 0) return false;
@@ -2476,16 +2657,10 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 if (currentFilter === 'inactive' && !row.details.isGloballyInactive) return false;
                 if (currentFilter === 'duplicates' && (!row.duplicateInfo || !row.duplicateInfo.isDuplicate)) return false;
 
-                if (searchQuery) {
-                    const terms = searchQuery.split(/[,;\n]+/).map(t => t.trim().toLowerCase()).filter(Boolean);
-                    if (terms.length > 1) {
-                        const targetStr = `${row.name} ${row.latestRank} ${row.latestPosition} ${row.latestIpn} ${row.details.uniqueLocations.join(' ')}`.toLowerCase();
-                        const matchesAny = terms.some(t => targetStr.includes(t));
-                        if (!matchesAny) return false;
-                    } else if (terms.length === 1) {
-                        const targetStr = `${row.name} ${row.latestRank} ${row.latestPosition} ${row.latestIpn} ${row.details.uniqueLocations.join(' ')}`.toLowerCase();
-                        if (!targetStr.includes(terms[0])) return false;
-                    }
+                if (searchTerms.length > 1) {
+                    if (!searchTerms.some(t => row.searchIndex.includes(t))) return false;
+                } else if (searchTerms.length === 1) {
+                    if (!row.searchIndex.includes(searchTerms[0])) return false;
                 }
                 return true;
             });
@@ -2521,350 +2696,305 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             if (sortDaysEl) sortDaysEl.innerText = currentSort.col === 'days' ? (currentSort.asc ? '↑' : '↓') : '↕';
 
             tableDataForExport = filtered;
+            activeFilteredRows = filtered;
+            window.activeFilteredRows = filtered;
+            currentlyRenderedCount = 0;
             const sortedDates = Array.from(successDatesCount).sort();
+            sortedDatesForMatrix = sortedDates;
 
-            // Render List View
+            if (tableObserver) {
+                tableObserver.disconnect();
+                tableObserver = null;
+            }
+
+            // Render List View (Chunked)
             resultTableBody.innerHTML = '';
 
             if (filtered.length === 0) {
                 resultTableBody.innerHTML = `<tr><td colspan="7" class="py-16 text-center text-slate-500 font-mono">За заданими фільтрами бійців не знайдено</td></tr>`;
             } else {
-                filtered.forEach((row, idx) => {
-                    const personId = `p-${idx}`;
-                    const details = row.details;
-                    const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ').trim();
-                    const displayName = formatDisplayName(row.name);
-                    const isSelected = selectedPersonNames.has(row.name);
-
-                    let locationBadgesHtml = details.uniqueLocations.length > 0
-                        ? `<div class="flex flex-wrap gap-1.5">${details.uniqueLocations.map(loc => {
-                            let color = 'bg-slate-800/80 border-slate-700 text-slate-300';
-                            let label = loc;
-                            if (/бро/i.test(loc)) {
-                                color = 'bg-emerald-950/70 border-emerald-600/60 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.15)]';
-                                label = '🛡️ БРО';
-                            } else if (/роп/i.test(loc)) {
-                                color = 'bg-amber-950/70 border-amber-600/60 text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.15)]';
-                                label = '🛡️ РОП';
-                            } else if (/воп/i.test(loc)) {
-                                color = 'bg-rose-950/70 border-rose-600/60 text-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.15)]';
-                                label = '⚔️ ВОП';
-                            } else if (/дв|30/i.test(loc)) {
-                                color = 'bg-sky-950/70 border-sky-600/60 text-sky-300 shadow-[0_0_8px_rgba(14,165,233,0.15)]';
-                                label = '🏷️ ДВ 30';
-                            }
-                            return `<span class="${color} border rounded-md px-2 py-0.5 text-[11px] font-mono font-bold whitespace-nowrap inline-flex items-center gap-1 transition-transform hover:scale-105" title="${escapeHtml(loc)}">${label}</span>`;
-                        }).join('')}</div>`
-                        : '<span class="text-slate-500 italic text-xs">Немає</span>';
-
-                    let daysBadgeClass = "text-blue-200 bg-blue-950/70 border-blue-500/50 font-black shadow-sm";
-                    if (details.isGloballyInactive) {
-                        daysBadgeClass = "text-slate-500 bg-slate-900 border-slate-800 opacity-60";
-                    }
-
-                    const isEven = idx % 2 === 0;
-                    const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
-
-                    let rowBgClass = '';
-                    if (isSelected) {
-                        rowBgClass = 'bg-blue-950/60 border-l-4 border-l-blue-500';
-                    } else if (isDup) {
-                        rowBgClass = 'bg-amber-950/30 border-l-4 border-l-amber-500 hover:bg-amber-950/45';
-                    } else {
-                        rowBgClass = isEven ? 'bg-slate-900/30' : 'bg-slate-900/70';
-                    }
-
-                    let dupBadgesHtml = '';
-                    if (isDup) {
-                        const uniqueReasons = new Map();
-                        row.duplicateInfo.reasons.forEach(r => {
-                            if (!uniqueReasons.has(r.type)) {
-                                uniqueReasons.set(r.type, {
-                                    label: r.label,
-                                    tooltips: [r.tooltip]
-                                });
-                            } else {
-                                uniqueReasons.get(r.type).tooltips.push(r.tooltip);
-                            }
-                        });
-
-                        dupBadgesHtml = Array.from(uniqueReasons.values()).map(b => `
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs cursor-help" title="${escapeHtml(b.tooltips.join('; '))}">
-                                ${escapeHtml(b.label)}
-                            </span>
-                        `).join('');
-                    }
-
-                    const trMain = document.createElement('tr');
-                    trMain.id = `row-${personId}`;
-                    trMain.className = `cursor-pointer hover:bg-slate-800/80 hover:border-slate-700 transition-all border-b border-slate-800/70 group ${details.isGloballyInactive ? 'opacity-60' : ''} ${rowBgClass}`;
-                    trMain.onclick = () => toggleDetails(personId);
-
-                    trMain.innerHTML = `
-                        <td class="py-2.5 px-2 text-center border-r border-slate-800/70" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <input type="checkbox" data-name="${escapeHtml(row.name)}" onchange="toggleSelectPerson('${escapeHtml(row.name)}')" ${isSelected ? 'checked' : ''} class="person-checkbox rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-0 cursor-pointer" title="Обрати бійця">
-                                <span class="text-xs text-slate-400 font-mono font-bold">${idx + 1}</span>
-                            </div>
-                        </td>
-                        <td class="py-2.5 px-2.5 text-[11px] border-r border-slate-800/70 leading-normal break-word-safe">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 font-medium border border-slate-700/60 shadow-xs">${escapeHtml(cleanRank)}</span>
-                        </td>
-                        <td class="py-2.5 px-2.5 font-bold text-white text-[13px] border-r border-slate-800/70 break-word-safe tracking-normal" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="group-hover:text-blue-300 transition-colors font-semibold">${escapeHtml(displayName)}</span>
-                                ${dupBadgesHtml}
-                                ${details.isGloballyInactive ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono bg-rose-950/70 text-rose-300 border border-rose-800/60 shadow-xs font-normal"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>Вибув</span>' : ''}
-                            </div>
-                        </td>
-                        <td class="py-2.5 px-2.5 text-slate-300 text-xs border-r border-slate-800/70 leading-relaxed max-w-sm break-word-safe">${escapeHtml(row.latestPosition || '—')}</td>
-                        <td class="py-2 px-2.5 border-r border-slate-800/70">${locationBadgesHtml}</td>
-                        <td class="py-2 px-2 text-center border-r border-slate-800/70">
-                            <span class="inline-flex items-center justify-center min-w-[34px] h-7 px-2 rounded-lg border font-mono text-xs ${daysBadgeClass}">${details.totalDays}</span>
-                        </td>
-                        <td class="py-2 px-1 text-center">
-                            <div class="w-6 h-6 mx-auto rounded-md bg-slate-800/40 group-hover:bg-slate-700/60 flex items-center justify-center transition-colors">
-                                <i data-lucide="chevron-down" class="chevron w-3.5 h-3.5 text-slate-400 group-hover:text-blue-300"></i>
-                            </div>
-                        </td>
-                    `;
-
-                    const trDetails = document.createElement('tr');
-                    trDetails.id = `details-${personId}`;
-                    trDetails.className = 'hidden bg-slate-950/80 border-b border-slate-800 shadow-inner';
-
-                    let conflictAlertHtml = '';
-                    if (isDup) {
-                        conflictAlertHtml = `
-                            <div class="p-2.5 rounded-xl border border-amber-500/60 bg-amber-950/50 mb-3 text-xs text-amber-200 flex items-start gap-2 shadow-sm font-sans">
-                                <span class="text-amber-400 font-bold shrink-0 text-sm">⚠️</span>
-                                <div class="space-y-1">
-                                    <div class="font-bold text-amber-300">Виявлено можливе дублювання або конфлікт даних:</div>
-                                    <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-200/90 font-mono">
-                                        ${row.duplicateInfo.reasons.map(r => `<li>${escapeHtml(r.tooltip)}</li>`).join('')}
-                                    </ul>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    let periodsHtml = details.periods.map(p => {
-                        const isSingleDay = (p.start === p.end);
-                        const dateRange = isSingleDay ? formatDateDisplay(p.start) : `${formatDateDisplay(p.start)} – ${formatDateDisplay(p.end)}`;
-
-                        if (p.isGap) {
-                            return `
-                                <div class="flex flex-col md:flex-row md:items-center justify-between p-2.5 rounded-xl border border-slate-800 bg-slate-900/35 mb-2 shadow-sm text-xs font-mono text-slate-400 opacity-80">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-slate-400 font-semibold">
-                                            ⏸️ ${dateRange}
-                                        </span>
-                                        <span class="font-bold text-slate-300">Не подавався</span>
-                                        <span class="text-slate-500 text-[11px]">(${escapeHtml(p.task)})</span>
-                                    </div>
-                                    <span class="text-slate-400 self-end md:self-auto mt-1 md:mt-0 font-medium text-xs bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                                        ${p.days} дн.
-                                    </span>
-                                </div>
-                            `;
-                        }
-
-                        let badgeBg = 'bg-slate-900 border-slate-800 text-slate-300';
-                        if (/бро/i.test(p.location)) badgeBg = 'bg-emerald-950/50 border-emerald-700/60 text-emerald-300';
-                        else if (/роп/i.test(p.location)) badgeBg = 'bg-amber-950/50 border-amber-700/60 text-amber-300';
-                        else if (/воп/i.test(p.location)) badgeBg = 'bg-rose-950/50 border-rose-700/60 text-rose-300';
-                        else if (/дв|30/i.test(p.location)) badgeBg = 'bg-sky-950/50 border-sky-700/60 text-sky-300';
-
-                        return `
-                            <div class="flex flex-col md:flex-row md:items-center justify-between p-3 rounded-xl border mb-2 shadow-sm text-xs font-mono ${badgeBg}">
-                                <div class="flex-1 space-y-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-cyan-400 font-bold">
-                                            📅 ${dateRange}
-                                        </span>
-                                        <span class="font-bold text-white">${escapeHtml(p.location)}</span>
-                                        ${p.task !== p.location ? `<span class="text-slate-400 text-[11px]">(${escapeHtml(p.task)})</span>` : ''}
-                                    </div>
-                                    <div class="text-[11px] text-slate-300 font-sans">
-                                        ${escapeHtml(p.rank || 'В/С')} &bull; ${escapeHtml(p.pos || 'Посада не вказана')} ${p.ipn ? `&bull; <span class="font-mono text-slate-400">ІПН: ${p.ipn}</span>` : ''}
-                                    </div>
-                                </div>
-                                <span class="text-blue-300 self-end md:self-auto mt-1 md:mt-0 font-bold text-sm bg-slate-950/80 px-2.5 py-1 rounded-lg border border-blue-500/30">
-                                    ${p.days} дн.
-                                </span>
-                            </div>
-                        `;
-                    }).join('');
-
-                    trDetails.innerHTML = `<td colspan="7" class="p-4 pl-8 md:pl-14"><div class="max-w-4xl">${conflictAlertHtml}${periodsHtml}</div></td>`;
-
-                    resultTableBody.appendChild(trMain);
-                    resultTableBody.appendChild(trDetails);
-                });
+                renderNextChunk();
             }
 
-            // Render Matrix View
-            renderMatrixTable(filtered, sortedDates);
+            // Render Matrix View (лише якщо відкрита вкладка табеля)
+            if (currentViewMode === 'matrix') {
+                renderMatrixTable(filtered, sortedDates);
+            }
 
             const maxDate = globalMaxDateStr || (sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : '');
             statsText.textContent = `(Показано: ${filtered.length} із ${database.size} бійців • Дат: ${successDatesCount.size}${maxDate ? ` • Зріз: ${formatDateDisplay(maxDate)}` : ''})`;
             exportExcelBtn.classList.remove('hidden');
             updateSelectionUI();
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         };
 
-        function renderMatrixTable(filtered, sortedDates) {
-            const headerTr = document.getElementById('matrixTableHeader');
-            const tbody = document.getElementById('matrixTableBody');
-            if (!headerTr || !tbody) return;
+        function buildMainRowElement(row, idx, personId) {
+            const details = row.details;
+            const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ').trim();
+            const displayName = formatDisplayName(row.name);
+            const isSelected = selectedPersonNames.has(row.name);
 
-            headerTr.innerHTML = '';
-            tbody.innerHTML = '';
+            let locationBadgesHtml = details.uniqueLocations.length > 0
+                ? `<div class="flex flex-wrap gap-1.5">${details.uniqueLocations.map(loc => {
+                    let color = 'bg-slate-800/80 border-slate-700 text-slate-300';
+                    let label = loc;
+                    if (/бро/i.test(loc)) {
+                        color = 'bg-emerald-950/70 border-emerald-600/60 text-emerald-300';
+                        label = '🛡️ БРО';
+                    } else if (/роп/i.test(loc)) {
+                        color = 'bg-amber-950/70 border-amber-600/60 text-amber-300';
+                        label = '🛡️ РОП';
+                    } else if (/воп/i.test(loc)) {
+                        color = 'bg-rose-950/70 border-rose-600/60 text-rose-300';
+                        label = '⚔️ ВОП';
+                    } else if (/дв|30/i.test(loc)) {
+                        color = 'bg-sky-950/70 border-sky-600/60 text-sky-300';
+                        label = '🏷️ ДВ 30';
+                    }
+                    return `<span class="${color} border rounded-md px-2 py-0.5 text-[11px] font-mono font-bold whitespace-nowrap inline-flex items-center gap-1 transition-transform hover:scale-105" title="${escapeHtml(loc)}">${label}</span>`;
+                }).join('')}</div>`
+                : '<span class="text-slate-500 italic text-xs">Немає</span>';
 
-            if (filtered.length === 0 || sortedDates.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="py-24 text-center text-slate-500 italic"><i data-lucide="calendar" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>Немає даних для побудови табеля</td></tr>`;
-                lucide.createIcons();
-                return;
+            let daysBadgeClass = "text-slate-200 bg-slate-950 border border-slate-700/80 font-mono font-bold shadow-xs";
+            if (details.isGloballyInactive) {
+                daysBadgeClass = "text-slate-500 bg-slate-900 border-slate-800 opacity-60";
             }
 
-            // Build Header
-            headerTr.innerHTML = `
-                <th class="sticky left-0 top-0 z-40 bg-slate-950 py-2.5 px-1 text-center w-14 min-w-[56px] max-w-[56px] border-r border-slate-800">
-                    <div class="flex items-center justify-center gap-1">
-                        <input type="checkbox" id="matrix-select-all" onchange="toggleSelectAll(this.checked)" class="rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-0 cursor-pointer" title="Обрати всіх / Зняти вибір">
-                        <span>№</span>
-                    </div>
-                </th>
-                <th class="sticky left-[56px] top-0 z-40 bg-slate-950 py-2.5 px-2 w-24 min-w-[96px] max-w-[96px] border-r border-slate-800 truncate">Звання</th>
-                <th class="sticky left-[152px] top-0 z-40 bg-slate-950 py-2.5 px-2.5 w-60 min-w-[240px] max-w-[240px] border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('name')">
-                    <div class="flex items-center justify-between">
-                        <span>ПІБ</span>
-                        <span class="text-slate-500">${currentSort.col === 'name' ? (currentSort.asc ? '↑' : '↓') : '↕'}</span>
-                    </div>
-                </th>
-                ${sortedDates.map(dStr => {
-                    const parts = dStr.split('-');
-                    const displayDate = parts.length === 3 ? `${parts[2]}.${parts[1]}` : dStr;
-                    return `<th class="py-2.5 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800 font-mono text-[11px] text-slate-300 font-semibold" title="Дата: ${formatDateDisplay(dStr)}">${displayDate}</th>`;
-                }).join('')}
-                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-emerald-400 font-bold">БРО</th>
-                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-amber-400 font-bold">РОП</th>
-                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-rose-400 font-bold">ВОП</th>
-                <th class="py-2.5 px-2 text-center min-w-[52px] border-r border-slate-800 text-cyan-400 font-bold">ЗабБД</th>
-                <th class="py-2.5 px-2 text-center min-w-[62px] text-blue-400 font-bold cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('days')">
-                    <div class="flex items-center justify-center gap-1">
-                        <span>Всього</span>
-                        <span class="text-slate-500">${currentSort.col === 'days' ? (currentSort.asc ? '↑' : '↓') : '↕'}</span>
-                    </div>
-                </th>
-            `;
+            const isEven = idx % 2 === 0;
+            const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
 
-            let sumBro = 0, sumRop = 0, sumVop = 0, sumDv30 = 0, sumTotal = 0;
-            const dateActiveCounts = {};
-            sortedDates.forEach(d => { dateActiveCounts[d] = 0; });
+            let rowBgClass = '';
+            if (isSelected) {
+                rowBgClass = 'bg-slate-800/80 border-l-2 border-l-amber-500/80';
+            } else if (isDup) {
+                rowBgClass = 'bg-amber-950/30 border-l-2 border-l-amber-500 hover:bg-amber-950/45';
+            } else {
+                rowBgClass = isEven ? 'bg-slate-900/30' : 'bg-slate-900/70';
+            }
 
-            filtered.forEach((row, idx) => {
-                const details = row.details;
-                const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ').trim();
-                const displayName = formatDisplayName(row.name);
-                const isSelected = selectedPersonNames.has(row.name);
-
-                sumBro += details.broDays;
-                sumRop += details.ropDays;
-                sumVop += details.vopDays;
-                sumDv30 += details.dv30Days;
-                sumTotal += details.totalDays;
-
-                let dateCellsHtml = '';
-                sortedDates.forEach(dStr => {
-                    if (row.records && row.records.has(dStr)) {
-                        dateActiveCounts[dStr]++;
-                        const rec = row.records.get(dStr);
-                        const cat = getRecordCategory(rec);
-
-                        let badgeHtml = '';
-                        const tooltipText = `${formatDateDisplay(dStr)}\nЛокація: ${rec.location}\nЗавдання: ${rec.task}\nФайл: ${rec.fileName}`;
-
-                        if (cat === 'bro') {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">БРО</span>`;
-                        } else if (cat === 'rop') {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950/80 text-amber-300 border border-amber-500/80 shadow-sm" title="${escapeHtml(tooltipText)}">РОП</span>`;
-                        } else if (cat === 'vop') {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">ВОП</span>`;
-                        } else if (cat === 'dv30') {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-sky-950/80 text-sky-300 border border-sky-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">Заб</span>`;
-                        } else {
-                            badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-blue-950/80 text-blue-300 border border-blue-600/80 shadow-sm" title="${escapeHtml(tooltipText)}">БД</span>`;
-                        }
-                        dateCellsHtml += `<td class="py-1 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70">${badgeHtml}</td>`;
+            let dupBadgesHtml = '';
+            if (isDup) {
+                const uniqueReasons = new Map();
+                row.duplicateInfo.reasons.forEach(r => {
+                    if (!uniqueReasons.has(r.type)) {
+                        uniqueReasons.set(r.type, {
+                            label: r.label,
+                            tooltips: [r.tooltip]
+                        });
                     } else {
-                        dateCellsHtml += `<td class="py-1 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70"><span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold text-rose-400/80 bg-rose-950/20 border border-rose-900/40 shadow-sm">✕</span></td>`;
+                        uniqueReasons.get(r.type).tooltips.push(r.tooltip);
                     }
                 });
 
-                const isEven = idx % 2 === 0;
-                const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
-                const matrixRowBg = isSelected ? 'bg-blue-950/60' : (isDup ? 'bg-amber-950/30' : (isEven ? 'bg-slate-900/30' : 'bg-slate-900/70'));
-                const stickyColBg = isSelected ? 'bg-blue-950' : (isDup ? 'bg-amber-950/90' : 'bg-slate-950');
+                dupBadgesHtml = Array.from(uniqueReasons.values()).map(b => `
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs cursor-help" title="${escapeHtml(b.tooltips.join('; '))}">
+                        ${escapeHtml(b.label)}
+                    </span>
+                `).join('');
+            }
 
-                const tr = document.createElement('tr');
-                tr.className = `hover:bg-slate-800/70 transition-colors border-b border-slate-800/70 ${details.isGloballyInactive ? 'opacity-60' : ''} ${isDup ? 'border-l-4 border-l-amber-500' : ''} ${matrixRowBg}`;
-                tr.innerHTML = `
-                    <td class="sticky left-0 z-20 ${stickyColBg} py-1.5 px-1 text-center w-14 min-w-[56px] max-w-[56px] border-r border-slate-800/70" onclick="event.stopPropagation()">
-                        <div class="flex items-center justify-center gap-1.5">
-                            <input type="checkbox" data-name="${escapeHtml(row.name)}" onchange="toggleSelectPerson('${escapeHtml(row.name)}')" ${isSelected ? 'checked' : ''} class="person-checkbox rounded border-slate-700 bg-slate-950 text-blue-500 focus:ring-0 cursor-pointer" title="Обрати бійця">
-                            <span class="text-slate-400 font-mono font-bold text-[11px]">${idx + 1}</span>
-                        </div>
-                    </td>
-                    <td class="sticky left-[56px] z-20 ${stickyColBg} py-1.5 px-2 border-r border-slate-800/70 w-24 min-w-[96px] max-w-[96px] truncate" title="${escapeHtml(cleanRank)}">
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 text-[10px] font-medium border border-slate-700/50 truncate max-w-full">${escapeHtml(cleanRank)}</span>
-                    </td>
-                    <td class="sticky left-[152px] z-20 ${stickyColBg} py-1.5 px-2.5 font-bold text-white border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] w-60 min-w-[240px] max-w-[240px] truncate text-[12px]" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
-                        <div class="flex items-center gap-1.5 truncate">
-                            <span class="truncate font-semibold">${escapeHtml(displayName)}</span>
-                            ${isDup ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 font-bold" title="${escapeHtml(row.duplicateInfo.reasons.map(r => r.tooltip).join('; '))}">⚠️ Дубль</span>` : ''}
-                            ${details.isGloballyInactive ? '<span class="text-[9px] font-mono text-rose-400 font-normal shrink-0" title="Вибув зі списків">⚠️</span>' : ''}
-                        </div>
-                    </td>
-                    ${dateCellsHtml}
-                    <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.broDays > 0 ? 'text-emerald-400 font-bold' : 'text-slate-600'}">${details.broDays > 0 ? details.broDays : '—'}</td>
-                    <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.ropDays > 0 ? 'text-amber-400 font-bold' : 'text-slate-600'}">${details.ropDays > 0 ? details.ropDays : '—'}</td>
-                    <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.vopDays > 0 ? 'text-rose-400 font-bold' : 'text-slate-600'}">${details.vopDays > 0 ? details.vopDays : '—'}</td>
-                    <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.dv30Days > 0 ? 'text-cyan-400 font-bold' : 'text-slate-600'}">${details.dv30Days > 0 ? details.dv30Days : '—'}</td>
-                    <td class="py-1.5 px-2 text-center font-mono font-bold text-blue-300">
-                        <span class="inline-block bg-blue-950/80 border border-blue-500/50 px-2 py-0.5 rounded text-xs">${details.totalDays}</span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            const trMain = document.createElement('tr');
+            trMain.id = `row-${personId}`;
+            trMain.className = `hardware-accelerated-row cursor-pointer hover:bg-slate-800/80 hover:border-slate-700 transition-all border-b border-slate-800/70 group ${details.isGloballyInactive ? 'opacity-60' : ''} ${rowBgClass}`;
+            trMain.onclick = () => window.toggleDetails(personId);
 
-            // Summary bottom row (РАЗОМ ПО ДНЯХ)
-            const summaryTr = document.createElement('tr');
-            summaryTr.className = 'bg-slate-950 font-mono text-xs border-t-2 border-slate-700 sticky bottom-0 z-30 shadow-lg';
-            summaryTr.innerHTML = `
-                <td class="sticky left-0 z-40 bg-slate-950 py-2.5 px-1 border-r border-slate-800 w-14 min-w-[56px] max-w-[56px]"></td>
-                <td class="sticky left-[56px] z-40 bg-slate-950 py-2.5 px-2 border-r border-slate-800 w-24 min-w-[96px] max-w-[96px]"></td>
-                <td class="sticky left-[152px] z-40 bg-slate-950 py-2.5 px-2.5 border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] font-bold text-slate-200 uppercase tracking-wider text-[11px] text-right w-60 min-w-[240px] max-w-[240px]">
-                    РАЗОМ ПО ДНЯХ:
+            trMain.innerHTML = `
+                <td class="py-2.5 px-2 text-center border-r border-slate-800/70" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-center gap-1.5">
+                        <input type="checkbox" data-name="${escapeHtml(row.name)}" onchange="toggleSelectPerson('${escapeHtml(row.name)}')" ${isSelected ? 'checked' : ''} class="person-checkbox rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-0 cursor-pointer" title="Обрати бійця">
+                        <span class="text-xs text-slate-400 font-mono font-bold">${idx + 1}</span>
+                    </div>
                 </td>
-                ${sortedDates.map(dStr => `
-                    <td class="py-1.5 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70">
-                        <span class="inline-block bg-slate-800 text-cyan-300 border border-slate-700 font-bold px-1.5 py-0.5 rounded text-[10px] min-w-[24px] shadow-sm">${dateActiveCounts[dStr]}</span>
-                    </td>
-                `).join('')}
-                <td class="py-2.5 px-2 text-center border-r border-slate-800 text-emerald-400 font-bold text-xs">${sumBro || 0}</td>
-                <td class="py-2.5 px-2 text-center border-r border-slate-800 text-amber-400 font-bold text-xs">${sumRop || 0}</td>
-                <td class="py-2.5 px-2 text-center border-r border-slate-800 text-rose-400 font-bold text-xs">${sumVop || 0}</td>
-                <td class="py-2.5 px-2 text-center border-r border-slate-800 text-cyan-400 font-bold text-xs">${sumDv30 || 0}</td>
-                <td class="py-2.5 px-2 text-center text-blue-400 font-black text-sm">${sumTotal || 0}</td>
+                <td class="py-2.5 px-2.5 text-[11px] border-r border-slate-800/70 leading-normal break-word-safe">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 font-medium border border-slate-700/60 shadow-xs">${escapeHtml(cleanRank)}</span>
+                </td>
+                <td class="py-2.5 px-2.5 font-bold text-white text-[13px] border-r border-slate-800/70 break-word-safe tracking-normal" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="group-hover:text-amber-300 transition-colors font-semibold">${escapeHtml(displayName)}</span>
+                        ${dupBadgesHtml}
+                        ${details.isGloballyInactive ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono bg-rose-950/70 text-rose-300 border border-rose-800/60 shadow-xs font-normal"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>Вибув</span>' : ''}
+                    </div>
+                </td>
+                <td class="py-2.5 px-2.5 text-slate-300 text-xs border-r border-slate-800/70 leading-relaxed max-w-sm break-word-safe">${escapeHtml(row.latestPosition || '—')}</td>
+                <td class="py-2 px-2.5 border-r border-slate-800/70">${locationBadgesHtml}</td>
+                <td class="py-2 px-2 text-center border-r border-slate-800/70">
+                    <span class="inline-flex items-center justify-center min-w-[34px] h-7 px-2 rounded-lg border font-mono text-xs ${daysBadgeClass}">${details.totalDays}</span>
+                </td>
+                <td class="py-2 px-1 text-center">
+                    <div class="w-6 h-6 mx-auto rounded-md bg-slate-800/40 group-hover:bg-slate-700/60 flex items-center justify-center transition-colors">
+                        <i data-lucide="chevron-down" class="chevron w-3.5 h-3.5 text-slate-400 group-hover:text-amber-300"></i>
+                    </div>
+                </td>
             `;
-            tbody.appendChild(summaryTr);
+            return trMain;
         }
 
-        function toggleDetails(personId) {
+        function renderNextChunk() {
+            const start = currentlyRenderedCount;
+            const end = Math.min(start + CHUNK_SIZE, activeFilteredRows.length);
+            if (start >= end && start > 0) return;
+
+            const existingSentinel = document.getElementById('loadMoreRowSentinel');
+            if (existingSentinel) existingSentinel.remove();
+
+            const fragment = document.createDocumentFragment();
+
+            for (let idx = start; idx < end; idx++) {
+                const row = activeFilteredRows[idx];
+                const personId = `p-${idx}`;
+                fragment.appendChild(buildMainRowElement(row, idx, personId));
+            }
+
+            currentlyRenderedCount = end;
+
+            const remaining = activeFilteredRows.length - currentlyRenderedCount;
+            if (remaining > 0) {
+                const sentinelTr = document.createElement('tr');
+                sentinelTr.id = 'loadMoreRowSentinel';
+                sentinelTr.innerHTML = `
+                    <td colspan="7" class="py-3 px-4 text-center bg-slate-900 border-t border-slate-800">
+                        <div class="flex items-center justify-center gap-3 text-xs text-slate-400 font-mono flex-wrap">
+                            <span>Показано <strong class="text-white">${currentlyRenderedCount}</strong> із <strong class="text-slate-300">${activeFilteredRows.length}</strong></span>
+                            <button type="button" onclick="renderNextChunk()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl font-bold transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5">
+                                <span>⬇ Показати ще (+${Math.min(CHUNK_SIZE, remaining)})</span>
+                            </button>
+                            <button type="button" onclick="window.renderAllRemaining()" class="px-2.5 py-1 text-slate-400 hover:text-white underline cursor-pointer text-[11px]">
+                                Показати всі (${activeFilteredRows.length})
+                            </button>
+                        </div>
+                    </td>
+                `;
+                fragment.appendChild(sentinelTr);
+                resultTableBody.appendChild(fragment);
+
+                if ('IntersectionObserver' in window) {
+                    if (tableObserver) tableObserver.disconnect();
+                    tableObserver = new IntersectionObserver((entries) => {
+                        if (entries[0] && entries[0].isIntersecting) {
+                            renderNextChunk();
+                        }
+                    }, { rootMargin: '300px' });
+                    tableObserver.observe(sentinelTr);
+                }
+            } else {
+                resultTableBody.appendChild(fragment);
+                if (tableObserver) tableObserver.disconnect();
+            }
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        window.renderNextChunk = renderNextChunk;
+
+        window.renderAllRemaining = function() {
+            if (tableObserver) tableObserver.disconnect();
+            const existingSentinel = document.getElementById('loadMoreRowSentinel');
+            if (existingSentinel) existingSentinel.remove();
+
+            const start = currentlyRenderedCount;
+            const end = activeFilteredRows.length;
+            const fragment = document.createDocumentFragment();
+
+            for (let idx = start; idx < end; idx++) {
+                const row = activeFilteredRows[idx];
+                const personId = `p-${idx}`;
+                fragment.appendChild(buildMainRowElement(row, idx, personId));
+            }
+
+            currentlyRenderedCount = end;
+            resultTableBody.appendChild(fragment);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.buildDetailsRowInnerHtml = function buildDetailsRowInnerHtml(personId) {
+            const idx = parseInt(personId.replace('p-', ''), 10);
+            const row = activeFilteredRows && activeFilteredRows[idx];
+            if (!row) return '';
+
+            const details = row.details;
+            const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
+
+            let conflictAlertHtml = '';
+            if (isDup) {
+                conflictAlertHtml = `
+                    <div class="p-2.5 rounded-xl border border-amber-500/50 bg-amber-950/40 mb-3 text-xs text-amber-200 flex items-start gap-2 shadow-xs font-sans">
+                        <span class="text-amber-400 font-bold shrink-0 text-sm">⚠️</span>
+                        <div class="space-y-1">
+                            <div class="font-bold text-amber-300">Виявлено можливе дублювання або конфлікт даних:</div>
+                            <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-200/90 font-mono">
+                                ${row.duplicateInfo.reasons.map(r => `<li>${escapeHtml(r.tooltip)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let periodsHtml = details.periods.map(p => {
+                const isSingleDay = (p.start === p.end);
+                const dateRange = isSingleDay ? formatDateDisplay(p.start) : `${formatDateDisplay(p.start)} – ${formatDateDisplay(p.end)}`;
+
+                if (p.isGap) {
+                    return `
+                        <div class="flex flex-col md:flex-row md:items-center justify-between p-2.5 rounded-xl border border-slate-800 bg-slate-900/40 mb-2 shadow-xs text-xs font-mono text-slate-400">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-slate-400 font-semibold">
+                                    ⏸️ ${dateRange}
+                                </span>
+                                <span class="font-bold text-slate-300">Не подавався</span>
+                                <span class="text-slate-500 text-[11px]">(${escapeHtml(p.task)})</span>
+                            </div>
+                            <span class="text-slate-400 self-end md:self-auto mt-1 md:mt-0 font-medium text-xs bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                                ${p.days} дн.
+                            </span>
+                        </div>
+                    `;
+                }
+
+                let badgeBg = 'bg-slate-900/90 border-slate-800 text-slate-200 border-l-4 border-l-slate-600';
+                if (/бро/i.test(p.location)) badgeBg = 'bg-slate-900/90 border-slate-800 text-slate-200 border-l-4 border-l-emerald-500';
+                else if (/роп/i.test(p.location)) badgeBg = 'bg-slate-900/90 border-slate-800 text-slate-200 border-l-4 border-l-amber-500';
+                else if (/воп/i.test(p.location)) badgeBg = 'bg-slate-900/90 border-slate-800 text-slate-200 border-l-4 border-l-rose-500';
+                else if (/дв|30/i.test(p.location)) badgeBg = 'bg-slate-900/90 border-slate-800 text-slate-200 border-l-4 border-l-sky-500';
+
+                return `
+                    <div class="flex flex-col md:flex-row md:items-center justify-between p-2.5 sm:p-3 rounded-xl border mb-2 shadow-xs text-xs font-mono ${badgeBg}">
+                        <div class="flex-1 space-y-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-amber-400 font-bold">
+                                    📅 ${dateRange}
+                                </span>
+                                <span class="font-bold text-white">${escapeHtml(p.location)}</span>
+                                ${p.task !== p.location ? `<span class="text-slate-400 text-[11px]">(${escapeHtml(p.task)})</span>` : ''}
+                            </div>
+                            <div class="text-[11px] text-slate-400 font-sans">
+                                ${escapeHtml(p.rank || 'В/С')} &bull; ${escapeHtml(p.pos || 'Посада не вказана')} ${p.ipn ? `&bull; <span class="font-mono text-slate-400">ІПН: ${p.ipn}</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="text-slate-200 self-end md:self-auto mt-1 md:mt-0 font-bold text-xs bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-700">
+                            ${p.days} дн.
+                        </span>
+                    </div>
+                `;
+            }).join('');
+
+            return `<td colspan="7" class="p-3 pl-6 md:pl-12 bg-slate-950/90 border-b border-slate-800"><div class="max-w-4xl">${conflictAlertHtml}${periodsHtml}</div></td>`;
+        };
+
+        window.toggleDetails = function toggleDetails(personId) {
             const rowMain = document.getElementById(`row-${personId}`);
-            const rowDetails = document.getElementById(`details-${personId}`);
-            if (!rowMain || !rowDetails) return;
+            if (!rowMain) return;
+
+            let rowDetails = document.getElementById(`details-${personId}`);
+            if (!rowDetails) {
+                rowDetails = document.createElement('tr');
+                rowDetails.id = `details-${personId}`;
+                rowDetails.className = 'bg-slate-950/90 border-b border-slate-800 shadow-inner';
+                rowDetails.innerHTML = window.buildDetailsRowInnerHtml ? window.buildDetailsRowInnerHtml(personId) : '';
+                rowMain.parentNode.insertBefore(rowDetails, rowMain.nextSibling);
+                rowMain.classList.add('row-expanded');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
 
             const isHidden = rowDetails.classList.contains('hidden');
             if (isHidden) {
@@ -2874,6 +3004,256 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 rowDetails.classList.add('hidden');
                 rowMain.classList.remove('row-expanded');
             }
+        };
+
+        let activeMatrixRows = [];
+        let activeMatrixDates = [];
+        let currentlyRenderedMatrixCount = 0;
+        const MATRIX_CHUNK_SIZE = 50;
+        let matrixObserver = null;
+
+        function buildMatrixRowElement(row, idx, sortedDates) {
+            const details = row.details;
+            const cleanRank = (row.latestRank || '—').replace(/\n|\r/g, ' ').trim();
+            const displayName = formatDisplayName(row.name);
+            const isSelected = selectedPersonNames.has(row.name);
+
+            let dateCellsHtml = '';
+            sortedDates.forEach(dStr => {
+                if (row.records && row.records.has(dStr)) {
+                    const rec = row.records.get(dStr);
+                    const cat = getRecordCategory(rec);
+
+                    let badgeHtml = '';
+                    const tooltipText = `${formatDateDisplay(dStr)}\nЛокація: ${rec.location}\nЗавдання: ${rec.task}\nФайл: ${rec.fileName}`;
+
+                    if (cat === 'bro') {
+                        badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-600/80 shadow-xs" title="${escapeHtml(tooltipText)}">БРО</span>`;
+                    } else if (cat === 'rop') {
+                        badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-amber-950/80 text-amber-300 border border-amber-500/80 shadow-xs" title="${escapeHtml(tooltipText)}">РОП</span>`;
+                    } else if (cat === 'vop') {
+                        badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-rose-950/80 text-rose-300 border border-rose-600/80 shadow-xs" title="${escapeHtml(tooltipText)}">ВОП</span>`;
+                    } else if (cat === 'dv30') {
+                        badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-sky-950/80 text-sky-300 border border-sky-600/80 shadow-xs" title="${escapeHtml(tooltipText)}">Заб</span>`;
+                    } else {
+                        badgeHtml = `<span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-200 border border-slate-700 shadow-xs" title="${escapeHtml(tooltipText)}">БД</span>`;
+                    }
+                    dateCellsHtml += `<td class="py-1 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70">${badgeHtml}</td>`;
+                } else {
+                    dateCellsHtml += `<td class="py-1 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70"><span class="inline-flex items-center justify-center w-full py-0.5 rounded text-[10px] font-mono font-bold text-rose-400/80 bg-rose-950/20 border border-rose-900/40 shadow-xs">✕</span></td>`;
+                }
+            });
+
+            const isEven = idx % 2 === 0;
+            const isDup = (row.duplicateInfo && row.duplicateInfo.isDuplicate);
+            const matrixRowBg = isSelected ? 'bg-slate-800/80' : (isDup ? 'bg-amber-950/30' : (isEven ? 'bg-slate-900/30' : 'bg-slate-900/70'));
+            const stickyColBg = isSelected ? 'bg-slate-800' : (isDup ? 'bg-amber-950/90' : 'bg-slate-950');
+
+            const tr = document.createElement('tr');
+            tr.className = `hardware-accelerated-row hover:bg-slate-800/70 transition-colors border-b border-slate-800/70 ${details.isGloballyInactive ? 'opacity-60' : ''} ${isDup ? 'border-l-4 border-l-amber-500' : ''} ${matrixRowBg}`;
+            tr.innerHTML = `
+                <td class="sticky left-0 z-20 ${stickyColBg} py-1.5 px-1 text-center w-14 min-w-[56px] max-w-[56px] border-r border-slate-800/70" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-center gap-1.5">
+                        <input type="checkbox" data-name="${escapeHtml(row.name)}" onchange="toggleSelectPerson('${escapeHtml(row.name)}')" ${isSelected ? 'checked' : ''} class="person-checkbox rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-0 cursor-pointer" title="Обрати бійця">
+                        <span class="text-slate-400 font-mono font-bold text-[11px]">${idx + 1}</span>
+                    </div>
+                </td>
+                <td class="sticky left-[56px] z-20 ${stickyColBg} py-1.5 px-2 border-r border-slate-800/70 w-24 min-w-[96px] max-w-[96px] truncate" title="${escapeHtml(cleanRank)}">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 text-[10px] font-medium border border-slate-700/50 truncate max-w-full">${escapeHtml(cleanRank)}</span>
+                </td>
+                <td class="sticky left-[152px] z-20 ${stickyColBg} py-1.5 px-2.5 font-bold text-white border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] w-60 min-w-[240px] max-w-[240px] truncate text-[12px]" title="${row.latestIpn ? 'ІПН: ' + escapeHtml(row.latestIpn) : ''}">
+                    <div class="flex items-center gap-1.5 truncate">
+                        <span class="truncate font-semibold">${escapeHtml(displayName)}</span>
+                        ${isDup ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 font-bold" title="${escapeHtml(row.duplicateInfo.reasons.map(r => r.tooltip).join('; '))}">⚠️ Дубль</span>` : ''}
+                        ${details.isGloballyInactive ? '<span class="text-[9px] font-mono text-rose-400 font-normal shrink-0" title="Вибув зі списків">⚠️</span>' : ''}
+                    </div>
+                </td>
+                ${dateCellsHtml}
+                <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.broDays > 0 ? 'text-emerald-400 font-bold' : 'text-slate-600'}">${details.broDays > 0 ? details.broDays : '—'}</td>
+                <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.ropDays > 0 ? 'text-amber-400 font-bold' : 'text-slate-600'}">${details.ropDays > 0 ? details.ropDays : '—'}</td>
+                <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.vopDays > 0 ? 'text-rose-400 font-bold' : 'text-slate-600'}">${details.vopDays > 0 ? details.vopDays : '—'}</td>
+                <td class="py-1.5 px-2 text-center border-r border-slate-800/70 font-mono ${details.dv30Days > 0 ? 'text-sky-400 font-bold' : 'text-slate-600'}">${details.dv30Days > 0 ? details.dv30Days : '—'}</td>
+                <td class="py-1.5 px-2 text-center font-mono font-bold text-slate-200">
+                    <span class="inline-block bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-xs text-slate-200">${details.totalDays}</span>
+                </td>
+            `;
+            return tr;
+        }
+
+        function renderNextMatrixChunk() {
+            const start = currentlyRenderedMatrixCount;
+            const end = Math.min(start + MATRIX_CHUNK_SIZE, activeMatrixRows.length);
+            if (start >= end && start > 0) return;
+
+            const tbody = document.getElementById('matrixTableBody');
+            if (!tbody) return;
+
+            const existingSentinel = document.getElementById('loadMoreMatrixSentinel');
+            if (existingSentinel) existingSentinel.remove();
+
+            const fragment = document.createDocumentFragment();
+            for (let idx = start; idx < end; idx++) {
+                const row = activeMatrixRows[idx];
+                fragment.appendChild(buildMatrixRowElement(row, idx, activeMatrixDates));
+            }
+            tbody.appendChild(fragment);
+
+            currentlyRenderedMatrixCount = end;
+
+            const remaining = activeMatrixRows.length - currentlyRenderedMatrixCount;
+            if (remaining > 0) {
+                const totalCols = 3 + activeMatrixDates.length + 5;
+                const sentinelTr = document.createElement('tr');
+                sentinelTr.id = 'loadMoreMatrixSentinel';
+                sentinelTr.innerHTML = `
+                    <td colspan="${totalCols}" class="py-3 px-4 text-center bg-slate-900 border-t border-slate-800">
+                        <div class="flex items-center justify-center gap-3 text-xs text-slate-400 font-mono flex-wrap">
+                            <span>Показано <strong class="text-white">${currentlyRenderedMatrixCount}</strong> із <strong class="text-slate-300">${activeMatrixRows.length}</strong></span>
+                            <button type="button" onclick="renderNextMatrixChunk()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl font-bold transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5">
+                                <span>⬇ Показати ще (+${Math.min(MATRIX_CHUNK_SIZE, remaining)})</span>
+                            </button>
+                            <button type="button" onclick="window.renderAllRemainingMatrix()" class="px-2.5 py-1 text-slate-400 hover:text-white underline cursor-pointer text-[11px]">
+                                Показати всі (${activeMatrixRows.length})
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(sentinelTr);
+
+                setupMatrixInfiniteScroll(sentinelTr);
+            }
+        }
+
+        function setupMatrixInfiniteScroll(sentinelElement) {
+            if (matrixObserver) {
+                matrixObserver.disconnect();
+            }
+
+            const container = document.getElementById('matrixViewContainer');
+            matrixObserver = new IntersectionObserver((entries) => {
+                const entry = entries[0];
+                if (entry && entry.isIntersecting) {
+                    matrixObserver.disconnect();
+                    renderNextMatrixChunk();
+                }
+            }, {
+                root: container || null,
+                rootMargin: '250px',
+                threshold: 0.05
+            });
+
+            matrixObserver.observe(sentinelElement);
+        }
+
+        window.renderAllRemainingMatrix = function renderAllRemainingMatrix() {
+            if (matrixObserver) matrixObserver.disconnect();
+            while (currentlyRenderedMatrixCount < activeMatrixRows.length) {
+                renderNextMatrixChunk();
+            }
+        };
+
+        function renderMatrixTable(filtered, sortedDates) {
+            const headerTr = document.getElementById('matrixTableHeader');
+            const tbody = document.getElementById('matrixTableBody');
+            const tfoot = document.getElementById('matrixTableFoot');
+            if (!headerTr || !tbody) return;
+
+            headerTr.innerHTML = '';
+            tbody.innerHTML = '';
+            if (tfoot) tfoot.innerHTML = '';
+
+            if (matrixObserver) {
+                matrixObserver.disconnect();
+                matrixObserver = null;
+            }
+
+            activeMatrixRows = filtered || [];
+            activeMatrixDates = sortedDates || [];
+            currentlyRenderedMatrixCount = 0;
+
+            if (activeMatrixRows.length === 0 || activeMatrixDates.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="py-24 text-center text-slate-500 italic"><i data-lucide="calendar" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>Немає даних для побудови табеля</td></tr>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
+
+            // Build Header
+            headerTr.innerHTML = `
+                <th class="sticky left-0 top-0 z-40 bg-slate-950 py-2.5 px-1 text-center w-14 min-w-[56px] max-w-[56px] border-r border-slate-800">
+                    <div class="flex items-center justify-center gap-1">
+                        <input type="checkbox" id="matrix-select-all" onchange="toggleSelectAll(this.checked)" class="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-0 cursor-pointer" title="Обрати всіх / Зняти вибір">
+                        <span>№</span>
+                    </div>
+                </th>
+                <th class="sticky left-[56px] top-0 z-40 bg-slate-950 py-2.5 px-2 w-24 min-w-[96px] max-w-[96px] border-r border-slate-800 truncate text-slate-300">Звання</th>
+                <th class="sticky left-[152px] top-0 z-40 bg-slate-950 py-2.5 px-2.5 w-60 min-w-[240px] max-w-[240px] border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] cursor-pointer hover:bg-slate-900 transition-colors text-slate-200" onclick="window.handleSort('name')">
+                    <div class="flex items-center justify-between">
+                        <span>ПІБ</span>
+                        <span class="text-slate-500">${currentSort.col === 'name' ? (currentSort.asc ? '↑' : '↓') : '↕'}</span>
+                    </div>
+                </th>
+                ${activeMatrixDates.map(dStr => {
+                    const parts = dStr.split('-');
+                    const displayDate = parts.length === 3 ? `${parts[2]}.${parts[1]}` : dStr;
+                    return `<th class="py-2.5 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800 font-mono text-[11px] text-slate-300 font-semibold" title="Дата: ${formatDateDisplay(dStr)}">${displayDate}</th>`;
+                }).join('')}
+                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-emerald-400 font-bold">БРО</th>
+                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-amber-400 font-bold">РОП</th>
+                <th class="py-2.5 px-2 text-center min-w-[46px] border-r border-slate-800 text-rose-400 font-bold">ВОП</th>
+                <th class="py-2.5 px-2 text-center min-w-[52px] border-r border-slate-800 text-sky-400 font-bold">ЗабБД</th>
+                <th class="py-2.5 px-2 text-center min-w-[62px] text-slate-200 font-bold cursor-pointer hover:bg-slate-900 transition-colors" onclick="window.handleSort('days')">
+                    <div class="flex items-center justify-center gap-1">
+                        <span>Всього</span>
+                        <span class="text-slate-500">${currentSort.col === 'days' ? (currentSort.asc ? '↑' : '↓') : '↕'}</span>
+                    </div>
+                </th>
+            `;
+
+            // Calculate Totals for Footer
+            let sumBro = 0, sumRop = 0, sumVop = 0, sumDv30 = 0, sumTotal = 0;
+            const dateActiveCounts = {};
+            activeMatrixDates.forEach(dStr => { dateActiveCounts[dStr] = 0; });
+
+            activeMatrixRows.forEach(row => {
+                const details = row.details;
+                sumBro += details.broDays;
+                sumRop += details.ropDays;
+                sumVop += details.vopDays;
+                sumDv30 += details.dv30Days;
+                sumTotal += details.totalDays;
+
+                activeMatrixDates.forEach(dStr => {
+                    if (row.records && row.records.has(dStr)) {
+                        dateActiveCounts[dStr]++;
+                    }
+                });
+            });
+
+            // Summary bottom row in tfoot
+            if (tfoot) {
+                tfoot.innerHTML = `
+                    <tr>
+                        <td class="sticky left-0 z-40 bg-slate-950 py-2.5 px-1 border-r border-slate-800 w-14 min-w-[56px] max-w-[56px]"></td>
+                        <td class="sticky left-[56px] z-40 bg-slate-950 py-2.5 px-2 border-r border-slate-800 w-24 min-w-[96px] max-w-[96px]"></td>
+                        <td class="sticky left-[152px] z-40 bg-slate-950 py-2.5 px-2.5 border-r-2 border-slate-700 shadow-[4px_0_6px_rgba(0,0,0,0.5)] font-bold text-slate-200 uppercase tracking-wider text-[11px] text-right w-60 min-w-[240px] max-w-[240px]">
+                            РАЗОМ ПО ДНЯХ:
+                        </td>
+                        ${activeMatrixDates.map(dStr => `
+                            <td class="py-1.5 px-1 text-center min-w-[48px] max-w-[52px] border-r border-slate-800/70">
+                                <span class="inline-block bg-slate-800 text-slate-200 border border-slate-700 font-bold px-1.5 py-0.5 rounded text-[10px] min-w-[24px] shadow-xs">${dateActiveCounts[dStr]}</span>
+                            </td>
+                        `).join('')}
+                        <td class="py-2.5 px-2 text-center border-r border-slate-800 text-emerald-400 font-bold text-xs">${sumBro || 0}</td>
+                        <td class="py-2.5 px-2 text-center border-r border-slate-800 text-amber-400 font-bold text-xs">${sumRop || 0}</td>
+                        <td class="py-2.5 px-2 text-center border-r border-slate-800 text-rose-400 font-bold text-xs">${sumVop || 0}</td>
+                        <td class="py-2.5 px-2 text-center border-r border-slate-800 text-sky-400 font-bold text-xs">${sumDv30 || 0}</td>
+                        <td class="py-2.5 px-2 text-center text-slate-200 font-mono font-bold text-sm">${sumTotal || 0}</td>
+                    </tr>
+                `;
+            }
+
+            // Render first chunk
+            renderNextMatrixChunk();
         }
 
         function exportToExcel() {

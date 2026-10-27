@@ -142,6 +142,45 @@
                 max-width: 100% !important; 
             }
         }
+
+        /* Плаваюча кнопка повернення нагору */
+        #btn-scroll-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #38bdf8;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+        }
+        #btn-scroll-top:hover {
+            background: #1e293b;
+            border-color: #38bdf8;
+            color: #ffffff;
+            transform: translateY(6px);
+        }
+        #btn-scroll-top:active {
+            transform: translateY(10px) scale(0.95);
+        }
+        #btn-scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-200 selection:bg-amber-500/30">
@@ -5661,8 +5700,15 @@
                     {/* Single Unified Modern Command Header */}
                     <header className="bg-slate-900/95 border border-slate-800/90 rounded-2xl p-3 sm:p-3.5 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3.5 shadow-2xl backdrop-blur-md">
                         
-                        {/* 1. Ліва частина: Логотип + Бренд + Версія */}
+                        {/* 1. Ліва частина: HUB + Логотип + Бренд + Версія */}
                         <div className="flex items-center gap-3 shrink-0">
+                            <a 
+                                href="index.html" 
+                                className="px-3 py-2 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 rounded-xl transition-all text-xs font-semibold flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0" 
+                                title="Повернутися до Єдиного Центру Управління (HUB)"
+                            >
+                                <span>🏠 HUB</span>
+                            </a>
                             <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 shadow-inner shrink-0">
                                 <Icon name="shield-alert" className="w-5 h-5" />
                             </div>
@@ -5676,25 +5722,25 @@
                                     className="text-[11px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-mono font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm" 
                                     title="Історія оновлень"
                                 >
-                                    ⚡ v3.6.4
+                                    ⚡ v3.6.5
                                 </button>
                                 <button
                                     onClick={() => setIsBackupOpen(true)}
                                     className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:scale-105 active:scale-95 ${
                                         diskServiceOnline 
                                             ? 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border-emerald-700/60' 
-                                            : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 border-slate-800'
+                                             : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 border-slate-800'
                                     }`}
                                     title={diskServiceOnline ? `Служба бекапу активна на диску (_backups). ${lastDiskSaveTime ? 'Збережено: ' + lastDiskSaveTime : 'Готова'}` : 'Служба бекапу недоступна'}
                                 >
-                                    <span className={`w-1.5 h-1.5 rounded-full ${diskServiceOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}></span>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${diskServiceOnline ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
                                     <span>{diskServiceOnline ? (lastDiskSaveTime ? `Диск: ${lastDiskSaveTime}` : 'Диск: OK') : 'Диск: Офлайн'}</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* 2. Центральна частина: Преміальний Segmented Tabs Bar */}
-                        <div className="flex items-center gap-1 bg-slate-950/90 border border-slate-800/90 p-1.5 rounded-xl shadow-inner overflow-x-auto self-start xl:self-center">
+                        <div className="flex items-center gap-1 bg-slate-950/90 border border-slate-800/90 p-1.5 rounded-xl shadow-inner shrink-0 self-start xl:self-center">
                             {/* Вкладка: Журнал */}
                             <button 
                                 onClick={() => handleTabSwitch("list")} 
@@ -5725,7 +5771,7 @@
                                 <div className="flex items-center gap-1 font-mono text-[10px]">
                                     {(triageCounts.crit + triageCounts.heavy + triageCounts.med + triageCounts.light) > 0 && (
                                         <span className="bg-amber-950/80 text-amber-300 border border-amber-800/80 px-1.5 py-0.2 rounded font-bold flex items-center gap-1 shadow-sm">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                                             {triageCounts.crit + triageCounts.heavy + triageCounts.med + triageCounts.light} 300
                                         </span>
                                     )}
@@ -5772,34 +5818,6 @@
 
                         {/* 3. Права частина: Уніфіковані тактичні кнопки дій */}
                         <div className="flex items-center gap-2 flex-wrap">
-                            {activeTab === "analytics" && (
-                                <>
-                                    <button 
-                                        onClick={handleOpenPrintableReport} 
-                                        className="px-3 py-2 bg-purple-950/80 hover:bg-purple-900/90 text-purple-300 font-semibold border border-purple-700/60 rounded-xl transition-all flex items-center gap-1.5 text-xs shadow-sm hover:shadow-purple-950/50 active:scale-95 cursor-pointer" 
-                                        title="Згенерувати офіційне бойове донесення у форматі A4 для друку або збереження в PDF"
-                                    >
-                                        <Icon name="printer" className="w-3.5 h-3.5 text-purple-400" /> 
-                                        <span>Доповідь (A4 / PDF)</span>
-                                    </button>
-                                    <button 
-                                        onClick={handleExportAnalyticsText} 
-                                        className="px-3 py-2 bg-blue-950/80 hover:bg-blue-900/90 text-blue-300 font-semibold border border-blue-700/60 rounded-xl transition-all flex items-center gap-1.5 text-xs shadow-sm hover:shadow-blue-950/50 active:scale-95 cursor-pointer" 
-                                        title="Згенерувати текстовий звіт в буфер обміну"
-                                    >
-                                        <Icon name="file-text" className="w-3.5 h-3.5 text-blue-400" /> 
-                                        <span>Звіт (Текст)</span>
-                                    </button>
-                                    <button 
-                                        onClick={handleExportAnalyticsExcel} 
-                                        className="px-3 py-2 bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 font-semibold border border-emerald-700/60 rounded-xl transition-all flex items-center gap-1.5 text-xs shadow-sm hover:shadow-emerald-950/50 active:scale-95 cursor-pointer" 
-                                        title="Експорт в Excel з діаграмами"
-                                    >
-                                        <Icon name="table" className="w-3.5 h-3.5 text-emerald-400" /> 
-                                        <span>Експорт (Excel)</span>
-                                    </button>
-                                </>
-                            )}
                             
                             {/* Головна дія */}
                             <button 
@@ -6803,15 +6821,44 @@
                                         </label>
                                     </div>
 
-                                    <button 
-                                        type="button" 
-                                        onClick={resetAnalyticsFilters} 
-                                        className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold rounded-xl border border-slate-800 transition cursor-pointer flex items-center gap-1.5 select-none"
-                                        title="Скинути параметри аналітики"
-                                    >
-                                        <Icon name="rotate-ccw" className="w-3.5 h-3.5" />
-                                        <span>Скинути</span>
-                                    </button>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <button 
+                                            type="button"
+                                            onClick={handleOpenPrintableReport} 
+                                            className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900/90 text-purple-300 font-semibold border border-purple-700/60 rounded-xl transition-all flex items-center gap-1.5 text-xs shadow-sm hover:shadow-purple-950/50 active:scale-95 cursor-pointer select-none" 
+                                            title="Згенерувати офіційне бойове донесення у форматі A4 для друку або збереження в PDF"
+                                        >
+                                            <Icon name="printer" className="w-3.5 h-3.5 text-purple-400" /> 
+                                            <span>Доповідь (A4 / PDF)</span>
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            onClick={handleExportAnalyticsText} 
+                                            className="px-3 py-1.5 bg-blue-950/80 hover:bg-blue-900/90 text-blue-300 font-semibold border border-blue-700/60 rounded-xl transition-all flex items-center gap-1.5 text-xs shadow-sm hover:shadow-blue-950/50 active:scale-95 cursor-pointer select-none" 
+                                            title="Згенерувати текстовий звіт в буфер обміну"
+                                        >
+                                            <Icon name="file-text" className="w-3.5 h-3.5 text-blue-400" /> 
+                                            <span>Звіт (Текст)</span>
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            onClick={handleExportAnalyticsExcel} 
+                                            className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 font-semibold border border-emerald-700/60 rounded-xl transition-all flex items-center gap-1.5 text-xs shadow-sm hover:shadow-emerald-950/50 active:scale-95 cursor-pointer select-none" 
+                                            title="Експорт в Excel з діаграмами"
+                                        >
+                                            <Icon name="table" className="w-3.5 h-3.5 text-emerald-400" /> 
+                                            <span>Експорт (Excel)</span>
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={resetAnalyticsFilters} 
+                                            className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold rounded-xl border border-slate-800 transition cursor-pointer flex items-center gap-1.5 select-none"
+                                            title="Скинути параметри аналітики"
+                                        >
+                                            <Icon name="rotate-ccw" className="w-3.5 h-3.5" />
+                                            <span>Скинути</span>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-2.5 px-4 shadow-sm flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10">
                                     <div className="flex flex-wrap items-center gap-3">
@@ -8728,10 +8775,24 @@
                                     </button>
                                 </div>
                                 <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                                    {/* 15.10.2026 */}
+                                    {/* 26.10.2026 */}
                                     <div className="relative pl-5 border-l-2 border-amber-500 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.6.4 (Відновлення ручного введення дати/часу та оптимізація фокусу полів)</span>
+                                            <span className="font-bold text-amber-400 font-mono text-sm">⚡ v3.6.5 (Прямий перехід до HUB, стабілізація табів аналітики & ергономіка)</span>
+                                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">26.10.2026</span>
+                                        </div>
+                                        <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
+                                            <li><strong className="text-white">Прямий перехід до HUB («🏠 HUB»):</strong> У командну шапку додано тактичну кнопку швидкого повернення до Єдиного Центру Управління комплексу в один клік.</li>
+                                            <li><strong className="text-white">Стабілізація таб-бару аналітики:</strong> Дії експорту («Доповідь A4/PDF», «Звіт Текст», «Експорт Excel») перенесено у внутрішню панель фільтрів аналітики, що повністю ліквідувало зсув, стискання та появу скролбару на табах шапки.</li>
+                                            <li><strong className="text-white">Швидке повернення нагору («▲ Нагору»):</strong> Додано плаваючу кнопку, яка плавно з'являється при скролі довгих реєстрів (понад 300px) та моментально повертає на початок сторінки.</li>
+                                            <li><strong className="text-white">Спокійні індикатори статусу:</strong> Прибрано пульсацію <code>animate-pulse</code> з індикатора зв'язку з диском та точки черги евакуації для зниження навантаження на зір під час нічних чергувань.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* 15.10.2026 */}
+                                    <div className="relative pl-5 border-l-2 border-slate-700 space-y-2 opacity-80">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-slate-300 font-mono text-sm">⚡ v3.6.4 (Відновлення ручного введення дати/часу та оптимізація фокусу полів)</span>
                                             <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">15.10.2026</span>
                                         </div>
                                         <ul className="space-y-1.5 text-slate-300 list-disc list-inside">
@@ -8949,6 +9010,21 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+    </script>
+
+    <!-- Плаваюча кнопка швидкого повернення нагору -->
+    <button id="btn-scroll-top" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" title="Повернутися нагору (Top)">▲</button>
+    <script>
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('btn-scroll-top');
+            if (btn) {
+                if (window.scrollY > 300) {
+                    btn.classList.add('visible');
+                } else {
+                    btn.classList.remove('visible');
+                }
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>
