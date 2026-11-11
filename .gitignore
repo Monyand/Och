@@ -6,8 +6,9 @@ __pycache__/
 !suite_agent.py
 !dispatcher_service.py
 
-# Local system utilities
+# Local system utilities & voice agents
 sys_utils/
+spotify_agent/
 
 # Local IDE configuration
 .vscode/
@@ -42,6 +43,16 @@ Element - *
 *.xls
 *.docx
 *.doc
+ПБД за весь час/
+*.pdf
+*.csv
+*.zip
+*.rar
+*.7z
+~$*
+*.tmp
+*.bak
+%TEMP%/
 
 # Local confidential agent rules & third-party agent skills (never commit)
 .agents/rules/
@@ -50,6 +61,12 @@ Element - *
 # Android build cache
 .gradle/
 android_app/.gradle/
+android_app/build/
+android_app/app/build/
+android_app/local.properties
+*.apk
+*.jks
+*.keystore
 
 # impeccable-ignore-start
 # Ephemeral output, runtime state, and per-dev overrides.
