@@ -7,8 +7,20 @@
     <title>Аналізатор безперервної ротації (Додаток 6)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS (xlsx-js-style) для читання та стилізованого експорту Excel -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <!-- SheetJS (xlsx-js-style) для читання та стилізованого експорту Excel (Локально + CDN) -->
+    <script src="v8/xlsx.js"></script>
+    <script>
+        if (typeof XLSX === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"><\/script>');
+        }
+    </script>
+    <!-- JSZip для фіксації шапки (Freeze Panes) в експорті Excel (Локально + CDN) -->
+    <script src="v8/jszip.min.js"></script>
+    <script>
+        if (typeof JSZip === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>');
+        }
+    </script>
     <!-- Mammoth для читання Word (.docx) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <!-- Lucide Icons -->
@@ -94,27 +106,59 @@
             overflow: hidden;
         }
 
-        /* Tactical Stepper & Mini-Gantt Timeline for Accordion */
-        .stepper-container {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .stepper-node {
+        /* Вертикальний хронологічний маршрут у розкритому досьє (Operate Mode) */
+        .route-timeline {
             position: relative;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+            padding-left: 24px;
         }
 
-        .stepper-arrow {
-            color: #475569;
-            font-size: 11px;
-            font-weight: 700;
-            user-select: none;
+        .route-timeline::before {
+            content: "";
+            position: absolute;
+            left: 8px;
+            top: 14px;
+            bottom: 14px;
+            width: 2px;
+            background: rgba(51, 65, 85, 0.85);
+            border-radius: 9999px;
+        }
+
+        .route-step {
+            position: relative;
+        }
+
+        .route-dot {
+            position: absolute;
+            left: -20px;
+            top: 14px;
+            width: 10px;
+            height: 10px;
+            border-radius: 9999px;
+            border: 2px solid #090d16;
+            z-index: 1;
+        }
+
+        .route-gap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 2px 0;
+        }
+
+        .route-gap-dot {
+            position: absolute;
+            left: -19px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background: #0f172a;
+            border: 1.5px dashed #64748b;
+            z-index: 1;
         }
 
         /* Glassmorphism utility */
@@ -123,6 +167,12 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(51, 65, 85, 0.7);
+        }
+
+        /* Усунення колізії hidden + flex для динамічних контейнерів та оверлеїв */
+        #rotGlobalDropOverlay:not(.hidden),
+        #rotFilterEmptyBar:not(.hidden) {
+            display: flex;
         }
     </style>
 </head>
@@ -146,7 +196,7 @@
                                 ДОДАТОК 6
                             </span>
                             <button onclick="openChangelogModal()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs" title="Історія оновлень та версій">
-                                ⚡ v1.5.2
+                                ⚡ v1.6.0
                             </button>
                         </div>
                         <!-- Інформаційні чіпи бази (показуються коли завантажені списки) -->
@@ -233,7 +283,24 @@
                                 <span class="text-emerald-400 font-bold">XLSX</span>
                             </div>
 
-                            <!-- Опція 1: Календарний табель -->
+                            <!-- Опція 1: Періоди ротацій (3-аркушевий офісний Excel) -->
+                            <button id="exportPeriodsExcelBtn" type="button" onclick="closeExportMenu(); window.exportPeriodsExcel();"
+                                class="w-full text-left p-2.5 rounded-xl hover:bg-slate-800/90 transition-all flex items-start gap-3 group cursor-pointer border border-transparent hover:border-amber-500/30">
+                                <div class="w-8 h-8 rounded-lg bg-amber-950/80 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-inner">
+                                    <i data-lucide="calendar-range" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs font-bold text-white group-hover:text-amber-300 transition-colors flex items-center justify-between">
+                                        <span id="exportPeriodsExcelBtnText">Періоди ротацій (Excel)</span>
+                                        <span class="text-[10px] font-mono text-amber-300/90 bg-amber-950/80 px-1.5 py-0.2 rounded border border-amber-800/60 font-semibold">3 арк.</span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-400 leading-tight mt-1">
+                                        Зведений табель, деталізація по періодах та точні дати
+                                    </div>
+                                </div>
+                            </button>
+
+                            <!-- Опція 2: Календарний табель -->
                             <button id="exportExcelBtn" type="button" onclick="closeExportMenu()"
                                 class="w-full text-left p-2.5 rounded-xl hover:bg-slate-800/90 transition-all flex items-start gap-3 group cursor-pointer border border-transparent hover:border-emerald-500/30">
                                 <div class="w-8 h-8 rounded-lg bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-inner">
@@ -304,15 +371,15 @@
 
                     <!-- Dropzone -->
                     <div id="dropZone"
-                        class="drop-zone border-2 border-dashed border-slate-700/90 hover:border-sky-500/70 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-800/30 transition-all min-h-[110px] group">
-                        <div class="w-10 h-10 rounded-full bg-slate-800/80 group-hover:bg-sky-500/15 text-slate-400 group-hover:text-sky-300 flex items-center justify-center mb-1.5 transition-colors">
-                            <i data-lucide="folder-up" class="w-5 h-5"></i>
+                        class="drop-zone border-2 border-dashed border-slate-700/90 hover:border-sky-500/70 rounded-xl p-3.5 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-800/30 transition-all min-h-[104px] group">
+                        <div class="w-9 h-9 rounded-full bg-slate-800/80 group-hover:bg-sky-500/15 text-slate-400 group-hover:text-sky-300 flex items-center justify-center mb-1.5 transition-colors pointer-events-none">
+                            <i data-lucide="folder-up" class="w-4 h-4"></i>
                         </div>
-                        <p class="text-xs font-bold text-slate-200 group-hover:text-slate-100 transition-colors">
-                            Перетягніть файли або папку зі списками сюди
+                        <p class="text-xs font-bold text-slate-200 group-hover:text-slate-100 transition-colors pointer-events-none">
+                            Перетягніть файли або папку з підпапками сюди (або будь-де на екран)
                         </p>
-                        <p class="text-[10px] text-slate-500 mt-0.5 font-mono">
-                            Авто-розпізнавання дати з назви (напр. 2026-08-15 або 15.08.2026)
+                        <p class="text-[10px] text-slate-500 mt-0.5 font-mono pointer-events-none">
+                            Авто-розпізнавання дати з назви файлу або підпапки (напр. 2026-08-15 чи 15.08.2026)
                         </p>
                     </div>
 
@@ -324,22 +391,75 @@
                             <span>Вибрати файли</span>
                         </button>
                         <button type="button" onclick="document.getElementById('folderInput').click()"
-                            class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-semibold py-1.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
-                            <i data-lucide="folder-input" class="w-3.5 h-3.5 text-slate-400"></i>
-                            <span>Додати папку</span>
+                            class="flex-1 bg-sky-600/20 hover:bg-sky-600/30 text-sky-200 hover:text-white border border-sky-500/40 text-xs font-bold py-1.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                            <i data-lucide="folder-search" class="w-3.5 h-3.5 text-sky-400"></i>
+                            <span>Додати папку (з підпапками)</span>
                         </button>
                         <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .docx" multiple>
                         <input type="file" id="folderInput" class="hidden" webkitdirectory directory multiple>
                     </div>
 
+                    <!-- Розумний фільтр цільових файлів у папках + опція дати з підпапки -->
+                    <div class="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800/90 space-y-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <label for="rotFilenameFilterInput" class="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
+                                <i data-lucide="filter" class="w-3.5 h-3.5 text-sky-400"></i>
+                                <span>Фільтр назви файлу (відбір з папок):</span>
+                            </label>
+                            <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-300 font-mono cursor-pointer select-none"
+                                title="Якщо в назві самого файлу дати немає — шукати дату в назві найближчої батьківської папки">
+                                <input type="checkbox" id="rotDateFromPathCheckbox" checked onchange="onRotFilterOptionChange()"
+                                    class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 accent-sky-500 cursor-pointer">
+                                <span>Дата з підпапки</span>
+                            </label>
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5">
+                            <div class="relative flex-1 min-w-0">
+                                <input type="text" id="rotFilenameFilterInput" value=""
+                                    oninput="onRotFilterInputChange(this.value)"
+                                    placeholder="напр.: Додаток 6, Дод6 (порожньо — всі .xlsx/.xls/.docx)"
+                                    class="w-full py-1.5 pl-2.5 pr-7 bg-slate-900 border border-slate-700/90 rounded-lg text-sky-300 font-mono font-semibold text-[11px] placeholder:text-slate-600 placeholder:font-sans outline-none focus:border-sky-500 transition-all shadow-inner">
+                                <button type="button" id="rotClearFilterBtn" onclick="setRotFilterPreset('')" title="Скинути фільтр (брати всі файли)"
+                                    class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-rose-400 text-sm font-mono cursor-pointer">&times;</button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1" id="rotFilterPresetsBar">
+                                <button type="button" onclick="setRotFilterPreset('Додаток 6')" data-preset="Додаток 6"
+                                    class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px] transition cursor-pointer">
+                                    Додаток 6
+                                </button>
+                                <button type="button" onclick="setRotFilterPreset('Дод6')" data-preset="Дод6"
+                                    class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px] transition cursor-pointer">
+                                    Дод6
+                                </button>
+                                <button type="button" onclick="setRotFilterPreset('БЧС')" data-preset="БЧС"
+                                    class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px] transition cursor-pointer">
+                                    БЧС
+                                </button>
+                                <button type="button" onclick="setRotFilterPreset('')" data-preset=""
+                                    class="px-2 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/40 font-sans text-[10px] font-bold transition cursor-pointer">
+                                    Всі
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Повідомлення коли сканування папок дало 0 підходящих файлів -->
+                    <div id="rotFilterEmptyBar" class="hidden flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-amber-950/35 border border-amber-700/50 text-amber-200 text-xs">
+                        <span id="rotFilterEmptyText" class="flex items-center gap-1.5 text-[11px] font-mono"></span>
+                        <button type="button" onclick="setRotFilterPreset('')"
+                            class="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-semibold text-[11px] cursor-pointer transition">
+                            Скинути фільтр
+                        </button>
+                    </div>
+
                     <!-- Прогрес обробки -->
                     <div id="loadingIndicator" class="hidden p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
                         <div class="flex items-center justify-between text-xs font-mono">
-                            <span class="text-slate-300 flex items-center gap-2">
-                                <span class="w-3 h-3 border-2 border-sky-400 border-t-transparent rounded-full animate-spin"></span>
-                                <span id="loadingText" class="truncate max-w-[280px]">Обробка файлів...</span>
+                            <span class="text-slate-300 flex items-center gap-2 min-w-0">
+                                <span class="w-3 h-3 border-2 border-sky-400 border-t-transparent rounded-full animate-spin shrink-0"></span>
+                                <span id="loadingText" class="truncate max-w-[340px]">Обробка файлів...</span>
                             </span>
-                            <span id="loadingPercent" class="text-sky-400 font-bold">0%</span>
+                            <span id="loadingPercent" class="text-sky-400 font-bold shrink-0">0%</span>
                         </div>
                         <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                             <div id="progressBar" class="bg-sky-500 h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
@@ -377,7 +497,7 @@
                     </div>
 
                     <!-- Панель 1: Список файлів з можливістю видалення -->
-                    <div id="filesListContainer" class="flex-1 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/90 p-2 max-h-[140px] space-y-1.5">
+                    <div id="filesListContainer" class="flex-1 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/90 p-2 max-h-[180px] lg:max-h-[215px] space-y-1.5">
                         <div id="filesListEmpty" class="text-slate-500 italic text-center py-6 text-xs font-mono flex flex-col items-center justify-center gap-1.5">
                             <i data-lucide="files" class="w-6 h-6 opacity-30 text-slate-400"></i>
                             <span>Завантажте файли зліва — тут з'явиться список з можливістю видалення</span>
@@ -386,7 +506,7 @@
                     </div>
 
                     <!-- Панель 2: Список логів -->
-                    <div id="logContainer" class="hidden flex-1 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/90 p-2.5 max-h-[140px]">
+                    <div id="logContainer" class="hidden flex-1 overflow-y-auto custom-scrollbar border border-slate-800 rounded-xl bg-slate-950/90 p-2.5 max-h-[180px] lg:max-h-[215px]">
                         <ul id="fileLog" class="space-y-1 font-mono text-[11px]">
                             <li class="text-slate-500 italic flex items-center gap-2">
                                 <i data-lucide="info" class="w-3.5 h-3.5 text-slate-500"></i>
@@ -456,8 +576,13 @@
                     <div class="flex items-center gap-2 flex-wrap">
                         <span id="statsSummary" class="text-slate-400">Очікування завантаження списків...</span>
                     </div>
-                    <div id="selectionBanner" class="hidden items-center gap-2 bg-slate-800/90 border border-slate-700 px-3 py-1 rounded-xl text-slate-200">
+                    <div id="selectionBanner" class="hidden items-center gap-2 flex-wrap bg-slate-800/90 border border-slate-700 px-3 py-1 rounded-xl text-slate-200">
                         <span>✓ Обрано: <strong id="selected-count" class="text-white">0</strong> бійців</span>
+                        <button type="button" onclick="window.exportPeriodsExcel()"
+                            class="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 transition cursor-pointer shadow-xs">
+                            <i data-lucide="download" class="w-3 h-3"></i>
+                            <span>Скачати періоди (Excel)</span>
+                        </button>
                         <button onclick="clearSelection()" class="text-slate-400 hover:text-white underline ml-1 cursor-pointer">
                             Скинути вибір
                         </button>
@@ -710,10 +835,24 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
-                <!-- v1.5.2 -->
+                <!-- v1.6.0 -->
                 <div class="relative pl-4 border-l-2 border-amber-500 space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.5.2 (Поточна версія)</span>
+                        <span class="font-bold text-amber-400 font-mono text-sm">⚡ v1.6.0 (Поточна версія)</span>
+                        <span class="text-[11px] font-mono text-slate-500">12.11.2026</span>
+                    </div>
+                    <ul class="space-y-1 text-slate-300 list-disc list-inside">
+                        <li><strong class="text-white">Рекурсивне перетягування папок та глобальна дропзона:</strong> Пакетне завантаження вкладених каталогів (<code>webkitGetAsEntry</code> і <code>FileSystemDirectoryHandle</code>) на всю сторінку з підказкою <code>#rotGlobalDropOverlay</code> та автоматичним витягуванням дати зі шляху підпапки (<code>#rotDateFromPathCheckbox</code>).</li>
+                        <li><strong class="text-white">Фільтр назв файлів із пресетами:</strong> Додано поле <code>#rotFilenameFilterInput</code> зі збереженням у <code>localStorage</code>, швидкими пресетами та захистом від кирилично-латинських омогліфів і тимчасових файлів Word/Excel.</li>
+                        <li><strong class="text-white">Вертикальна шкала маршруту періодів:</strong> Повністю перероблено розгорнуту картку бійця (<code>.route-timeline</code>) — чіткі дати, тривалість із правильним відмінюванням, повна назва зміненої посади без обрізання та окремі індикатори пропусків між періодами.</li>
+                        <li><strong class="text-white">Класичний офісний Excel-експорт періодів (<code>.xlsx</code>):</strong> Генерація 3-аркушевої книги («Періоди ротацій», «Зведення по особах», «Точні дати») з меню експорту, панелі виділення та картки бійця — з паспортом бійця для вибірки 1 особи, візуальним розділенням груп, закріпленою шапкою <code>A5</code>/<code>A4</code>, автофільтром і <code>=SUM(...)</code>. Виправлено зчитування <code>#ignoreTextArea</code> в табельному експорті.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.5.2 -->
+                <div class="relative pl-4 border-l-2 border-slate-700 space-y-1.5 opacity-80">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-400 font-mono text-sm">v1.5.2</span>
                         <span class="text-[11px] font-mono text-slate-500">19.10.2026</span>
                     </div>
                     <ul class="space-y-1 text-slate-300 list-disc list-inside">
@@ -999,6 +1138,17 @@
         </div>
     </div>
 
+    <!-- Повноекранний оверлей перетягування файлів і папок -->
+    <div id="rotGlobalDropOverlay" class="fixed inset-0 z-[220] bg-slate-950/75 backdrop-blur-sm hidden items-center justify-center p-6 pointer-events-none">
+        <div class="max-w-lg w-full rounded-3xl border-2 border-dashed border-sky-400 bg-slate-900/95 p-8 text-center shadow-2xl shadow-sky-950/60 space-y-3">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-sky-500/20 border border-sky-400/50 flex items-center justify-center text-sky-300">
+                <i data-lucide="folder-down" class="w-7 h-7"></i>
+            </div>
+            <div class="text-base font-extrabold text-white">Відпустіть папку або файли Додатку 6</div>
+            <div id="rotGlobalDropOverlaySub" class="text-xs text-sky-300/90 font-mono">Рекурсивний скан підпапок • .xlsx, .xls, .docx</div>
+        </div>
+    </div>
+
     <!-- 6. ОСНОВНИЙ СКРИПТ ЛОГІКИ -->
     <script>
         function normalizeMilitaryText(text, options = { toLower: true, replaceHomoglyphs: true }) {
@@ -1266,6 +1416,435 @@
             cachedAllRows = [];
         }
 
+        // ==========================================
+        // ФІЛЬТР НАЗВ ФАЙЛІВ, ДАТА З ПІДПАПОК ТА РЕКУРСИВНИЙ DROP
+        // ==========================================
+
+        const ROT_FILTER_STORAGE_KEY = 'rotations_filename_filter_v1';
+        const ROT_DATE_PATH_STORAGE_KEY = 'rotations_date_from_path_v1';
+        let rotFileFilter = '';
+        let rotDateFromPath = true;
+
+        function normalizeFileFilterText(str) {
+            if (!str) return '';
+            let s = String(str)
+                .replace(/[\u00A0\u2000-\u200b\ufeff]/g, ' ')
+                .toLowerCase();
+            s = s.replace(/[мm]b/g, 'мб');
+            const homoglyphs = {
+                'a': 'а', 'b': 'в', 'c': 'с', 'e': 'е', 'h': 'н',
+                'i': 'і', 'k': 'к', 'm': 'м', 'o': 'о', 'p': 'р',
+                't': 'т', 'x': 'х', 'y': 'у'
+            };
+            return s.replace(/[abcehikmoptxy]/g, ch => homoglyphs[ch] || ch).trim();
+        }
+
+        function loadRotFilterSettings() {
+            try {
+                const storedFilter = localStorage.getItem(ROT_FILTER_STORAGE_KEY);
+                rotFileFilter = (storedFilter !== null) ? storedFilter : '';
+                const storedDatePath = localStorage.getItem(ROT_DATE_PATH_STORAGE_KEY);
+                rotDateFromPath = (storedDatePath !== 'false');
+            } catch (e) {
+                rotFileFilter = '';
+                rotDateFromPath = true;
+            }
+            syncRotFilterUI();
+        }
+
+        function saveRotFilterSettings() {
+            const pathEl = document.getElementById('rotDateFromPathCheckbox');
+            if (pathEl) rotDateFromPath = !!pathEl.checked;
+            try {
+                localStorage.setItem(ROT_FILTER_STORAGE_KEY, rotFileFilter || '');
+                localStorage.setItem(ROT_DATE_PATH_STORAGE_KEY, String(rotDateFromPath));
+            } catch (e) {
+                console.warn('LocalStorage filter save error:', e);
+            }
+            syncRotFilterUI();
+        }
+
+        function syncRotFilterUI() {
+            const val = rotFileFilter || '';
+            const input = document.getElementById('rotFilenameFilterInput');
+            const clearBtn = document.getElementById('rotClearFilterBtn');
+            const pathEl = document.getElementById('rotDateFromPathCheckbox');
+            const overlaySub = document.getElementById('rotGlobalDropOverlaySub');
+
+            if (input && input.value !== val) input.value = val;
+            if (clearBtn) clearBtn.classList.toggle('hidden', !val);
+            if (pathEl) pathEl.checked = !!rotDateFromPath;
+
+            if (overlaySub) {
+                const parts = ['Рекурсивний скан підпапок', '.xlsx/.xls/.docx'];
+                parts.push(val.trim() ? `фільтр: «${val.trim()}»` : 'усі файли');
+                if (rotDateFromPath) parts.push('дата з підпапки');
+                overlaySub.textContent = parts.join(' • ');
+            }
+
+            document.querySelectorAll('#rotFilterPresetsBar [data-preset]').forEach(btn => {
+                const preset = btn.getAttribute('data-preset') || '';
+                const isActive = (preset === val.trim());
+                if (isActive) {
+                    btn.className = 'px-2 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/40 font-mono text-[10px] font-bold transition cursor-pointer';
+                } else {
+                    btn.className = 'px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px] transition cursor-pointer';
+                }
+            });
+        }
+
+        function onRotFilterInputChange(val) {
+            rotFileFilter = String(val || '');
+            hideRotEmptyFilterFeedback();
+            saveRotFilterSettings();
+        }
+
+        function onRotFilterOptionChange() {
+            saveRotFilterSettings();
+        }
+
+        function setRotFilterPreset(val) {
+            rotFileFilter = String(val || '');
+            hideRotEmptyFilterFeedback();
+            saveRotFilterSettings();
+        }
+
+        function hideRotEmptyFilterFeedback() {
+            const bar = document.getElementById('rotFilterEmptyBar');
+            if (bar) bar.classList.add('hidden');
+        }
+
+        function renderRotEmptyFilterFeedback(message) {
+            const bar = document.getElementById('rotFilterEmptyBar');
+            const txt = document.getElementById('rotFilterEmptyText');
+            if (txt) txt.textContent = message;
+            if (bar) bar.classList.remove('hidden');
+        }
+
+        function isValidCalendarDate(year, month, day) {
+            if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
+            if (year < 2020 || year > 2035 || month < 1 || month > 12 || day < 1 || day > 31) return false;
+            const dt = new Date(Date.UTC(year, month - 1, day));
+            return dt.getUTCFullYear() === year && (dt.getUTCMonth() + 1) === month && dt.getUTCDate() === day;
+        }
+
+        function formatIsoDateParts(year, month, day) {
+            return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+
+        function extractDateFromString(rawStr) {
+            if (!rawStr) return null;
+            const cleaned = String(rawStr)
+                .replace(/[\u00A0\u2000-\u200B\uFEFF]/g, ' ')
+                .replace(/\b[0-9]+(?=(?:19|20)\d{2}[.\-_]\d{1,2}[.\-_]\d{1,2})/g, '');
+
+            // 1. Формат YYYY-MM-DD / YYYY.MM.DD / YYYY_MM_DD
+            const isoMatches = cleaned.matchAll(/(?<!\d)((?:19|20)\d{2})[.\-_](\d{1,2})[.\-_](\d{1,2})(?!\d)/g);
+            for (const m of isoMatches) {
+                const y = parseInt(m[1], 10);
+                const mo = parseInt(m[2], 10);
+                const d = parseInt(m[3], 10);
+                if (isValidCalendarDate(y, mo, d)) return formatIsoDateParts(y, mo, d);
+            }
+
+            // 2. Формат DD.MM.YYYY / DD-MM-YYYY / DD.MM.YY (захист від числових кодів на кшталт 01_2МБ_ХХХ_5.18 через (?<!\d) та валідацію року 2020..2035)
+            const dmyMatches = cleaned.matchAll(/(?<!\d)(\d{1,2})[.\-_](\d{1,2})[.\-_]((?:20)?\d{2})(?!\d)/g);
+            for (const m of dmyMatches) {
+                const d = parseInt(m[1], 10);
+                const mo = parseInt(m[2], 10);
+                const y = m[3].length === 2 ? (2000 + parseInt(m[3], 10)) : parseInt(m[3], 10);
+                if (isValidCalendarDate(y, mo, d)) return formatIsoDateParts(y, mo, d);
+            }
+
+            return null;
+        }
+
+        function extractDateFromFile(file, useFolderFallback = true) {
+            if (!file || !file.name) return { dateStr: null, source: null, folderName: null, relPath: '' };
+            const relPath = file._relativePath || file.webkitRelativePath || file.name;
+
+            const fromName = extractDateFromString(file.name);
+            if (fromName) {
+                return { dateStr: fromName, source: 'filename', folderName: null, relPath };
+            }
+
+            if (useFolderFallback && relPath && (relPath.includes('/') || relPath.includes('\\'))) {
+                const parts = relPath.split(/[\\/]+/).filter(Boolean);
+                // Йдемо від найближчої батьківської папки назовні (напр. Архів/11.2026/10.11.2026/Дод6.xlsx -> 10.11.2026)
+                for (let i = parts.length - 2; i >= 0; i--) {
+                    const fromFolder = extractDateFromString(parts[i]);
+                    if (fromFolder) {
+                        return { dateStr: fromFolder, source: 'folder', folderName: parts[i], relPath };
+                    }
+                }
+            }
+
+            return { dateStr: null, source: null, folderName: null, relPath };
+        }
+
+        function extractDateFromFilename(filename) {
+            return extractDateFromString(filename);
+        }
+
+        function captureDroppedDataTransfer(dataTransfer) {
+            if (!dataTransfer) {
+                return { entries: [], handlePromises: [], rawFiles: [], hasDirectoryEntry: false, itemCount: 0 };
+            }
+            const rawFiles = dataTransfer.files ? Array.from(dataTransfer.files) : [];
+            const entries = [];
+            const handlePromises = [];
+            const directItemFiles = [];
+            let hasDirectoryEntry = false;
+
+            const items = dataTransfer.items ? Array.from(dataTransfer.items) : [];
+            // Синхронно збираємо entry/handle до першого await, щоб браузер не очистив DataTransfer
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (!item || (item.kind && item.kind !== 'file')) continue;
+
+                if (typeof item.webkitGetAsEntry === 'function') {
+                    try {
+                        const entry = item.webkitGetAsEntry();
+                        if (entry) {
+                            if (entry.isDirectory) hasDirectoryEntry = true;
+                            entries.push(entry);
+                        }
+                    } catch (e) {
+                        console.warn('webkitGetAsEntry error:', e);
+                    }
+                }
+
+                if (typeof item.getAsFileSystemHandle === 'function') {
+                    try {
+                        const hp = item.getAsFileSystemHandle();
+                        if (hp && typeof hp.then === 'function') {
+                            handlePromises.push(hp.catch(() => null));
+                        }
+                    } catch (e) {
+                        console.warn('getAsFileSystemHandle error:', e);
+                    }
+                }
+
+                if (typeof item.getAsFile === 'function') {
+                    try {
+                        const f = item.getAsFile();
+                        if (f) directItemFiles.push(f);
+                    } catch (_) {}
+                }
+            }
+
+            return {
+                entries,
+                handlePromises,
+                rawFiles: rawFiles.length > 0 ? rawFiles : directItemFiles,
+                hasDirectoryEntry,
+                itemCount: Math.max(items.length, rawFiles.length, directItemFiles.length)
+            };
+        }
+
+        async function readAllDirectoryEntries(dirReader) {
+            const entries = [];
+            let readMore = true;
+            while (readMore) {
+                const batch = await new Promise((resolve) => {
+                    try {
+                        dirReader.readEntries(resolve, () => resolve([]));
+                    } catch (_) {
+                        resolve([]);
+                    }
+                });
+                if (batch && batch.length > 0) {
+                    entries.push(...batch);
+                } else {
+                    readMore = false;
+                }
+            }
+            return entries;
+        }
+
+        async function traverseFileSystemHandle(handle, parentPath, out, state, onScanProgress) {
+            if (!handle) return;
+            try {
+                if (handle.kind === 'file') {
+                    const f = await handle.getFile();
+                    if (f) {
+                        f._relativePath = parentPath ? `${parentPath}/${f.name}` : f.name;
+                        out.push(f);
+                        state.seen++;
+                        if (onScanProgress && state.seen % 25 === 0) {
+                            await onScanProgress(state.seen, parentPath || f.name);
+                        }
+                    }
+                } else if (handle.kind === 'directory' && typeof handle.entries === 'function') {
+                    const nextPath = parentPath ? `${parentPath}/${handle.name}` : handle.name;
+                    if (onScanProgress) {
+                        await onScanProgress(state.seen, nextPath);
+                    }
+                    for await (const [, child] of handle.entries()) {
+                        await traverseFileSystemHandle(child, nextPath, out, state, onScanProgress);
+                    }
+                }
+            } catch (err) {
+                console.warn('FileSystemHandle scan error:', parentPath || handle.name, err);
+            }
+        }
+
+        function filterUsableFallbackFiles(rawFiles, hasDirectoryEntry) {
+            return (rawFiles || []).filter(f => {
+                if (!f || !f.name) return false;
+                if (hasDirectoryEntry && f.size === 0 && !f.type && !f.name.includes('.')) return false;
+                return true;
+            }).map(f => {
+                if (!f._relativePath) f._relativePath = f.webkitRelativePath || f.name;
+                return f;
+            });
+        }
+
+        async function collectDroppedFiles(dtOrCaptured, onScanProgress = null) {
+            if (!dtOrCaptured) return [];
+            const captured = (dtOrCaptured && Array.isArray(dtOrCaptured.entries))
+                ? dtOrCaptured
+                : captureDroppedDataTransfer(dtOrCaptured);
+
+            const collectedFiles = [];
+            let scannedCount = 0;
+
+            if (captured.entries.length > 0) {
+                const queue = [...captured.entries];
+                while (queue.length > 0) {
+                    const entry = queue.shift();
+                    if (!entry) continue;
+
+                    if (entry.isFile) {
+                        const file = await new Promise((resolve) => {
+                            try {
+                                entry.file((f) => {
+                                    const cleanPath = (entry.fullPath || f.name || '').replace(/^\/+/, '');
+                                    f._relativePath = cleanPath || f.name;
+                                    resolve(f);
+                                }, () => resolve(null));
+                            } catch (_) {
+                                resolve(null);
+                            }
+                        });
+                        if (file) {
+                            collectedFiles.push(file);
+                            scannedCount++;
+                            if (onScanProgress && scannedCount % 25 === 0) {
+                                await onScanProgress(scannedCount, file._relativePath || file.name);
+                            }
+                        }
+                    } else if (entry.isDirectory) {
+                        try {
+                            const dirPath = (entry.fullPath || entry.name || '').replace(/^\/+/, '');
+                            if (onScanProgress) {
+                                await onScanProgress(scannedCount, dirPath);
+                            }
+                            const reader = entry.createReader();
+                            const subEntries = await readAllDirectoryEntries(reader);
+                            if (subEntries.length > 0) queue.push(...subEntries);
+                        } catch (err) {
+                            console.warn('Directory traversal error:', entry.name, err);
+                        }
+                    }
+                }
+            }
+
+            if (collectedFiles.length === 0 && captured.handlePromises && captured.handlePromises.length > 0) {
+                const handles = await Promise.all(captured.handlePromises);
+                const state = { seen: 0 };
+                for (const h of handles) {
+                    if (h) await traverseFileSystemHandle(h, '', collectedFiles, state, onScanProgress);
+                }
+            }
+
+            if (collectedFiles.length === 0 && captured.rawFiles && captured.rawFiles.length > 0) {
+                return filterUsableFallbackFiles(captured.rawFiles, captured.hasDirectoryEntry);
+            }
+
+            return collectedFiles;
+        }
+
+        function filterCandidateRotationFiles(rawFiles) {
+            const rawFilter = (rotFileFilter || '').trim();
+            const filterTerms = rawFilter
+                ? rawFilter.split(/[,;\n]+/).map(t => t.trim()).filter(Boolean)
+                : [];
+            const normTerms = filterTerms.map(t => {
+                const norm = normalizeFileFilterText(t);
+                const compact = norm.replace(/[_\-\s]+/g, ' ').trim();
+                return { raw: t, norm, compact };
+            });
+
+            const supportedExts = new Set(['xlsx', 'xls', 'docx']);
+            const matched = [];
+            const skipped = [];
+            let tempSkippedCount = 0;
+            let extSkippedCount = 0;
+            let filterSkippedCount = 0;
+
+            for (const file of (rawFiles || [])) {
+                if (!file || !file.name) continue;
+                const relPath = (file._relativePath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
+                if (!file._relativePath) file._relativePath = relPath;
+
+                if (file.name.startsWith('~$') || file.name.startsWith('.')) {
+                    tempSkippedCount++;
+                    skipped.push({ name: file.name, path: relPath, reason: 'temp' });
+                    continue;
+                }
+
+                const ext = (file.name.split('.').pop() || '').toLowerCase();
+                if (!file.name.includes('.') || !supportedExts.has(ext)) {
+                    extSkippedCount++;
+                    skipped.push({ name: file.name, path: relPath, reason: 'ext' });
+                    continue;
+                }
+
+                if (normTerms.length > 0) {
+                    const normFileName = normalizeFileFilterText(file.name);
+                    const compactFileName = normFileName.replace(/[_\-\s]+/g, ' ').trim();
+                    const isMatch = normTerms.some(t => normFileName.includes(t.norm) || compactFileName.includes(t.compact));
+                    if (!isMatch) {
+                        filterSkippedCount++;
+                        skipped.push({ name: file.name, path: relPath, reason: 'filter' });
+                        continue;
+                    }
+                }
+
+                matched.push(file);
+            }
+
+            return {
+                matched,
+                skipped,
+                stats: {
+                    scanned: (rawFiles || []).length,
+                    matchedCount: matched.length,
+                    skippedCount: skipped.length,
+                    tempSkippedCount,
+                    extSkippedCount,
+                    filterSkippedCount
+                }
+            };
+        }
+
+        function setRotDropHighlight(active) {
+            const dz = document.getElementById('dropZone');
+            const overlay = document.getElementById('rotGlobalDropOverlay');
+            if (dz) dz.classList.toggle('dragover', !!active);
+            if (overlay) overlay.classList.toggle('hidden', !active);
+        }
+
+        function isFileDragEvent(e) {
+            const dt = e && e.dataTransfer;
+            if (!dt) return false;
+            const types = dt.types ? Array.from(dt.types) : [];
+            if (types.includes('Files') || types.includes('application/x-moz-file')) return true;
+            const items = dt.items ? Array.from(dt.items) : [];
+            return items.some(item => item && item.kind === 'file');
+        }
+
         function toggleUploadPanel(show) {
             isUploadPanelOpen = show;
             const cards = document.getElementById('uploadCards');
@@ -1436,6 +2015,10 @@
                     const isDocx = ext === 'docx';
                     const iconBg = isDocx ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
                     const iconName = isDocx ? 'file-text' : 'file-spreadsheet';
+                    const displayPath = file.relativePath || file.name;
+                    const folderLabel = (file.relativePath && file.relativePath !== file.name)
+                        ? file.relativePath.replace(/[\\/][^\\/]+$/, '')
+                        : '';
 
                     html += `
                         <div class="flex items-center justify-between p-1.5 px-2 rounded-lg bg-slate-950/80 border border-slate-800/90 hover:border-slate-700 transition group text-xs font-mono">
@@ -1443,14 +2026,17 @@
                                 <div class="w-5 h-5 rounded flex items-center justify-center shrink-0 border ${iconBg}">
                                     <i data-lucide="${iconName}" class="w-3 h-3"></i>
                                 </div>
-                                <span class="truncate text-slate-200 font-medium text-[11px]" title="${escapeHtml(file.name)}">
-                                    ${escapeHtml(file.name)}
-                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="truncate text-slate-200 font-medium text-[11px]" title="${escapeHtml(displayPath)}">
+                                        ${escapeHtml(file.name)}
+                                    </div>
+                                    ${folderLabel ? `<div class="truncate text-[9px] text-slate-500" title="${escapeHtml(displayPath)}">${escapeHtml(folderLabel)}</div>` : ''}
+                                </div>
                                 <span class="text-[10px] text-slate-500 shrink-0 font-normal">
                                     ${file.count} осіб
                                 </span>
                             </div>
-                            <button type="button" onclick="removeUploadedFile('${file.id}')" title="Видалити файл «${escapeHtml(file.name)}»" class="p-1 rounded bg-slate-800/60 hover:bg-red-950/80 text-slate-400 hover:text-red-300 border border-slate-700 hover:border-red-800/60 transition cursor-pointer active:scale-95 shrink-0">
+                            <button type="button" onclick="removeUploadedFile('${file.id}')" title="Видалити файл «${escapeHtml(displayPath)}»" class="p-1 rounded bg-slate-800/60 hover:bg-red-950/80 text-slate-400 hover:text-red-300 border border-slate-700 hover:border-red-800/60 transition cursor-pointer active:scale-95 shrink-0">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -1474,7 +2060,7 @@
                 const displayDate = formatDateDisplay(dateStr).toLowerCase();
                 const monthKey = dateStr.slice(0, 7);
                 const monthDisplay = formatMonthYearDisplay(monthKey).toLowerCase();
-                const matchingFiles = uploadedFiles.filter(f => f.date === dateStr && f.name && f.name.toLowerCase().includes(batchSearchQuery));
+                const matchingFiles = uploadedFiles.filter(f => f.date === dateStr && (f.relativePath || f.name || '').toLowerCase().includes(batchSearchQuery));
                 return dateStr.includes(batchSearchQuery) || 
                        displayDate.includes(batchSearchQuery) || 
                        monthDisplay.includes(batchSearchQuery) || 
@@ -2054,24 +2640,184 @@
             }
         };
 
-        window.copySoldierDossierByKey = function(key, btnElement) {
-            let row = (typeof tableDataForExport !== 'undefined') ? tableDataForExport.find(r => r.key === key) : null;
-            if (!row && database.has(key)) {
-                const personData = database.get(key);
-                const sortedDates = Array.from(personData.records.keys()).sort();
-                const latestDate = sortedDates[sortedDates.length - 1];
-                const latestRecord = personData.records.get(latestDate);
-                const ignoreTextArea = document.getElementById('ignoreTextArea');
-                const ignoredKeywords = ignoreTextArea ? ignoreTextArea.value.split(/[\n,;]+/).map(s => s.trim().toLowerCase()).filter(s => s.length > 0) : [];
-                const details = buildDetailedPeriods(personData.records, ignoredKeywords);
-                row = {
-                    key: key,
-                    name: personData.name,
-                    latestRank: latestRecord.rank,
-                    latestPosition: latestRecord.position,
-                    details: details
-                };
+        function getEpochDay(dateStr) {
+            if (!dateStr) return 0;
+            const parts = dateStr.split('-');
+            if (parts.length < 3) return 0;
+            return Math.floor(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])) / 86400000);
+        }
+
+        function cleanLocationName(loc) {
+            if (!loc) return "";
+            let s = String(loc).trim();
+            s = s.replace(/[`’ʼ‘"«»“”„]/g, '"').replace(/\s+/g, ' ');
+            return s;
+        }
+
+        function normalizeLocationKey(loc) {
+            if (!loc) return "";
+            let s = String(loc).toLowerCase().trim();
+            s = s.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ');
+            s = s.replace(/[`’ʼ‘"«»“”„]/g, '').replace(/\s+/g, ' ');
+            s = s.replace(/\s*\((роп|воп|оп|взвод|рота|бат|б-н)\)/gi, '');
+            return s.trim();
+        }
+
+        function buildDetailedPeriods(recordsMap, ignoredKeywords = []) {
+            if (recordsMap.size === 0) return { periods: [], currentStreak: 0, uniqueStatuses: [] };
+
+            const sortedDates = Array.from(recordsMap.keys()).sort();
+            const latestPersonDate = sortedDates[sortedDates.length - 1];
+            const periods = [];
+            let currentPeriod = null;
+
+            // Дедуплікація локацій з урахуванням регістру
+            const locationMap = new Map();
+
+            for (let i = 0; i < sortedDates.length; i++) {
+                const dateStr = sortedDates[i];
+                const record = recordsMap.get(dateStr);
+                const statusStr = record.status;
+                const rankStr = record.rank;
+                const posStr = record.position;
+                const statusLow = statusStr.toLowerCase();
+
+                const isIgnored = ignoredKeywords.length > 0 && ignoredKeywords.some(kw => statusLow.includes(kw));
+
+                const rawParts = statusStr.split(/\s*\+\s*/);
+                rawParts.forEach(part => {
+                    const cPart = cleanLocationName(part);
+                    const locNormKey = normalizeLocationKey(cPart);
+                    const isPartIgnored = ignoredKeywords.length > 0 && ignoredKeywords.some(kw => locNormKey.includes(kw));
+                    if (cPart && locNormKey && locNormKey !== 'не вказано' && !isPartIgnored) {
+                        if (!locationMap.has(locNormKey)) {
+                            locationMap.set(locNormKey, cPart);
+                        } else {
+                            const currentStored = locationMap.get(locNormKey);
+                            if (currentStored === currentStored.toUpperCase() && cPart !== cPart.toUpperCase()) {
+                                locationMap.set(locNormKey, cPart);
+                            }
+                        }
+                    }
+                });
+
+                const locKey = normalizeLocationKey(statusStr);
+
+                if (!currentPeriod) {
+                    currentPeriod = {
+                        start: dateStr,
+                        end: dateStr,
+                        status: statusStr,
+                        locKey: locKey,
+                        rank: rankStr,
+                        position: posStr,
+                        days: 1,
+                        isIgnored: isIgnored
+                    };
+                } else {
+                    const diffDays = getEpochDay(dateStr) - getEpochDay(currentPeriod.end);
+                    const isSameLocation = (currentPeriod.locKey === locKey) || (!currentPeriod.isIgnored && !isIgnored && currentPeriod.status.toLowerCase() === statusStr.toLowerCase());
+
+                    if (diffDays === 1 && isSameLocation && currentPeriod.isIgnored === isIgnored) {
+                        currentPeriod.end = dateStr;
+                        currentPeriod.days++;
+                        if (currentPeriod.status === currentPeriod.status.toUpperCase() && statusStr !== statusStr.toUpperCase()) {
+                            currentPeriod.status = statusStr;
+                        }
+                        if (rankStr && rankStr !== 'Не вказано') currentPeriod.rank = rankStr;
+                        if (posStr && posStr !== 'Не вказано') currentPeriod.position = posStr;
+                    } else {
+                        periods.push(currentPeriod);
+                        currentPeriod = {
+                            start: dateStr,
+                            end: dateStr,
+                            status: statusStr,
+                            locKey: locKey,
+                            rank: rankStr,
+                            position: posStr,
+                            days: 1,
+                            isIgnored: isIgnored
+                        };
+                    }
+                }
             }
+            if (currentPeriod) periods.push(currentPeriod);
+
+            let currentStreak = 0;
+            let isGloballyInactive = false;
+
+            if (globalMaxDateStr) {
+                const gapToGlobalMax = getEpochDay(globalMaxDateStr) - getEpochDay(latestPersonDate);
+                if (gapToGlobalMax > 1) {
+                    isGloballyInactive = true;
+                }
+            }
+
+            if (!isGloballyInactive && periods.length > 0) {
+                for (let i = periods.length - 1; i >= 0; i--) {
+                    const p = periods[i];
+                    if (p.isIgnored) break;
+                    if (i < periods.length - 1) {
+                        const nextP = periods[i + 1];
+                        const gap = getEpochDay(nextP.start) - getEpochDay(p.end);
+                        if (gap > 1) break;
+                    }
+                    currentStreak += p.days;
+                }
+            }
+
+            return {
+                periods,
+                currentStreak,
+                uniqueStatuses: Array.from(locationMap.values()),
+                isGloballyInactive
+            };
+        }
+
+        function formatDaysUa(n) {
+            const abs = Math.abs(Number(n) || 0);
+            if (abs % 10 === 1 && abs % 100 !== 11) return 'доба';
+            if (abs % 10 >= 2 && abs % 10 <= 4 && (abs % 100 < 12 || abs % 100 > 14)) return 'доби';
+            return 'діб';
+        }
+
+        function isRotationPeriodInStreak(periods, pIdx, isGloballyInactive) {
+            if (!Array.isArray(periods) || !periods[pIdx] || periods[pIdx].isIgnored || isGloballyInactive) {
+                return false;
+            }
+            for (let k = pIdx; k < periods.length; k++) {
+                if (periods[k].isIgnored) return false;
+                if (k < periods.length - 1) {
+                    const gap = getEpochDay(periods[k + 1].start) - getEpochDay(periods[k].end);
+                    if (gap > 1) return false;
+                }
+            }
+            return true;
+        }
+
+        function resolveSoldierRowForExport(key) {
+            const fromTable = (typeof tableDataForExport !== 'undefined') ? tableDataForExport.find(r => r.key === key) : null;
+            if (fromTable) return fromTable;
+            if (!database.has(key)) return null;
+
+            const personData = database.get(key);
+            const sortedDates = Array.from(personData.records.keys()).sort();
+            const latestDate = sortedDates[sortedDates.length - 1];
+            const latestRecord = personData.records.get(latestDate);
+            const ignoreEl = document.getElementById('ignoreTextArea');
+            const ignoredKeywords = ignoreEl ? ignoreEl.value.split(/[\n,;]+/).map(s => s.trim().toLowerCase()).filter(s => s.length > 0) : [];
+            const details = buildDetailedPeriods(personData.records, ignoredKeywords);
+            return {
+                key: key,
+                name: personData.name,
+                latestRank: latestRecord.rank,
+                latestPosition: latestRecord.position,
+                details: details
+            };
+        }
+
+        window.copySoldierDossierByKey = function(key, btnElement) {
+            const row = resolveSoldierRowForExport(key);
             if (!row) return;
 
             const formattedRank = (typeof formatRank === 'function') ? formatRank(row.latestRank) : row.latestRank;
@@ -2110,6 +2856,708 @@
             } else {
                 prompt("Скопіюйте довідку вручну:", text);
             }
+        };
+
+        // ==========================================
+        // ЕКСПОРТ ПЕРІОДІВ У КЛАСИЧНОМУ ОФІСНОМУ EXCEL
+        // ==========================================
+
+        function createOfficeExcelStyles() {
+            const gridBorder = {
+                top: { style: 'thin', color: { rgb: 'FFD0D7DE' } },
+                bottom: { style: 'thin', color: { rgb: 'FFD0D7DE' } },
+                left: { style: 'thin', color: { rgb: 'FFD0D7DE' } },
+                right: { style: 'thin', color: { rgb: 'FFD0D7DE' } }
+            };
+            const groupTopBorder = {
+                top: { style: 'medium', color: { rgb: 'FF8C96A5' } },
+                bottom: { style: 'thin', color: { rgb: 'FFD0D7DE' } },
+                left: { style: 'thin', color: { rgb: 'FFD0D7DE' } },
+                right: { style: 'thin', color: { rgb: 'FFD0D7DE' } }
+            };
+            const headerBorder = {
+                top: { style: 'thin', color: { rgb: 'FF7F8C9A' } },
+                bottom: { style: 'medium', color: { rgb: 'FF596575' } },
+                left: { style: 'thin', color: { rgb: 'FFA6B0BD' } },
+                right: { style: 'thin', color: { rgb: 'FFA6B0BD' } }
+            };
+            const passportBorder = {
+                top: { style: 'thin', color: { rgb: 'FFD0D7DE' } },
+                bottom: { style: 'thin', color: { rgb: 'FFB0B8C4' } },
+                left: { style: 'thin', color: { rgb: 'FFD0D7DE' } },
+                right: { style: 'thin', color: { rgb: 'FFD0D7DE' } }
+            };
+            const totalBorder = {
+                top: { style: 'thin', color: { rgb: 'FF595959' } },
+                bottom: { style: 'double', color: { rgb: 'FF595959' } },
+                left: { style: 'thin', color: { rgb: 'FFBFBFBF' } },
+                right: { style: 'thin', color: { rgb: 'FFBFBFBF' } }
+            };
+            const mkData = (opts = {}) => ({
+                font: {
+                    name: 'Calibri',
+                    sz: opts.sz || 10,
+                    bold: !!opts.bold,
+                    color: { rgb: opts.fgRgb || 'FF000000' }
+                },
+                fill: { patternType: 'solid', fgColor: { rgb: opts.bg || 'FFFFFFFF' } },
+                border: opts.groupTop ? groupTopBorder : gridBorder,
+                alignment: {
+                    horizontal: opts.h || 'left',
+                    vertical: opts.v || 'center',
+                    wrapText: opts.wrap !== false
+                },
+                ...(opts.numFmt ? { numFmt: opts.numFmt } : {})
+            });
+
+            return {
+                title: {
+                    font: { name: 'Calibri', sz: 12, bold: true, color: { rgb: 'FF000000' } },
+                    fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFFFF' } },
+                    alignment: { horizontal: 'left', vertical: 'center', wrapText: false }
+                },
+                subtitle: {
+                    font: { name: 'Calibri', sz: 9.5, color: { rgb: 'FF4D5562' } },
+                    fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFFFF' } },
+                    alignment: { horizontal: 'left', vertical: 'center', wrapText: false }
+                },
+                passportMeta: {
+                    font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'FF1E293B' } },
+                    fill: { patternType: 'solid', fgColor: { rgb: 'FFF3F6FA' } },
+                    border: passportBorder,
+                    alignment: { horizontal: 'left', vertical: 'center', wrapText: false }
+                },
+                th: {
+                    font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'FF000000' } },
+                    fill: { patternType: 'solid', fgColor: { rgb: 'FFD9E1F2' } },
+                    border: headerBorder,
+                    alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
+                },
+                totalText: {
+                    font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'FF000000' } },
+                    fill: { patternType: 'solid', fgColor: { rgb: 'FFF2F2F2' } },
+                    border: totalBorder,
+                    alignment: { horizontal: 'left', vertical: 'center', wrapText: false }
+                },
+                totalNum: {
+                    font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'FF000000' } },
+                    fill: { patternType: 'solid', fgColor: { rgb: 'FFF2F2F2' } },
+                    border: totalBorder,
+                    alignment: { horizontal: 'center', vertical: 'center' },
+                    numFmt: '0'
+                },
+                totalBlank: {
+                    font: { name: 'Calibri', sz: 10, color: { rgb: 'FF000000' } },
+                    fill: { patternType: 'solid', fgColor: { rgb: 'FFF2F2F2' } },
+                    border: totalBorder,
+                    alignment: { horizontal: 'center', vertical: 'center' }
+                },
+                mkData
+            };
+        }
+
+        function styleExcelRange(ws, r1, c1, r2, c2, styleObj) {
+            for (let r = r1; r <= r2; r++) {
+                for (let c = c1; c <= c2; c++) {
+                    const addr = XLSX.utils.encode_cell({ r, c });
+                    if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+                    ws[addr].s = styleObj;
+                }
+            }
+        }
+
+        function calcExcelRowHeight(rowVals, colWidths, minHpt = 22, lineHpt = 14, padHpt = 6, maxHpt = 240) {
+            let neededHpt = minHpt;
+            for (let i = 0; i < rowVals.length; i++) {
+                const raw = rowVals[i];
+                const str = (raw && typeof raw === 'object' && 'v' in raw) ? String(raw.v ?? '') : String(raw ?? '');
+                if (!str) continue;
+                const wch = Math.max(6, (colWidths[i] || 20) - 2);
+                const effCharsPerLine = Math.max(4, Math.floor(wch * 0.92));
+                const lines = str.split('\n');
+                let totalLines = 0;
+                for (const ln of lines) {
+                    totalLines += Math.max(1, Math.ceil(ln.length / effCharsPerLine));
+                }
+                const cellHpt = Math.round(totalLines * lineHpt + padHpt);
+                if (cellHpt > neededHpt) neededHpt = cellHpt;
+            }
+            return Math.min(maxHpt, neededHpt);
+        }
+
+        async function injectXlsxFreezePanes(xlsxArrayBuf, sheetSpecs) {
+            if (typeof JSZip === 'undefined') return null;
+            const zip = await JSZip.loadAsync(xlsxArrayBuf);
+            for (const spec of sheetSpecs) {
+                const sPath = typeof spec === 'string' ? spec : spec.path;
+                const freezeRow = (typeof spec === 'object' && spec.freezeRow) ? spec.freezeRow : 3;
+                const topLeft = `A${freezeRow + 1}`;
+                const freezeXml = `<sheetViews><sheetView workbookViewId="0"><pane ySplit="${freezeRow}" topLeftCell="${topLeft}" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="${topLeft}" sqref="${topLeft}"/></sheetView></sheetViews>`;
+                const file = zip.file(sPath);
+                if (!file) continue;
+                let xml = await file.async('string');
+                xml = xml.replace(/<sheetViews>[\s\S]*?<\/sheetViews>/, freezeXml);
+                zip.file(sPath, xml);
+            }
+            return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+        }
+
+        function resolveExcelPeriodMeta(row, periods, pIdx) {
+            const p = periods[pIdx];
+            const inStreak = isRotationPeriodInStreak(periods, pIdx, row.details?.isGloballyInactive);
+            const statusText = p.isIgnored ? 'Скидання' : (inStreak ? 'Активний стрік' : 'Минулий');
+
+            let gapNote = '—';
+            if (pIdx > 0) {
+                const gapDiff = getEpochDay(p.start) - getEpochDay(periods[pIdx - 1].end);
+                if (gapDiff > 1) {
+                    const missing = gapDiff - 1;
+                    gapNote = `Пропуск ${missing} ${formatDaysUa(missing)}`;
+                } else if (gapDiff === 1) {
+                    gapNote = 'Без перерви';
+                }
+            }
+
+            const periodPos = (p.position && p.position !== 'Не вказано')
+                ? p.position.replace(/[\r\n]+/g, ' ').trim()
+                : ((row.latestPosition && row.latestPosition !== 'Не вказано') ? row.latestPosition.replace(/[\r\n]+/g, ' ').trim() : '—');
+
+            return { p, statusText, gapNote, periodPos };
+        }
+
+        function resolveExcelStatusCellOpts(statusText, baseBg, groupTop) {
+            if (statusText === 'Скидання') {
+                return { h: 'center', v: 'center', bold: true, fgRgb: 'FF9C0006', bg: 'FFFCE4D6', wrap: false, groupTop };
+            }
+            if (statusText === 'Активний стрік') {
+                return { h: 'center', v: 'center', bold: true, fgRgb: 'FF006100', bg: 'FFE2EFDA', wrap: false, groupTop };
+            }
+            return { h: 'center', v: 'center', fgRgb: 'FF4D5562', bg: baseBg, wrap: false, groupTop };
+        }
+
+        function buildRotationsPeriodsMainWorksheet(rowsToExport, metaInfo, styles) {
+            const isSingle = rowsToExport.length === 1;
+            if (isSingle) {
+                const row = rowsToExport[0];
+                const periods = row.details?.periods || [];
+                const cleanRank = (typeof formatRank === 'function') ? formatRank(row.latestRank) : (row.latestRank || 'Не вказано');
+                const cleanPos = (row.latestPosition && row.latestPosition !== 'Не вказано') ? row.latestPosition.replace(/[\r\n]+/g, ' ').trim() : '—';
+                const totalBaseDays = periods.reduce((acc, p) => acc + p.days, 0);
+                const statusLabel = row.details?.isGloballyInactive ? 'Вибув' : 'В строю';
+
+                const cols = [
+                    { wch: 7 },  // №
+                    { wch: 13 }, // Початок
+                    { wch: 13 }, // Кінець
+                    { wch: 11 }, // Діб
+                    { wch: 36 }, // Локація / Позиція
+                    { wch: 18 }, // Статус періоду
+                    { wch: 40 }, // Посада за період
+                    { wch: 24 }  // Перерва перед періодом
+                ];
+                const colWidths = cols.map(c => c.wch);
+                const headers = ['№', 'Початок', 'Кінець', 'Діб', 'Локація / Позиція', 'Статус періоду', 'Посада за період', 'Перерва перед періодом'];
+                const aoa = [
+                    [`Періоди ротацій — ${row.name}`],
+                    [`Звання: ${cleanRank} • Посада: ${cleanPos} • Період даних: ${metaInfo.dateRangeLabel} • Сформовано: ${metaInfo.stamp}`],
+                    [`Безперервно: ${row.details?.currentStreak || 0} діб   |   Всього в базі: ${totalBaseDays} діб   |   Періодів: ${periods.length}   |   Статус: ${statusLabel}`],
+                    headers
+                ];
+                const rowHeights = [{ hpt: 24 }, { hpt: 20 }, { hpt: 22 }, { hpt: 34 }];
+
+                let totalDaysSum = 0;
+                const rowMetaList = [];
+                periods.forEach((p, pIdx) => {
+                    totalDaysSum += p.days;
+                    const { statusText, gapNote, periodPos } = resolveExcelPeriodMeta(row, periods, pIdx);
+                    const excelRow = [
+                        pIdx + 1,
+                        formatDateDisplay(p.start),
+                        formatDateDisplay(p.end),
+                        p.days,
+                        cleanLocationName(p.status) || '—',
+                        statusText,
+                        periodPos,
+                        gapNote
+                    ];
+                    aoa.push(excelRow);
+                    rowHeights.push({ hpt: calcExcelRowHeight(excelRow, colWidths, 22, 14, 6, 120) });
+                    rowMetaList.push({ statusText, gapNote, bg: pIdx % 2 === 0 ? 'FFFFFFFF' : 'FFF9FBFD' });
+                });
+
+                const firstDataExcelRow = 5;
+                const lastDataExcelRow = 4 + periods.length;
+                const totalExcelRow = lastDataExcelRow + 1;
+
+                aoa.push([
+                    `Всього періодів: ${periods.length}`, '', '',
+                    periods.length > 0 ? { t: 'n', f: `SUM(D${firstDataExcelRow}:D${lastDataExcelRow})`, v: totalDaysSum } : 0,
+                    '', '', '', ''
+                ]);
+                rowHeights.push({ hpt: 22 });
+
+                const ws = XLSX.utils.aoa_to_sheet(aoa);
+                ws['!cols'] = cols;
+                ws['!rows'] = rowHeights;
+                ws['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+                    { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+                    { s: { r: 2, c: 0 }, e: { r: 2, c: 7 } },
+                    { s: { r: totalExcelRow - 1, c: 0 }, e: { r: totalExcelRow - 1, c: 2 } }
+                ];
+                if (periods.length > 0) ws['!autofilter'] = { ref: `A4:H${lastDataExcelRow}` };
+
+                styleExcelRange(ws, 0, 0, 0, 7, styles.title);
+                styleExcelRange(ws, 1, 0, 1, 7, styles.subtitle);
+                styleExcelRange(ws, 2, 0, 2, 7, styles.passportMeta);
+                styleExcelRange(ws, 3, 0, 3, 7, styles.th);
+
+                rowMetaList.forEach((rm, i) => {
+                    const r = 4 + i;
+                    const setS = (c, opts) => {
+                        const addr = XLSX.utils.encode_cell({ r, c });
+                        if (ws[addr]) ws[addr].s = styles.mkData({ bg: rm.bg, ...opts });
+                    };
+                    setS(0, { h: 'center', v: 'center', wrap: false });
+                    setS(1, { h: 'center', v: 'center', wrap: false });
+                    setS(2, { h: 'center', v: 'center', wrap: false });
+                    setS(3, { h: 'center', v: 'center', bold: true, numFmt: '0', wrap: false });
+                    setS(4, { h: 'left', v: 'center', bold: true });
+                    setS(5, resolveExcelStatusCellOpts(rm.statusText, rm.bg, false));
+                    setS(6, { h: 'left', v: 'center', sz: 9.5 });
+                    setS(7, { h: 'center', v: 'center', fgRgb: rm.gapNote.startsWith('Пропуск') ? 'FF9A3412' : 'FF4D5562', wrap: false });
+                });
+
+                const trIdx = totalExcelRow - 1;
+                styleExcelRange(ws, trIdx, 0, trIdx, 7, styles.totalBlank);
+                styleExcelRange(ws, trIdx, 0, trIdx, 2, styles.totalText);
+                ws[XLSX.utils.encode_cell({ r: trIdx, c: 3 })].s = styles.totalNum;
+
+                return ws;
+            }
+
+            // Багато бійців: 1 рядок = 1 період з візуальним розділенням груп по бійцю
+            const cols = [
+                { wch: 7 },  // №
+                { wch: 20 }, // Військове звання
+                { wch: 32 }, // ПІБ
+                { wch: 13 }, // Початок
+                { wch: 13 }, // Кінець
+                { wch: 11 }, // Діб
+                { wch: 34 }, // Локація / Позиція
+                { wch: 18 }, // Статус періоду
+                { wch: 36 }, // Посада за період
+                { wch: 24 }  // Перерва перед періодом
+            ];
+            const colWidths = cols.map(c => c.wch);
+            const headers = ['№', 'Військове звання', 'ПІБ', 'Початок', 'Кінець', 'Діб', 'Локація / Позиція', 'Статус\nперіоду', 'Посада за період', 'Перерва перед\nперіодом'];
+            const aoa = [
+                [metaInfo.detailTitle],
+                [metaInfo.subtitle],
+                headers
+            ];
+            const rowHeights = [{ hpt: 24 }, { hpt: 19 }, { hpt: 34 }];
+
+            let seq = 0;
+            let totalDaysSum = 0;
+            const rowMetaList = [];
+
+            rowsToExport.forEach((row, personIdx) => {
+                const periods = row.details?.periods || [];
+                const cleanRank = (typeof formatRank === 'function') ? formatRank(row.latestRank) : (row.latestRank || 'Не вказано');
+                const personBg = personIdx % 2 === 0 ? 'FFFFFFFF' : 'FFF7F9FC';
+
+                periods.forEach((p, pIdx) => {
+                    seq++;
+                    totalDaysSum += p.days;
+                    const { statusText, gapNote, periodPos } = resolveExcelPeriodMeta(row, periods, pIdx);
+                    const excelRow = [
+                        seq,
+                        cleanRank,
+                        row.name,
+                        formatDateDisplay(p.start),
+                        formatDateDisplay(p.end),
+                        p.days,
+                        cleanLocationName(p.status) || '—',
+                        statusText,
+                        periodPos,
+                        gapNote
+                    ];
+                    aoa.push(excelRow);
+                    rowHeights.push({ hpt: calcExcelRowHeight(excelRow, colWidths, 22, 14, 6, 120) });
+                    rowMetaList.push({
+                        bg: personBg,
+                        groupTop: personIdx > 0 && pIdx === 0,
+                        statusText,
+                        gapNote
+                    });
+                });
+            });
+
+            const firstDataExcelRow = 4;
+            const lastDataExcelRow = 3 + seq;
+            const totalExcelRow = lastDataExcelRow + 1;
+
+            aoa.push([
+                `Всього періодів: ${seq}`, '', '', '', '',
+                seq > 0 ? { t: 'n', f: `SUM(F${firstDataExcelRow}:F${lastDataExcelRow})`, v: totalDaysSum } : 0,
+                '', '', '', ''
+            ]);
+            rowHeights.push({ hpt: 22 });
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            ws['!cols'] = cols;
+            ws['!rows'] = rowHeights;
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+                { s: { r: totalExcelRow - 1, c: 0 }, e: { r: totalExcelRow - 1, c: 4 } }
+            ];
+            if (seq > 0) ws['!autofilter'] = { ref: `A3:J${lastDataExcelRow}` };
+
+            styleExcelRange(ws, 0, 0, 0, 9, styles.title);
+            styleExcelRange(ws, 1, 0, 1, 9, styles.subtitle);
+            styleExcelRange(ws, 2, 0, 2, 9, styles.th);
+
+            rowMetaList.forEach((rm, i) => {
+                const r = 3 + i;
+                const setS = (c, opts) => {
+                    const addr = XLSX.utils.encode_cell({ r, c });
+                    if (ws[addr]) ws[addr].s = styles.mkData({ bg: rm.bg, groupTop: rm.groupTop, ...opts });
+                };
+                setS(0, { h: 'center', v: 'center', wrap: false });
+                setS(1, { h: 'left', v: 'center' });
+                setS(2, { h: 'left', v: 'center', bold: true });
+                setS(3, { h: 'center', v: 'center', wrap: false });
+                setS(4, { h: 'center', v: 'center', wrap: false });
+                setS(5, { h: 'center', v: 'center', bold: true, numFmt: '0', wrap: false });
+                setS(6, { h: 'left', v: 'center', bold: true });
+                setS(7, resolveExcelStatusCellOpts(rm.statusText, rm.bg, rm.groupTop));
+                setS(8, { h: 'left', v: 'center', sz: 9.5 });
+                setS(9, { h: 'center', v: 'center', fgRgb: rm.gapNote.startsWith('Пропуск') ? 'FF9A3412' : 'FF4D5562', wrap: false });
+            });
+
+            const trIdx = totalExcelRow - 1;
+            styleExcelRange(ws, trIdx, 0, trIdx, 9, styles.totalBlank);
+            styleExcelRange(ws, trIdx, 0, trIdx, 4, styles.totalText);
+            ws[XLSX.utils.encode_cell({ r: trIdx, c: 5 })].s = styles.totalNum;
+
+            return ws;
+        }
+
+        function buildRotationsSummaryWorksheet(rowsToExport, metaInfo, styles) {
+            const cols = [
+                { wch: 7 },  // №
+                { wch: 20 }, // Звання
+                { wch: 32 }, // ПІБ
+                { wch: 36 }, // Посада / Підрозділ
+                { wch: 18 }, // Безперервно, діб
+                { wch: 18 }, // Всього в базі, діб
+                { wch: 13 }, // Періодів
+                { wch: 29 }, // Діапазон присутності
+                { wch: 32 }, // Остання локація
+                { wch: 16 }  // Статус у списках
+            ];
+            const colWidths = cols.map(c => c.wch);
+            const headers = [
+                '№',
+                'Військове звання',
+                'ПІБ',
+                'Посада / Підрозділ',
+                'Безперервно,\nдіб',
+                'Всього в базі,\nдіб',
+                'Періодів',
+                'Діапазон присутності',
+                'Остання локація',
+                'Статус\nу списках'
+            ];
+            const aoa = [
+                [metaInfo.summaryTitle],
+                [metaInfo.subtitle],
+                headers
+            ];
+            const rowHeights = [{ hpt: 24 }, { hpt: 19 }, { hpt: 34 }];
+
+            let totalBaseDaysSum = 0;
+            let totalPeriodsSum = 0;
+
+            rowsToExport.forEach((row, idx) => {
+                const periods = row.details?.periods || [];
+                const cleanRank = (typeof formatRank === 'function') ? formatRank(row.latestRank) : (row.latestRank || 'Не вказано');
+                const cleanPos = (row.latestPosition && row.latestPosition !== 'Не вказано') ? row.latestPosition.replace(/[\r\n]+/g, ' ').trim() : '—';
+                const totalBaseDays = periods.reduce((acc, p) => acc + p.days, 0);
+                totalBaseDaysSum += totalBaseDays;
+                totalPeriodsSum += periods.length;
+
+                let presenceRange = '—';
+                if (periods.length > 0) {
+                    const pFirst = periods[0].start;
+                    const pLast = periods[periods.length - 1].end;
+                    presenceRange = pFirst === pLast ? formatDateDisplay(pFirst) : `${formatDateDisplay(pFirst)} — ${formatDateDisplay(pLast)}`;
+                }
+
+                const lastPeriod = periods.length > 0 ? periods[periods.length - 1] : null;
+                const lastLoc = lastPeriod
+                    ? `${cleanLocationName(lastPeriod.status)}${lastPeriod.isIgnored ? ' (скидання)' : ''}`
+                    : '—';
+                const statusLabel = row.details?.isGloballyInactive ? 'Вибув' : 'В строю';
+
+                const excelRow = [
+                    idx + 1,
+                    cleanRank,
+                    row.name,
+                    cleanPos,
+                    row.details?.currentStreak || 0,
+                    totalBaseDays,
+                    periods.length,
+                    presenceRange,
+                    lastLoc,
+                    statusLabel
+                ];
+                aoa.push(excelRow);
+                rowHeights.push({ hpt: calcExcelRowHeight(excelRow, colWidths, 22, 14, 6, 90) });
+            });
+
+            const firstDataExcelRow = 4;
+            const lastDataExcelRow = 3 + rowsToExport.length;
+            const totalExcelRow = lastDataExcelRow + 1;
+
+            aoa.push([
+                `Всього осіб: ${rowsToExport.length}`, '', '', '', '',
+                rowsToExport.length > 0 ? { t: 'n', f: `SUM(F${firstDataExcelRow}:F${lastDataExcelRow})`, v: totalBaseDaysSum } : 0,
+                rowsToExport.length > 0 ? { t: 'n', f: `SUM(G${firstDataExcelRow}:G${lastDataExcelRow})`, v: totalPeriodsSum } : 0,
+                '', '', ''
+            ]);
+            rowHeights.push({ hpt: 22 });
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            ws['!cols'] = cols;
+            ws['!rows'] = rowHeights;
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+                { s: { r: totalExcelRow - 1, c: 0 }, e: { r: totalExcelRow - 1, c: 3 } }
+            ];
+            if (rowsToExport.length > 0) ws['!autofilter'] = { ref: `A3:J${lastDataExcelRow}` };
+
+            styleExcelRange(ws, 0, 0, 0, 9, styles.title);
+            styleExcelRange(ws, 1, 0, 1, 9, styles.subtitle);
+            styleExcelRange(ws, 2, 0, 2, 9, styles.th);
+
+            for (let i = 0; i < rowsToExport.length; i++) {
+                const r = 3 + i;
+                const rowBg = i % 2 === 0 ? 'FFFFFFFF' : 'FFF9FBFD';
+                const setS = (c, opts) => {
+                    const addr = XLSX.utils.encode_cell({ r, c });
+                    if (ws[addr]) ws[addr].s = styles.mkData({ bg: rowBg, ...opts });
+                };
+                setS(0, { h: 'center', v: 'center', wrap: false });
+                setS(1, { h: 'left', v: 'center' });
+                setS(2, { h: 'left', v: 'center', bold: true });
+                setS(3, { h: 'left', v: 'center', sz: 9.5 });
+                setS(4, { h: 'center', v: 'center', bold: true, numFmt: '0', wrap: false });
+                setS(5, { h: 'center', v: 'center', numFmt: '0', wrap: false });
+                setS(6, { h: 'center', v: 'center', numFmt: '0', wrap: false });
+                setS(7, { h: 'center', v: 'center', wrap: false });
+                setS(8, { h: 'left', v: 'center' });
+                setS(9, { h: 'center', v: 'center', wrap: false });
+            }
+
+            const trIdx = totalExcelRow - 1;
+            styleExcelRange(ws, trIdx, 0, trIdx, 9, styles.totalBlank);
+            styleExcelRange(ws, trIdx, 0, trIdx, 3, styles.totalText);
+            ws[XLSX.utils.encode_cell({ r: trIdx, c: 5 })].s = styles.totalNum;
+            ws[XLSX.utils.encode_cell({ r: trIdx, c: 6 })].s = styles.totalNum;
+
+            return ws;
+        }
+
+        function buildRotationsExactDatesWorksheet(rowsToExport, metaInfo, styles) {
+            const cols = [
+                { wch: 7 },  // №
+                { wch: 20 }, // Звання
+                { wch: 30 }, // ПІБ
+                { wch: 13 }, // Діб у базі
+                { wch: 46 }, // Точні дати
+                { wch: 64 }  // Хронологія по днях (Дата: Локація)
+            ];
+            const colWidths = cols.map(c => c.wch);
+            const headers = ['№', 'Військове звання', 'ПІБ', 'Діб\nу базі', 'Точні дати обліку', 'Записи по датах (Дата: Локація)'];
+            const aoa = [
+                [metaInfo.datesTitle],
+                [metaInfo.subtitle],
+                headers
+            ];
+            const rowHeights = [{ hpt: 24 }, { hpt: 19 }, { hpt: 34 }];
+
+            rowsToExport.forEach((row, idx) => {
+                const person = database.get(row.key);
+                const sortedDates = person ? Array.from(person.records.keys()).sort() : [];
+                const cleanRank = (typeof formatRank === 'function') ? formatRank(row.latestRank) : (row.latestRank || 'Не вказано');
+                const datesCsv = sortedDates.map(d => formatDateDisplay(d)).join(', ') || '—';
+                const dailyLog = sortedDates.map(d => {
+                    const rec = person.records.get(d);
+                    return `${formatDateDisplay(d)}: ${cleanLocationName(rec?.status || '—')}`;
+                }).join('\n') || '—';
+
+                const excelRow = [
+                    idx + 1,
+                    cleanRank,
+                    row.name,
+                    sortedDates.length,
+                    datesCsv,
+                    dailyLog
+                ];
+                aoa.push(excelRow);
+                rowHeights.push({ hpt: calcExcelRowHeight(excelRow, colWidths, 22, 13.5, 6, 300) });
+            });
+
+            const lastDataExcelRow = 3 + rowsToExport.length;
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            ws['!cols'] = cols;
+            ws['!rows'] = rowHeights;
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }
+            ];
+            if (rowsToExport.length > 0) ws['!autofilter'] = { ref: `A3:F${lastDataExcelRow}` };
+
+            styleExcelRange(ws, 0, 0, 0, 5, styles.title);
+            styleExcelRange(ws, 1, 0, 1, 5, styles.subtitle);
+            styleExcelRange(ws, 2, 0, 2, 5, styles.th);
+
+            for (let i = 0; i < rowsToExport.length; i++) {
+                const r = 3 + i;
+                const rowBg = i % 2 === 0 ? 'FFFFFFFF' : 'FFF9FBFD';
+                const setS = (c, opts) => {
+                    const addr = XLSX.utils.encode_cell({ r, c });
+                    if (ws[addr]) ws[addr].s = styles.mkData({ bg: rowBg, ...opts });
+                };
+                setS(0, { h: 'center', v: 'center', wrap: false });
+                setS(1, { h: 'left', v: 'center' });
+                setS(2, { h: 'left', v: 'center', bold: true });
+                setS(3, { h: 'center', v: 'center', bold: true, numFmt: '0', wrap: false });
+                setS(4, { h: 'left', v: 'center', sz: 9.5 });
+                setS(5, { h: 'left', v: 'center', sz: 9.5 });
+            }
+
+            return ws;
+        }
+
+        function buildRotationsPeriodsWorkbook(rowsToExport, scopeLabel) {
+            let effMin = '';
+            let effMax = '';
+            let totalPeriodsCount = 0;
+            rowsToExport.forEach(r => {
+                const ps = r.details?.periods || [];
+                totalPeriodsCount += ps.length;
+                ps.forEach(p => {
+                    if (p.start && (!effMin || p.start < effMin)) effMin = p.start;
+                    if (p.end && (!effMax || p.end > effMax)) effMax = p.end;
+                });
+            });
+            if (!effMin) effMin = globalMinDateStr;
+            if (!effMax) effMax = globalMaxDateStr;
+
+            const minD = effMin ? formatDateDisplay(effMin) : '—';
+            const maxD = effMax ? formatDateDisplay(effMax) : '—';
+            const dateRangeLabel = (minD !== '—' && maxD !== '—') ? (minD === maxD ? minD : `${minD} — ${maxD}`) : '—';
+            const now = new Date();
+            const stamp = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+            const metaInfo = {
+                detailTitle: `Періоди ротацій — ${scopeLabel}`,
+                summaryTitle: `Зведення по особах — ${scopeLabel}`,
+                datesTitle: `Точні дати та локації обліку — ${scopeLabel}`,
+                dateRangeLabel,
+                stamp,
+                subtitle: `Період даних: ${dateRangeLabel} • Осіб: ${rowsToExport.length} • Періодів: ${totalPeriodsCount} • Сформовано: ${stamp}`
+            };
+
+            const styles = createOfficeExcelStyles();
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, buildRotationsPeriodsMainWorksheet(rowsToExport, metaInfo, styles), 'Періоди ротацій');
+            XLSX.utils.book_append_sheet(wb, buildRotationsSummaryWorksheet(rowsToExport, metaInfo, styles), 'Зведення по особах');
+            XLSX.utils.book_append_sheet(wb, buildRotationsExactDatesWorksheet(rowsToExport, metaInfo, styles), 'Точні дати');
+            wb._freezeSpecs = [
+                { path: 'xl/worksheets/sheet1.xml', freezeRow: rowsToExport.length === 1 ? 4 : 3 },
+                { path: 'xl/worksheets/sheet2.xml', freezeRow: 3 },
+                { path: 'xl/worksheets/sheet3.xml', freezeRow: 3 }
+            ];
+            return wb;
+        }
+
+        async function exportPeriodsWorkbook(rowsToExport, scopeLabel, filename) {
+            if (typeof XLSX === 'undefined') {
+                alert('Бібліотека Excel (XLSX) не завантажена.');
+                return;
+            }
+            if (!rowsToExport || rowsToExport.length === 0) {
+                alert('Немає записів для експорту.');
+                return;
+            }
+
+            try {
+                const wb = buildRotationsPeriodsWorkbook(rowsToExport, scopeLabel);
+                if (typeof JSZip !== 'undefined' && typeof Blob !== 'undefined' && typeof URL !== 'undefined') {
+                    const rawArr = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+                    const finalBytes = await injectXlsxFreezePanes(rawArr, wb._freezeSpecs || [
+                        'xl/worksheets/sheet1.xml',
+                        'xl/worksheets/sheet2.xml',
+                        'xl/worksheets/sheet3.xml'
+                    ]);
+                    const blob = new Blob([finalBytes || rawArr], {
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1500);
+                } else {
+                    XLSX.writeFile(wb, filename);
+                }
+                if (typeof showCopyToast === 'function') {
+                    showCopyToast(`Збережено Excel: ${filename}`);
+                }
+            } catch (err) {
+                console.error('Excel export error:', err);
+                alert(`Помилка формування Excel: ${err.message}`);
+            }
+        }
+
+        window.exportPeriodsExcel = function() {
+            const isSelected = selectedSoldiers.size > 0;
+            const rowsToExport = isSelected
+                ? tableDataForExport.filter(r => selectedSoldiers.has(r.key))
+                : tableDataForExport;
+
+            if (!rowsToExport || rowsToExport.length === 0) {
+                alert('Немає записів для експорту за поточними фільтрами.');
+                return;
+            }
+
+            const now = new Date();
+            const stamp = `${String(now.getDate()).padStart(2, '0')}_${String(now.getMonth() + 1).padStart(2, '0')}_${now.getFullYear()}`;
+            const scopeLabel = isSelected
+                ? `Вибірка (${rowsToExport.length} ос.)`
+                : `Усі за фільтром (${rowsToExport.length} ос.)`;
+            const filename = isSelected
+                ? `Періоди_ротацій_обрані_${rowsToExport.length}_осіб_${stamp}.xlsx`
+                : `Періоди_ротацій_дод6_${stamp}.xlsx`;
+
+            exportPeriodsWorkbook(rowsToExport, scopeLabel, filename);
+        };
+
+        window.exportSingleSoldierPeriodsExcel = function(key) {
+            const row = resolveSoldierRowForExport(key);
+            if (!row) return;
+            const now = new Date();
+            const stamp = `${String(now.getDate()).padStart(2, '0')}_${String(now.getMonth() + 1).padStart(2, '0')}_${now.getFullYear()}`;
+            const safeName = (row.name || 'Боєць').replace(/[^\p{L}\p{N}_-]+/gu, '_').replace(/^_+|_+$/g, '');
+            exportPeriodsWorkbook([row], row.name, `Періоди_${safeName}_${stamp}.xlsx`);
         };
 
         window.handleSort = function(col) {
@@ -2259,6 +3707,7 @@
             const banner = document.getElementById('selectionBanner');
             const countSpan = document.getElementById('selected-count');
             const exportDropdownBtnText = document.getElementById('exportDropdownBtnText');
+            const exportPeriodsBtnText = document.getElementById('exportPeriodsExcelBtnText');
             const exportBtnText = document.getElementById('exportExcelBtnText');
             const exportPosBtnText = document.getElementById('exportPositionsListBtnText');
             const selCount = selectedSoldiers.size;
@@ -2268,12 +3717,14 @@
                 banner.classList.add('flex');
                 countSpan.textContent = selCount;
                 if (exportDropdownBtnText) exportDropdownBtnText.textContent = `Експорт Excel (${selCount} обр.)`;
+                if (exportPeriodsBtnText) exportPeriodsBtnText.textContent = `Періоди ротацій (${selCount} обр.)`;
                 if (exportBtnText) exportBtnText.textContent = `Табель Excel (${selCount} обр.)`;
                 if (exportPosBtnText) exportPosBtnText.textContent = `Зріз позицій (${selCount} обр.)`;
             } else {
                 banner.classList.add('hidden');
                 banner.classList.remove('flex');
                 if (exportDropdownBtnText) exportDropdownBtnText.textContent = `Експорт Excel`;
+                if (exportPeriodsBtnText) exportPeriodsBtnText.textContent = `Періоди ротацій (Excel)`;
                 if (exportBtnText) exportBtnText.textContent = `Табель Excel`;
                 if (exportPosBtnText) exportPosBtnText.textContent = `Зріз позицій (Excel)`;
             }
@@ -2348,24 +3799,162 @@
                 }
             });
 
-            // Drag & Drop
+            // Завантажуємо налаштування фільтра назв файлів і дати з підпапки
+            loadRotFilterSettings();
+
+            // Drag & Drop (файли + рекурсивні папки з підпапками, глобально по всьому вікну)
+            async function handleIncomingFiles(rawFileList) {
+                const rawFiles = Array.from(rawFileList || []);
+                if (rawFiles.length === 0) return;
+
+                if (!isUploadPanelOpen) {
+                    toggleUploadPanel(true);
+                }
+
+                const { matched, skipped, stats } = filterCandidateRotationFiles(rawFiles);
+
+                if (matched.length === 0) {
+                    loadingIndicator.classList.add('hidden');
+                    const filterLabel = (rotFileFilter || '').trim();
+                    const msg = filterLabel
+                        ? `Проскановано ${stats.scanned} файлів — жоден не підійшов під фільтр «${filterLabel}» (.xlsx, .xls, .docx).`
+                        : `Проскановано ${stats.scanned} файлів — не знайдено жодного .xlsx, .xls чи .docx.`;
+                    renderRotEmptyFilterFeedback(msg);
+                    if (fileLog.children.length === 1 && fileLog.children[0].textContent.includes('Очікування')) {
+                        fileLog.innerHTML = '';
+                    }
+                    logMessage(`⚠️ ${escapeHtml(msg)}`, 'text-amber-400');
+                    switchRightPanelTab('logs');
+                    showCopyToast(filterLabel ? `Немає файлів за фільтром «${filterLabel}»` : 'Підходящих файлів не знайдено');
+                    if (window.lucide) lucide.createIcons();
+                    return;
+                }
+
+                hideRotEmptyFilterFeedback();
+                if (skipped.length > 0) {
+                    if (fileLog.children.length === 1 && fileLog.children[0].textContent.includes('Очікування')) {
+                        fileLog.innerHTML = '';
+                    }
+                    const details = [];
+                    if (stats.filterSkippedCount > 0) details.push(`за фільтром: ${stats.filterSkippedCount}`);
+                    if (stats.extSkippedCount + stats.tempSkippedCount > 0) details.push(`інші/тимчасові: ${stats.extSkippedCount + stats.tempSkippedCount}`);
+                    logMessage(`ℹ️ З папок відібрано <strong>${matched.length}</strong> із ${stats.scanned} файлів${details.length ? ` (пропущено ${details.join(', ')})` : ''}`, 'text-slate-400');
+                }
+
+                await processFiles(matched);
+            }
+
+            async function processCapturedDrop(captured) {
+                if (!isUploadPanelOpen) {
+                    toggleUploadPanel(true);
+                }
+                try {
+                    if (captured && (captured.hasDirectoryEntry || captured.itemCount > 1)) {
+                        loadingIndicator.classList.remove('hidden');
+                        loadingText.textContent = 'Сканування папок і підпапок...';
+                        loadingPercent.textContent = '...';
+                        progressBar.style.width = '15%';
+                    }
+
+                    let lastYieldAt = 0;
+                    const onScanProgress = async (count, currentPath) => {
+                        loadingIndicator.classList.remove('hidden');
+                        loadingText.textContent = `Сканування папок: знайдено ${count} файлів (${currentPath || '...'})`;
+                        const now = Date.now();
+                        if (now - lastYieldAt > 40) {
+                            lastYieldAt = now;
+                            await new Promise(r => setTimeout(r, 0));
+                        }
+                    };
+
+                    const files = await collectDroppedFiles(captured, onScanProgress);
+                    if (files.length > 0) {
+                        await handleIncomingFiles(files);
+                    } else {
+                        loadingIndicator.classList.add('hidden');
+                        const msg = (captured && captured.hasDirectoryEntry)
+                            ? 'У перетягнутій папці (та підпапках) файлів не знайдено або браузер обмежив доступ — спробуйте кнопку «Додати папку (з підпапками)».'
+                            : 'Перетягнуті елементи не містять доступних файлів (.xlsx, .xls, .docx).';
+                        renderRotEmptyFilterFeedback(msg);
+                        switchRightPanelTab('logs');
+                        logMessage(`⚠️ ${escapeHtml(msg)}`, 'text-amber-400');
+                    }
+                } catch (err) {
+                    console.error('Drop processing error:', err);
+                    loadingIndicator.classList.add('hidden');
+                    renderRotEmptyFilterFeedback('Помилка читання перетягнутої папки. Скористайтеся кнопкою «Додати папку (з підпапками)».');
+                }
+            }
+
             dropZone.addEventListener('click', (e) => {
-                if (e.target.tagName !== 'INPUT' && !e.target.closest('button')) {
+                if (e.target.tagName !== 'INPUT' && !e.target.closest('button') && !e.target.closest('label')) {
                     fileInput.click();
                 }
             });
-            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-                if (e.dataTransfer.files.length) processFiles(e.dataTransfer.files);
-            });
+
             fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length) processFiles(e.target.files);
+                if (e.target.files && e.target.files.length > 0) {
+                    const files = Array.from(e.target.files);
+                    e.target.value = '';
+                    handleIncomingFiles(files);
+                }
             });
+
             folderInput.addEventListener('change', (e) => {
-                if (e.target.files.length) processFiles(e.target.files);
+                if (e.target.files && e.target.files.length > 0) {
+                    const files = Array.from(e.target.files).map(f => {
+                        f._relativePath = f.webkitRelativePath || f.name;
+                        return f;
+                    });
+                    e.target.value = '';
+                    handleIncomingFiles(files);
+                }
+            });
+
+            let rotDragDepth = 0;
+            const resetRotDragOverlay = () => {
+                rotDragDepth = 0;
+                setRotDropHighlight(false);
+            };
+
+            window.addEventListener('dragend', resetRotDragOverlay);
+            window.addEventListener('blur', resetRotDragOverlay);
+
+            window.addEventListener('dragenter', (e) => {
+                if (!isFileDragEvent(e)) return;
+                e.preventDefault();
+                rotDragDepth++;
+                setRotDropHighlight(true);
+            });
+
+            window.addEventListener('dragover', (e) => {
+                if (!isFileDragEvent(e)) return;
+                e.preventDefault();
+                if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+                if (rotDragDepth === 0) {
+                    rotDragDepth = 1;
+                    setRotDropHighlight(true);
+                }
+            });
+
+            window.addEventListener('dragleave', (e) => {
+                rotDragDepth = Math.max(0, rotDragDepth - 1);
+                if (rotDragDepth === 0 || !e.relatedTarget) {
+                    resetRotDragOverlay();
+                }
+            });
+
+            window.addEventListener('drop', (e) => {
+                if (!isFileDragEvent(e)) {
+                    resetRotDragOverlay();
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                resetRotDragOverlay();
+
+                const captured = captureDroppedDataTransfer(e.dataTransfer);
+                processCapturedDrop(captured);
             });
 
             clearBtn.addEventListener('click', async () => {
@@ -2379,6 +3968,7 @@
                     globalMinDateStr = null;
                     await clearStateFromDB();
                     hideStorageStatus();
+                    hideRotEmptyFilterFeedback();
                     fileLog.innerHTML = '<li class="text-slate-500 italic flex items-center gap-2"><i data-lucide="info" class="w-3.5 h-3.5 text-slate-500"></i><span>Очікування завантаження файлів для аналізу...</span></li>';
                     document.getElementById('log-count').innerText = '0 записів';
                     document.getElementById('files-processed-badge').innerText = '0 дат';
@@ -2414,8 +4004,8 @@
                 const sortedDates = Array.from(successDatesCount).sort();
 
                 // Отримуємо актуальні виключення
-                const ignoreText = document.getElementById('ignoredStatuses') ? document.getElementById('ignoredStatuses').value : '';
-                const activeIgnored = ignoreText.split('\n').map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+                const ignoreText = document.getElementById('ignoreTextArea') ? document.getElementById('ignoreTextArea').value : '';
+                const activeIgnored = ignoreText.split(/[\n,;]+/).map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
 
                 // --- 1. АРКУШ ТАБЕЛЯ (Календарна сітка по днях) ---
                 const tabel_headers = [
@@ -3482,7 +5072,6 @@
                 }
 
                 loadingIndicator.classList.remove('hidden');
-                clearBtn.classList.remove('hidden');
 
                 let current = 0;
                 const total = filesArray.length;
@@ -3502,6 +5091,11 @@
                 loadingIndicator.classList.add('hidden');
                 fileInput.value = '';
                 folderInput.value = '';
+                if (uploadedFiles.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
 
                 // Автоматично зберігаємо стан у IndexedDB
                 await persistCurrentState();
@@ -3509,6 +5103,8 @@
                 // Автоматично згортаємо панель завантаження при успішному розборі, щоб дати 100% простору таблиці
                 if (successDatesCount.size > 0) {
                     toggleUploadPanel(false);
+                } else {
+                    switchRightPanelTab('logs');
                 }
 
                 if (window.lucide) lucide.createIcons();
@@ -3516,11 +5112,16 @@
 
             function processSingleFile(file) {
                 return new Promise((resolve) => {
-                    const extractedDate = extractDateFromFilename(file.name);
+                    const dateInfo = extractDateFromFile(file, rotDateFromPath);
+                    const extractedDate = dateInfo.dateStr;
+                    const relPath = (dateInfo.relPath || file._relativePath || file.webkitRelativePath || file.name).replace(/\\/g, '/');
                     const fileExtension = (file.name.split('.').pop() || '').toLowerCase();
 
                     if (!extractedDate) {
-                        logMessage(`❌ "${file.name}" — дату в назві не виявлено`, 'text-amber-400');
+                        const hint = rotDateFromPath
+                            ? 'дату не виявлено (ні в назві файлу, ні у папках)'
+                            : 'дату в назві файлу не виявлено';
+                        logMessage(`❌ "${escapeHtml(relPath)}" — ${hint}`, 'text-amber-400');
                         return resolve();
                     }
 
@@ -3606,10 +5207,20 @@
 
                             const fileEntries = Array.from(fileEntriesMap.values());
                             if (fileEntries.length > 0) {
-                                const existingIdx = uploadedFiles.findIndex(f => f.name === file.name && f.date === extractedDate);
+                                const isNested = relPath.includes('/');
+                                const existingIdx = uploadedFiles.findIndex(f => {
+                                    if (f.date !== extractedDate) return false;
+                                    const existingPath = (f.relativePath || f.name || '').replace(/\\/g, '/');
+                                    if (isNested || existingPath.includes('/')) {
+                                        return existingPath === relPath;
+                                    }
+                                    return f.name === file.name;
+                                });
                                 const fileRecord = {
                                     id: existingIdx !== -1 ? uploadedFiles[existingIdx].id : ('f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)),
                                     name: file.name,
+                                    relativePath: relPath,
+                                    dateSource: dateInfo.source,
                                     date: extractedDate,
                                     count: fileEntries.length,
                                     size: file.size || 0,
@@ -3623,160 +5234,20 @@
                                     uploadedFiles.push(fileRecord);
                                 }
 
-                                logMessage(`✅ ${formatDateDisplay(extractedDate)} — ${fileEntries.length} осіб (${file.name})`, 'text-emerald-400');
+                                const folderHint = (dateInfo.source === 'folder' && dateInfo.folderName)
+                                    ? ` <span class="text-sky-300">(з папки «${escapeHtml(dateInfo.folderName)}»)</span>`
+                                    : '';
+                                logMessage(`✅ ${formatDateDisplay(extractedDate)}${folderHint} — ${fileEntries.length} осіб (${escapeHtml(file.name)})`, 'text-emerald-400');
                             } else {
-                                logMessage(`⚠️ "${file.name}" — ПІБ бійців не виявлено`, 'text-slate-400');
+                                logMessage(`⚠️ "${escapeHtml(relPath)}" — ПІБ бійців не виявлено`, 'text-slate-400');
                             }
                         } catch (err) {
-                            logMessage(`❌ Помилка читання: ${file.name}`, 'text-red-400');
+                            logMessage(`❌ Помилка читання: ${escapeHtml(relPath)}`, 'text-red-400');
                         }
                         resolve();
                     };
                     reader.readAsArrayBuffer(file);
                 });
-            }
-
-            function extractDateFromFilename(filename) {
-                const m1 = filename.match(/(\d{4})[.\-_](\d{1,2})[.\-_](\d{1,2})/);
-                if (m1) return `${m1[1]}-${m1[2].padStart(2, '0')}-${m1[3].padStart(2, '0')}`;
-                const m2 = filename.match(/(\d{1,2})[.\-_](\d{1,2})[.\-_](\d{2,4})/);
-                if (m2) return `${m2[3].length === 2 ? '20' + m2[3] : m2[3]}-${m2[2].padStart(2, '0')}-${m2[1].padStart(2, '0')}`;
-                return null;
-            }
-
-            function getEpochDay(dateStr) {
-                if (!dateStr) return 0;
-                const parts = dateStr.split('-');
-                if (parts.length < 3) return 0;
-                return Math.floor(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])) / 86400000);
-            }
-
-            function cleanLocationName(loc) {
-                if (!loc) return "";
-                let s = String(loc).trim();
-                s = s.replace(/[`’ʼ‘"«»“”„]/g, '"').replace(/\s+/g, ' ');
-                return s;
-            }
-
-            function normalizeLocationKey(loc) {
-                if (!loc) return "";
-                let s = String(loc).toLowerCase().trim();
-                s = s.replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ');
-                s = s.replace(/[`’ʼ‘"«»“”„]/g, '').replace(/\s+/g, ' ');
-                s = s.replace(/\s*\((роп|воп|оп|взвод|рота|бат|б-н)\)/gi, '');
-                return s.trim();
-            }
-
-            function buildDetailedPeriods(recordsMap, ignoredKeywords = []) {
-                if (recordsMap.size === 0) return { periods: [], currentStreak: 0, uniqueStatuses: [] };
-
-                const sortedDates = Array.from(recordsMap.keys()).sort();
-                const latestPersonDate = sortedDates[sortedDates.length - 1];
-                const periods = [];
-                let currentPeriod = null;
-                
-                // Дедуплікація локацій з урахуванням регістру
-                const locationMap = new Map(); // normalized_low -> canonical representation
-
-                for (let i = 0; i < sortedDates.length; i++) {
-                    const dateStr = sortedDates[i];
-                    const record = recordsMap.get(dateStr);
-                    const statusStr = record.status;
-                    const rankStr = record.rank;
-                    const posStr = record.position;
-                    const statusLow = statusStr.toLowerCase();
-
-                    const isIgnored = ignoredKeywords.length > 0 && ignoredKeywords.some(kw => statusLow.includes(kw));
-
-                    // Дедуплікація під-локацій через normalizeLocationKey
-                    const rawParts = statusStr.split(/\s*\+\s*/);
-                    rawParts.forEach(part => {
-                        const cPart = cleanLocationName(part);
-                        const locNormKey = normalizeLocationKey(cPart);
-                        const isPartIgnored = ignoredKeywords.length > 0 && ignoredKeywords.some(kw => locNormKey.includes(kw));
-                        if (cPart && locNormKey && locNormKey !== 'не вказано' && !isPartIgnored) {
-                            if (!locationMap.has(locNormKey)) {
-                                locationMap.set(locNormKey, cPart);
-                            } else {
-                                const currentStored = locationMap.get(locNormKey);
-                                if (currentStored === currentStored.toUpperCase() && cPart !== cPart.toUpperCase()) {
-                                    locationMap.set(locNormKey, cPart);
-                                }
-                            }
-                        }
-                    });
-
-                    const locKey = normalizeLocationKey(statusStr);
-
-                    if (!currentPeriod) {
-                        currentPeriod = { 
-                            start: dateStr, 
-                            end: dateStr, 
-                            status: statusStr, 
-                            locKey: locKey, 
-                            rank: rankStr, 
-                            position: posStr, 
-                            days: 1, 
-                            isIgnored: isIgnored 
-                        };
-                    } else {
-                        const diffDays = getEpochDay(dateStr) - getEpochDay(currentPeriod.end);
-                        const isSameLocation = (currentPeriod.locKey === locKey) || (!currentPeriod.isIgnored && !isIgnored && currentPeriod.status.toLowerCase() === statusStr.toLowerCase());
-
-                        if (diffDays === 1 && isSameLocation && currentPeriod.isIgnored === isIgnored) {
-                            currentPeriod.end = dateStr;
-                            currentPeriod.days++;
-                            if (currentPeriod.status === currentPeriod.status.toUpperCase() && statusStr !== statusStr.toUpperCase()) {
-                                currentPeriod.status = statusStr;
-                            }
-                            if (rankStr && rankStr !== 'Не вказано') currentPeriod.rank = rankStr;
-                            if (posStr && posStr !== 'Не вказано') currentPeriod.position = posStr;
-                        } else {
-                            periods.push(currentPeriod);
-                            currentPeriod = { 
-                                start: dateStr, 
-                                end: dateStr, 
-                                status: statusStr, 
-                                locKey: locKey, 
-                                rank: rankStr, 
-                                position: posStr, 
-                                days: 1, 
-                                isIgnored: isIgnored 
-                            };
-                        }
-                    }
-                }
-                if (currentPeriod) periods.push(currentPeriod);
-
-                let currentStreak = 0;
-                let isGloballyInactive = false;
-
-                if (globalMaxDateStr) {
-                    const gapToGlobalMax = getEpochDay(globalMaxDateStr) - getEpochDay(latestPersonDate);
-                    if (gapToGlobalMax > 1) {
-                        isGloballyInactive = true;
-                    }
-                }
-
-                if (!isGloballyInactive && periods.length > 0) {
-                    for (let i = periods.length - 1; i >= 0; i--) {
-                        const p = periods[i];
-                        if (p.isIgnored) break;
-                        if (i < periods.length - 1) {
-                            const nextP = periods[i + 1];
-                            const gap = getEpochDay(nextP.start) - getEpochDay(p.end);
-                            if (gap > 1) break;
-                        }
-                        currentStreak += p.days;
-                    }
-                }
-
-                return {
-                    periods,
-                    currentStreak,
-                    uniqueStatuses: Array.from(locationMap.values()),
-                    isGloballyInactive
-                };
             }
 
             window.buildDetailsRowInnerHtml = function buildDetailsRowInnerHtml(row, personId) {
@@ -3798,80 +5269,92 @@
                     statusBadgePill = `<span class="px-2.5 py-0.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-mono text-[11px] font-bold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>🟢 Безперервно: ${details.currentStreak} діб</span>`;
                 }
 
-                // Генерація ультракомпактних чіпів маршруту з адаптивним переносом (flex-wrap)
-                const timelineChipsHtml = details.periods.map((p, pIdx) => {
-                    let isPartOfStreak = false;
-                    if (!p.isIgnored && !details.isGloballyInactive) {
-                        let gapFound = false;
-                        for (let k = pIdx; k < details.periods.length; k++) {
-                            if (details.periods[k].isIgnored) { gapFound = true; break; }
-                            if (k < details.periods.length - 1) {
-                                const gap = getEpochDay(details.periods[k + 1].start) - getEpochDay(details.periods[k].end);
-                                if (gap > 1) { gapFound = true; break; }
-                            }
+                // Генерація вертикального вирівняного маршруту періодів із фіксацією розривів
+                const timelineRowsHtml = details.periods.map((p, pIdx) => {
+                    let gapHtml = '';
+                    if (pIdx > 0) {
+                        const prevPeriod = details.periods[pIdx - 1];
+                        const gapDiff = getEpochDay(p.start) - getEpochDay(prevPeriod.end);
+                        if (gapDiff > 1) {
+                            const missingDays = gapDiff - 1;
+                            gapHtml = `
+                                <div class="route-gap text-[10px] font-mono text-slate-400">
+                                    <span class="route-gap-dot" aria-hidden="true"></span>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-950/90 border border-dashed border-slate-700/80 text-slate-400">
+                                        <i data-lucide="pause-circle" class="w-3 h-3 text-slate-500 shrink-0"></i>
+                                        <span>Пропуск у списках: <strong class="text-slate-200 font-semibold">${missingDays} ${formatDaysUa(missingDays)}</strong> — розрив безперервності</span>
+                                    </span>
+                                </div>
+                            `;
                         }
-                        isPartOfStreak = !gapFound;
                     }
 
-                    const isLast = (pIdx === details.periods.length - 1);
-                    const isSingleDay = (p.start === p.end);
-                    const dateRangeText = isSingleDay 
-                        ? formatDateDisplay(p.start) 
-                        : `${formatDateDisplay(p.start)} — ${formatDateDisplay(p.end)}`;
-                    const daysText = `${p.days} ${p.days === 1 ? 'доба' : (p.days >= 2 && p.days <= 4 ? 'доби' : 'діб')}`;
+                    const isPartOfStreak = isRotationPeriodInStreak(details.periods, pIdx, details.isGloballyInactive);
 
-                    let chipBg = 'bg-slate-900/90 border-slate-800 text-slate-300';
-                    let dotColor = 'bg-slate-500';
-                    let badgeTag = '';
+                    const isSingleDay = (p.start === p.end);
+                    const dateRangeText = isSingleDay
+                        ? formatDateDisplay(p.start)
+                        : `${formatDateDisplay(p.start)} — ${formatDateDisplay(p.end)}`;
+                    const daysText = `${p.days} ${formatDaysUa(p.days)}`;
+
+                    let rowCls = 'bg-slate-900/65 border-slate-800/90 hover:border-slate-700';
+                    let dotCls = 'bg-slate-500';
+                    let statusTagHtml = '<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/80 border border-slate-800 text-slate-400 font-mono text-[10px] uppercase tracking-wide whitespace-nowrap">Минулий</span>';
 
                     if (p.isIgnored) {
-                        chipBg = 'bg-red-950/30 border-red-800/60 text-red-200';
-                        dotColor = 'bg-red-500';
-                        badgeTag = '<span class="text-[9px] font-mono font-bold text-red-400 uppercase bg-red-950/90 px-1.5 py-0.2 rounded border border-red-800/80 shrink-0">Скидання</span>';
+                        rowCls = 'bg-slate-900/80 border-rose-500/30 hover:border-rose-400/50';
+                        dotCls = 'bg-rose-400';
+                        statusTagHtml = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-950/60 border border-rose-500/35 text-rose-300 font-mono text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap"><i data-lucide="rotate-ccw" class="w-2.5 h-2.5 shrink-0"></i><span>Скидання</span></span>';
                     } else if (isPartOfStreak) {
                         if (details.currentStreak >= 60) {
-                            chipBg = 'bg-red-950/30 border-red-500/60 text-red-100 shadow-xs shadow-red-950';
-                            dotColor = 'bg-red-400';
+                            rowCls = 'bg-slate-900/95 border-rose-500/40 hover:border-rose-400/60';
+                            dotCls = 'bg-rose-400';
+                            statusTagHtml = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-950/70 border border-rose-500/40 text-rose-200 font-mono text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap"><i data-lucide="flame" class="w-2.5 h-2.5 shrink-0"></i><span>Стрік</span></span>';
                         } else if (details.currentStreak >= 50) {
-                            chipBg = 'bg-amber-950/30 border-amber-500/60 text-amber-100 shadow-xs shadow-amber-950';
-                            dotColor = 'bg-amber-400';
+                            rowCls = 'bg-slate-900/95 border-amber-500/35 hover:border-amber-400/55';
+                            dotCls = 'bg-amber-400';
+                            statusTagHtml = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-500/40 text-amber-200 font-mono text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap"><i data-lucide="flame" class="w-2.5 h-2.5 shrink-0"></i><span>Стрік</span></span>';
                         } else {
-                            chipBg = 'bg-slate-800/90 border-slate-700 text-slate-200 shadow-xs';
-                            dotColor = 'bg-emerald-400';
+                            rowCls = 'bg-slate-900/95 border-emerald-500/30 hover:border-emerald-400/50';
+                            dotCls = 'bg-emerald-400';
+                            statusTagHtml = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-950/60 border border-emerald-500/35 text-emerald-300 font-mono text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap"><i data-lucide="check" class="w-2.5 h-2.5 shrink-0"></i><span>Стрік</span></span>';
                         }
-                        badgeTag = '<span class="text-[9px] font-mono font-bold text-emerald-400 uppercase bg-slate-950 px-1.5 py-0.2 rounded border border-slate-800 shrink-0">Стрік</span>';
                     }
 
-                    const hasDiffPos = (p.position && p.position !== 'Не вказано' && p.position !== row.latestPosition);
-                    const diffNotice = hasDiffPos 
-                        ? `<span class="text-[9px] font-mono text-amber-300/90 max-w-[150px] truncate shrink-0" title="Посада за період: ${escapeHtml(p.position)}">📌 ${escapeHtml(p.position)}</span>`
-                        : '';
-
-                    const arrowHtml = !isLast 
-                        ? '<div class="flex items-center justify-center text-slate-500 shrink-0 px-0.5"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></div>' 
+                    const normPeriodPos = (p.position || '').trim().toLowerCase();
+                    const normLatestPos = (row.latestPosition || '').trim().toLowerCase();
+                    const hasDiffPos = (p.position && p.position !== 'Не вказано' && normPeriodPos !== normLatestPos);
+                    const diffNotice = hasDiffPos
+                        ? `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-950/35 border border-amber-500/25 text-[11px] font-sans text-amber-200/95 break-words" title="Посада за цей період"><i data-lucide="briefcase" class="w-3 h-3 text-amber-400 shrink-0"></i><span>${escapeHtml(p.position)}</span></span>`
                         : '';
 
                     return `
-                        <div class="flex items-center gap-1.5">
-                            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border ${chipBg} font-mono text-xs transition-colors hover:border-slate-600 shadow-xs">
-                                <span class="w-1.5 h-1.5 rounded-full ${dotColor} shrink-0"></span>
-                                <span class="font-bold text-white text-[11px] whitespace-nowrap">${dateRangeText}</span>
-                                <span class="text-slate-300 text-[10px] font-semibold bg-slate-950/80 px-1.5 py-0.5 rounded border border-slate-800 shrink-0 whitespace-nowrap">${daysText}</span>
-                                ${getPositionBadge(p.status, { truncate: false })}
-                                ${badgeTag}
-                                ${diffNotice}
+                        ${gapHtml}
+                        <div class="route-step">
+                            <span class="route-dot ${dotCls}" aria-hidden="true"></span>
+                            <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 px-3 py-2 rounded-xl border ${rowCls} transition-colors">
+                                <div class="flex items-center gap-2.5 shrink-0">
+                                    <span class="font-mono tabular-nums font-bold text-slate-100 text-[11px] md:w-[174px] whitespace-nowrap">${dateRangeText}</span>
+                                    <span class="font-mono tabular-nums text-[10px] font-semibold text-slate-200 bg-slate-950/90 px-2 py-0.5 rounded-md border border-slate-800 md:w-[74px] text-center whitespace-nowrap">${daysText}</span>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+                                    ${getPositionBadge(p.status, { truncate: false })}
+                                    ${diffNotice}
+                                </div>
+                                <div class="flex items-center shrink-0 md:ml-auto">
+                                    ${statusTagHtml}
+                                </div>
                             </div>
-                            ${arrowHtml}
                         </div>
                     `;
                 }).join('');
 
                 return `
-                    <td colspan="8" class="p-3 bg-slate-950/95 border-b border-slate-800/90 shadow-inner max-w-0 w-full min-w-0">
-                        <div class="flex flex-col gap-2.5 w-full min-w-0">
+                    <td colspan="8" class="p-3 sm:p-3.5 bg-slate-950/95 border-b border-slate-800/90 shadow-inner max-w-0 w-full min-w-0">
+                        <div class="flex flex-col gap-3 w-full min-w-0">
                             
                             <!-- Рядок 1: Компактна мета-інформація та дія -->
-                            <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 pb-2 border-b border-slate-800/80">
+                            <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-800/80">
                                 <div class="flex items-center gap-2 flex-wrap min-w-0">
                                     <div class="w-6 h-6 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0">
                                         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
@@ -3879,16 +5362,23 @@
                                     <span class="text-sm font-bold text-white tracking-tight">${escapeHtml(row.name)}</span>
                                     ${getRankBadge(row.latestRank)}
                                     ${statusBadgePill}
-                                    <span class="text-xs text-slate-400 font-sans truncate max-w-lg 2xl:max-w-2xl" title="${escapeHtml(row.latestPosition || '')}">
+                                    <span class="text-xs text-slate-400 font-sans break-words max-w-lg 2xl:max-w-2xl" title="${escapeHtml(row.latestPosition || '')}">
                                         ${escapeHtml(row.latestPosition || 'Посаду не вказано')}
                                     </span>
                                 </div>
 
                                 <div class="flex items-center gap-2 shrink-0 flex-wrap">
-                                    <span class="text-[11px] font-mono text-slate-400 bg-slate-900/90 px-2.5 py-1 rounded-xl border border-slate-800 flex items-center gap-1.5 shadow-xs">
+                                    <span class="text-[11px] font-mono tabular-nums text-slate-400 bg-slate-900/90 px-2.5 py-1 rounded-xl border border-slate-800 flex items-center gap-1.5 shadow-xs">
                                         <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
                                         <span>Облік: <strong class="text-slate-200">${formatDateDisplay(firstDate)} — ${formatDateDisplay(lastDate)}</strong> (${totalDaysInBase} дн.)</span>
                                     </span>
+
+                                    <button type="button" onclick="event.stopPropagation(); window.exportSingleSoldierPeriodsExcel('${row.key}')"
+                                        class="px-3 py-1 bg-emerald-600/20 hover:bg-emerald-600/35 text-emerald-200 hover:text-white border border-emerald-500/40 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                                        title="Скачати періоди ротацій цього бійця в Excel">
+                                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                        <span>Скачати Excel</span>
+                                    </button>
 
                                     <button type="button" onclick="event.stopPropagation(); copySoldierDossierByKey('${row.key}', this)"
                                         class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
@@ -3899,14 +5389,17 @@
                                 </div>
                             </div>
 
-                            <!-- Рядок 2: Хронологічний маршрут позицій -->
-                            <div class="flex flex-col sm:flex-row sm:items-start gap-2 pt-0.5 min-w-0">
-                                <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider shrink-0 pt-1">
-                                    <i data-lucide="route" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                                    <span class="text-slate-300">Маршрут (${details.periods.length}):</span>
+                            <!-- Рядок 2: Вертикальний маршрут періодів -->
+                            <div class="space-y-2 pt-0.5 min-w-0">
+                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                    <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider">
+                                        <i data-lucide="route" class="w-3.5 h-3.5 text-sky-400 shrink-0"></i>
+                                        <span>Маршрут (${details.periods.length})</span>
+                                    </div>
+                                    <span class="text-[10px] font-mono text-slate-500">Вирівняна хронологія періодів та перерв</span>
                                 </div>
-                                <div class="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
-                                    ${timelineChipsHtml}
+                                <div class="route-timeline">
+                                    ${timelineRowsHtml}
                                 </div>
                             </div>
 
