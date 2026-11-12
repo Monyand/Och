@@ -1,704 +1,1476 @@
 <!DOCTYPE html>
-<html lang="uk" class="dark">
-
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Єдиний Центр Управління | Комплекс Програм</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
-                    },
-                    colors: {
-                        darkbg: '#050811',
-                        darkcard: '#0c1322',
-                        darkpanel: '#090e1a',
-                        darkinput: '#111b2e',
-                        darkborder: '#1e293b'
-                    }
+    <meta name="color-scheme" content="dark">
+    <title>HUB ОЧ // ТАКТ-ОБЛІК — Відомість робочих модулів</title>
+
+    <!-- 100% Офлайн-бібліотеки (пріоритет v8/) -->
+    <script src="v8/tailwind.js"></script>
+    <script src="v8/lucide.js"></script>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg-paper: #111418;
+            --bg-surface: #181c22;
+            --bg-band: #20262f;
+            --bg-toolbar: #151920;
+            --bg-priority: #182230;
+            --bg-hover: #1f252e;
+
+            --shell-bg: #141922;
+            --shell-border: #0a0d12;
+            --shell-inset: #0e1218;
+            --shell-stroke: #343f50;
+            --shell-ink: #e6e8eb;
+            --shell-muted: #98a4b5;
+
+            --border-rule: #2b3340;
+            --border-subtle: #222933;
+            --border-input: #394455;
+
+            --ink-primary: #e6e8eb;
+            --ink-secondary: #a5adb8;
+            --ink-muted: #8892a0;
+
+            --accent-primary: #4c8ed9;
+            --accent-btn: #2b67ab;
+            --accent-hover: #245791;
+            --accent-tint: #182638;
+
+            --state-ok: #4cc38a;
+            --state-ok-bg: #11261c;
+            --state-ok-border: #265c41;
+            --state-warn: #f0b44c;
+            --state-warn-bg: #281f0f;
+            --state-warn-border: #6e4e16;
+            --state-err: #f27474;
+            --state-err-bg: #2b1416;
+            --state-err-border: #7c2a30;
+
+            --font-sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Cascadia Mono', 'Consolas', ui-monospace, SFMono-Regular, monospace;
+        }
+
+        html {
+            font-size: 16px;
+            scrollbar-color: #4b5563 #14181f;
+            scrollbar-width: auto;
+        }
+
+        body {
+            margin: 0;
+            min-block-size: 100dvh;
+            background-color: var(--bg-paper);
+            color: var(--ink-primary);
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            line-height: 1.45;
+            text-align: start;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            text-wrap: balance;
+        }
+
+        h2, h3 {
+            margin: 0;
+            text-wrap: balance;
+        }
+
+        p {
+            margin: 0;
+            text-wrap: pretty;
+        }
+
+        ::selection {
+            background-color: var(--accent-primary);
+            color: #ffffff;
+        }
+
+        button, a, input {
+            font-family: inherit;
+        }
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
+        .mono-num {
+                font-family: var(--font-mono);
+                font-variant-numeric: tabular-nums;
+            }
+
+            /* -------------------------------------------------------------
+               Екран блокування доступу (Login Gate)
+            ------------------------------------------------------------- */
+            .login-backdrop {
+                position: fixed;
+                inset: 0;
+                z-index: 200;
+                display: grid;
+                place-items: center;
+                padding: 1.25rem;
+                background-color: var(--bg-paper);
+                transition: opacity 0.2s ease, visibility 0.2s ease;
+            }
+
+            .login-sheet {
+                inline-size: 100%;
+                max-inline-size: 27rem;
+                background-color: var(--bg-surface);
+                border: 1px solid var(--border-rule);
+                border-top: 4px solid var(--shell-bg);
+            }
+
+            .login-head {
+                background-color: var(--shell-bg);
+                color: var(--shell-ink);
+                padding: 1.125rem 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+                border-bottom: 1px solid var(--shell-border);
+            }
+
+            .login-body {
+                padding: 1.5rem;
+            }
+
+            .field-input {
+                inline-size: 100%;
+                min-block-size: 2.625rem;
+                padding: 0.5625rem 0.75rem;
+                background-color: var(--shell-inset);
+                border: 1px solid var(--border-input);
+                color: var(--ink-primary);
+                font-size: 0.9375rem;
+                border-radius: 2px;
+                transition: border-color 0.15s ease;
+            }
+
+            .field-input::placeholder {
+                color: var(--ink-muted);
+            }
+
+            .field-input:focus {
+                border-color: var(--accent-primary);
+                outline: 2px solid rgba(76, 142, 217, 0.25);
+                outline-offset: 0;
+            }
+
+            .btn-primary {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                min-block-size: 2.5rem;
+                padding: 0.5rem 1rem;
+                background-color: var(--accent-btn);
+                color: #f4f6f8;
+                border: 1px solid var(--accent-primary);
+                border-radius: 2px;
+                font-size: 0.875rem;
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                transition: background-color 0.15s ease, border-color 0.15s ease;
+            }
+
+            .btn-primary:hover:not(:disabled) {
+                background-color: var(--accent-hover);
+                border-color: var(--accent-hover);
+            }
+
+            /* -------------------------------------------------------------
+               Основна робоча оболонка (Shell + Title-Block Header)
+            ------------------------------------------------------------- */
+            .hub-shell {
+                min-block-size: 100dvh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .topbar {
+                background-color: var(--shell-bg);
+                color: var(--shell-ink);
+                border-bottom: 2px solid var(--shell-border);
+                padding: 0.75rem 1.75rem;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem 1.25rem;
+            }
+
+            .brand-cluster {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.625rem 0.875rem;
+                min-inline-size: 0;
+            }
+
+            .brand-mark {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                inline-size: 2.125rem;
+                block-size: 2.125rem;
+                background-color: var(--shell-inset);
+                border: 1px solid var(--shell-stroke);
+                color: var(--shell-ink);
+                flex-shrink: 0;
+            }
+
+            h1.brand-title,
+            .brand-title {
+                font-size: 1.5rem;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+                line-height: 1.2;
+                color: var(--shell-ink);
+            }
+
+            .brand-subtitle {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                color: var(--shell-muted);
+            }
+
+            .version-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375rem;
+                padding: 0.25rem 0.5625rem;
+                background-color: var(--shell-inset);
+                border: 1px solid var(--shell-stroke);
+                color: var(--shell-ink);
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                font-variant-numeric: tabular-nums;
+                cursor: pointer;
+                border-radius: 2px;
+                transition: background-color 0.15s ease, border-color 0.15s ease;
+            }
+
+            .version-btn:hover {
+                background-color: var(--bg-band);
+                border-color: var(--accent-primary);
+            }
+
+            .top-actions {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .dispatcher-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.3125rem 0.75rem;
+                background-color: var(--shell-inset);
+                border: 1px solid var(--shell-stroke);
+                color: #dbe7f7;
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                font-variant-numeric: tabular-nums;
+                text-decoration: none;
+                border-radius: 2px;
+            }
+
+            .dispatcher-badge.is-online {
+                border-color: #2e8555;
+                background-color: #0e281d;
+                color: #d1fae5;
+            }
+
+            .dispatcher-badge.is-offline {
+                border-color: #9a5b13;
+                background-color: #291c0d;
+                color: #fde68a;
+            }
+
+            .status-dot {
+                inline-size: 0.5rem;
+                block-size: 0.5rem;
+                border-radius: 50%;
+                background-color: #94a3b8;
+                flex-shrink: 0;
+            }
+
+            .dispatcher-badge.is-online .status-dot {
+                background-color: #22c55e;
+            }
+
+            .dispatcher-badge.is-offline .status-dot {
+                background-color: #f59e0b;
+            }
+
+            .btn-shell {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375rem;
+                padding: 0.375rem 0.75rem;
+                border: 1px solid var(--shell-stroke);
+                background-color: transparent;
+                color: var(--shell-ink);
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-decoration: none;
+                cursor: pointer;
+                border-radius: 2px;
+                transition: background-color 0.15s ease, border-color 0.15s ease;
+            }
+
+            .btn-shell:hover {
+                background-color: var(--bg-band);
+                border-color: var(--accent-primary);
+            }
+
+            .btn-shell--danger:hover {
+                background-color: #45151a;
+                border-color: #dc2626;
+                color: #fee2e2;
+            }
+
+            /* -------------------------------------------------------------
+               Багаторівневий стабільний тулбар (Zoom-safe)
+            ------------------------------------------------------------- */
+            .toolbar {
+                background-color: var(--bg-toolbar);
+                border-bottom: 1px solid var(--border-rule);
+                padding: 0.625rem 1.75rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .toolbar-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.625rem 1rem;
+            }
+
+            .search-wrap {
+                position: relative;
+                flex: 1 1 20rem;
+                max-inline-size: 34rem;
+                min-inline-size: 0;
+            }
+
+            .search-icon {
+                position: absolute;
+                inset-inline-start: 0.75rem;
+                inset-block-start: 50%;
+                transform: translateY(-50%);
+                color: var(--ink-muted);
+                pointer-events: none;
+            }
+
+            .search-input {
+                inline-size: 100%;
+                min-block-size: 2.375rem;
+                padding: 0.4375rem 5.5rem 0.4375rem 2.25rem;
+                background-color: var(--shell-inset);
+                border: 1px solid var(--border-input);
+                color: var(--ink-primary);
+                font-size: 0.875rem;
+                border-radius: 2px;
+            }
+
+            .search-input:focus {
+                border-color: var(--accent-primary);
+                outline: 2px solid rgba(76, 142, 217, 0.25);
+                outline-offset: 0;
+            }
+
+            .search-input::placeholder {
+                color: var(--ink-muted);
+            }
+
+            .search-right {
+                position: absolute;
+                inset-inline-end: 0.5rem;
+                inset-block-start: 50%;
+                transform: translateY(-50%);
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375rem;
+            }
+
+            .kbd-hint {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                padding: 0.125rem 0.375rem;
+                background-color: var(--bg-band);
+                border: 1px solid var(--border-rule);
+                color: var(--ink-secondary);
+                border-radius: 2px;
+            }
+
+            .clear-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                inline-size: 1.5rem;
+                block-size: 1.5rem;
+                background-color: transparent;
+                border: 1px solid transparent;
+                color: var(--ink-muted);
+                cursor: pointer;
+                border-radius: 2px;
+            }
+
+            .clear-btn:hover {
+                color: var(--ink-primary);
+                background-color: var(--bg-band);
+            }
+
+            .contour-tabs {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.375rem;
+            }
+
+            .tab-btn {
+                padding: 0.3125rem 0.6875rem;
+                background-color: var(--bg-surface);
+                border: 1px solid var(--border-rule);
+                color: var(--ink-secondary);
+                font-size: 0.75rem;
+                font-weight: 600;
+                cursor: pointer;
+                border-radius: 2px;
+                transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+            }
+
+            .tab-btn:hover {
+                border-color: var(--accent-primary);
+                color: var(--ink-primary);
+            }
+
+            .tab-btn[aria-pressed="true"] {
+                background-color: var(--accent-btn);
+                border-color: var(--accent-primary);
+                color: #f4f6f8;
+            }
+
+            .toolbar-stats {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem 1.25rem;
+                padding-top: 0.375rem;
+                border-top: 1px solid var(--border-rule);
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                font-variant-numeric: tabular-nums;
+                color: var(--ink-secondary);
+            }
+
+            .stat-cluster {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.5rem 1.25rem;
+            }
+
+            .stat-cluster strong {
+                color: var(--ink-primary);
+            }
+
+            /* -------------------------------------------------------------
+               Відомість робочих контурів та модулів (4 Контури)
+            ------------------------------------------------------------- */
+            .workspace {
+                flex: 1 1 auto;
+                padding: 1.25rem 1.75rem 2rem;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 1.25rem 1.5rem;
+                align-content: start;
+                max-inline-size: 105rem;
+                inline-size: 100%;
+                margin-inline: auto;
+            }
+
+            @media (max-width: 1120px) {
+                .workspace {
+                    grid-template-columns: minmax(0, 1fr);
                 }
             }
-        };
-    </script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 50% 0%, #0f1c3f 0%, #050811 75%);
-            min-height: 100vh;
-        }
 
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
+            .contour-section {
+                background-color: var(--bg-surface);
+                border: 1px solid var(--border-rule);
+                min-inline-size: 0;
+            }
 
-        ::-webkit-scrollbar-track {
-            background: #050811;
-        }
+            .contour-head {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem;
+                padding: 0.5625rem 0.875rem;
+                background-color: var(--bg-band);
+                border-bottom: 1px solid var(--border-rule);
+            }
 
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 4px;
-        }
+            .contour-title {
+                font-size: 0.75rem;
+                font-weight: 700;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--ink-primary);
+            }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
-        }
+            .contour-code {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                color: var(--ink-secondary);
+                font-variant-numeric: tabular-nums;
+            }
 
-        .app-card {
-            background-color: #0c1322;
-            border: 1px solid #1e293b;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
+            .module-row {
+                display: grid;
+                grid-template-columns: 3.125rem minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.6875rem 0.875rem;
+                border-bottom: 1px solid var(--border-subtle);
+                transition: background-color 0.12s ease;
+            }
 
-        .app-card:hover {
-            transform: translateY(-4px);
-            border-color: #3b82f6;
-            box-shadow: 0 14px 30px -8px rgba(59, 130, 246, 0.22);
-        }
+            .module-row:last-child {
+                border-bottom: none;
+            }
 
-        @keyframes pulse-glow {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-        .animate-glow {
-            animation: pulse-glow 3s infinite ease-in-out;
-        }
+            .module-row:hover {
+                background-color: var(--bg-hover);
+            }
+
+            .module-row.is-priority {
+                background-color: var(--bg-priority);
+                border-inline-start: 3px solid var(--accent-primary);
+                padding-inline-start: calc(0.875rem - 3px);
+            }
+
+            .module-row.is-priority:hover {
+                background-color: #1d293a;
+            }
+
+            .module-code {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: var(--accent-primary);
+                font-variant-numeric: tabular-nums;
+            }
+
+            .module-info {
+                min-inline-size: 0;
+            }
+
+            .module-head-line {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: baseline;
+                gap: 0.375rem 0.625rem;
+            }
+
+            .module-name {
+                font-size: 0.9375rem;
+                font-weight: 700;
+                color: var(--ink-primary);
+            }
+
+            .module-tag {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                padding: 0.0625rem 0.375rem;
+                background-color: var(--bg-toolbar);
+                border: 1px solid var(--border-rule);
+                color: var(--ink-secondary);
+                border-radius: 2px;
+            }
+
+            .module-tag--accent {
+                background-color: var(--accent-tint);
+                border-color: #35547a;
+                color: #a9ccf0;
+            }
+
+            .module-desc {
+                margin-top: 0.1875rem;
+                font-size: 0.75rem;
+                color: var(--ink-muted);
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                line-clamp: 2;
+                overflow: hidden;
+            }
+
+            .module-actions {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-shrink: 0;
+            }
+
+            .module-meta {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 0.125rem;
+                min-inline-size: 4.75rem;
+            }
+
+            .module-ver {
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                font-weight: 600;
+                font-variant-numeric: tabular-nums;
+                color: var(--ink-primary);
+                background-color: var(--bg-band);
+                border: 1px solid var(--border-rule);
+                padding: 0.125rem 0.4375rem;
+                border-radius: 2px;
+            }
+
+            .module-date {
+                font-family: var(--font-mono);
+                font-size: 0.6875rem;
+                font-variant-numeric: tabular-nums;
+                color: var(--ink-muted);
+            }
+
+            .btn-open {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.3125rem;
+                padding: 0.375rem 0.6875rem;
+                background-color: var(--accent-btn);
+                color: #f4f6f8;
+                border: 1px solid var(--accent-primary);
+                border-radius: 2px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-decoration: none;
+                white-space: nowrap;
+                transition: background-color 0.15s ease;
+            }
+
+            .btn-open:hover {
+                background-color: var(--accent-hover);
+                border-color: var(--accent-hover);
+            }
+
+            .btn-dl {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                inline-size: 2rem;
+                block-size: 1.9375rem;
+                background-color: var(--bg-surface);
+                border: 1px solid var(--border-input);
+                color: var(--ink-secondary);
+                border-radius: 2px;
+                text-decoration: none;
+                transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+            }
+
+            .btn-dl:hover {
+                background-color: var(--bg-band);
+                border-color: var(--ink-secondary);
+                color: var(--ink-primary);
+            }
+
+            @media (max-width: 680px) {
+                .topbar, .toolbar {
+                    padding-inline: 1rem;
+                }
+                .workspace {
+                    padding: 0.875rem 1rem 1.5rem;
+                }
+                .module-row {
+                    grid-template-columns: 2.75rem minmax(0, 1fr);
+                }
+                .module-actions {
+                    grid-column: 1 / -1;
+                    justify-content: space-between;
+                    padding-top: 0.375rem;
+                    border-top: 1px dashed var(--border-subtle);
+                }
+                .module-meta {
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+            }
+
+            .empty-state {
+                grid-column: 1 / -1;
+                background-color: var(--bg-surface);
+                border: 1px solid var(--border-rule);
+                padding: 2.5rem 1.5rem;
+                text-align: center;
+                color: var(--ink-muted);
+            }
+
+            .hub-footer {
+                background-color: var(--bg-band);
+                border-top: 1px solid var(--border-rule);
+                padding: 0.625rem 1.75rem;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem 1rem;
+                font-family: var(--font-mono);
+                font-size: 0.75rem;
+                color: var(--ink-secondary);
+            }
+
+            /* -------------------------------------------------------------
+               Модальне вікно історії змін (<dialog>)
+            ------------------------------------------------------------- */
+            dialog.hub-dialog {
+                margin: auto;
+                padding: 0;
+                inline-size: min(40rem, calc(100% - 2rem));
+                max-block-size: 85dvh;
+                border: 1px solid var(--border-rule);
+                border-top: 3px solid var(--accent-primary);
+                background-color: var(--bg-surface);
+                color: var(--ink-primary);
+                z-index: 210;
+            }
+
+            dialog.hub-dialog::backdrop {
+                background-color: rgba(6, 9, 13, 0.75);
+            }
+
+            .dialog-head {
+                background-color: var(--bg-band);
+                border-bottom: 1px solid var(--border-rule);
+                padding: 0.875rem 1.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+            }
+
+            .dialog-body {
+                padding: 1.125rem 1.25rem;
+                overflow-y: auto;
+                max-block-size: calc(85dvh - 4rem);
+                scrollbar-gutter: stable;
+                overscroll-behavior: contain;
+            }
+
+            .changelog-entry {
+                padding-bottom: 0.875rem;
+                margin-bottom: 0.875rem;
+                border-bottom: 1px solid var(--border-subtle);
+            }
+
+            .changelog-entry:last-child {
+                border-bottom: none;
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+
+            .hidden {
+                display: none !important;
+            }
     </style>
 </head>
+<body>
 
-<body class="text-slate-200 antialiased min-h-screen flex flex-col justify-between selection:bg-blue-500/30">
-
-    <!-- Login Screen -->
-    <div id="login-screen" class="w-full flex-1 flex flex-col items-center justify-center p-4">
-        <div class="app-card rounded-2xl p-8 max-w-sm w-full mx-4 text-center shadow-2xl border border-slate-800">
-            <div class="w-14 h-14 mx-auto mb-5 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
-                <i data-lucide="shield-check" class="w-7 h-7"></i>
-            </div>
-            <h2 class="text-2xl font-extrabold text-white mb-2 tracking-tight">Вхід у Систему</h2>
-            <p class="text-xs text-slate-400 mb-6">Введіть пароль для доступу до панелі інструментів</p>
-            
-            <div class="space-y-3 text-left">
-                <div class="relative">
-                    <input type="password" id="password-input"
-                        class="w-full bg-[#111b2e] border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono text-sm"
-                        placeholder="Пароль..." onkeypress="if(event.key === 'Enter') checkPassword()">
+    <!-- Екран авторизації -->
+    <div id="login-screen" class="login-backdrop">
+        <div class="login-sheet">
+            <div class="login-head">
+                <div>
+                    <div class="mono-num text-xs" style="color: var(--shell-muted);">СИСТЕМА ТАКТ-ОБЛІК</div>
+                    <h2 style="font-size: 1.125rem; font-weight: 700;">Вхід до HUB ОЧ</h2>
                 </div>
-                <button onclick="checkPassword()"
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-lg hover:shadow-blue-600/30 active:scale-[0.98] text-sm flex items-center justify-center gap-2 cursor-pointer">
-                    <i data-lucide="log-in" class="w-4 h-4"></i>
-                    <span>Увійти</span>
-                </button>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
             </div>
-            <p id="error-msg" class="text-rose-400 text-xs mt-3.5 hidden font-medium text-center">
-                <span class="inline-flex items-center justify-center gap-1">
-                    <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
-                    <span>Невірний пароль! Спробуйте ще раз.</span>
-                </span>
-            </p>
+            <div class="login-body">
+                <p style="color: var(--ink-secondary); font-size: 0.8125rem; margin-bottom: 1rem;">
+                    Автономний робочий вузол утиліт чергової служби та штабу. Введіть ключ доступу для відкриття відомості модулів.
+                </p>
+                <div style="margin-bottom: 0.875rem;">
+                    <label for="password-input" class="mono-num" style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--ink-secondary); margin-bottom: 0.375rem;">
+                        ПАРОЛЬ ДОСТУПУ
+                    </label>
+                    <input type="password" id="password-input" placeholder="Введіть пароль..." autocomplete="current-password" class="field-input">
+                </div>
+                <button type="button" onclick="checkPassword()" class="btn-primary" style="inline-size: 100%;">
+                    <span>Розблокувати робочу область</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M5 12h14"></path>
+                        <path d="m12 5 7 7-7 7"></path>
+                    </svg>
+                </button>
+                <p id="error-msg" class="hidden" style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: var(--state-err-bg); border: 1px solid var(--state-err-border); color: var(--state-err); font-size: 0.75rem; font-weight: 600;">
+                    Невірний пароль. Спробуйте ще раз.
+                </p>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content (Hidden by default) -->
-    <div id="main-content" class="w-full flex-col items-center flex-1 p-4 sm:p-6 lg:p-10 hidden">
-        
-        <!-- Header -->
-        <header class="max-w-7xl w-full mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-[#0c1322]/80 backdrop-blur-md p-6 rounded-2xl border border-slate-800 shadow-xl">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 shrink-0">
-                    <i data-lucide="layers" class="w-6 h-6"></i>
+    <!-- Основний контент -->
+    <div id="main-content" class="hub-shell hidden">
+
+        <!-- Рядок 1 шапки: Ідентифікатор + Диспетчер + Глобальні переходи -->
+        <header class="topbar">
+            <div class="brand-cluster">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
                 </div>
                 <div>
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <h1 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400 tracking-tight">
-                            Єдиний Центр Управління
-                        </h1>
-                        <span class="text-[11px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full">
-                            HUB v2.0
-                        </span>
-                    </div>
-                    <p class="text-slate-400 text-xs sm:text-sm mt-0.5">
-                        Швидкий запуск, експорт та автономна робота з усіма модулями військового комплексу
-                    </p>
+                    <h1 class="brand-title">HUB ОЧ // ТАКТ-ОБЛІК</h1>
+                    <div class="brand-subtitle">ФОРМУЛЯР РОБОЧИХ МОДУЛІВ · 100% OFFLINE (v8/)</div>
                 </div>
+                <button type="button" id="hubVersionBtn" onclick="openHubChangelog()" class="version-btn" title="Відкрити журнал змін HUB">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 16v-4"></path>
+                        <path d="M12 8h.01"></path>
+                    </svg>
+                    <span>HUB v2.1.0</span>
+                </button>
             </div>
 
-            <!-- Header Controls -->
-            <div class="flex items-center gap-3 self-end md:self-auto flex-wrap">
-                <!-- Live Dispatcher Status Badge -->
-                <div id="dispatcher-status-badge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-[11px] font-mono shadow-sm transition-all" title="Статус штабного диспетчера (автобекапи порт 8780)">
-                    <span id="dispatcher-status-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
-                    <span id="dispatcher-status-text" class="text-slate-400">8780: Перевірка...</span>
-                </div>
-
-                <div class="relative w-48 sm:w-64">
-                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none"></i>
-                    <input type="text" id="appSearch" oninput="filterApps()"
-                        placeholder="Пошук програми... (Ctrl+K)"
-                        class="w-full bg-[#111b2e] border border-slate-700 rounded-xl pl-9 pr-8 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors">
-                    <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-white transition-colors cursor-pointer" title="Очистити пошук (Esc)">
-                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
-                <a href="audit_dashboard.html" target="_blank" title="Відкрити Дашборд Цілісності (Suite QA Guard)"
-                    class="px-3 py-1.5 bg-slate-800/80 hover:bg-amber-950/60 text-slate-300 hover:text-amber-300 border border-slate-700 hover:border-amber-800 rounded-xl transition-all cursor-pointer shadow-sm flex items-center gap-1.5 text-xs font-semibold">
-                    <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
-                    <span class="hidden sm:inline">Аудит</span>
+            <div class="top-actions">
+                <a href="audit_dashboard.html" target="_blank" id="dispatcher-status-badge" class="dispatcher-badge" title="Відкрити панель аудиту диспетчера (127.0.0.1:8780)">
+                    <span id="dispatcher-status-dot" class="status-dot"></span>
+                    <span id="dispatcher-status-text">ДИСПЕТЧЕР :8780 · ПЕРЕВІРКА...</span>
                 </a>
-                <a href="Кіберзахист.html" target="_blank" title="Відкрити Кіберзахист & DLP Guard"
-                    class="px-3 py-1.5 bg-slate-800/80 hover:bg-cyan-950/60 text-slate-300 hover:text-cyan-300 border border-slate-700 hover:border-cyan-800 rounded-xl transition-all cursor-pointer shadow-sm flex items-center gap-1.5 text-xs font-semibold">
-                    <i data-lucide="shield-alert" class="w-4 h-4 text-cyan-400"></i>
-                    <span class="hidden sm:inline">Кіберзахист</span>
+                <a href="audit_dashboard.html" target="_blank" class="btn-shell">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                    </svg>
+                    <span>Аудит</span>
                 </a>
-                <button onclick="lockHub()" title="Заблокувати термінал"
-                    class="p-2 bg-slate-800/80 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-800 rounded-xl transition-all cursor-pointer shadow-sm">
-                    <i data-lucide="lock" class="w-4 h-4"></i>
+                <a href="Кіберзахист.html" target="_blank" class="btn-shell">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="M12 8v4"></path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                    <span>Кіберзахист</span>
+                </a>
+                <button type="button" onclick="lockHub()" class="btn-shell btn-shell--danger" title="Заблокувати HUB">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Заблокувати</span>
                 </button>
             </div>
         </header>
 
-        <!-- Grid Container -->
-        <main class="max-w-7xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="apps-grid">
-
-            <!-- Card 1: Додаток 6 -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="додаток 6 воп роп бро заб бд пбд бчс сзч">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                            <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
-                        </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">Додаток 6</h2>
+        <!-- Стабільна 2-рядна панель фільтрації та зведених параметрів -->
+        <section class="toolbar" aria-label="Пошук та фільтрація модулів">
+            <div class="toolbar-row">
+                <div class="search-wrap">
+                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </svg>
+                    <input type="text" id="appSearch" oninput="filterApps()" placeholder="Пошук модуля за назвою або ключем (дод6, пбд, бр, бк...)" class="search-input">
+                    <div class="search-right">
+                        <span class="kbd-hint">Ctrl+K</span>
+                        <button type="button" onclick="clearSearch()" id="clearSearchBtn" class="clear-btn hidden" title="Очистити пошук (Esc)" aria-label="Очистити пошук">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                                <path d="M18 6 6 18"></path>
+                                <path d="m6 6 12 12"></path>
+                            </svg>
+                        </button>
                     </div>
-                    <span class="bg-blue-500/15 text-blue-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-blue-500/30">Основне</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Автоматичний розподіл особового складу за грошовими категоріями (270, 170, 100, 30 тис. грн), звірка з БЧС/СЗЧ, виявлення описок та генератор зведеної матриці.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-blue-400"></i> v2.1.1</span>
-                    <span>13.10.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Додаток 6.html" target="_blank"
-                        class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-blue-600/20">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Додаток 6.html" download="Додаток 6.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
+
+                <div class="contour-tabs" role="group" aria-label="Фільтр контурів">
+                    <button type="button" class="tab-btn" data-contour-filter="all" aria-pressed="true" onclick="setContourFilter('all')">Усі контури (16)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="A" aria-pressed="false" onclick="setContourFilter('A')">А · Дод. 6 (5)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="B" aria-pressed="false" onclick="setContourFilter('B')">Б · Звіти (4)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="C" aria-pressed="false" onclick="setContourFilter('C')">В · БР і втрати (3)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="D" aria-pressed="false" onclick="setContourFilter('D')">Г · Розрахунки (4)</button>
                 </div>
             </div>
 
-            <!-- Card 2: Звіт ПБД -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="звіт пбд бойове зведення дашборд розвідка підрозділи">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                        </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">Звіт ПБД</h2>
-                    </div>
-                    <span class="bg-emerald-500/15 text-emerald-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">Аналітика</span>
+            <div class="toolbar-stats">
+                <div class="stat-cluster">
+                    <span>ВІДОБРАЖЕНО МОДУЛІВ: <strong id="visibleCountStat">16 / 16</strong></span>
+                    <span>КОНТУРІВ: <strong>4</strong></span>
+                    <span>ПРІОРИТЕТ: <strong>М-01 Ротації (дод6)</strong></span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Багатопотоковий тактичний дашборд для контролю подачі звітів за підрозділами, структуризації чисельності та формування зведених відомостей.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-emerald-400"></i> v1.3.8</span>
-                    <span>26.10.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Звіт ПБД.html" target="_blank"
-                        class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/20">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Звіт ПБД.html" download="Звіт ПБД.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
+                <div class="stat-cluster">
+                    <span>СЕРЕДОВИЩЕ: <strong>OFFLINE v8/</strong></span>
+                    <span>ПОШУК: <strong>/ або Ctrl+K</strong> · <strong>ESC — СКИНУТИ</strong></span>
                 </div>
             </div>
+        </section>
 
-            <!-- Card 3: Звіт ОЧ (Доповідь КСП) -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="звіт оч доповідь ксп word docx бойове донесення">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                            <i data-lucide="file-text" class="w-5 h-5"></i>
+        <!-- Сітка 4 оперативних контурів -->
+        <main id="apps-grid" class="workspace">
+
+            <!-- КОНТУР А: Додаток 6 та чергування -->
+            <section class="contour-section" data-contour="A">
+                <div class="contour-head">
+                    <h2 class="contour-title">01 · Додаток 6 та чергування</h2>
+                    <span class="contour-code">КОНТУР А · 5 УТИЛІТ</span>
+                </div>
+
+                <!-- М-01: Ротації (дод6) -->
+                <div class="module-row app-item is-priority" data-contour="A" data-title="ротації додаток 6 чергування 50 60 діб о/с особовий склад">
+                    <span class="module-code">М-01</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Ротації (дод6)</span>
+                            <span class="module-tag module-tag--accent">О/С · Пріоритет</span>
+                            <span class="module-tag">XLSX</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors">Звіт ОЧ (Доповідь)</h2>
+                        <p class="module-desc">Аналізатор безперервної ротації: автоматичний підрахунок діб бойового чергування за Додатком 6 з виділенням критичних порогів (50–59 та 60+ діб).</p>
                     </div>
-                    <span class="bg-indigo-500/15 text-indigo-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-indigo-500/30">Документи</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Генератор офіційної доповіді КСП із живим прев'ю стандартного аркуша А4, автоматичним форматуванням параграфів та експортом у .docx.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-indigo-400"></i> v1.2.0</span>
-                    <span>18.08.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Звіт ОЧ.html" target="_blank"
-                        class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-600/20">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Звіт ОЧ.html" download="Звіт ОЧ.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 4: Генератор БЧС -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="генератор бчс матриця статуси docx zip">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                            <i data-lucide="users" class="w-5 h-5"></i>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.7.0</span>
+                            <span class="module-date">12.11.2026</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">Генератор БЧС</h2>
+                        <a href="Ротації (дод6).html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Ротації (дод6).html" download="Ротації (дод6).html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Ротації (дод6).html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
                     </div>
-                    <span class="bg-cyan-500/15 text-cyan-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-cyan-500/30">Парсер</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Пакетний парсер матричних таблиць БЧС: пошук о/с за категоріями, прев'ю знайдених людей та формування окремих .docx документів у .zip архів.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-cyan-400"></i> v1.2.0</span>
-                    <span>07.10.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="БЧС.html" target="_blank"
-                        class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-cyan-600/20">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="БЧС.html" download="БЧС.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
 
-            <!-- Card 5: Калькулятор БК -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="калькулятор бк витрата боєприпасів патрони вог рпг гранати м52п3 м52 рдг excel tsv">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                            <i data-lucide="crosshair" class="w-5 h-5"></i>
+                <!-- М-02: Додаток 6 -->
+                <div class="module-row app-item" data-contour="A" data-title="додаток 6 воп роп бро заб бд пбд бчс сзч">
+                    <span class="module-code">М-02</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Додаток 6</span>
+                            <span class="module-tag">О/С & ВОП</span>
+                            <span class="module-tag">XLSX/DOCX</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-amber-400 transition-colors">Калькулятор БК</h2>
+                        <p class="module-desc">Основний облік та зведення особового складу за позиціями ВОП, РОП, БРО, статусами ПБД, БЧС та СЗЧ з експортом звітних таблиць.</p>
                     </div>
-                    <span class="bg-amber-500/15 text-amber-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-amber-500/30">Калькулятори</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Інтелектуальне розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями (5.45, 7.62, ВОГ, РПГ, ручні та димові гранати М52П3, РДГ, РСП).
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-amber-400"></i> v1.4.2</span>
-                    <span>27.10.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Калькулятор БК.html" target="_blank"
-                        class="flex-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-amber-600/20">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Калькулятор БК.html" download="Калькулятор БК.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 6: Калькулятор ВгЗ -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="калькулятор вгз вогневі завдання координати цілі журнал">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
-                            <i data-lucide="target" class="w-5 h-5"></i>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v2.2.0</span>
+                            <span class="module-date">12.11.2026</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-red-400 transition-colors">Калькулятор ВгЗ</h2>
+                        <a href="Додаток 6.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Додаток 6.html" download="Додаток 6.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Додаток 6.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
                     </div>
-                    <span class="bg-red-500/15 text-red-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-red-500/30">Калькулятори</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Журнал обліку вогневих завдань артилерії та мінометів: фіксація цілей, координат, типу боєприпасів та зведення загальної витрати.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-red-400"></i> v1.3.0</span>
-                    <span>17.08.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Калькулятор ВгЗ.html" target="_blank"
-                        class="flex-1 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-red-600/20">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Калькулятор ВгЗ.html" download="Калькулятор ВгЗ.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
 
-            <!-- Card 7: Ротації (дод6) -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="ротації додаток 6 чергування 50 60 діб о/с особовий склад">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-slate-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400">
-                            <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                <!-- М-03: Переміщення (дод6) -->
+                <div class="module-row app-item" data-contour="A" data-title="аналізатор переміщень додаток 6 воп роп бро заббд неподані ротація порівняння">
+                    <span class="module-code">М-03</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Переміщення (дод6)</span>
+                            <span class="module-tag">О/С & Позиції</span>
+                            <span class="module-tag">XLSX</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-amber-400 transition-colors">Ротації (дод6)</h2>
+                        <p class="module-desc">Контроль та порівняння списків Додатка 6: фіксація переміщень з бойових позицій (ВОП/РОП) в БРО (100), Забезпечення (30) та виявлення неподаних бійців.</p>
                     </div>
-                    <span class="bg-slate-800 text-slate-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-slate-700">О/С</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Аналізатор безперервної ротації: автоматичний підрахунок діб бойового чергування за Додатком 6 з виділенням критичних порогів (50-59 та 60+ діб).
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-amber-400"></i> v1.6.0</span>
-                    <span>12.11.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Ротації (дод6).html" target="_blank"
-                        class="flex-1 bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white border border-slate-700 hover:border-amber-500/50 text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Ротації (дод6).html" download="Ротації (дод6).html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 8: Облік періодів (БЗ & ДВ 30) -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="облік періодів завдань бз дв 30 роп воп ксп щоденні звіти інтервали діб">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                            <i data-lucide="calendar-range" class="w-5 h-5"></i>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.0.0</span>
+                            <span class="module-date">28.08.2026</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">Облік періодів</h2>
+                        <a href="Переміщення (дод6).html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Переміщення (дод6).html" download="Переміщення (дод6).html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Переміщення (дод6).html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
                     </div>
-                    <span class="bg-cyan-500/15 text-cyan-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-cyan-500/30">БЗ & ДВ 30</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Аналізатор щоденних періодів бойових завдань (РОП/ВОП) та додаткової винагороди (ДВ 30): автоматичний розрахунок інтервалів, агрегація по бійцях та експорт у Excel.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-amber-400"></i> v1.5.3</span>
-                    <span>27.10.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Облік періодів.html" target="_blank"
-                        class="flex-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white border border-slate-700 hover:border-cyan-500/50 text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Облік періодів.html" download="Облік періодів.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
 
-            <!-- Card 9: Облік втрат (MedTactical) -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="облік втрат medtactical 200 300 сзч поранені евакуація медицина">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
-                            <i data-lucide="heart-pulse" class="w-5 h-5"></i>
+                <!-- М-04: Облік періодів -->
+                <div class="module-row app-item" data-contour="A" data-title="облік періодів завдань бз дв 30 роп воп ксп щоденні звіти інтервали діб">
+                    <span class="module-code">М-04</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Облік періодів</span>
+                            <span class="module-tag">БЗ & ДВ 30</span>
+                            <span class="module-tag">XLSX</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-rose-400 transition-colors">Облік втрат</h2>
+                        <p class="module-desc">Аналізатор щоденних періодів бойових завдань (РОП/ВОП) та додаткової винагороди (ДВ 30): автоматичний розрахунок інтервалів, агрегація по бійцях та експорт у Excel.</p>
                     </div>
-                    <span class="bg-rose-500/15 text-rose-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-rose-500/30">Медицина / О/С</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Комплексна система медично-санітарного обліку (200, 300, СЗЧ, евакуація, госпіталізація), аналітичні діаграми, фільтри та експорт в Excel.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-rose-400"></i> v3.6.5</span>
-                    <span>26.10.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Облік втрат.html" target="_blank"
-                        class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-rose-600/20">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Облік втрат.html" download="Облік втрат.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 10: Облік перевіряючих -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="облік перевіряючих бр бойові розпорядження пбд docx подобові донесення аудит періоди excel xlsx">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-yellow-400">
-                            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.5.3</span>
+                            <span class="module-date">27.10.2026</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-yellow-400 transition-colors">Облік перевіряючих</h2>
+                        <a href="Облік періодів.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Облік періодів.html" download="Облік періодів.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Облік періодів.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
                     </div>
-                    <span class="bg-yellow-500/15 text-yellow-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-yellow-500/30">Парсер</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Парсер БР та пакетний аудит ПБД (.docx) за всі місяці з безперервними періодами, мультивибором, контролем «Кого забули?» та експортом у Word і Excel.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-yellow-400"></i> v1.6.0</span>
-                    <span>11.11.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Облік перевіряючих.html" target="_blank"
-                        class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-slate-950 font-bold text-xs text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-yellow-600/20">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Облік перевіряючих.html" download="Облік перевіряючих.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
 
-            <!-- Card 11: Облік бойових розпоряджень (БР) -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item border-amber-500/30 hover:border-amber-400" data-title="облік бр бойові розпорядження element матриця штаб бро розпорядження доповіді контроль накази">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-orange-400 to-yellow-300 opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shadow-sm">
-                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                <!-- М-05: ТАКТ-ОБЛІК -->
+                <div class="module-row app-item" data-contour="A" data-title="такт облік v8 особовий склад позиції журнал виходів офлайн">
+                    <span class="module-code">М-05</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">ТАКТ-ОБЛІК</span>
+                            <span class="module-tag">Комплекс v8</span>
+                            <span class="module-tag">OFFLINE</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-amber-300 transition-colors">Облік БР</h2>
+                        <p class="module-desc">Автономна робоча станція діловода/штабу: облік о/с, позицій, журнал бойових виходів, шифровані бекапи та вбудовані офлайн-бібліотеки.</p>
                     </div>
-                    <span class="bg-amber-500/20 text-amber-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-amber-500/40 shadow-xs">Штаб / БР</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Єдиний реєстр бойових розпоряджень батальйону: імпорт повідомлень з чату Element, контроль виконання, статуси, відповідальні, терміни та експорт у Excel.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-amber-400"></i> v1.5.1</span>
-                    <span>24.10.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Облік БР.html" target="_blank"
-                        class="flex-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-amber-600/30">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Облік БР.html" download="Облік БР.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 12: Форматер майна -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item" data-title="форматер майна списки спорядження очищення тексту">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-400 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-slate-700/20 border border-slate-600/30 flex items-center justify-center text-slate-300">
-                            <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.6.0</span>
+                            <span class="module-date">08.10.2026</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-teal-400 transition-colors">Форматер майна</h2>
+                        <a href="v8/Такт-Облік.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="v8/Такт-Облік.html" download="Такт-Облік.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Такт-Облік.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
                     </div>
-                    <span class="bg-slate-700/30 text-slate-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-slate-600/30">Утиліти</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Швидке очищення, нумерація та приведення до єдиного військового стандарту сирих списків майна, спорядження, агрегація дублікатів та сортування.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-teal-400"></i> v1.5.1</span>
-                    <span>29.09.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Форматер майна.html" target="_blank"
-                        class="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Форматер майна.html" download="Форматер майна.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
+            </section>
 
-            <!-- Card 12: ТАКТ-ОБЛІК (v8) -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item border-emerald-500/30 hover:border-emerald-400" data-title="такт облік v8 особовий склад позиції журнал виходів офлайн">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-sm">
-                            <i data-lucide="shield" class="w-5 h-5"></i>
+            <!-- КОНТУР Б: Щоденні звіти та донесення -->
+            <section class="contour-section" data-contour="B">
+                <div class="contour-head">
+                    <h2 class="contour-title">02 · Щоденні звіти та донесення</h2>
+                    <span class="contour-code">КОНТУР Б · 4 УТИЛІТИ</span>
+                </div>
+
+                <!-- М-06: Звіт ПБД -->
+                <div class="module-row app-item" data-contour="B" data-title="звіт пбд бойове зведення дашборд розвідка підрозділи">
+                    <span class="module-code">М-06</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Звіт ПБД</span>
+                            <span class="module-tag">Аналітика</span>
+                            <span class="module-tag">XLSX/DOCX</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-emerald-300 transition-colors">ТАКТ-ОБЛІК</h2>
+                        <p class="module-desc">Багатопотоковий тактичний дашборд для контролю подачі звітів за підрозділами, структуризації чисельності та формування зведених відомостей.</p>
                     </div>
-                    <span class="bg-emerald-500/20 text-emerald-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/40 shadow-xs">Комплекс v8</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Автономна робоча станція діловода/штабу: облік о/с, позицій, журнал бойових виходів, шифровані бекапи та вбудовані офлайн-бібліотеки.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-emerald-400"></i> v1.6.0</span>
-                    <span class="text-emerald-400/80 font-bold">08.10.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="v8/Такт-Облік.html" target="_blank"
-                        class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/30">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="v8/Такт-Облік.html" download="Такт-Облік.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 12: Оперативний Журнал (ЖБД) -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item border-teal-500/30 hover:border-teal-400" data-title="оперативний журнал дій жбд завдання штурмові дії втрати противника овт статус позицій виконання бр">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 via-emerald-400 to-cyan-500 opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-400 shadow-sm">
-                            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.3.8</span>
+                            <span class="module-date">26.10.2026</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-teal-300 transition-colors">Оперативний журнал</h2>
+                        <a href="Звіт ПБД.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Звіт ПБД.html" download="Звіт ПБД.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Звіт ПБД.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
                     </div>
-                    <span class="bg-teal-500/20 text-teal-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-teal-500/40 shadow-xs">ЖБД / Штаб</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Штабний журнал дій: облік завдань, штурмових дій, втрат о/с та ОВТ, стану позицій, виконання БР, генератор позатермінових донесень та БД.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-teal-400"></i> v1.0.0</span>
-                    <span>25.08.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Оперативний журнал.html" target="_blank"
-                        class="flex-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-teal-600/30">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Оперативний журнал.html" download="Оперативний журнал.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
 
-            <!-- Card 13: Аналізатор переміщень (Додаток 6) -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item border-cyan-500/30 hover:border-cyan-400" data-title="аналізатор переміщень додаток 6 воп роп бро заббд неподані ротація порівняння">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-sm">
-                            <i data-lucide="arrow-left-right" class="w-5 h-5"></i>
+                <!-- М-07: Звіт ОЧ (Доповідь) -->
+                <div class="module-row app-item" data-contour="B" data-title="звіт оч доповідь ксп word docx бойове донесення">
+                    <span class="module-code">М-07</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Звіт ОЧ (Доповідь)</span>
+                            <span class="module-tag">Документи</span>
+                            <span class="module-tag">DOCX</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">Переміщення (дод6)</h2>
+                        <p class="module-desc">Генератор офіційної доповіді КСП із живим прев'ю стандартного аркуша А4, автоматичним форматуванням параграфів та експортом у .docx.</p>
                     </div>
-                    <span class="bg-cyan-500/20 text-cyan-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-cyan-500/40 shadow-xs">О/С & Позиції</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Контроль та порівняння списків Додатка 6: фіксація переміщень з бойових позицій (ВОП/РОП) в БРО (100), Забезпечення (30) та виявлення неподаних бійців.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-cyan-400"></i> v1.0.0</span>
-                    <span>28.08.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Переміщення (дод6).html" target="_blank"
-                        class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-cyan-600/30">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Переміщення (дод6).html" download="Переміщення (дод6).html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Card 14: Кіберзахист & DLP -->
-            <div class="app-card rounded-2xl p-5 flex flex-col group relative overflow-hidden app-item border-cyan-500/40 hover:border-cyan-400 shadow-lg shadow-cyan-950/20" data-title="кіберзахист безпека dlp edr usb флешки буфер мережа зачистка panic airgap">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-rose-500 opacity-100 transition-opacity"></div>
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-sm">
-                            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.2.0</span>
+                            <span class="module-date">18.08.2026</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">Кіберзахист & DLP</h2>
+                        <a href="Звіт ОЧ.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Звіт ОЧ.html" download="Звіт ОЧ.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Звіт ОЧ.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
                     </div>
-                    <span class="bg-cyan-500/20 text-cyan-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-cyan-500/40 shadow-xs">Безпека / EDR</span>
                 </div>
-                <p class="text-xs text-slate-400 mb-4 flex-grow leading-relaxed">
-                    Автономний моніторинг витоку даних: блокування та контроль USB-носіїв, авто-затирання буфера обміну, мережевий сторож, цілісність бекапів та екстрений Panic Kill Switch.
-                </p>
-                <div class="text-[11px] font-mono text-slate-500 mb-3 flex items-center justify-between">
-                    <span class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3 text-cyan-400"></i> v1.0.0</span>
-                    <span>10.09.2026</span>
-                </div>
-                <div class="flex gap-2 mt-auto pt-2 border-t border-slate-800/80">
-                    <a href="Кіберзахист.html" target="_blank"
-                        class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold text-center py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-cyan-600/30">
-                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        <span>Відкрити</span>
-                    </a>
-                    <a href="Кіберзахист.html" download="Кіберзахист.html" title="Завантажити актуальний .html файл"
-                        class="px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 rounded-xl transition-all flex items-center justify-center">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    </a>
-                </div>
-            </div>
 
+                <!-- М-08: Генератор БЧС -->
+                <div class="module-row app-item" data-contour="B" data-title="генератор бчс матриця статуси docx zip">
+                    <span class="module-code">М-08</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Генератор БЧС</span>
+                            <span class="module-tag">Парсер</span>
+                            <span class="module-tag">DOCX/ZIP</span>
+                        </div>
+                        <p class="module-desc">Пакетний парсер матричних таблиць БЧС: пошук о/с за категоріями, прев'ю знайдених людей та формування окремих .docx документів у .zip архів.</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.2.0</span>
+                            <span class="module-date">07.10.2026</span>
+                        </div>
+                        <a href="БЧС.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="БЧС.html" download="БЧС.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити БЧС.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- М-09: Оперативний журнал -->
+                <div class="module-row app-item" data-contour="B" data-title="оперативний журнал дій жбд завдання штурмові дії втрати противника овт статус позицій виконання бр">
+                    <span class="module-code">М-09</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Оперативний журнал</span>
+                            <span class="module-tag">ЖБД / Штаб</span>
+                            <span class="module-tag">HTML/DOCX</span>
+                        </div>
+                        <p class="module-desc">Штабний журнал дій: облік завдань, штурмових дій, втрат о/с та ОВТ, стану позицій, виконання БР, генератор позатермінових донесень та БД.</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.0.0</span>
+                            <span class="module-date">25.08.2026</span>
+                        </div>
+                        <a href="Оперативний журнал.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Оперативний журнал.html" download="Оперативний журнал.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Оперативний журнал.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- КОНТУР В: БР, втрати та контроль -->
+            <section class="contour-section" data-contour="C">
+                <div class="contour-head">
+                    <h2 class="contour-title">03 · БР, втрати та контроль</h2>
+                    <span class="contour-code">КОНТУР В · 3 УТИЛІТИ</span>
+                </div>
+
+                <!-- М-10: Облік перевіряючих -->
+                <div class="module-row app-item" data-contour="C" data-title="облік перевіряючих бр бойові розпорядження пбд docx подобові донесення аудит періоди excel xlsx">
+                    <span class="module-code">М-10</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Облік перевіряючих</span>
+                            <span class="module-tag">Парсер</span>
+                            <span class="module-tag">DOCX/XLSX</span>
+                        </div>
+                        <p class="module-desc">Парсер БР та пакетний аудит ПБД (.docx) за всі місяці з безперервними періодами, мультивибором, контролем «Кого забули?» та експортом у Word і Excel.</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.6.0</span>
+                            <span class="module-date">11.11.2026</span>
+                        </div>
+                        <a href="Облік перевіряючих.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Облік перевіряючих.html" download="Облік перевіряючих.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Облік перевіряючих.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- М-11: Облік БР -->
+                <div class="module-row app-item" data-contour="C" data-title="облік бр бойові розпорядження element матриця штаб бро розпорядження доповіді контроль накази">
+                    <span class="module-code">М-11</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Облік БР</span>
+                            <span class="module-tag">Штаб / БР</span>
+                            <span class="module-tag">XLSX</span>
+                        </div>
+                        <p class="module-desc">Єдиний реєстр бойових розпоряджень батальйону: імпорт повідомлень з чату Element, контроль виконання, статуси, відповідальні, терміни та експорт у Excel.</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.5.1</span>
+                            <span class="module-date">24.10.2026</span>
+                        </div>
+                        <a href="Облік БР.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Облік БР.html" download="Облік БР.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Облік БР.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- М-12: Облік втрат -->
+                <div class="module-row app-item" data-contour="C" data-title="облік втрат medtactical 200 300 сзч поранені евакуація медицина">
+                    <span class="module-code">М-12</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Облік втрат</span>
+                            <span class="module-tag">Медицина / О/С</span>
+                            <span class="module-tag">XLSX</span>
+                        </div>
+                        <p class="module-desc">Комплексна система медично-санітарного обліку (200, 300, СЗЧ, евакуація, госпіталізація), аналітичні діаграми, фільтри та експорт в Excel.</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v3.6.5</span>
+                            <span class="module-date">26.10.2026</span>
+                        </div>
+                        <a href="Облік втрат.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Облік втрат.html" download="Облік втрат.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Облік втрат.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- КОНТУР Г: Розрахунки та безпека -->
+            <section class="contour-section" data-contour="D">
+                <div class="contour-head">
+                    <h2 class="contour-title">04 · Розрахунки та безпека</h2>
+                    <span class="contour-code">КОНТУР Г · 4 УТИЛІТИ</span>
+                </div>
+
+                <!-- М-13: Калькулятор БК -->
+                <div class="module-row app-item" data-contour="D" data-title="калькулятор бк витрата боєприпасів патрони вог рпг гранати м52п3 м52 рдг excel tsv">
+                    <span class="module-code">М-13</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Калькулятор БК</span>
+                            <span class="module-tag">Калькулятори</span>
+                            <span class="module-tag">XLSX/TSV</span>
+                        </div>
+                        <p class="module-desc">Інтелектуальне розпізнавання та підсумовування витрати боєприпасів за сирими текстовими донесеннями (5.45, 7.62, ВОГ, РПГ, ручні та димові гранати М52П3, РДГ, РСП).</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.4.2</span>
+                            <span class="module-date">27.10.2026</span>
+                        </div>
+                        <a href="Калькулятор БК.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Калькулятор БК.html" download="Калькулятор БК.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Калькулятор БК.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- М-14: Калькулятор ВгЗ -->
+                <div class="module-row app-item" data-contour="D" data-title="калькулятор вгз вогневі завдання координати цілі журнал">
+                    <span class="module-code">М-14</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Калькулятор ВгЗ</span>
+                            <span class="module-tag">Калькулятори</span>
+                            <span class="module-tag">HTML</span>
+                        </div>
+                        <p class="module-desc">Журнал обліку вогневих завдань артилерії та мінометів: фіксація цілей, координат, типу боєприпасів та зведення загальної витрати.</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.3.0</span>
+                            <span class="module-date">17.08.2026</span>
+                        </div>
+                        <a href="Калькулятор ВгЗ.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Калькулятор ВгЗ.html" download="Калькулятор ВгЗ.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Калькулятор ВгЗ.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- М-15: Форматер майна -->
+                <div class="module-row app-item" data-contour="D" data-title="форматер майна списки спорядження очищення тексту">
+                    <span class="module-code">М-15</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Форматер майна</span>
+                            <span class="module-tag">Утиліти</span>
+                            <span class="module-tag">TEXT/XLSX</span>
+                        </div>
+                        <p class="module-desc">Швидке очищення, нумерація та приведення до єдиного військового стандарту сирих списків майна, спорядження, агрегація дублікатів та сортування.</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.5.1</span>
+                            <span class="module-date">29.09.2026</span>
+                        </div>
+                        <a href="Форматер майна.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Форматер майна.html" download="Форматер майна.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Форматер майна.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- М-16: Кіберзахист & DLP -->
+                <div class="module-row app-item" data-contour="D" data-title="кіберзахист безпека dlp edr usb флешки буфер мережа зачистка panic airgap">
+                    <span class="module-code">М-16</span>
+                    <div class="module-info">
+                        <div class="module-head-line">
+                            <span class="module-name">Кіберзахист & DLP</span>
+                            <span class="module-tag">Безпека / EDR</span>
+                            <span class="module-tag">LOCAL</span>
+                        </div>
+                        <p class="module-desc">Автономний моніторинг витоку даних: блокування та контроль USB-носіїв, авто-затирання буфера обміну, мережевий сторож, цілісність бекапів та екстрений Panic Kill Switch.</p>
+                    </div>
+                    <div class="module-actions">
+                        <div class="module-meta">
+                            <span class="module-ver">v1.0.0</span>
+                            <span class="module-date">10.09.2026</span>
+                        </div>
+                        <a href="Кіберзахист.html" target="_blank" class="btn-open">Відкрити →</a>
+                        <a href="Кіберзахист.html" download="Кіберзахист.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Кіберзахист.html">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Повідомлення про відсутність збігів -->
+            <div id="no-results" class="empty-state hidden">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin: 0 auto 0.625rem; display: block; color: var(--ink-muted);" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                    <path d="m8 8 6 6"></path>
+                    <path d="m14 8-6 6"></path>
+                </svg>
+                <p style="font-weight: 600; color: var(--ink-primary);">За вашим запитом модулів не знайдено</p>
+                <p style="font-size: 0.75rem; margin-top: 0.25rem;">Спробуйте скинути фільтр контуру або натисніть Esc для очищення пошуку.</p>
+            </div>
         </main>
 
-        <!-- No Results Fallback -->
-        <div id="no-results" class="hidden max-w-md mx-auto text-center py-12 text-slate-500">
-            <i data-lucide="search-x" class="w-10 h-10 mx-auto mb-3 text-slate-600"></i>
-            <p class="text-sm">За вашим запитом програм не знайдено</p>
-        </div>
-
+        <footer class="hub-footer">
+            <span>ЄДИНИЙ ЦЕНТР УПРАВЛІННЯ · ТАКТ-ОБЛІК · 2026</span>
+            <span>АВТОНОМНИЙ КОМПЛЕКС УТИЛІТ · ПОВНІСТЮ ОФЛАЙН</span>
+        </footer>
     </div>
 
-    <!-- Footer -->
-    <footer class="w-full text-center py-4 border-t border-slate-800/60 text-slate-500 text-xs font-mono">
-        Єдиний Центр Управління • Автономний програмний комплекс • 2026
-    </footer>
+    <!-- Модальне вікно журналу змін HUB -->
+    <dialog id="changelogModal" class="hub-dialog" aria-labelledby="changelogModalTitle">
+        <div class="dialog-head">
+            <div>
+                <div class="mono-num" style="font-size: 0.6875rem; color: var(--ink-muted);">ЖУРНАЛ ОНОВЛЕНЬ</div>
+                <h3 id="changelogModalTitle" style="font-size: 1rem; font-weight: 700;">HUB ОЧ // ТАКТ-ОБЛІК</h3>
+            </div>
+            <button type="button" onclick="closeHubChangelog()" class="clear-btn" title="Закрити (Esc)" aria-label="Закрити вікно">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="dialog-body">
+            <div class="changelog-entry">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.375rem;">
+                    <strong class="mono-num" style="color: var(--ink-primary);">HUB v2.1.0 · Додаток 6 v2.2.0 · Ротації v1.7.0</strong>
+                    <span class="mono-num" style="font-size: 0.75rem; color: var(--ink-muted);">12.11.2026</span>
+                </div>
+                <p style="font-size: 0.8125rem; color: var(--ink-secondary); line-height: 1.5;">
+                    Впроваджено єдину візуальну систему «Графітова матова Відомість» (<code>DESIGN.md</code> / <code>PRODUCT.md</code>): 4 оперативні контури (М-01..М-16) у HUB, повний редизайн <code>Додаток 6.html</code> (без перемикача тем, з діловою термінологією та SVG-іконками), офлайн-пріоритет <code>v8/</code> у <code>Ротації (дод6).html</code> та перевірку роботи на 100–175% масштабу.
+                </p>
+            </div>
+            <div class="changelog-entry">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.375rem;">
+                    <strong class="mono-num" style="color: var(--ink-primary);">Ротації (дод6) v1.6.0</strong>
+                    <span class="mono-num" style="font-size: 0.75rem; color: var(--ink-muted);">12.11.2026</span>
+                </div>
+                <p style="font-size: 0.8125rem; color: var(--ink-secondary); line-height: 1.5;">
+                    Рекурсивний Drag &amp; Drop папок, фільтр назв файлів, вертикальний таймлайн періодів та 3-аркушевий офіційний Excel-експорт періодів ротацій.
+                </p>
+            </div>
+            <div class="changelog-entry">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.375rem;">
+                    <strong class="mono-num" style="color: var(--ink-primary);">Облік перевіряючих v1.6.0</strong>
+                    <span class="mono-num" style="font-size: 0.75rem; color: var(--ink-muted);">11.11.2026</span>
+                </div>
+                <p style="font-size: 0.8125rem; color: var(--ink-secondary); line-height: 1.5;">
+                    Мультимісячний аудит ПБД («Усі місяці»), автоматичні безперервні періоди залучення та ізоляція файлів із підпапок.
+                </p>
+            </div>
+        </div>
+    </dialog>
 
     <script>
         // -------------------------------------------------------------------------
@@ -707,12 +1479,8 @@
 
         // SHA-256 хеш пароля доступу за замовчуванням ("admin")
         const CORRECT_HASH = "cf23dc33d6aba13592a72190564ed18b2c0dae295f681ee0fddc4862f01225cf";
+        let activeContourFilter = "all";
 
-        /**
-         * Обчислює SHA-256 хеш введеного рядка пароля за допомогою Web Crypto API
-         * @param {string} password - Введений користувачем пароль
-         * @returns {Promise<string>} Шістнадцятковий рядок хешу
-         */
         async function hashPassword(password) {
             const msgUint8 = new TextEncoder().encode(password);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -720,169 +1488,211 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        /**
-         * Перевіряє введений пароль проти збереженого еталонного хешу
-         */
         async function checkPassword() {
             const pwd = document.getElementById("password-input").value;
             const errorMsg = document.getElementById("error-msg");
 
-            try {
-                const hash = await hashPassword(pwd);
-                if (hash === CORRECT_HASH) {
-                    unlockHub();
-                } else {
-                    errorMsg.classList.remove("hidden");
-                    lucide.createIcons();
-                }
-            } catch (err) {
-                console.error("Помилка перевірки пароля:", err);
+            if (!pwd) return;
+
+            const enteredHash = await hashPassword(pwd);
+            if (enteredHash === CORRECT_HASH) {
+                sessionStorage.setItem("hub_unlocked", "true");
+                unlockHub();
+            } else {
+                errorMsg.classList.remove("hidden");
+                const input = document.getElementById("password-input");
+                input.value = "";
+                input.focus();
             }
         }
 
-        /**
-         * Розблоковує інтерфейс головного хабу та зберігає стан у межах поточної вкладки
-         */
         function unlockHub() {
-            document.getElementById("login-screen").classList.add("hidden");
-            document.getElementById("main-content").classList.remove("hidden");
-            document.getElementById("main-content").classList.add("flex");
-            sessionStorage.setItem('hub_unlocked', 'true');
-            lucide.createIcons();
+            const loginScreen = document.getElementById("login-screen");
+            const mainContent = document.getElementById("main-content");
+
+            loginScreen.style.opacity = "0";
+            loginScreen.style.pointerEvents = "none";
+
+            setTimeout(() => {
+                loginScreen.classList.add("hidden");
+                mainContent.classList.remove("hidden");
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            }, 180);
         }
 
-        /**
-         * Блокує екран терміналу та повертає форму авторизації
-         */
         function lockHub() {
-            sessionStorage.removeItem('hub_unlocked');
-            document.getElementById("password-input").value = "";
-            document.getElementById("login-screen").classList.remove("hidden");
-            document.getElementById("main-content").classList.add("hidden");
-            document.getElementById("main-content").classList.remove("flex");
-            document.getElementById("error-msg").classList.add("hidden");
-            lucide.createIcons();
+            sessionStorage.removeItem("hub_unlocked");
+            location.reload();
         }
 
-        /**
-         * Очищає поле пошуку та скидає фільтри
-         */
+        function setContourFilter(contour) {
+            activeContourFilter = contour;
+            document.querySelectorAll('[data-contour-filter]').forEach((btn) => {
+                btn.setAttribute('aria-pressed', btn.getAttribute('data-contour-filter') === contour ? 'true' : 'false');
+            });
+            filterApps();
+        }
+
         function clearSearch() {
             const input = document.getElementById('appSearch');
-            const clearBtn = document.getElementById('clearSearchBtn');
-            if (input) {
-                input.value = '';
-                filterApps();
-            }
-            if (clearBtn) clearBtn.classList.add('hidden');
+            input.value = '';
+            setContourFilter('all');
+            input.focus();
         }
 
-        /**
-         * Жива фільтрація карток програм за ключовими словами та метаданими (data-title)
-         */
         function filterApps() {
             const input = document.getElementById('appSearch');
-            const query = (input?.value || '').toLowerCase().trim();
+            const filter = (input.value || '').toLowerCase().trim();
+            const cards = document.querySelectorAll('.app-item');
+            const sections = document.querySelectorAll('.contour-section');
             const clearBtn = document.getElementById('clearSearchBtn');
-            if (clearBtn) {
-                if (query) clearBtn.classList.remove('hidden');
-                else clearBtn.classList.add('hidden');
-            }
-
-            const items = document.querySelectorAll('.app-item');
+            const noResults = document.getElementById('no-results');
+            const statEl = document.getElementById('visibleCountStat');
             let visibleCount = 0;
 
-            items.forEach(item => {
-                const text = (item.getAttribute('data-title') || '') + ' ' + (item.innerText || '').toLowerCase();
-                if (!query || text.includes(query)) {
-                    item.style.display = 'flex';
+            if (filter.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            cards.forEach(card => {
+                const title = card.getAttribute('data-title') || '';
+                const textContent = card.textContent.toLowerCase();
+                const contour = card.getAttribute('data-contour') || '';
+
+                const matchesQuery = !filter || title.includes(filter) || textContent.includes(filter);
+                const matchesContour = activeContourFilter === 'all' || contour === activeContourFilter;
+
+                if (matchesQuery && matchesContour) {
+                    card.classList.remove('hidden');
                     visibleCount++;
                 } else {
-                    item.style.display = 'none';
+                    card.classList.add('hidden');
                 }
             });
 
-            const noRes = document.getElementById('no-results');
+            sections.forEach(sec => {
+                const visibleInSection = sec.querySelectorAll('.app-item:not(.hidden)').length;
+                if (visibleInSection === 0) {
+                    sec.classList.add('hidden');
+                } else {
+                    sec.classList.remove('hidden');
+                }
+            });
+
+            if (statEl) {
+                statEl.textContent = `${visibleCount} / ${cards.length}`;
+            }
+
             if (visibleCount === 0) {
-                noRes.classList.remove('hidden');
+                noResults.classList.remove('hidden');
             } else {
-                noRes.classList.add('hidden');
+                noResults.classList.add('hidden');
             }
         }
 
-        /**
-         * Перевіряє доступність локального бекенд-сервісу Диспетчера (порт 8780)
-         */
+        function openHubChangelog() {
+            const dlg = document.getElementById('changelogModal');
+            if (dlg && typeof dlg.showModal === 'function') {
+                dlg.showModal();
+            }
+        }
+
+        function closeHubChangelog() {
+            const dlg = document.getElementById('changelogModal');
+            if (dlg && dlg.open) {
+                dlg.close();
+            }
+        }
+
         async function checkDispatcherStatus() {
             const badge = document.getElementById('dispatcher-status-badge');
-            const dot = document.getElementById('dispatcher-status-dot');
             const text = document.getElementById('dispatcher-status-text');
-            if (!badge || !dot || !text) return;
+            if (!badge || !text) return;
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1500);
+                const timer = setTimeout(() => controller.abort(), 1200);
                 const res = await fetch('http://127.0.0.1:8780/health', { signal: controller.signal });
-                clearTimeout(timeoutId);
+                clearTimeout(timer);
+
                 if (res.ok) {
-                    dot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]';
-                    text.className = 'text-emerald-300 font-bold';
-                    text.innerText = '8780: Онлайн';
-                    badge.title = 'Штабний диспетчер активний (порт 8780). Автоматичні бекапи на диск доступні.';
+                    badge.className = "dispatcher-badge is-online";
+                    text.textContent = "ДИСПЕТЧЕР :8780 · АКТИВНИЙ";
                     return;
                 }
-            } catch (e) {}
+            } catch (e) {
+                // Офлайн або служба не запущена
+            }
 
-            dot.className = 'w-2 h-2 rounded-full bg-slate-500';
-            text.className = 'text-slate-400 font-normal';
-            text.innerText = '8780: Офлайн';
-            badge.title = 'Штабний диспетчер недоступний на 127.0.0.1:8780 (фонові бекапи на диск тимчасово не працюють).';
+            badge.className = "dispatcher-badge is-offline";
+            text.textContent = "ДИСПЕТЧЕР :8780 · ВІДКЛ.";
         }
 
-        // Делегування кліку: клік по всій площі картки запускає модуль, якщо клік не припав на кнопку скачування .html
-        document.getElementById('apps-grid')?.addEventListener('click', (e) => {
-            const downloadBtn = e.target.closest('a[download]');
-            if (downloadBtn) return; // Скачування файлу працює штатно
-            const card = e.target.closest('.app-card');
-            if (!card) return;
-            const openBtn = card.querySelector('a:not([download])');
-            if (openBtn && openBtn.href && !e.target.closest('a')) {
-                window.open(openBtn.href, openBtn.target || '_blank');
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
             }
-        });
 
-        // Глобальні клавіатурні скорочення (Ctrl+K, '/', Esc)
-        window.addEventListener('keydown', (e) => {
-            const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
-            if ((e.key === '/' && !isInput) || ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K'))) {
-                e.preventDefault();
-                const searchInput = document.getElementById('appSearch');
-                if (searchInput) {
-                    searchInput.focus();
-                    searchInput.select();
+            if (sessionStorage.getItem("hub_unlocked") === "true") {
+                const loginScreen = document.getElementById("login-screen");
+                const mainContent = document.getElementById("main-content");
+                loginScreen.classList.add("hidden");
+                mainContent.classList.remove("hidden");
+            } else {
+                const pwdInput = document.getElementById("password-input");
+                if (pwdInput) {
+                    pwdInput.focus();
                 }
             }
-            if (e.key === 'Escape') {
-                const searchInput = document.getElementById('appSearch');
-                if (document.activeElement === searchInput) {
-                    clearSearch();
-                    searchInput.blur();
+
+            const pwdInput = document.getElementById("password-input");
+            if (pwdInput) {
+                pwdInput.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") {
+                        checkPassword();
+                    }
+                });
+            }
+
+            const appsGrid = document.getElementById('apps-grid');
+            if (appsGrid) {
+                appsGrid.addEventListener('click', (e) => {
+                    const link = e.target.closest('a:not([download])');
+                    if (link) {
+                        e.preventDefault();
+                        window.open(link.getAttribute('href'), '_blank');
+                    }
+                });
+            }
+
+            const changelogDlg = document.getElementById('changelogModal');
+            if (changelogDlg) {
+                changelogDlg.addEventListener('click', (e) => {
+                    if (e.target === changelogDlg) {
+                        closeHubChangelog();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (document.getElementById('login-screen').classList.contains('hidden')) {
+                    const searchInput = document.getElementById('appSearch');
+                    if ((e.key === '/' || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) && document.activeElement !== searchInput) {
+                        e.preventDefault();
+                        searchInput.focus();
+                    } else if (e.key === 'Escape' && document.activeElement === searchInput) {
+                        clearSearch();
+                    }
                 }
-            }
-        });
+            });
 
-        // Запуск моніторингу статусу Диспетчера
-        checkDispatcherStatus();
-        setInterval(checkDispatcherStatus, 30000);
-
-        // Автоматичне відновлення сесії при оновленні сторінки (F5 / Ctrl+R)
-        window.addEventListener('DOMContentLoaded', () => {
-            if (sessionStorage.getItem('hub_unlocked') === 'true') {
-                unlockHub();
-            }
-            lucide.createIcons();
+            checkDispatcherStatus();
+            setInterval(checkDispatcherStatus, 5000);
         });
     </script>
 </body>
-
 </html>
