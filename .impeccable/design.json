@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-12T11:19:15+02:00",
+  "generatedAt": "2026-11-13T13:26:30+02:00",
   "title": "Design System: ТАКТ-ОБЛІК / HUB ОЧ (Dark Graphite)",
   "extensions": {
     "colorMeta": {
@@ -33,7 +33,7 @@
       "refersTo": "button-primary",
       "description": "High-contrast cerulean fill button for dark graphite surfaces.",
       "html": "<button type=\"button\" class=\"ds-btn-open\">Відкрити →</button>",
-      "css": ".ds-btn-open { display: inline-flex; align-items: center; gap: 0.3125rem; padding: 0.375rem 0.6875rem; background: #2b67ab; color: #f4f6f8; border: 1px solid #4c8ed9; border-radius: 2px; font-size: 0.75rem; font-weight: 600; cursor: pointer; } .ds-btn-open:hover { background: #245791; } .ds-btn-open:focus-visible { outline: 2px solid #4c8ed9; outline-offset: 2px; }"
+      "css": ".ds-btn-open { display: inline-flex; align-items: center; gap: 0.3125rem; padding: 0.375rem 0.6875rem; background: #2b67ab; color: #e6e8eb; border: 1px solid #4c8ed9; border-radius: 2px; font-size: 0.75rem; font-weight: 600; cursor: pointer; } .ds-btn-open:hover { background: #245791; } .ds-btn-open:focus-visible { outline: 2px solid #4c8ed9; outline-offset: 2px; }"
     },
     {
       "name": "Shell Action Button",
@@ -49,7 +49,7 @@
       "refersTo": "button-primary",
       "description": "Toggle button for contour or threshold filtering.",
       "html": "<div style=\"display:flex;gap:6px;\"><button class=\"ds-tab\" aria-pressed=\"true\">Усі контури (16)</button><button class=\"ds-tab\" aria-pressed=\"false\">50–59 діб</button></div>",
-      "css": ".ds-tab { padding: 0.3125rem 0.6875rem; background: #181c22; border: 1px solid #2b3340; color: #a5adb8; font-size: 0.75rem; font-weight: 600; border-radius: 2px; cursor: pointer; } .ds-tab:hover { border-color: #4c8ed9; color: #e6e8eb; } .ds-tab[aria-pressed=\"true\"] { background: #2b67ab; border-color: #4c8ed9; color: #f4f6f8; }"
+      "css": ".ds-tab { padding: 0.3125rem 0.6875rem; background: #181c22; border: 1px solid #2b3340; color: #a5adb8; font-size: 0.75rem; font-weight: 600; border-radius: 2px; cursor: pointer; } .ds-tab:hover { border-color: #4c8ed9; color: #e6e8eb; } .ds-tab[aria-pressed=\"true\"] { background: #2b67ab; border-color: #4c8ed9; color: #e6e8eb; }"
     },
     {
       "name": "Dark Graphite Input",
