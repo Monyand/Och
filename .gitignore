@@ -13,6 +13,7 @@ spotify_agent/
 # Local IDE configuration
 .vscode/
 .gemini/
+.codex/
 
 # Local Cyber Guard & Security Tools
 Кіберзахист.html
@@ -79,6 +80,7 @@ android_app/local.properties
 **/.impeccable/*.png
 **/.impeccable/review/
 **/.impeccable/questions/
+**/.impeccable/mocks/
 **/.impeccable/live/server.json
 **/.impeccable/live/sessions/
 **/.impeccable/live/previews/

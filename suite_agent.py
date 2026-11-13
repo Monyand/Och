@@ -8,7 +8,7 @@
 для 12 автономних штабних HTML-додатків.
 
 Використання:
-    python suite_agent.py             # Повний аудит + генерація дашборду audit_dashboard.html
+    python suite_agent.py             # Повний аудит комплексу
     python suite_agent.py --check     # Швидка перевірка цілісності для CI/CD (код 0 або 1)
     python suite_agent.py --fix       # Авто-виправлення розбіжностей у версіях та шрифтах
     python suite_agent.py --backup    # Миттєвий zip-знімок усіх додатків у папку _backups/
@@ -312,292 +312,6 @@ def auto_fix_suite():
 
     print(f"\n{Colors.BOLD}{Colors.GREEN}✨ Завершено! Виправлено зауважень: {fixed_count}{Colors.ENDC}\n")
 
-def generate_html_dashboard(audit_results):
-    """Генерує інтерактивний преміальний HTML-дашборд стану комплексу"""
-    dashboard_path = os.path.join(WORKSPACE_DIR, "audit_dashboard.html")
-    
-    total_apps = len(audit_results)
-    perfect_apps = sum(1 for a in audit_results if a.get("is_perfect", False))
-    health_pct = round((perfect_apps / total_apps) * 100) if total_apps > 0 else 100
-    now_str = datetime.now().strftime("%d.%m.%Y о %H:%M:%S")
-
-    cards_json = json.dumps(audit_results, ensure_ascii=False)
-
-    html_content = f"""<!DOCTYPE html>
-<html lang="uk" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛡️ Дашборд Цілісності Комплексу | Suite QA Guard</title>
-    <!-- Fonts: Inter & JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {{
-            darkMode: 'class',
-            theme: {{
-                extend: {{
-                    fontFamily: {{
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace']
-                    }}
-                }}
-            }}
-        }}
-    </script>
-    <style>
-        body {{
-            font-family: 'Inter', sans-serif;
-            background-color: #020617;
-            color: #f8fafc;
-        }}
-        .custom-scroll::-webkit-scrollbar {{ width: 6px; height: 6px; }}
-        .custom-scroll::-webkit-scrollbar-track {{ background: rgba(15, 23, 42, 0.6); }}
-        .custom-scroll::-webkit-scrollbar-thumb {{ background: rgba(51, 65, 85, 0.8); border-radius: 9999px; }}
-    </style>
-</head>
-<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-300">
-    
-    <!-- Top Tactical Bar -->
-    <header class="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-6 py-4">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-amber-400/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-950/30">
-                    <i data-lucide="shield-check" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-lg font-bold text-white tracking-tight">Suite QA & Integrity Guard</h1>
-                        <span class="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">v1.1.0</span>
-                    </div>
-                    <p class="text-xs text-slate-400">Автономний моніторинг та контроль якості {total_apps} додатків комплексу</p>
-                </div>
-            </div>
-
-            <!-- Quick Action Stats -->
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3.5 py-1.5 rounded-xl font-mono text-xs shadow-inner">
-                    <span class="text-slate-400">Цілісність:</span>
-                    <span class="font-bold { 'text-emerald-400' if health_pct == 100 else 'text-amber-400' }">{health_pct}%</span>
-                    <span class="text-slate-600">|</span>
-                    <span class="text-slate-400">Програм:</span>
-                    <span class="font-bold text-white">{perfect_apps}/{total_apps}</span>
-                </div>
-                <a href="index.html" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
-                    <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-amber-400"></i>
-                    <span>Відкрити HUB</span>
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl mx-auto w-full p-6 space-y-6">
-        
-        <!-- Status Summary Hero -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
-                    <i data-lucide="layers" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Всього модулів</span>
-                    <div class="text-xl font-bold text-white font-mono">{total_apps} програм</div>
-                </div>
-            </div>
-
-            <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                    <i data-lucide="check-circle-2" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">100% Узгоджені</span>
-                    <div class="text-xl font-bold text-emerald-400 font-mono">{perfect_apps} з {total_apps}</div>
-                </div>
-            </div>
-
-            <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
-                    <i data-lucide="type" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Типографіка</span>
-                    <div class="text-xl font-bold text-indigo-300 font-mono">Inter + Mono</div>
-                </div>
-            </div>
-
-            <div class="bg-slate-900/70 border border-slate-800/90 rounded-2xl p-4 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                    <i data-lucide="clock" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Останній аудит</span>
-                    <div class="text-xs font-bold text-slate-200 font-mono mt-1">{now_str}</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Search & Filter Controls -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/40 p-2 rounded-2xl border border-slate-800/60">
-            <div class="relative w-full sm:w-80">
-                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                <input 
-                    type="text" 
-                    id="search-input" 
-                    placeholder="Пошук за назвою чи категорією..." 
-                    class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-amber-500/50 transition font-sans"
-                    oninput="filterApps()"
-                >
-            </div>
-            <div class="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
-                <button onclick="setFilter('all')" id="btn-filter-all" class="px-3 py-1.5 bg-slate-800 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-semibold transition cursor-pointer">Всі ({total_apps})</button>
-                <button onclick="setFilter('perfect')" id="btn-filter-perfect" class="px-3 py-1.5 bg-slate-900 text-slate-400 hover:text-white border border-slate-800 rounded-xl text-xs font-semibold transition cursor-pointer">Ідеальні ({perfect_apps})</button>
-                <button onclick="setFilter('issues')" id="btn-filter-issues" class="px-3 py-1.5 bg-slate-900 text-slate-400 hover:text-white border border-slate-800 rounded-xl text-xs font-semibold transition cursor-pointer">З зауваженнями ({total_apps - perfect_apps})</button>
-            </div>
-        </div>
-
-        <!-- Applications Grid -->
-        <div id="apps-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- Rendered via JS -->
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="border-t border-slate-800/80 bg-slate-950/80 px-6 py-4 text-center text-xs text-slate-500">
-        <p>Штабний комплекс оперативних програм • Автономний контроль кодової бази • Inter Standard</p>
-    </footer>
-
-    <!-- Logic Script -->
-    <script>
-        const appsData = {cards_json};
-        let currentFilter = 'all';
-
-        function renderApps() {{
-            const query = document.getElementById('search-input').value.toLowerCase().trim();
-            const container = document.getElementById('apps-container');
-            container.innerHTML = '';
-
-            const filtered = appsData.filter(app => {{
-                if (currentFilter === 'perfect' && !app.is_perfect) return false;
-                if (currentFilter === 'issues' && app.is_perfect) return false;
-                if (query) {{
-                    const matchName = (app.app_name || '').toLowerCase().includes(query);
-                    const matchFile = (app.file || '').toLowerCase().includes(query);
-                    const matchCat = (app.category || '').toLowerCase().includes(query);
-                    if (!matchName && !matchFile && !matchCat) return false;
-                }}
-                return true;
-            }});
-
-            if (filtered.length === 0) {{
-                container.innerHTML = `
-                    <div class="col-span-full py-12 text-center text-slate-500 font-mono text-xs">
-                        Нічого не знайдено за вашим запитом.
-                    </div>
-                `;
-                return;
-            }}
-
-            filtered.forEach(app => {{
-                const isOk = app.is_perfect;
-                const card = document.createElement('div');
-                card.className = `bg-slate-900/90 border rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all duration-200 hover:border-slate-700 hover:shadow-xl ${{
-                    isOk ? 'border-slate-800/90' : 'border-amber-500/40 bg-amber-950/10'
-                }}`;
-
-                const issuesHtml = app.issues && app.issues.length > 0
-                    ? `<div class="space-y-1 mt-2 pt-2 border-t border-slate-800/80">
-                        ${{app.issues.map(i => `<div class="text-[11px] text-amber-300/90 flex items-start gap-1.5"><i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5"></i><span>${{i}}</span></div>`).join('')}}
-                       </div>`
-                    : '';
-
-                card.innerHTML = `
-                    <div class="space-y-3">
-                        <div class="flex items-start justify-between gap-2">
-                            <div>
-                                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">${{app.category}}</span>
-                                <h3 class="text-base font-bold text-white mt-1.5">${{app.app_name}}</h3>
-                                <p class="text-xs font-mono text-slate-500 mt-0.5">${{app.file}}</p>
-                            </div>
-                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${{
-                                isOk ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800' : 'bg-amber-950/80 text-amber-300 border-amber-800'
-                            }}">
-                                ${{isOk ? '🟢 100% OK' : '⚠️ Зауваження'}}
-                            </span>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 text-xs font-mono bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/60">
-                            <div>
-                                <span class="text-slate-500 block text-[10px]">Версія (HUB):</span>
-                                <span class="font-bold text-amber-300">${{app.hub_ver}}</span>
-                            </div>
-                            <div>
-                                <span class="text-slate-500 block text-[10px]">Версія (Файл):</span>
-                                <span class="font-bold text-slate-200">${{app.internal_ver}}</span>
-                            </div>
-                            <div class="mt-1">
-                                <span class="text-slate-500 block text-[10px]">Шрифти:</span>
-                                <span class="text-slate-300">${{app.has_inter ? 'Inter' : '⚠️ Немає'}}</span>
-                            </div>
-                            <div class="mt-1">
-                                <span class="text-slate-500 block text-[10px]">Розмір:</span>
-                                <span class="text-slate-300">${{app.size_kb}} KB</span>
-                            </div>
-                        </div>
-
-                        ${{issuesHtml}}
-                    </div>
-
-                    <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                        <span class="text-[10px] font-mono text-slate-500">${{app.storage}}</span>
-                        <a href="${{app.file}}" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-semibold rounded-xl transition flex items-center gap-1">
-                            <span>Відкрити</span>
-                            <i data-lucide="external-link" class="w-3 h-3 text-slate-400"></i>
-                        </a>
-                    </div>
-                `;
-
-                container.appendChild(card);
-            }});
-
-            lucide.createIcons();
-        }}
-
-        function setFilter(filter) {{
-            currentFilter = filter;
-            ['all', 'perfect', 'issues'].forEach(f => {{
-                const el = document.getElementById('btn-filter-' + f);
-                if (f === filter) {{
-                    el.className = 'px-3 py-1.5 bg-slate-800 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-semibold transition cursor-pointer';
-                }} else {{
-                    el.className = 'px-3 py-1.5 bg-slate-900 text-slate-400 hover:text-white border border-slate-800 rounded-xl text-xs font-semibold transition cursor-pointer';
-                }}
-            }});
-            renderApps();
-        }}
-
-        function filterApps() {{
-            renderApps();
-        }}
-
-        // Initial Render
-        renderApps();
-    </script>
-</body>
-</html>"""
-
-    with open(dashboard_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    print(f"{Colors.GREEN}✔ Інтерактивний HTML Дашборд згенеровано:{Colors.ENDC} audit_dashboard.html")
-    print(f"  {Colors.DIM}Шлях: {dashboard_path}{Colors.ENDC}\n")
-
 def print_terminal_report(audit_results):
     """Красивий кольоровий звіт у консоль"""
     print(f"\n{Colors.BOLD}{Colors.HEADER}========================================================================{Colors.ENDC}")
@@ -643,7 +357,7 @@ def main():
     if args.fix:
         auto_fix_suite()
         results = run_suite_audit()
-        generate_html_dashboard(results)
+        print_terminal_report(results)
         return
 
     if args.watch:
@@ -663,14 +377,14 @@ def main():
                         last_mtimes[app["file"]] = mtime
                 if changed:
                     res = run_suite_audit()
-                    generate_html_dashboard(res)
+                    print_terminal_report(res)
                     print(f"{Colors.GREEN}✔ Аудит оновлено.{Colors.ENDC}\n")
                 time.sleep(2)
         except KeyboardInterrupt:
             print(f"\n{Colors.YELLOW}Вартового зупинено.{Colors.ENDC}")
             return
 
-    # За замовчуванням: повний аудит + генерація дашборду
+    # За замовчуванням: повний аудит
     results = run_suite_audit()
 
     if args.json:
@@ -678,7 +392,6 @@ def main():
         return
 
     print_terminal_report(results)
-    generate_html_dashboard(results)
 
     if args.check:
         all_perfect = all(r.get("is_perfect", False) for r in results)

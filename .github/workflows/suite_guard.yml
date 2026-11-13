@@ -26,11 +26,3 @@ jobs:
       - name: 🚀 Запуск Suite QA Agent
         run: |
           python suite_agent.py --check
-
-      - name: 📊 Збереження звіту аудиту як артефакту
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: audit-dashboard-report
-          path: audit_dashboard.html
-          retention-days: 14
