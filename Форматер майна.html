@@ -4,325 +4,1036 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Форматер Майна</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
-                    }
-                }
-            }
-        }
-    </script>
+    <meta name="color-scheme" content="dark">
+    <title>Форматер Майна — ТАКТ-ОБЛІК</title>
+
     <style>
-        /* Стилізація скролбару */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        :root {
+            color-scheme: only dark;
+            accent-color: #4c8ed9;
+
+            /* «Графітова матова Відомість» (DESIGN.md) */
+            --bg-paper: #111418;
+            --bg-surface: #181c22;
+            --bg-band: #20262f;
+            --bg-toolbar: #151920;
+            --priority-tint: #182230;
+
+            --shell-carbon: #141922;
+            --shell-trim: #0a0d12;
+            --shell-inset: #0e1218;
+            --shell-stroke: #343f50;
+
+            --ink-primary: #e6e8eb;
+            --ink-secondary: #a5adb8;
+            --ink-muted: #8892a0;
+
+            --border-rule: #2b3340;
+            --border-subtle: #222933;
+            --border-input: #394455;
+
+            --accent-cerulean: #4c8ed9;
+            --accent-btn: #2b67ab;
+            --accent-btn-hover: #245791;
+            --accent-tint: #182638;
+
+            --state-ok: #4cc38a;
+            --state-ok-dot: #34a86e;
+            --state-ok-bg: #11261c;
+            --state-ok-border: #265c41;
+
+            --state-warn: #f0b44c;
+            --state-warn-bg: #281f0f;
+            --state-warn-border: #6e4e16;
+
+            --state-err: #f27474;
+            --state-err-bg: #2b1416;
+            --state-err-border: #7c2a30;
+
+            --font-sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Cascadia Mono', 'Consolas', ui-monospace, SFMono-Regular, monospace;
+
+            --radius: 0px;
+            --radius-ctrl: 2px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-sans);
+            scrollbar-color: #465366 #111418;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
+        ::selection {
+            background: var(--accent-btn);
+            color: var(--ink-primary);
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+        html,
+        body {
+            background-color: var(--bg-paper);
+            color: var(--ink-primary);
+            font-size: 14px;
+            line-height: 1.45;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .mono-num {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .page-wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 1.25rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.875rem;
+        }
+
+        /* TOPBAR SHELL */
+        .topbar {
+            background: var(--shell-carbon);
+            border: 1px solid var(--border-rule);
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem 1rem;
+        }
+
+        .brand-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 0;
+        }
+
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            background: var(--bg-surface);
+            border: 1px solid var(--shell-stroke);
+            border-radius: var(--radius-ctrl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-cerulean);
+            flex-shrink: 0;
+        }
+
+        .brand-title-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .brand-title-row h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.25;
+            letter-spacing: 0.01em;
+            color: var(--ink-primary);
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            line-height: 1.45;
+            color: var(--ink-muted);
+            margin-top: 2px;
+        }
+
+        .btn-version {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.16rem 0.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--shell-stroke);
+            border-radius: var(--radius-ctrl);
+            color: var(--accent-cerulean);
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .btn-version:hover {
+            background: var(--accent-btn);
+            border-color: var(--accent-cerulean);
+            color: var(--ink-primary);
+        }
+
+        .btn-version:focus-visible {
+            outline: 2px solid var(--accent-cerulean);
+            outline-offset: 2px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.36rem 0.65rem;
+            background: var(--shell-inset);
+            border: 1px solid var(--border-rule);
+            border-radius: var(--radius-ctrl);
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--ink-secondary);
+        }
+
+        .status-chip svg {
+            color: var(--accent-cerulean);
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            min-height: 32px;
+            background: var(--bg-band);
+            border: 1px solid var(--border-input);
+            border-radius: var(--radius-ctrl);
+            color: var(--ink-primary);
+            font-size: 0.75rem;
+            line-height: 1.4;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--shell-stroke);
+            border-color: var(--accent-cerulean);
+        }
+
+        .btn:focus-visible {
+            outline: 2px solid var(--accent-cerulean);
+            outline-offset: 2px;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-shell {
+            background: var(--shell-carbon);
+            border-color: var(--shell-stroke);
+        }
+
+        .btn-shell:hover:not(:disabled) {
+            background: var(--bg-band);
+            border-color: var(--accent-cerulean);
+        }
+
+        .btn-primary {
+            background: var(--accent-btn);
+            border-color: var(--accent-cerulean);
+            color: var(--ink-primary);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-btn-hover);
+        }
+
+        .btn-primary.is-copied {
+            background: var(--state-ok-bg);
+            border-color: var(--state-ok-border);
+            color: var(--state-ok);
+        }
+
+        .btn-danger-outline {
+            background: var(--state-err-bg);
+            border-color: var(--state-err-border);
+            color: var(--state-err);
+        }
+
+        .btn-danger-outline:hover:not(:disabled) {
+            background: var(--bg-band);
+            border-color: var(--state-err);
+            color: var(--ink-primary);
+        }
+
+        .btn-icon {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            min-height: 30px;
+        }
+
+        /* SETTINGS TOOLBAR */
+        .toolbar {
+            background: var(--bg-toolbar);
+            border: 1px solid var(--border-rule);
+            padding: 0.65rem 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .toolbar-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem 1.25rem;
+        }
+
+        .toolbar-options {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.65rem 1.25rem;
+        }
+
+        .check-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            font-weight: 600;
+            color: var(--ink-secondary);
+            cursor: pointer;
+        }
+
+        .check-option:hover {
+            color: var(--ink-primary);
+        }
+
+        .check-option input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .select-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            color: var(--ink-secondary);
+        }
+
+        .field-select {
+            padding: 0.28rem 0.55rem;
+            background: var(--shell-inset);
+            border: 1px solid var(--border-input);
+            border-radius: var(--radius-ctrl);
+            color: var(--ink-primary);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        .field-select:focus-visible {
+            outline: 2px solid var(--accent-cerulean);
+            outline-offset: 1px;
+            border-color: var(--accent-cerulean);
+        }
+
+        .quick-status {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--ink-muted);
+        }
+
+        /* SPLIT EDITOR WORKSPACE */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.875rem;
+        }
+
+        .panel-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-rule);
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            height: 560px;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            background: var(--bg-band);
+            border-bottom: 1px solid var(--border-rule);
+            padding: 0.55rem 0.85rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 44px;
+        }
+
+        .panel-head-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .panel-head-title h2 {
+            font-size: 0.875rem;
+            line-height: 1.4;
+            font-weight: 700;
+            color: var(--ink-primary);
+        }
+
+        .panel-head-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .stats-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.14rem 0.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-rule);
+            border-radius: var(--radius-ctrl);
+            color: var(--accent-cerulean);
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            font-weight: 700;
+        }
+
+        /* CODE / TEXT PANES */
+        .editor-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background: var(--shell-inset);
+        }
+
+        .line-numbers {
+            width: 3rem;
+            padding: 0.85rem 0.65rem 0.85rem 0.25rem;
+            background: var(--bg-toolbar);
+            border-right: 1px solid var(--border-subtle);
+            color: var(--ink-muted);
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            text-align: right;
+            overflow: hidden;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .code-textarea {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            padding: 0.85rem 0.9rem;
+            background: transparent;
+            border: 0;
+            color: var(--ink-primary);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            white-space: pre;
+            resize: none;
+            outline: none;
+        }
+
+        .code-textarea::placeholder {
+            color: var(--ink-muted);
+        }
+
+        .code-textarea:focus-visible {
+            outline: 2px solid rgba(76, 142, 217, 0.35);
+            outline-offset: -2px;
+        }
+
+        /* FOOTER LEGEND */
+        .legend-bar {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-rule);
+            padding: 0.7rem 0.9rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.65rem 1rem;
+        }
+
+        .legend-chips {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .legend-label {
+            font-size: 0.75rem;
+            line-height: 1.4;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--ink-secondary);
+            margin-right: 0.25rem;
+        }
+
+        .legend-chip {
+            padding: 0.16rem 0.5rem;
+            background: var(--bg-band);
+            border: 1px solid var(--border-rule);
+            border-radius: var(--radius-ctrl);
+            color: var(--ink-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .legend-offline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--ink-secondary);
+        }
+
+        .legend-offline svg {
+            color: var(--state-ok);
+            flex-shrink: 0;
+        }
+
+        /* NATIVE DIALOGS (modern-web-guidance: dialog + light-dismiss + scroll contain) */
+        dialog.app-dialog {
+            background: var(--bg-surface);
+            color: var(--ink-primary);
+            border: 1px solid var(--shell-stroke);
+            border-radius: 0;
+            padding: 0;
+            margin: auto;
+            width: min(620px, calc(100vw - 2rem));
+            max-height: min(85vh, calc(100dvh - 2rem));
+            overflow: hidden;
+            z-index: 210;
+        }
+
+        dialog.app-dialog--compact {
+            width: min(440px, calc(100vw - 2rem));
+        }
+
+        dialog.app-dialog[open] {
+            display: flex;
+            flex-direction: column;
+        }
+
+        dialog.app-dialog:modal {
+            overscroll-behavior: contain;
+        }
+
+        dialog.app-dialog::backdrop {
+            background: rgba(10, 13, 18, 0.78);
+            overflow: hidden;
+            overscroll-behavior: contain;
+        }
+
+        .dialog-head {
+            background: var(--shell-carbon);
+            border-bottom: 1px solid var(--border-rule);
+            padding: 0.85rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dialog-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .dialog-title-wrap h2 {
+            font-size: 0.9375rem;
+            line-height: 1.35;
+            font-weight: 700;
+            color: var(--ink-primary);
+        }
+
+        .dialog-subtitle {
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--ink-muted);
+        }
+
+        .dialog-body {
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            font-size: 0.875rem;
+            line-height: 1.45;
+            color: var(--ink-secondary);
+        }
+
+        .dialog-footer {
+            background: var(--bg-toolbar);
+            border-top: 1px solid var(--border-rule);
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cl-entry {
+            background: var(--bg-toolbar);
+            border: 1px solid var(--border-rule);
+            border-left: 3px solid var(--border-input);
+            padding: 0.8rem 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .cl-entry--current {
+            border-left-color: var(--accent-cerulean);
+        }
+
+        .cl-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 0.4rem;
+        }
+
+        .cl-ver {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            font-weight: 700;
+            color: var(--ink-primary);
+        }
+
+        .cl-ver--current {
+            color: var(--accent-cerulean);
+        }
+
+        .cl-date {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--ink-muted);
+        }
+
+        .cl-list {
+            padding-left: 1.15rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            font-size: 0.875rem;
+            line-height: 1.45;
+            color: var(--ink-secondary);
+        }
+
+        .cl-list strong {
+            color: var(--ink-primary);
+        }
+
+        .cl-list code {
+            font-family: var(--font-mono);
+            background: var(--shell-inset);
+            border: 1px solid var(--border-subtle);
+            padding: 0.05rem 0.3rem;
+            border-radius: var(--radius-ctrl);
+            color: var(--ink-primary);
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-card {
+                height: 440px;
+            }
         }
     </style>
 </head>
 
-<body class="min-h-screen bg-slate-950 text-slate-300 p-4 md:p-8 font-sans selection:bg-blue-500/30">
-    <div class="max-w-6xl mx-auto space-y-6">
+<body>
+    <div class="page-wrap">
 
         <!-- Шапка програми -->
-        <header class="mb-2 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-slate-800/80 pb-5">
-            <div>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
-                        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+        <header class="topbar">
+            <div class="brand-left">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <path d="M12 11h4"></path>
+                        <path d="M12 16h4"></path>
+                        <path d="M8 11h.01"></path>
+                        <path d="M8 16h.01"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-title-row">
+                        <h1>Форматер Майна</h1>
+                        <button type="button" onclick="openModal('modal-changelog')" title="Історія оновлень" class="btn-version">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>v1.6.0</span>
+                        </button>
                     </div>
-                    <div>
-                        <div class="flex items-center gap-2.5">
-                            <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Форматер Майна</h1>
-                            <button onclick="openModal('modal-changelog')" title="Історія оновлень"
-                                class="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 font-mono font-bold px-2.5 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1.5">
-                                <span class="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                                <span>⚡ v1.5.1</span>
-                            </button>
-                        </div>
-                        <p class="text-slate-400 text-xs md:text-sm mt-0.5">Вставте будь-який сирий текст списків майна — отримайте ідеально чистий стандартизований шаблон.</p>
-                    </div>
+                    <p class="brand-subtitle">Вставте будь-який сирий текст списків майна — отримайте стандартизований перелік із точними одиницями виміру.</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <button id="btn-demo"
-                    class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-all shadow-sm cursor-pointer">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+            <div class="topbar-actions">
+                <button type="button" id="btn-demo" class="btn btn-shell">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--state-warn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
                     <span>Вставити приклад</span>
                 </button>
-                <span class="text-[11px] font-mono text-slate-500 flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-                    <i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-400"></i>
-                    <span>OFFLINE ENGINE</span>
+                <span class="status-chip">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                        <rect x="9" y="9" width="6" height="6"></rect>
+                        <line x1="9" y1="1" x2="9" y2="4"></line>
+                        <line x1="15" y1="1" x2="15" y2="4"></line>
+                        <line x1="9" y1="20" x2="9" y2="23"></line>
+                        <line x1="15" y1="20" x2="15" y2="23"></line>
+                    </svg>
+                    <span>100% OFFLINE</span>
                 </span>
             </div>
         </header>
 
         <!-- Панель інструментів та налаштувань форматування -->
-        <div class="bg-slate-900/90 rounded-xl border border-slate-800 p-3.5 shadow-lg flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
-                <!-- Опція: Об'єднати дублікати -->
-                <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors">
-                    <input type="checkbox" id="chk-merge" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer">
-                    <span class="font-medium">Об'єднати дублікати (сумувати)</span>
-                </label>
+        <section class="toolbar" aria-label="Налаштування форматування">
+            <div class="toolbar-row">
+                <div class="toolbar-options">
+                    <label class="check-option">
+                        <input type="checkbox" id="chk-merge">
+                        <span>Об'єднати дублікати (сумувати)</span>
+                    </label>
 
-                <!-- Опція: Сортувати А-Я -->
-                <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors">
-                    <input type="checkbox" id="chk-sort" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer">
-                    <span class="font-medium">Сортувати А-Я</span>
-                </label>
+                    <label class="check-option">
+                        <input type="checkbox" id="chk-sort">
+                        <span>Сортувати А-Я</span>
+                    </label>
 
-                <!-- Опція: Нормалізувати номенклатуру -->
-                <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors" title="Стандартизувати синоніми та діаметри (наприклад: Д 120 / 120 мм, ПОВ-57)">
-                    <input type="checkbox" id="chk-normalize" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer">
-                    <span class="font-medium">Нормалізувати номенклатуру (Д 120 / ПОВ-57)</span>
-                </label>
-
-                <!-- Опція: Розділювач у кінці рядка -->
-                <div class="flex items-center gap-1.5 text-slate-400">
-                    <span>Розділювач:</span>
-                    <select id="sel-delimiter" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
-                        <option value=";" selected>; (крапка з комою)</option>
-                        <option value=".">. (крапка)</option>
-                        <option value="">без роздільника</option>
-                    </select>
+                    <label class="check-option" title="Стандартизувати синоніми та діаметри (наприклад: Д 120 / 120 мм, ПОВ-57)">
+                        <input type="checkbox" id="chk-normalize">
+                        <span>Нормалізувати номенклатуру (Д 120 / ПОВ-57)</span>
+                    </label>
                 </div>
+                <span id="quick-status" class="quick-status">Автопарсинг активний</span>
+            </div>
 
-                <!-- Опція: Префікс рядка -->
-                <div class="flex items-center gap-1.5 text-slate-400">
-                    <span>Стиль списку:</span>
-                    <select id="sel-prefix" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500 cursor-pointer">
-                        <option value="none" selected>Без маркерів</option>
-                        <option value="dash">– Тире</option>
-                        <option value="bullet">• Булет</option>
-                        <option value="numbered">1. Нумерація</option>
-                    </select>
+            <div class="toolbar-row">
+                <div class="toolbar-options">
+                    <label class="select-group">
+                        <span>Розділювач:</span>
+                        <select id="sel-delimiter" class="field-select">
+                            <option value=";" selected>; (крапка з комою)</option>
+                            <option value=".">. (крапка)</option>
+                            <option value="">без роздільника</option>
+                        </select>
+                    </label>
+
+                    <label class="select-group">
+                        <span>Стиль списку:</span>
+                        <select id="sel-prefix" class="field-select">
+                            <option value="none" selected>Без маркерів</option>
+                            <option value="dash">– Тире</option>
+                            <option value="bullet">• Булет</option>
+                            <option value="numbered">1. Нумерація</option>
+                        </select>
+                    </label>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <span id="quick-status" class="text-[11px] font-mono text-slate-500">Автопарсинг активний</span>
-            </div>
-        </div>
+        </section>
 
         <!-- Основна робоча сітка -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <main class="workspace-grid">
 
             <!-- Ліва колонка: Сирі дані -->
-            <div class="flex flex-col space-y-3">
-                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden flex flex-col h-[560px]">
-                    <div class="bg-slate-800/80 px-4 py-3 border-b border-slate-700/50 flex justify-between items-center z-10 backdrop-blur-sm">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
-                            <h2 class="font-semibold text-slate-200 text-sm">Сирі дані (рапорти / списки)</h2>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <button id="btn-split-lines"
-                                class="text-slate-400 hover:text-blue-400 transition-colors px-2 py-1 rounded hover:bg-slate-700/50 cursor-pointer flex items-center gap-1 text-xs font-medium"
-                                title="Розбити переліки з крапкою з комою (;) на окремі рядки">
-                                <i data-lucide="scissors" class="w-3.5 h-3.5 text-blue-400"></i>
-                                <span class="hidden sm:inline">Розбити рядки</span>
-                            </button>
-                            <button id="btn-clear"
-                                class="text-slate-400 hover:text-red-400 transition-colors p-1.5 rounded hover:bg-slate-700/50 cursor-pointer"
-                                title="Очистити все">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
+            <div class="panel-card">
+                <div class="panel-head">
+                    <div class="panel-head-title">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        <h2>Сирі дані (рапорти / списки)</h2>
                     </div>
+                    <div class="panel-head-actions">
+                        <button type="button" id="btn-split-lines" class="btn btn-shell"
+                            title="Розбити переліки з крапкою з комою (;) на окремі рядки">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cerulean)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="6" cy="6" r="3"></circle>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+                                <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+                                <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+                            </svg>
+                            <span>Розбити рядки</span>
+                        </button>
+                        <button type="button" id="btn-clear" class="btn btn-danger-outline btn-icon" title="Очистити все" aria-label="Очистити все">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
 
-                    <!-- Редактор із номерами рядків -->
-                    <div class="flex flex-1 overflow-hidden relative bg-slate-900/50">
-                        <div id="line-numbers"
-                            class="w-12 bg-slate-900/80 text-slate-500 font-mono text-[13px] text-right pt-4 pb-4 pr-3 border-r border-slate-800 overflow-hidden select-none"
-                            style="line-height: 1.5rem;">
-                            <div>1</div>
-                        </div>
-                        <textarea id="input-text"
-                            class="flex-1 w-full h-full pt-4 pb-4 px-4 font-mono text-[13px] text-slate-200 bg-transparent resize-none outline-none focus:ring-1 focus:ring-inset focus:ring-blue-500/50 placeholder-slate-600"
-                            style="line-height: 1.5rem; white-space: pre;" wrap="off"
-                            placeholder="Вставляйте сюди текст з будь-якими крапками, дефісами, маркерами чи коментарями..."></textarea>
+                <div class="editor-body">
+                    <div id="line-numbers" class="line-numbers">
+                        <div>1</div>
                     </div>
+                    <textarea id="input-text" class="code-textarea" wrap="off" aria-label="Вхідний сирий текст списків майна"
+                        placeholder="Вставляйте сюди текст з будь-якими крапками, дефісами, маркерами чи коментарями..."></textarea>
                 </div>
             </div>
 
             <!-- Права колонка: Результат -->
-            <div class="flex flex-col space-y-3">
-                <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden flex flex-col h-[560px]">
-                    <div class="bg-blue-950/30 px-4 py-3 border-b border-blue-900/50 flex flex-wrap gap-2 justify-between items-center z-10 backdrop-blur-sm">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="check-circle-2" class="w-4 h-4 text-blue-400"></i>
-                            <h2 class="font-semibold text-blue-400 text-sm">Стандартизований результат</h2>
-                            <span id="stats-badge"
-                                class="hidden font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-blue-900/40 text-blue-300 border border-blue-800/60">
-                                0 рядків
-                            </span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button id="btn-download"
-                                class="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-800 border border-slate-700 text-blue-400 hover:bg-slate-700 hover:text-blue-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm cursor-pointer"
-                                disabled>
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                <span class="hidden sm:inline">Завантажити .txt</span>
-                            </button>
-                            <button id="btn-copy"
-                                class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-30 disabled:cursor-not-allowed shadow-sm active:scale-95 cursor-pointer"
-                                disabled>
-                                <i id="copy-icon" data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                <span id="copy-text">Копіювати</span>
-                            </button>
-                        </div>
+            <div class="panel-card">
+                <div class="panel-head">
+                    <div class="panel-head-title">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cerulean)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <h2>Стандартизований результат</h2>
+                        <span id="stats-badge" class="stats-badge hidden">0 рядків</span>
                     </div>
-
-                    <!-- Результат -->
-                    <div class="flex flex-1 overflow-hidden relative bg-slate-900/30">
-                        <textarea id="output-text" readonly
-                            class="flex-1 w-full h-full pt-4 pb-4 px-4 font-mono text-[13px] text-slate-100 bg-transparent resize-none outline-none placeholder-slate-600"
-                            style="line-height: 1.5rem; white-space: pre;" wrap="off"
-                            placeholder="Тут автоматично з'явиться готовий стандартизований список..."></textarea>
+                    <div class="panel-head-actions">
+                        <button type="button" id="btn-download" class="btn btn-shell" disabled>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cerulean)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Завантажити .txt</span>
+                        </button>
+                        <button type="button" id="btn-copy" class="btn btn-primary" disabled>
+                            <span id="copy-icon-wrap" aria-hidden="true">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </span>
+                            <span id="copy-text">Копіювати</span>
+                        </button>
                     </div>
                 </div>
+
+                <div class="editor-body">
+                    <textarea id="output-text" readonly class="code-textarea" wrap="off" aria-label="Стандартизований результат"
+                        placeholder="Тут автоматично з'явиться готовий стандартизований список..."></textarea>
+                </div>
             </div>
-        </div>
+        </main>
 
         <!-- Нижня інформаційна панель -->
-        <div class="bg-slate-900/60 rounded-xl border border-slate-800/80 p-4 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="font-bold text-slate-300 uppercase tracking-wider text-[10px]">Розпізнає:</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">шт. / од. / секц. / лист.</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пара / к-кт / набір / блок</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">пач. / цинк / ящ. / уп.</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">рул. / бухта / мот. / кот.</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">м / км / пог. м / кв. м / куб. м</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">амп. / фл. / туб / доз / балон</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">л / кг / кан. / т / картридж</span>
+        <footer class="legend-bar">
+            <div class="legend-chips">
+                <span class="legend-label">Розпізнає:</span>
+                <span class="legend-chip">шт. / од. / секц. / лист.</span>
+                <span class="legend-chip">пара / к-кт / набір / блок</span>
+                <span class="legend-chip">пач. / цинк / ящ. / уп.</span>
+                <span class="legend-chip">рул. / бухта / мот. / кот.</span>
+                <span class="legend-chip">м / км / пог. м / кв. м / куб. м</span>
+                <span class="legend-chip">амп. / фл. / туб / доз / балон</span>
+                <span class="legend-chip">л / кг / кан. / т / картридж</span>
             </div>
-            <div class="flex items-center gap-1.5 text-slate-500">
-                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
-                <span>Автозбереження в браузері (LocalStorage) • 100% офлайн</span>
+            <div class="legend-offline">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <polyline points="9 12 11 14 15 10"></polyline>
+                </svg>
+                <span>Автозбереження в браузері (LocalStorage) · 100% офлайн</span>
             </div>
-        </div>
+        </footer>
 
     </div>
+
+    <!-- Діалог підтвердження очищення -->
+    <dialog id="modal-confirm-clear" class="app-dialog app-dialog--compact" closedby="any" aria-labelledby="confirmClearTitle">
+        <div class="dialog-head">
+            <div class="dialog-title-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--state-err)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <h2 id="confirmClearTitle">Очистити всі вхідні дані?</h2>
+            </div>
+            <button type="button" onclick="closeModal('modal-confirm-clear')" class="btn btn-icon" aria-label="Закрити">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="dialog-body">
+            Увесь текст у лівому полі вводу та збережена чернетка у браузері будуть видалені.
+        </div>
+        <form method="dialog" class="dialog-footer">
+            <button type="submit" value="cancel" class="btn btn-shell" autofocus>Скасувати</button>
+            <button type="submit" value="confirm" class="btn btn-danger-outline">Очистити</button>
+        </form>
+    </dialog>
 
     <!-- Модальне вікно Changelog (Історія оновлень) -->
-    <div id="modal-changelog" onclick="if(event.target === this) closeModal('modal-changelog')" class="fixed inset-0 z-[200] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/40">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                        <i data-lucide="history" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-white">Історія оновлень</h2>
-                        <p class="text-xs text-slate-400">Форматер військового майна та спорядження</p>
-                    </div>
+    <dialog id="modal-changelog" class="app-dialog" closedby="any" aria-labelledby="changelogModalTitle">
+        <div class="dialog-head">
+            <div class="dialog-title-wrap">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                        <path d="M12 7v5l4 2"></path>
+                    </svg>
                 </div>
-                <button onclick="closeModal('modal-changelog')" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm">
-                <!-- v1.5.1 -->
-                <div class="relative pl-5 border-l-2 border-blue-500 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-blue-400 font-mono text-sm">⚡ v1.5.1 (Поточна)</span>
-                        <span class="text-[11px] font-mono text-slate-500">29.09.2026</span>
-                    </div>
-                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Розумне розбиття складних рядків (smartSplitLine):</strong> розбиття за крапкою з комою (<code>;</code>) тепер перевіряє кількість фрагментів з числовими показниками; складні назви та комплекти з характеристиками через крапку з комою (наприклад, <code>GSR 12V-35; L-Boxx; 4нас - 1 шт</code>) більше не розриваються на пошкоджені фрагменти.</li>
-                        <li><strong class="text-white">Тактична нормалізація номенклатури (ПОВ-57 та димоходи):</strong> впроваджено стандартизоване перетворення армійських пічних комплектів: <code>Піч чавунна переносна ПОВ-57</code>, димохідні труби, відводи 90° (<code>Коліно 90° 120 мм</code>), дефлектори (<code>Грибок 120 мм</code>) та іскрогасники (<code>Іскрогасник 120 мм</code>) із приведенням позначень діаметрів (<code>Д 120</code> ➔ <code>120 мм</code>).</li>
-                        <li><strong class="text-white">Опціональний перемикач стандартизації:</strong> додано чекбокс «Нормалізувати номенклатуру» в панель налаштувань із надійним збереженням стану в LocalStorage.</li>
-                    </ul>
-                </div>
-
-                <!-- v1.5.0 -->
-                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-400 font-mono text-sm">v1.5.0</span>
-                        <span class="text-[11px] font-mono text-slate-500">23.09.2026</span>
-                    </div>
-                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
-                        <li><strong class="text-white">Очищення PUA-маркерів MS Word та чекбоксів:</strong> усунуто появу артефактних прямокутників (tofu) при вставці списків із Microsoft Word чи PDF; повне відсікання символів Private Use Area (<code>\uE000-\uF8FF</code>) та діапазонів геометричних фігур і чекбоксів.</li>
-                        <li><strong class="text-white">Двосторонній парсинг (Two-way Extraction):</strong> повноцінна підтримка записів із кількістю на початку рядка (наприклад: <code>5 шт. Лопата саперна</code>, <code>2 пари Берці Талан</code>, <code>500 м Дріт польовий</code>, <code>10 - Бронежилет Корсар</code>) без втрати назви майна.</li>
-                        <li><strong class="text-white">Мультипозиційні списки та розбиття рядків:</strong> автоматична обробка рядків із крапкою з комою (<code>;</code>) та нова кнопка <code>[✂️ Розбити рядки]</code> в панелі редактора для миттєвого розбиття склеєних переліків на окремі позиції.</li>
-                        <li><strong class="text-white">Нові армійські одиниці виміру:</strong> додано розпізнавання доз (доз/дози), туб (туб/туба), картриджів (картридж/картр.), фільтрів, секцій (сект./секцій), листів/аркушів (лист/арк.), блоків (блок/блоків), балонів (балон/балонів).</li>
-                        <li><strong class="text-white">Покращене розпізнавання розділів:</strong> оптимізовано автовизначення служб та підрозділів (ПММ, РАО, Зв'язок, Розділ, Блок тощо) навіть за відсутності двокрапки в кінці.</li>
-                    </ul>
-                </div>
-
-                <!-- v1.4.0 -->
-                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-400 font-mono text-sm">v1.4.0</span>
-                        <span class="text-[11px] font-mono text-slate-500">18.09.2026</span>
-                    </div>
-                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
-                        <li><strong class="text-slate-300">Розширений армійський каталог одиниць:</strong> додано розпізнавання пачок, цинків, котушок саперного/польового дроту, мотків, бухт, рулонів, погонних метрів (пог. м, п.м.), квадратних та кубічних метрів, медичних засобів (ампули, флакони, тюбики).</li>
-                        <li><strong class="text-slate-300">Чітке розділення тонн і штук:</strong> усунуто помилкову заміну «10 т» на «10 шт.» — тонни для ПММ та будматеріалів зберігаються коректно.</li>
-                        <li><strong class="text-slate-300">Гарантоване відсікання зайвих даних (End-of-line focus):</strong> прізвища закріплених бійців, коментарі обставин втрати та примітки в дужках відкидаються; кожен рядок чітко закінчується кількістю та одиницею виміру.</li>
-                        <li><strong class="text-slate-300">Розумне об'єднання дублікатів (Merge):</strong> опція автоматичного сумування однакових позицій майна з граматичним відмінюванням одиниць виміру (наприклад: 1 цинк + 2 цинки = 3 цинки).</li>
-                        <li><strong class="text-slate-300">Сортування А-Я та налаштування пунктуації:</strong> можливість алфавітного сортування в межах розділів, вибір стилю списку (без маркерів, тире, булети, нумерація) та кінцевого розділювача (; або .).</li>
-                        <li><strong class="text-slate-300">Безпека LocalStorage та пам'яті:</strong> обробка переповнення квоти сховища та безпечне відкладене скасування URL-об'єктів для експорту .txt.</li>
-                    </ul>
-                </div>
-
-                <!-- v1.3.0 -->
-                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-400 font-mono text-sm">v1.3.0</span>
-                        <span class="text-[11px] font-mono text-slate-500">28.08.2026</span>
-                    </div>
-                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
-                        <li><strong class="text-slate-300">Розділи та служби:</strong> Автоматичне розпізнавання заголовків служб (ЗББР, ОВТ, медичний пункт тощо) із двокрапкою.</li>
-                        <li><strong class="text-slate-300">Двосторонній редактор:</strong> Синхронізована колонка з номерами рядків та прев'ю результату.</li>
-                    </ul>
-                </div>
-
-                <!-- v1.2.0 -->
-                <div class="relative pl-5 border-l-2 border-slate-700 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-400 font-mono text-sm">v1.2.0</span>
-                        <span class="text-[11px] font-mono text-slate-500">10.08.2026</span>
-                    </div>
-                    <ul class="space-y-1.5 text-slate-400 list-disc list-inside">
-                        <li><strong class="text-slate-300">Базовий парсер кількостей:</strong> Розпізнавання штук, комплектів, пар та очищення базових списків.</li>
-                        <li><strong class="text-slate-300">Експорт:</strong> Можливість швидкого копіювання в буфер або збереження у файл .txt.</li>
-                    </ul>
+                <div>
+                    <h2 id="changelogModalTitle">Історія оновлень</h2>
+                    <div class="dialog-subtitle">Форматер військового майна та спорядження</div>
                 </div>
             </div>
-            <div class="px-6 py-3 bg-slate-950/60 border-t border-slate-800 text-right">
-                <button onclick="closeModal('modal-changelog')" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer">
-                    Закрити
-                </button>
+            <button type="button" onclick="closeModal('modal-changelog')" class="btn btn-icon" aria-label="Закрити">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="dialog-body">
+            <div class="cl-entry cl-entry--current">
+                <div class="cl-head">
+                    <span class="cl-ver cl-ver--current">v1.6.0 (Поточна)</span>
+                    <span class="cl-date">13.11.2026</span>
+                </div>
+                <ul class="cl-list">
+                    <li><strong>Дизайн-система «Графітова матова Відомість» (Operate):</strong> інтерфейс переведено на матову палітру <code>Charcoal-Slate &amp; Paper-Rule</code> (<code>#111418</code>, <code>#181c22</code>, <code>#151920</code>), чіткі шрифти з <code>tabular-nums</code>, векторні SVG-іконки та стабільну панель інструментів для зуму 125–175%.</li>
+                    <li><strong>100% офлайн та нативні діалоги:</strong> усунено зовнішні залежності, а модальні вікна <code>#modal-confirm-clear</code> і <code>#modal-changelog</code> реалізовано на нативних <code>&lt;dialog closedby="any"&gt;</code> замість браузерних <code>alert()</code>/<code>confirm()</code>.</li>
+                </ul>
+            </div>
+
+            <div class="cl-entry">
+                <div class="cl-head">
+                    <span class="cl-ver">v1.5.1</span>
+                    <span class="cl-date">29.09.2026</span>
+                </div>
+                <ul class="cl-list">
+                    <li><strong>Розумне розбиття складних рядків (smartSplitLine):</strong> розбиття за крапкою з комою (<code>;</code>) тепер перевіряє кількість фрагментів з числовими показниками; складні назви та комплекти з характеристиками через крапку з комою (наприклад, <code>GSR 12V-35; L-Boxx; 4нас - 1 шт</code>) більше не розриваються на пошкоджені фрагменти.</li>
+                    <li><strong>Тактична нормалізація номенклатури (ПОВ-57 та димоходи):</strong> впроваджено стандартизоване перетворення армійських пічних комплектів: <code>Піч чавунна переносна ПОВ-57</code>, димохідні труби, відводи 90° (<code>Коліно 90° 120 мм</code>), дефлектори (<code>Грибок 120 мм</code>) та іскрогасники (<code>Іскрогасник 120 мм</code>) із приведенням позначень діаметрів (<code>Д 120</code> → <code>120 мм</code>).</li>
+                    <li><strong>Опціональний перемикач стандартизації:</strong> додано чекбокс «Нормалізувати номенклатуру» в панель налаштувань із надійним збереженням стану в LocalStorage.</li>
+                </ul>
+            </div>
+
+            <div class="cl-entry">
+                <div class="cl-head">
+                    <span class="cl-ver">v1.5.0</span>
+                    <span class="cl-date">23.09.2026</span>
+                </div>
+                <ul class="cl-list">
+                    <li><strong>Очищення PUA-маркерів MS Word та чекбоксів:</strong> усунуто появу артефактних прямокутників (tofu) при вставці списків із Microsoft Word чи PDF; повне відсікання символів Private Use Area (<code>\uE000-\uF8FF</code>) та діапазонів геометричних фігур і чекбоксів.</li>
+                    <li><strong>Двосторонній парсинг (Two-way Extraction):</strong> повноцінна підтримка записів із кількістю на початку рядка (наприклад: <code>5 шт. Лопата саперна</code>, <code>2 пари Берці Талан</code>, <code>500 м Дріт польовий</code>, <code>10 - Бронежилет Корсар</code>) без втрати назви майна.</li>
+                    <li><strong>Мультипозиційні списки та розбиття рядків:</strong> автоматична обробка рядків із крапкою з комою (<code>;</code>) та кнопка <code>Розбити рядки</code> в панелі редактора для миттєвого розбиття склеєних переліків на окремі позиції.</li>
+                    <li><strong>Нові армійські одиниці виміру:</strong> додано розпізнавання доз (доз/дози), туб (туб/туба), картриджів (картридж/картр.), фільтрів, секцій (сект./секцій), листів/аркушів (лист/арк.), блоків (блок/блоків), балонів (балон/балонів).</li>
+                    <li><strong>Покращене розпізнавання розділів:</strong> оптимізовано автовизначення служб та підрозділів (ПММ, РАО, Зв'язок, Розділ, Блок тощо) навіть за відсутності двокрапки в кінці.</li>
+                </ul>
+            </div>
+
+            <div class="cl-entry">
+                <div class="cl-head">
+                    <span class="cl-ver">v1.4.0</span>
+                    <span class="cl-date">18.09.2026</span>
+                </div>
+                <ul class="cl-list">
+                    <li><strong>Розширений армійський каталог одиниць:</strong> додано розпізнавання пачок, цинків, котушок саперного/польового дроту, мотків, бухт, рулонів, погонних метрів (пог. м, п.м.), квадратних та кубічних метрів, медичних засобів (ампули, флакони, тюбики).</li>
+                    <li><strong>Чітке розділення тонн і штук:</strong> усунуто помилкову заміну «10 т» на «10 шт.» — тонни для ПММ та будматеріалів зберігаються коректно.</li>
+                    <li><strong>Гарантоване відсікання зайвих даних (End-of-line focus):</strong> прізвища закріплених бійців, коментарі обставин втрати та примітки в дужках відкидаються; кожен рядок чітко закінчується кількістю та одиницею виміру.</li>
+                    <li><strong>Розумне об'єднання дублікатів (Merge):</strong> опція автоматичного сумування однакових позицій майна з граматичним відмінюванням одиниць виміру (наприклад: 1 цинк + 2 цинки = 3 цинки).</li>
+                    <li><strong>Сортування А-Я та налаштування пунктуації:</strong> можливість алфавітного сортування в межах розділів, вибір стилю списку (без маркерів, тире, булети, нумерація) та кінцевого розділювача (; або .).</li>
+                    <li><strong>Безпека LocalStorage та пам'яті:</strong> обробка переповнення квоти сховища та безпечне відкладене скасування URL-обєктів для експорту .txt.</li>
+                </ul>
+            </div>
+
+            <div class="cl-entry">
+                <div class="cl-head">
+                    <span class="cl-ver">v1.3.0</span>
+                    <span class="cl-date">28.08.2026</span>
+                </div>
+                <ul class="cl-list">
+                    <li><strong>Розділи та служби:</strong> Автоматичне розпізнавання заголовків служб (ЗББР, ОВТ, медичний пункт тощо) із двокрапкою.</li>
+                    <li><strong>Двосторонній редактор:</strong> Синхронізована колонка з номерами рядків та прев'ю результату.</li>
+                </ul>
+            </div>
+
+            <div class="cl-entry">
+                <div class="cl-head">
+                    <span class="cl-ver">v1.2.0</span>
+                    <span class="cl-date">10.08.2026</span>
+                </div>
+                <ul class="cl-list">
+                    <li><strong>Базовий парсер кількостей:</strong> Розпізнавання штук, комплектів, пар та очищення базових списків.</li>
+                    <li><strong>Експорт:</strong> Можливість швидкого копіювання в буфер або збереження у файл .txt.</li>
+                </ul>
             </div>
         </div>
-    </div>
+        <div class="dialog-footer">
+            <button type="button" onclick="closeModal('modal-changelog')" class="btn btn-primary">Закрити</button>
+        </div>
+    </dialog>
 
     <script>
         const inputArea = document.getElementById('input-text');
@@ -932,11 +1643,13 @@
 
         btnSplitLines.addEventListener('click', splitInputIntoLines);
 
+        const copyIconWrap = document.getElementById('copy-icon-wrap');
+        const COPY_SVG_DEFAULT = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        const COPY_SVG_DONE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
         btnClear.addEventListener('click', () => {
-            if (inputArea.value && confirm('Очистити всі вхідні дані?')) {
-                inputArea.value = '';
-                formatData();
-            }
+            if (!inputArea.value) return;
+            openModal('modal-confirm-clear');
         });
 
         // Безпечне копіювання в буфер обміну
@@ -945,12 +1658,12 @@
 
             function onCopySuccess() {
                 copyText.textContent = "Скопійовано!";
-                btnCopy.classList.replace('bg-blue-600', 'bg-emerald-600');
-                btnCopy.classList.replace('hover:bg-blue-500', 'hover:bg-emerald-500');
+                if (copyIconWrap) copyIconWrap.innerHTML = COPY_SVG_DONE;
+                btnCopy.classList.add('is-copied');
                 setTimeout(() => {
                     copyText.textContent = "Копіювати";
-                    btnCopy.classList.replace('bg-emerald-600', 'bg-blue-600');
-                    btnCopy.classList.replace('hover:bg-emerald-500', 'hover:bg-blue-500');
+                    if (copyIconWrap) copyIconWrap.innerHTML = COPY_SVG_DEFAULT;
+                    btnCopy.classList.remove('is-copied');
                 }, 2000);
             }
 
@@ -985,27 +1698,56 @@
             }, 1000);
         });
 
-        // Модальне вікно Changelog
+        // Нативні <dialog> модальні вікна (modern-web-guidance: dialog + light-dismiss)
+        function attachDialogLightDismiss(dlg) {
+            if (!dlg || ('closedBy' in HTMLDialogElement.prototype)) return;
+            dlg.addEventListener('click', (e) => {
+                if (e.target !== dlg) return;
+                const rect = dlg.getBoundingClientRect();
+                if (
+                    e.clientX < rect.left ||
+                    e.clientX > rect.right ||
+                    e.clientY < rect.top ||
+                    e.clientY > rect.bottom
+                ) {
+                    dlg.close();
+                }
+            });
+        }
+
         function openModal(id) {
             const modal = document.getElementById(id);
-            if (!modal) return;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            lucide.createIcons();
+            if (!modal || modal.open) return;
+            if (typeof modal.showModal === 'function') modal.showModal();
         }
 
         function closeModal(id) {
             const modal = document.getElementById(id);
-            if (!modal) return;
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal && modal.open) modal.close();
         }
 
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal('modal-changelog');
-            }
-        });
+        const changelogDlg = document.getElementById('modal-changelog');
+        const confirmClearDlg = document.getElementById('modal-confirm-clear');
+
+        attachDialogLightDismiss(changelogDlg);
+        attachDialogLightDismiss(confirmClearDlg);
+
+        if (changelogDlg) {
+            changelogDlg.addEventListener('close', () => {
+                changelogDlg.returnValue = '';
+            });
+        }
+
+        if (confirmClearDlg) {
+            confirmClearDlg.addEventListener('close', () => {
+                const action = confirmClearDlg.returnValue;
+                confirmClearDlg.returnValue = '';
+                if (action === 'confirm') {
+                    inputArea.value = '';
+                    formatData();
+                }
+            });
+        }
 
         // Відновлення збереженого стану
         try {
@@ -1022,8 +1764,6 @@
         const savedData = localStorage.getItem('formatterData_v15') || localStorage.getItem('formatterData_v14') || localStorage.getItem('formatterData') || '';
         inputArea.value = savedData;
 
-        // Ініціалізація іконок
-        lucide.createIcons();
         formatData();
     </script>
 </body>
