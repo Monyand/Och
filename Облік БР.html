@@ -420,6 +420,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -427,6 +428,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         .line-clamp-3 {
             display: -webkit-box;
             -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -461,7 +463,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                         </h1>
                         <button id="versionBadge" type="button" onclick="openChangelogModal()" class="btn-version" title="Історія версій">
                             <i data-lucide="history" class="w-3 h-3"></i>
-                            <span>v1.6.0</span>
+                            <span>v1.6.1</span>
                         </button>
                     </div>
                     <p class="text-[11px] text-[#8892a0] hidden sm:block">Оперативний штаб • Реєстр та контроль виконання</p>
@@ -955,11 +957,11 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         </div>
     </dialog>
 
-    <!-- Native Modal 3: Changelog Modal (v1.6.0) -->
+    <!-- Native Modal 3: Changelog Modal (v1.6.1) -->
     <dialog id="changelogModal" class="br-dialog br-dialog-md" closedby="any" aria-labelledby="changelogModalTitle">
         <div class="pb-3 border-b border-[#2b3340] flex items-center justify-between shrink-0">
             <div class="flex items-center gap-2.5">
-                <span class="btn-version cursor-default">v1.6.0</span>
+                <span class="btn-version cursor-default">v1.6.1</span>
                 <h2 id="changelogModalTitle" class="text-[15px] font-bold text-[#e6e8eb]">Історія оновлень</h2>
             </div>
             <button type="button" onclick="closeModal('changelogModal')" class="text-[#8892a0] hover:text-[#e6e8eb] p-1 rounded cursor-pointer" title="Закрити">
@@ -967,6 +969,17 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             </button>
         </div>
         <div class="space-y-4 text-xs text-[#a5adb8] max-h-[70vh] overflow-y-auto pr-1">
+            <div class="pb-3.5 border-b border-[#222933] space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-[#e6e8eb] font-mono">Версія 1.6.1</span>
+                    <span class="text-[11px] text-[#8892a0] font-mono tabular-nums">14.11.2026</span>
+                </div>
+                <ul class="list-disc list-inside space-y-1 text-[#a5adb8] text-xs">
+                    <li><strong class="text-[#e6e8eb]">Безлімітне збереження (IndexedDB + Диск):</strong> прибрано залежність від 5 МБ ліміту <code>localStorage</code>; <code>localStorage</code> працює лише як опційний кеш, а основною базою є безлімітний <code>IndexedDB</code> та фізичний диск через Диспетчер.</li>
+                    <li><strong class="text-[#e6e8eb]">Авто-мердж при старті та запис при виході:</strong> <code>initStorageAndSync()</code> на кожному відкритті об'єднує записи з <code>IndexedDB</code>, <code>localStorage</code> і диска без затирання свіжих БР; додано <code>keepalive: true</code> і миттєве скидання на <code>pagehide</code> / <code>beforeunload</code>.</li>
+                    <li><strong class="text-[#e6e8eb]">Чистий CSS:</strong> додано стандартні властивості <code>line-clamp: 2</code> і <code>line-clamp: 3</code> у стилі.</li>
+                </ul>
+            </div>
             <div class="pb-3.5 border-b border-[#222933] space-y-1.5">
                 <div class="flex items-center justify-between">
                     <span class="font-bold text-[#e6e8eb] font-mono">Версія 1.6.0</span>
@@ -1473,33 +1486,47 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             }
         }
 
+        const CLEARED_FLAG_KEY = 'br_tracker_cleared_flag';
+        let _hasPendingDiskSave = false;
+
+        async function flushDiskBackup(items) {
+            if (!items || items.length === 0) {
+                _hasPendingDiskSave = false;
+                return false;
+            }
+            try {
+                updateDiskStatusUI('saving');
+                const payload = JSON.stringify({
+                    app: 'br_tracker',
+                    content: JSON.stringify(items, null, 2)
+                });
+                const res = await fetch(`${DISPATCHER_API_BASE}/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload,
+                    keepalive: true
+                });
+                if (res.ok) {
+                    _hasPendingDiskSave = false;
+                    const now = new Date();
+                    lastDiskBackupTime = now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    updateDiskStatusUI('synced');
+                    return true;
+                }
+                updateDiskStatusUI('offline');
+            } catch (err) {
+                updateDiskStatusUI('offline');
+            }
+            return false;
+        }
+
         function saveToDiskBackup(items, immediate = false) {
             if (diskSaveDebounceTimer) clearTimeout(diskSaveDebounceTimer);
+            _hasPendingDiskSave = true;
             const delay = immediate ? 0 : 800;
 
-            diskSaveDebounceTimer = setTimeout(async () => {
-                if (!items || items.length === 0) return;
-                try {
-                    updateDiskStatusUI('saving');
-                    const payload = JSON.stringify({
-                        app: 'br_tracker',
-                        content: JSON.stringify(items, null, 2)
-                    });
-                    const res = await fetch(`${DISPATCHER_API_BASE}/save`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: payload
-                    });
-                    if (res.ok) {
-                        const now = new Date();
-                        lastDiskBackupTime = now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                        updateDiskStatusUI('synced');
-                    } else {
-                        updateDiskStatusUI('offline');
-                    }
-                } catch (err) {
-                    updateDiskStatusUI('offline');
-                }
+            diskSaveDebounceTimer = setTimeout(() => {
+                flushDiskBackup(items);
             }, delay);
         }
 
@@ -1548,20 +1575,40 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             }
         }
 
-        // Consolidated Multi-Tier Persistence
-        function saveToStorage() {
-            // 1. LocalStorage
+        function mergeBrCollections(baseItems, incomingItems) {
+            const existingIds = new Set(baseItems.map(i => i.id));
+            const merged = [...baseItems];
+            let addedCount = 0;
+
+            for (const item of incomingItems) {
+                if (!item || LEGACY_DEMO_IDS.has(item.id)) continue;
+                if (!existingIds.has(item.id)) {
+                    existingIds.add(item.id);
+                    merged.push(item);
+                    addedCount++;
+                }
+            }
+            return { merged, addedCount };
+        }
+
+        // Consolidated Multi-Tier Persistence (IndexedDB + Disk primary, LocalStorage best-effort cache)
+        function saveToStorage(skipDisk = false) {
             try {
+                if (brItems.length > 0) {
+                    localStorage.removeItem(CLEARED_FLAG_KEY);
+                }
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(brItems));
-            } catch (e) {
-                console.error("LocalStorage save error:", e);
+            } catch (_) {
+                // LocalStorage has a ~5MB browser cap; silently fall back to unlimited IndexedDB + Disk
             }
 
-            // 2. IndexedDB
+            // Primary unlimited local storage
             saveToIndexedDB(brItems);
 
-            // 3. Physical Disk (Dispatcher)
-            saveToDiskBackup(brItems);
+            // Physical Disk (Dispatcher)
+            if (!skipDisk) {
+                saveToDiskBackup(brItems);
+            }
         }
 
         // Initialization & Auto-Hydration
@@ -1570,40 +1617,48 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             setInterval(() => checkDiskBackupStatus(false), 20000);
         });
 
-        async function initStorageAndSync() {
-            let loadedCount = 0;
+        function flushPendingOnExit() {
+            if (_hasPendingDiskSave && brItems.length > 0) {
+                if (diskSaveDebounceTimer) clearTimeout(diskSaveDebounceTimer);
+                flushDiskBackup(brItems);
+            }
+        }
+        window.addEventListener('pagehide', flushPendingOnExit);
+        window.addEventListener('beforeunload', flushPendingOnExit);
 
-            // Step 1: LocalStorage
+        async function initStorageAndSync() {
+            let lsItems = [];
+            let idbItems = [];
+
+            // Step 1: Read LocalStorage (best-effort cache)
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        brItems = parsed.filter(item => !LEGACY_DEMO_IDS.has(item.id));
-                        loadedCount = brItems.length;
+                    if (Array.isArray(parsed)) {
+                        lsItems = parsed.filter(item => item && !LEGACY_DEMO_IDS.has(item.id));
                     }
                 }
             } catch (e) {
                 console.error("LocalStorage init error:", e);
             }
 
-            // Step 2: If LocalStorage is empty, check IndexedDB
-            if (loadedCount === 0) {
-                try {
-                    const idbItems = await loadFromIndexedDB();
-                    if (Array.isArray(idbItems) && idbItems.length > 0) {
-                        brItems = idbItems.filter(item => !LEGACY_DEMO_IDS.has(item.id));
-                        if (brItems.length > 0) {
-                            loadedCount = brItems.length;
-                            showToast(`Відновлено ${brItems.length} БР з IndexedDB!`, "ok");
-                            try {
-                                localStorage.setItem(STORAGE_KEY, JSON.stringify(brItems));
-                            } catch (_) {}
-                        }
-                    }
-                } catch (e) {
-                    console.error("IndexedDB init error:", e);
+            // Step 2: Always read IndexedDB (unlimited primary local storage)
+            try {
+                const loadedIdb = await loadFromIndexedDB();
+                if (Array.isArray(loadedIdb)) {
+                    idbItems = loadedIdb.filter(item => item && !LEGACY_DEMO_IDS.has(item.id));
                 }
+            } catch (e) {
+                console.error("IndexedDB init error:", e);
+            }
+
+            // Combine IndexedDB + LocalStorage without letting stale LocalStorage win
+            const localCombined = mergeBrCollections(idbItems, lsItems);
+            brItems = localCombined.merged;
+
+            if (localCombined.addedCount > 0 && idbItems.length === 0 && brItems.length > 0) {
+                saveToIndexedDB(brItems);
             }
 
             // Immediate render with whatever local data is present
@@ -1611,22 +1666,29 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
             lucide.createIcons();
             applyFilters();
 
-            // Step 3: Physical Disk Auto-Hydration via Dispatcher API
+            // Step 3: Physical Disk Auto-Merge via Dispatcher API
             try {
                 const diskData = await checkDiskBackupStatus(false);
                 if (diskData && diskData.exists && diskData.content) {
                     const parsedDisk = JSON.parse(diskData.content);
                     if (Array.isArray(parsedDisk) && parsedDisk.length > 0) {
-                        // If browser memory was completely empty (e.g. freshly opened in Brave or Chrome cleared):
-                        if (brItems.length === 0) {
-                            brItems = parsedDisk.filter(item => !LEGACY_DEMO_IDS.has(item.id));
-                            sanitizeExistingDatabase();
-                            try {
-                                localStorage.setItem(STORAGE_KEY, JSON.stringify(brItems));
-                            } catch (_) {}
-                            saveToIndexedDB(brItems);
-                            applyFilters();
-                            showToast(`Автоматично відновлено ${brItems.length} БР з жорсткого диска!`, "ok");
+                        const isIntentionallyCleared = localStorage.getItem(CLEARED_FLAG_KEY) === '1';
+                        if (!isIntentionallyCleared) {
+                            const prevLen = brItems.length;
+                            const { merged, addedCount } = mergeBrCollections(brItems, parsedDisk);
+                            if (addedCount > 0) {
+                                brItems = merged;
+                                sanitizeExistingDatabase();
+                                saveToStorage(true);
+                                applyFilters();
+                                const delta = brItems.length - prevLen;
+                                if (delta > 0) {
+                                    showToast(`Синхронізовано ${delta} БР з диска (всього: ${brItems.length})`, "ok");
+                                }
+                            } else if (brItems.length > parsedDisk.length) {
+                                // Browser has newer items not yet written to disk
+                                saveToDiskBackup(brItems, true);
+                            }
                         }
                     }
                 } else if (diskData && diskData.online && brItems.length > 0) {
@@ -2806,7 +2868,8 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                 tone: 'danger',
                 onConfirm: () => {
                     brItems = [];
-                    saveToStorage();
+                    try { localStorage.setItem(CLEARED_FLAG_KEY, '1'); } catch (_) {}
+                    saveToStorage(true);
                     applyFilters();
                     showToast('Базу успішно очищено!', 'ok');
                 }

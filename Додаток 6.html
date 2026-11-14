@@ -321,7 +321,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                         <svg class="w-3.5 h-3.5 text-[#4c8ed9]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>v2.2.1</span>
+                        <span>v2.2.2</span>
                     </button>
                 </div>
             </div>
@@ -1561,7 +1561,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] font-mono font-semibold px-2 py-0.5 rounded-[2px] ml-1 tabular-nums">v2.2.1</span>
+                    <span class="text-xs bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] font-mono font-semibold px-2 py-0.5 rounded-[2px] ml-1 tabular-nums">v2.2.2</span>
                 </h3>
                 <button type="button" onclick="closeChangelogModal()"
                     class="text-[#8892a0] hover:text-[#e6e8eb] focus:outline-none p-1.5 rounded-[2px] hover:bg-[#20262f] transition-colors cursor-pointer">
@@ -1587,9 +1587,23 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "2.2.2",
+                date: "14.11.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "Контроль порожніх звітів та гомогліфів",
+                        color: "blue",
+                        items: [
+                            "<b>Реєстр опрацьованих файлів (<code>processedFileNames</code>)</b>: файли з 0 записів у таблицях (напр. порожні рапорти) тепер гарантовано зараховуються у перевірці <code>checkMissingFiles()</code> і не позначаються як «Відсутні звіти».",
+                            "<b>Нормалізація гомогліфів та бейдж <code>0 записів</code></b>: додано <code>normalizeMissingCheckText()</code> (уніфікація латиниця→кирилиця та невидимих символів), а біля порожніх файлів у списку показується бейдж <code>0 записів</code>."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "2.2.1",
                 date: "12.11.2026",
-                isCurrent: true,
                 sections: [
                     {
                         title: "Повністю автономна офлайн-збірка та виправлення консолі",
@@ -3343,13 +3357,32 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             }
         }
 
+        function normalizeMissingCheckText(text) {
+            const homoglyphMap = {
+                a: 'а', b: 'в', c: 'с', e: 'е', h: 'н', i: 'і',
+                k: 'к', m: 'м', o: 'о', p: 'р', t: 'т', x: 'х', y: 'у'
+            };
+            return String(text || '')
+                .normalize('NFKC')
+                .replace(/[\u200B-\u200D\uFEFF]/g, '')
+                .toLowerCase()
+                .replace(/[abcehikmoptxy]/g, ch => homoglyphMap[ch] || ch);
+        }
+
+        function getUploadedFileNamesSet() {
+            return new Set([
+                ...processedFileNames,
+                ...[...vopData, ...btgrData, ...broData, ...zabData].map(p => p.fileName)
+            ]);
+        }
+
         function checkMissingFiles() {
             const alertContainer = document.getElementById('missingFilesAlert');
             if (!alertContainer) return;
 
             if (currentAppMode === 'archive') {
                 const detectedDates = getAllDetectedDates();
-                const totalFiles = [...new Set([...vopData, ...btgrData, ...broData, ...zabData].map(p => p.fileName))].length;
+                const totalFiles = getUploadedFileNamesSet().size;
 
                 if (totalFiles === 0) {
                     alertContainer.classList.add('hidden');
@@ -3391,7 +3424,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 return;
             }
 
-            const uploadedFileNames = [...new Set([...vopData, ...btgrData, ...broData, ...zabData].map(p => p.fileName.toLowerCase()))];
+            const uploadedFileNames = [...getUploadedFileNamesSet()].map(fn => fn.toLowerCase());
 
             if (uploadedFileNames.length === 0) {
                 alertContainer.classList.add('hidden');
@@ -3402,8 +3435,8 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             const presentUnits = [];
 
             expectedUnits.forEach(unit => {
-                // 1. Нормалізуємо очікувану назву (розділяємо букви і цифри, щоб "1мб" і "1 мб" були однаковими)
-                let str = unit.toLowerCase();
+                // 1. Нормалізуємо очікувану назву (гомогліфи + розділення букв і цифр, щоб "1мб" і "1 мб" були однаковими)
+                let str = normalizeMissingCheckText(unit);
                 str = str.replace(/([0-9])([a-zа-яієїґ])/g, '$1 $2').replace(/([a-zа-яієїґ])([0-9])/g, '$1 $2');
 
                 // 2. Розбиваємо на слова/числа
@@ -3417,11 +3450,12 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 const regex = new RegExp(`(^|[^a-zа-яієїґ0-9'])${innerPattern}([^a-zа-яієїґ0-9']|$)`, 'i');
 
                 const found = uploadedFileNames.some(fn => {
-                    // Нормалізуємо ім'я файлу: знімаємо розширення, префікси пбд/щбд,
+                    // Нормалізуємо ім'я файлу: знімаємо розширення, гомогліфи, префікси пбд/щбд,
                     // відокремлюємо стики літер та цифр (напр. "РВ21" -> "РВ 21", "5МР" -> "5 МР")
                     // та прибираємо дати для точного пошуку підрозділів.
-                    let cleanFn = fn
-                        .replace(/\.(docx|dotx|xlsx|xls|csv)$/i, ' ')
+                    let cleanFn = normalizeMissingCheckText(
+                        fn.replace(/\.(docx|dotx|xlsx|xls|csv)$/i, ' ')
+                    )
                         .replace(/(пбд|щбд)/gi, ' ')
                         .replace(/([0-9])([a-zа-яієїґ])/gi, '$1 $2')
                         .replace(/([a-zа-яієїґ])([0-9])/gi, '$1 $2')
@@ -5023,6 +5057,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 
         let invalidTasksList = [];
         let processedDocsCount = 0;
+        let processedFileNames = new Set();
 
         let bchsFuzzyNameDiscrepancies = [];
 
@@ -5200,6 +5235,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                     });
 
                     processedDocsCount++;
+                    processedFileNames.add(file.name);
                     const totalCount = fileVopCount + fileBtgrCount + fileBroCount + fileZabCount;
 
                     const li = document.createElement('li');
@@ -5211,6 +5247,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                         <svg class="w-3.5 h-3.5 text-[#4cc38a] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         <span class="font-medium text-[#e6e8eb] truncate text-[11px]" title="${file.name}">${file.name}</span>
                         ${docDate ? `<span class="px-1.5 py-0.5 rounded-[2px] text-[10px] font-mono bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] flex-shrink-0 font-semibold tabular-nums" title="Визначена дата документа">${docDate}</span>` : ''}
+                        ${totalCount === 0 ? `<span class="px-1.5 py-0.5 rounded-[2px] text-[10px] font-mono bg-[#2b1f0e] text-[#f0b44c] border border-[#6e4e16] flex-shrink-0 font-semibold tabular-nums" title="Файл успішно опрацьовано, але записів у таблицях не знайдено">0 записів</span>` : ''}
                     `;
 
                     const deleteBtn = document.createElement('button');
@@ -5279,6 +5316,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             btgrData = btgrData.filter(r => r.fileName !== fileName || r.isManualEdit);
             broData = broData.filter(r => r.fileName !== fileName || r.isManualEdit);
             zabData = zabData.filter(r => r.fileName !== fileName || r.isManualEdit);
+            processedFileNames.delete(fileName);
 
             // Оновлюємо лічильник
             processedDocsCount--;
@@ -7017,6 +7055,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             ignoredBlacklistIds.clear();
             ignoredMissingIds.clear();
             processedDocsCount = 0;
+            processedFileNames.clear();
             selectedDateFilter = 'all';
             const dateFilterBar = document.getElementById('archive-date-filter-bar');
             if (dateFilterBar) dateFilterBar.classList.add('hidden');
@@ -7933,6 +7972,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                     btgrData = btgrData.filter(r => r.fileName !== oldFn || r.isManualEdit);
                     broData = broData.filter(r => r.fileName !== oldFn || r.isManualEdit);
                     zabData = zabData.filter(r => r.fileName !== oldFn || r.isManualEdit);
+                    processedFileNames.delete(oldFn);
                 }
             });
 
@@ -7943,6 +7983,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             bundle.active_files.forEach(fileInfo => {
                 const fileName = fileInfo.fileName;
                 const records = fileInfo.records || [];
+                processedFileNames.add(fileName);
 
                 // Видаляємо попередню версію цього ж файлу (якщо він був змінений/перезаписаний), зберігаючи ручні правки
                 vopData = vopData.filter(r => r.fileName !== fileName || r.isManualEdit);
@@ -7989,12 +8030,19 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             _loadedDispatcherFileNames = currentActiveNames;
 
             // 3. Синхронізація списку файлів в інтерфейсі (fileNamesList)
+            const fileRecordCounts = new Map();
+            [...vopData, ...btgrData, ...broData, ...zabData].forEach(p => {
+                fileRecordCounts.set(p.fileName, (fileRecordCounts.get(p.fileName) || 0) + 1);
+            });
+
+            const allActiveFilesSet = getUploadedFileNamesSet();
             const fileNamesList = document.getElementById('fileNames');
             if (fileNamesList) {
                 fileNamesList.innerHTML = '';
-                const allActiveFiles = [...new Set([...vopData, ...btgrData, ...broData, ...zabData].map(p => p.fileName))].sort();
+                const allActiveFiles = [...allActiveFilesSet].sort();
                 allActiveFiles.forEach(fn => {
                     const isDisp = _loadedDispatcherFileNames.has(fn);
+                    const recCount = fileRecordCounts.get(fn) || 0;
                     const li = document.createElement('li');
                     li.className = "group flex items-center justify-between hover:bg-[#20262f] p-1.5 rounded-[2px] transition-colors mb-0.5 border border-transparent hover:border-[#2b3340]";
                     li.innerHTML = `
@@ -8002,6 +8050,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                             <svg class="w-3.5 h-3.5 ${isDisp ? 'text-[#4c8ed9]' : 'text-[#4cc38a]'} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             <span class="font-medium text-[#e6e8eb] truncate text-[11px]" title="${fn}">${fn}</span>
                             ${isDisp ? '<span class="text-[9px] font-mono text-[#4c8ed9] bg-[#182230] px-1 py-0.5 rounded-[2px] border border-[#2d4a6d] shrink-0">диск</span>' : ''}
+                            ${recCount === 0 ? '<span class="px-1.5 py-0.5 rounded-[2px] text-[10px] font-mono bg-[#2b1f0e] text-[#f0b44c] border border-[#6e4e16] flex-shrink-0 font-semibold tabular-nums" title="Файл успішно опрацьовано, але записів у таблицях не знайдено">0 записів</span>' : ''}
                         </div>
                         <button class="text-[#8892a0] hover:text-[#f27474] opacity-0 group-hover:opacity-100 p-1 rounded-[2px] transition-opacity focus:outline-none flex-shrink-0 cursor-pointer" title="Видалити цей файл">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -8014,7 +8063,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             }
 
             // 4. Оновлення лічильників та відображення областей результатів
-            const allFilesCount = new Set([...vopData, ...btgrData, ...broData, ...zabData].map(p => p.fileName)).size;
+            const allFilesCount = allActiveFilesSet.size;
             processedDocsCount = allFilesCount;
 
             const docsCountEl = document.getElementById('docsCountDisplay');
