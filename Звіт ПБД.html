@@ -332,7 +332,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         }
 
         .nav-count {
-            display: inline-flex;
+            display: none;
             align-items: center;
             justify-content: center;
             min-width: 20px;
@@ -350,6 +350,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         }
 
         .nav-count.non-zero {
+            display: inline-flex;
             background: var(--accent-tint);
             border-color: var(--accent-btn);
             color: var(--ink-primary);
@@ -403,19 +404,19 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         .container {
             flex: 1;
             min-width: 0;
-            max-width: 1360px;
-            margin: 0 auto;
+            max-width: 100%;
             width: 100%;
-            padding: 18px 20px 80px;
+            padding: 16px 24px 80px;
         }
 
         /* ─── FILES & SETTINGS TABS ───────────────────────────── */
         .settings-panel {
             display: none;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-rule);
-            border-radius: var(--radius);
-            padding: 18px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-rule);
+            border-radius: 0;
+            padding: 0 0 18px;
             margin-bottom: 18px;
         }
 
@@ -469,7 +470,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             border: 1px dashed var(--border-input);
             background: var(--shell-inset);
             border-radius: var(--radius);
-            padding: 28px 18px;
+            padding: 18px 16px;
             text-align: center;
             cursor: pointer;
             transition: border-color 0.15s ease, background-color 0.15s ease;
@@ -526,10 +527,18 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             color: var(--state-ok);
         }
 
+        .files-actions-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
         .btn-primary-generate {
-            width: 100%;
-            margin-top: 14px;
-            height: 40px;
+            width: auto;
+            min-width: 200px;
+            padding: 0 18px;
+            height: 34px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -537,9 +546,9 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             background: var(--accent-btn);
             color: #ffffff;
             border: 1px solid var(--accent-primary);
-            border-radius: var(--radius);
+            border-radius: var(--radius-sm);
             font-family: inherit;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.14s ease;
@@ -549,17 +558,31 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             background: var(--accent-hover);
         }
 
-        /* Settings grid */
+        /* Settings sections (flat Paper-Rule inside native dialog) */
         .settings-grid {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 0;
+        }
+
+        .settings-section {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-rule);
+        }
+
+        .settings-section:first-child {
+            padding-top: 2px;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+            padding-bottom: 2px;
         }
 
         .settings-grid-split {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
+            gap: 16px;
         }
 
         @media (max-width: 900px) {
@@ -568,54 +591,33 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             }
         }
 
-        .settings-card {
-            background: var(--bg-toolbar);
-            border: 1px solid var(--border-rule);
-            border-radius: var(--radius);
-            padding: 14px 16px;
-        }
-
-        .settings-card-header {
+        .settings-section-header {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        .settings-card-title {
+        .settings-section-title {
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: 600;
             color: var(--ink-primary);
         }
 
-        .dict-counter-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            background: var(--shell-inset);
-            border: 1px solid var(--border-rule);
-            border-radius: var(--radius-sm);
+        .dict-counter-text {
             font-family: var(--font-mono);
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 500;
             font-variant-numeric: tabular-nums;
-            color: var(--ink-secondary);
+            color: var(--ink-muted);
         }
 
-        .dict-counter-badge.tone-ok {
-            background: var(--state-ok-bg);
-            border-color: var(--state-ok-border);
-            color: var(--state-ok);
-        }
-
-        .dict-counter-badge.tone-warn {
-            background: var(--state-warn-bg);
-            border-color: var(--state-warn-border);
+        .dict-counter-text.tone-warn {
             color: var(--state-warn);
         }
 
@@ -707,21 +709,17 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             border-color: var(--accent-primary);
         }
 
-        .btn-disk-save {
-            background: var(--state-ok-bg);
-            color: var(--state-ok);
-            border-color: var(--state-ok-border);
-        }
-
-        .btn-disk-save:hover {
-            background: #173527;
-            border-color: var(--state-ok);
-        }
-
+        .btn-disk-save,
         .btn-disk-load {
-            background: var(--bg-band);
-            color: var(--accent-primary);
-            border-color: var(--accent-btn);
+            background: var(--bg-toolbar);
+            color: var(--ink-primary);
+            border-color: var(--border-input);
+        }
+
+        .btn-disk-save:hover,
+        .btn-disk-load:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-primary);
         }
 
         .btn-disk-load:hover {
@@ -867,10 +865,11 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 
         .section-header-top {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
             justify-content: space-between;
             gap: 8px 12px;
+            width: 100%;
         }
 
         .section-header h2 {
@@ -881,6 +880,16 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             display: flex;
             align-items: center;
             gap: 8px;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .header-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
 
         .sec-code {
@@ -979,45 +988,54 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         .badge-wing { background: var(--state-err-bg); border-color: var(--state-err-border); color: var(--state-err); }
         .badge-heavy { background: var(--state-violet-bg); border-color: var(--state-violet-border); color: var(--state-violet); }
 
-        /* ─── CONSTRUCTOR ITEMS (PAPER-RULE FLAT, NO 4px BORDER-LEFT) ─── */
+        /* ─── CONSTRUCTOR ITEMS (PAPER-RULE HORIZONTAL ROWS) ─── */
         .constructor-item {
-            background: var(--bg-toolbar);
-            border: 1px solid var(--border-rule);
-            border-radius: var(--radius);
-            padding: 12px 14px;
-            margin-bottom: 10px;
-            transition: border-color 0.14s ease, opacity 0.14s ease;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-rule);
+            border-radius: 0;
+            padding: 10px 8px;
+            margin-bottom: 0;
+            transition: background-color 0.12s ease, opacity 0.14s ease;
+        }
+
+        .constructor-item:first-child {
+            border-top: 1px solid var(--border-rule);
         }
 
         .constructor-item:hover {
-            border-color: var(--border-input);
+            background: var(--bg-toolbar);
         }
 
         .constructor-item.success {
-            border-color: var(--state-ok-border);
+            box-shadow: inset 2px 0 0 var(--state-ok);
         }
 
         .constructor-item.uav-item,
         .constructor-item.info {
-            border-color: var(--accent-btn);
+            box-shadow: none;
         }
 
         .constructor-item.warning {
-            border-color: var(--state-warn-border);
+            box-shadow: inset 2px 0 0 var(--state-warn);
         }
 
         .constructor-item.danger {
-            border-color: var(--state-err-border);
+            box-shadow: inset 2px 0 0 var(--state-err);
             background: #1c1518;
         }
 
         .constructor-item.manual-card {
-            background: var(--shell-inset);
-            border-color: var(--border-input);
+            background: transparent;
+            border: none;
+            border-top: 1px solid var(--border-rule);
+            border-radius: 0;
+            padding: 12px 0 6px;
         }
 
         .constructor-item.has-enemy-cas {
-            border-color: var(--state-err);
+            box-shadow: inset 2px 0 0 var(--state-err);
+            background: #1c1518;
         }
 
         .item-meta-head {
@@ -1074,6 +1092,11 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             gap: 8px 10px;
         }
 
+        .constructor-controls input,
+        .crew-stats-textarea {
+            font-variant-numeric: tabular-nums;
+        }
+
         .constructor-controls label {
             font-size: 12px;
             color: var(--ink-secondary);
@@ -1098,10 +1121,11 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 
         .cas-box {
             margin-top: 10px;
-            padding: 8px 10px;
-            border: 1px solid var(--border-rule);
-            background: var(--shell-inset);
-            border-radius: var(--radius-sm);
+            padding: 8px 0 2px;
+            border: none;
+            border-top: 1px dashed var(--border-rule);
+            background: transparent;
+            border-radius: 0;
             display: flex;
             align-items: center;
             gap: 14px;
@@ -1109,8 +1133,10 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         }
 
         .cas-box.is-active {
-            border-color: var(--state-err-border);
+            border: 1px solid var(--state-err-border);
             background: var(--state-err-bg);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
         }
 
         .cas-toggle-label {
@@ -1204,13 +1230,14 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             margin-top: 8px;
         }
 
-        /* Crew Stats Box */
+        /* Crew Stats (Paper-Rule flat, no nested card border) */
         .stats-card {
-            background: var(--bg-toolbar);
-            border: 1px solid var(--border-rule);
-            border-radius: var(--radius);
-            padding: 12px 14px;
-            margin-bottom: 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-rule);
+            border-radius: 0;
+            padding: 0 0 14px;
+            margin-bottom: 14px;
         }
 
         .stats-card-head {
@@ -1613,10 +1640,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 
     <header class="topbar">
         <div class="topbar-brand">
-            <a href="index.html" class="btn-shell" title="Повернутися до Єдиного Центру Управління (HUB)">
-                <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                <span>HUB</span>
-            </a>
             <button type="button" class="btn-shell btn-toggle-sidebar" id="toggle-sidebar-btn" onclick="toggleSidebar()"
                 title="Сховати/Показати навігацію розділів" aria-label="Сховати/Показати навігацію розділів">
                 <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
@@ -1624,11 +1647,10 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             <h1 class="topbar-title">
                 <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
                 <span>Звіт ПБД</span>
-                <span class="badge-tactical">М-06</span>
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
                     <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                    <span>v1.4.0</span>
+                    <span>v1.4.1</span>
                 </button>
             </h1>
         </div>
@@ -1642,7 +1664,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
                 <span>Файли</span>
             </button>
-            <button type="button" id="btn-tab-settings" class="btn-shell" onclick="toggleTab('settings-panel')">
+            <button type="button" id="btn-tab-settings" class="btn-shell" onclick="openSettingsModal()">
                 <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
                 <span>Налаштування</span>
             </button>
@@ -1669,19 +1691,14 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                     <h2>
                         <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
                         <span>Завантаження та парсинг файлів</span>
-                        <span class="badge-tactical badge-tactical-accent">EXCEL / CSV</span>
                     </h2>
-                    <span class="settings-status-badge">
-                        <span class="dot"></span>
-                        <span>Готовий до обробки</span>
-                    </span>
                 </div>
                 <div class="file-inputs">
                     <div class="drop-zone" id="drop-zone">
                         <input type="file" id="file-all" accept=".xlsx, .xls, .csv" multiple style="display: none;">
                         <div class="drop-icon-wrap"><svg class="ui-icon drop-icon-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg></div>
                         <div class="drop-title">Перетягніть файли сюди або клікніть для вибору</div>
-                        <div class="drop-sub">Потрібні: Події (events), Вогневі (fire), БпЛА (uav)</div>
+                        <div class="drop-sub">Можна завантажити 1, 2 або всі 3 файли: Події (events), Вогневі (fire), БпЛА (uav)</div>
                         <div id="drop-badges" class="drop-badges">
                             <span class="file-badge" id="badge-events"><svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg><span>Події не знайдено</span></span>
                             <span class="file-badge" id="badge-fire"><svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg><span>Вогневі не знайдено</span></span>
@@ -1690,107 +1707,11 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                     </div>
                 </div>
 
-                <button type="button" class="btn-primary-generate" onclick="processFiles()">
-                    <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                    <span>Згенерувати всі звіти</span>
-                </button>
-            </div>
-
-            <!-- SETTINGS TAB -->
-            <div id="settings-panel" class="settings-panel">
-                <div class="settings-header-bar">
-                    <h2>
-                        <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
-                        <span>Налаштування комплексу</span>
-                        <span class="badge-tactical badge-tactical-accent">PBD CONFIG</span>
-                    </h2>
-                    <span class="settings-status-badge">
-                        <span class="dot"></span>
-                        <span>Автозбереження активне</span>
-                    </span>
-                </div>
-
-                <div class="settings-grid">
-                    <div class="settings-card">
-                        <div class="settings-card-header">
-                            <div class="settings-card-title">
-                                <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
-                                <span>Назва підрозділу</span>
-                            </div>
-                            <span class="dict-counter-badge tone-ok">Шапка звітів</span>
-                        </div>
-                        <input type="text" id="unit-name" value="1 мб 111 овмбр" placeholder="Вкажіть підрозділ (напр: 1 мб 111 овмбр)..." style="width: 100%; font-weight: 500;">
-                        <div class="dict-tip">
-                            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                            <span>Використовується у зведених назвах файлів та формуванні офіційних таблиць донесень.</span>
-                        </div>
-                    </div>
-
-                    <div class="settings-grid-split">
-                        <div class="settings-card">
-                            <div class="settings-card-header">
-                                <div class="settings-card-title">
-                                    <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
-                                    <span>Словник позицій</span>
-                                </div>
-                                <span id="pos-count-badge" class="dict-counter-badge">0 позицій</span>
-                            </div>
-                            <textarea id="pos-dict" class="dict-textarea" rows="7"
-                                placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;"></textarea>
-                            <div class="dict-tip">
-                                <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                <span>Формат: <code>Шукана назва = Як виводити</code>. Програма ігнорує регістр і лапки при автопошуку.</span>
-                            </div>
-                        </div>
-
-                        <div class="settings-card">
-                            <div class="settings-card-header">
-                                <div class="settings-card-title">
-                                    <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
-                                    <span>Словник зброї ОВгП</span>
-                                </div>
-                                <span id="weapon-count-badge" class="dict-counter-badge tone-warn">0 зв'язок</span>
-                            </div>
-                            <textarea id="weapon-dict" class="dict-textarea" rows="7"
-                                placeholder="ОМЕГА = КБА-222 (120мм)&#10;ОМЕГА = МВ81/024 (81 мм)&#10;СОКІЛ = УПІК 82 (82мм)"></textarea>
-                            <div class="dict-tip">
-                                <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                <span>Формат: <code>Назва позиції = Зброя</code>. Якщо кілька калібрів на позиції — вкажіть кожен окремим рядком.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="settings-card">
-                        <div class="settings-card-header">
-                            <div class="settings-card-title">
-                                <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
-                                <span>Безпека та синхронізація налаштувань</span>
-                            </div>
-                            <span class="dict-counter-badge tone-accent">AES-256 GCM</span>
-                        </div>
-                        <p class="security-desc">
-                            Експортуйте зашифрований файл конфігурації для безпечного перенесення словників позицій та зброї на інші автономні штабні ноутбуки.
-                        </p>
-                        <div class="security-actions">
-                            <button type="button" onclick="openSettingsExportModal()" class="btn-export" title="Зберегти налаштування у файл для перенесення на інший ПК">
-                                <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                <span>Експорт налаштувань (.enc)</span>
-                            </button>
-                            <button type="button" onclick="triggerSettingsImport()" class="btn-import" title="Завантажити раніше збережені налаштування з файлу">
-                                <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
-                                <span>Імпорт налаштувань (.enc)</span>
-                            </button>
-                            <button type="button" onclick="saveZvitSettingsToDisk(true)" class="btn-export btn-disk-save" title="Зберегти налаштування та словники на жорсткий диск (Диспетчер)">
-                                <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg>
-                                <span>На диск</span>
-                            </button>
-                            <button type="button" onclick="restoreZvitSettingsFromDisk(true)" class="btn-import btn-disk-load" title="Відновити налаштування та словники з диска (Диспетчер)">
-                                <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-                                <span>З диска</span>
-                            </button>
-                            <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
-                        </div>
-                    </div>
+                <div class="files-actions-row">
+                    <button type="button" class="btn-primary-generate" onclick="processFiles()">
+                        <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                        <span>Згенерувати звіти</span>
+                    </button>
                 </div>
             </div>
 
@@ -2284,35 +2205,31 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             document.body.classList.toggle('sidebar-hidden');
         }
 
+        function openSettingsModal() {
+            updateDictCounters();
+            const dlg = document.getElementById('modal-settings');
+            if (dlg && typeof dlg.showModal === 'function') {
+                dlg.showModal();
+            }
+        }
+
         function toggleTab(tabId) {
+            if (tabId === 'settings-panel') {
+                openSettingsModal();
+                return;
+            }
             const filesPanel = document.getElementById('files-panel');
-            const settingsPanel = document.getElementById('settings-panel');
             const btnFiles = document.getElementById('btn-tab-files');
-            const btnSettings = document.getElementById('btn-tab-settings');
-            
+            if (!filesPanel) return;
+
             const updateTabs = () => {
-                if (tabId === 'files-panel') {
-                    if (filesPanel.classList.contains('active')) {
-                        filesPanel.classList.remove('active');
-                        if (btnFiles) btnFiles.classList.remove('active');
-                    } else {
-                        filesPanel.classList.add('active');
-                        settingsPanel.classList.remove('active');
-                        if (btnFiles) btnFiles.classList.add('active');
-                        if (btnSettings) btnSettings.classList.remove('active');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
+                if (filesPanel.classList.contains('active')) {
+                    filesPanel.classList.remove('active');
+                    if (btnFiles) btnFiles.classList.remove('active');
                 } else {
-                    if (settingsPanel.classList.contains('active')) {
-                        settingsPanel.classList.remove('active');
-                        if (btnSettings) btnSettings.classList.remove('active');
-                    } else {
-                        settingsPanel.classList.add('active');
-                        filesPanel.classList.remove('active');
-                        if (btnSettings) btnSettings.classList.add('active');
-                        if (btnFiles) btnFiles.classList.remove('active');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
+                    filesPanel.classList.add('active');
+                    if (btnFiles) btnFiles.classList.add('active');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             };
 
@@ -2896,20 +2813,45 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             });
         }
 
-        function handleDroppedFiles(files) {
-            Array.from(files).forEach(file => {
+        async function handleDroppedFiles(files) {
+            for (const file of Array.from(files)) {
                 const name = file.name.toLowerCase();
                 if (name.includes('events') || name.includes('поді') || name.includes('под')) {
                     dropEventsFile = file;
                     setFileBadgeState('badge-events', true, file.name, 'Події не знайдено');
-                } else if (name.includes('fire') || name.includes('вогн') || name.includes('вогонь') || name.includes('стрільб')) {
+                    continue;
+                }
+                if (name.includes('fire') || name.includes('вогн') || name.includes('вогонь') || name.includes('стрільб')) {
                     dropFireFile = file;
                     setFileBadgeState('badge-fire', true, file.name, 'Вогневі не знайдено');
-                } else if (name.includes('uav') || name.includes('бпла') || name.includes('бпс') || name.includes('дрон')) {
+                    continue;
+                }
+                if (name.includes('uav') || name.includes('бпла') || name.includes('бпс') || name.includes('дрон')) {
                     dropUavFile = file;
                     setFileBadgeState('badge-uav', true, file.name, 'БпЛА не знайдено');
+                    continue;
                 }
-            });
+
+                // Fallback: автовизначення типу файлу за колонками Excel/CSV, якщо назва нестандартна
+                try {
+                    const rows = await parseExcelFile(file);
+                    const sampleKeys = rows.length > 0 ? Object.keys(rows[0]).map(k => k.toLowerCase()) : [];
+                    if (sampleKeys.some(k => k.includes('місія') || k.includes('тип засобу'))) {
+                        dropUavFile = file;
+                        setFileBadgeState('badge-uav', true, file.name, 'БпЛА не знайдено');
+                    } else if (sampleKeys.some(k => k.includes('категорія зброї') || k.includes('назва зброї'))) {
+                        dropFireFile = file;
+                        setFileBadgeState('badge-fire', true, file.name, 'Вогневі не знайдено');
+                    } else if (sampleKeys.some(k => k.includes('тип події'))) {
+                        dropEventsFile = file;
+                        setFileBadgeState('badge-events', true, file.name, 'Події не знайдено');
+                    } else {
+                        showToast(`Не вдалося розпізнати тип файлу: ${file.name}`, "warn");
+                    }
+                } catch (_) {
+                    showToast(`Помилка читання файлу: ${file.name}`, "err");
+                }
+            }
         }
 
         
@@ -3022,8 +2964,8 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         });
         
         async function processFiles() {
-            if (!dropEventsFile || !dropFireFile || !dropUavFile) {
-                showToast("Завантажте 3 обов'язкові файли (events, fire, uav).", "warn"); return;
+            if (!dropEventsFile && !dropFireFile && !dropUavFile) {
+                showToast("Завантажте хоча б один файл (events, fire або uav).", "warn"); return;
             }
 
             localStorage.setItem('saved-unit-name', document.getElementById('unit-name').value);
@@ -3031,18 +2973,15 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             localStorage.setItem('saved-weapon-dict', document.getElementById('weapon-dict').value);
 
             try {
-                eventsData = await parseExcelFile(dropEventsFile);
-                fireMissionsData = await parseExcelFile(dropFireFile);
-                uavData = await parseExcelFile(dropUavFile);
+                eventsData = dropEventsFile ? await parseExcelFile(dropEventsFile) : [];
+                fireMissionsData = dropFireFile ? await parseExcelFile(dropFireFile) : [];
+                uavData = dropUavFile ? await parseExcelFile(dropUavFile) : [];
 
                 buildPosMap();
                 buildWeaponMap();
                 document.getElementById('files-panel').classList.remove('active');
-                document.getElementById('settings-panel').classList.remove('active');
                 const btnFiles = document.getElementById('btn-tab-files');
-                const btnSettings = document.getElementById('btn-tab-settings');
                 if (btnFiles) btnFiles.classList.remove('active');
-                if (btnSettings) btnSettings.classList.remove('active');
 
                 ['report-1-list', 'report-3-1-1', 'report-2-fpv', 'report-2-drop', 'report-2-mortar', 'report-2-art', 'report-2-other', 'report-3-fpv', 'report-3-drop', 'report-3-heavy', 'report-3-delivery', 'report-4-ovgp', 'report-4-gen'].forEach(id => {
                     document.getElementById(id).innerHTML = '';
@@ -3616,7 +3555,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                             <label>Час:</label> <input type="text" id="r3-time-${index}" value="${escapeHTML(timeUI)}" style="width: 140px;">
                             <label>Поз.:</label> <input type="text" id="r3-pos-${index}" value='${escapeHTML(posFormatted)}' style="width: 150px;">
                             <label>Засіб:</label> <input type="text" id="r3-weapon-${index}" value="${escapeHTML(typeRaw)}" style="width: 180px;">
-                            <label>Рез-т:</label> <input type="text" id="r3-result-${index}" value="${escapeHTML(result)}" style="width: 140px;">
+                            <label>Рез-т:</label> <input type="text" id="r3-result-${index}" value="${escapeHTML(result)}" style="flex: 1 1 220px; min-width: 180px;">
                             <button class="btn-small btn-add" onclick="addUavReport(${index})">Додати в звіт</button>
                             <button class="btn-small btn-hide" onclick="hideItem('r3-item-${index}')">Сховати</button>
                         </div>
@@ -3640,7 +3579,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                             <label>Б/Ч:</label> <input type="text" id="r3-ammo-${index}" value="${escapeHTML(ammo)}" style="width: 120px;">
                             <label>Ціль:</label> <input type="text" id="r3-target-${index}" value="${escapeHTML(target)}" style="width: 120px;">
                             <label>Квадрат:</label> <input type="text" id="r3-coords-${index}" value="${escapeHTML(coords)}" style="width: 130px;">
-                            <label>Рез-т:</label> <input type="text" id="r3-result-${index}" value="${escapeHTML(result)}" style="width: 120px;">
+                            <label>Рез-т:</label> <input type="text" id="r3-result-${index}" value="${escapeHTML(result)}" style="flex: 1 1 180px; min-width: 160px;">
                             <button class="btn-small btn-add" onclick="addUavReport(${index})">Додати в звіт</button>
                             <button class="btn-small btn-hide" onclick="hideItem('r3-item-${index}')">Сховати</button>
                         </div>
@@ -3735,20 +3674,24 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             const fixedCrews = ['КЕНТ', 'ГРУТ', 'ПЕГАС', 'БАРАКУДА', 'ЖНЕЦЬ', 'ВОМБАТ'];
             let resultParts = [];
 
-            // 1. Обов'язкові екіпажі у строгому порядку
+            // 1. Зафіксовані у звіті екіпажі зі списку (у строгому порядку, без нулів)
             fixedCrews.forEach(name => {
-                let count = crewCounts[name] || 0;
-                resultParts.push(`${name}: ${count}`);
+                const count = crewCounts[name] || 0;
+                if (count > 0) {
+                    resultParts.push(`${name}: ${count}`);
+                }
             });
 
             // 2. Будь-які інші підтверджені екіпажі поза списком
             Object.keys(crewCounts).forEach(name => {
-                if (!fixedCrews.includes(name)) {
+                if (!fixedCrews.includes(name) && crewCounts[name] > 0) {
                     resultParts.push(`${name}: ${crewCounts[name]}`);
                 }
             });
 
-            let valText = `Кількість вильотів ТЗ:\n${resultParts.join(', ')}.`;
+            let valText = resultParts.length > 0
+                ? `Кількість вильотів ТЗ:\n${resultParts.join(', ')}.`
+                : `Кількість вильотів ТЗ:\nНемає підтверджених вильотів.`;
 
             const statsElems = document.querySelectorAll('.crew-stats-textarea, #crew-stats-text');
             statsElems.forEach(el => {
@@ -3756,17 +3699,59 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             });
         }
 
-        window.copyCrewStats = function (btn) {
+        function escapeHtmlForClipboard(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        async function copyTextWithYellowDigits(plainText) {
+            const htmlLines = plainText.split('\n').map(line =>
+                escapeHtmlForClipboard(line).replace(/\b(\d+)\b/g, '<span style="background-color:#ffff00;mso-highlight:yellow;">$1</span>')
+            );
+            const htmlText = `<div style="font-size:13pt;font-weight:bold;"><b>${htmlLines.join('<br>')}</b></div>`;
+
+            if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+                try {
+                    const item = new ClipboardItem({
+                        'text/plain': new Blob([plainText], { type: 'text/plain' }),
+                        'text/html': new Blob([htmlText], { type: 'text/html' })
+                    });
+                    await navigator.clipboard.write([item]);
+                    return;
+                } catch (_) {
+                    // Fallback to execCommand copy with text/html
+                }
+            }
+
+            const copyListener = function (e) {
+                e.clipboardData.setData('text/plain', plainText);
+                e.clipboardData.setData('text/html', htmlText);
+                e.preventDefault();
+            };
+            document.addEventListener('copy', copyListener);
+            const ok = document.execCommand('copy');
+            document.removeEventListener('copy', copyListener);
+            if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(plainText);
+            }
+        }
+
+        window.copyCrewStats = async function (btn) {
             const container = btn.closest('.panel, .panel-body') || document;
             const textElem = container.querySelector('.crew-stats-textarea, #crew-stats-text') || document.getElementById('crew-stats-text');
             if (!textElem || !textElem.value.trim()) return showToast("Статистика порожня.", "warn");
             const cleanedStats = textElem.value.split('\n').map(l => cleanReportText(l)).filter(Boolean).join('\n');
-            navigator.clipboard.writeText(cleanedStats).then(() => {
+            try {
+                await copyTextWithYellowDigits(cleanedStats);
                 const origHtml = btn.innerHTML;
                 btn.textContent = "Скопійовано";
                 btn.classList.add('is-copied');
                 setTimeout(() => { btn.innerHTML = origHtml; btn.classList.remove('is-copied'); }, 2000);
-            }).catch(e => showToast("Помилка копіювання: " + e, "err"));
+            } catch (e) {
+                showToast("Помилка копіювання: " + e, "err");
+            }
         };
 
         window.addUavReport = function (i, isManual = false) {
@@ -4573,9 +4558,31 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.4.1",
+                date: "14.11.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "Завантаження файлів, статистика та Word-форматування",
+                        items: [
+                            "<b>Гнучке завантаження 1–3 файлів</b>: Генерація звітів тепер працює з будь-якою комбінацією завантажених файлів (1, 2 або 3) із фолбеком розпізнавання таблиць за заголовками колонок Excel.",
+                            "<b>Чиста статистика вильотів екіпажів (ТЗ)</b>: Виводяться лише ті позиції/екіпажі, які реально зафіксовані у підтвердженому звіті (`count &gt; 0`), без нульових позицій.",
+                            "<b>Копіювання статистики для Word</b>: Реалізовано `copyTextWithYellowDigits()` — вставка у Word із жирним шрифтом `13pt` та жовтим виділенням цифр."
+                        ]
+                    },
+                    {
+                        title: "Інтерфейс Paper-Rule та Налаштування",
+                        items: [
+                            "<b>Модальне вікно налаштувань</b>: Налаштування перенесено в нативний `&lt;dialog id=\"modal-settings\"&gt;` з плоскими секціями та фоновою автосинхронізацією на диск.",
+                            "<b>Плоскі рядки конструктора й безкаркасні блоки</b>: Прибрано дублюючі рамки навколо `.stats-card`, `.constructor-item` переведено на горизонтальні рядки Paper-Rule, розширено поле `Рез-т:` без обрізання тексту та приховано нульові лічильники в сайдбарі."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.4.0",
                 date: "13.11.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "Дизайн-система «Графітова матова Відомість» і навігація",
@@ -4894,13 +4901,84 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 
     </script>
 
+    <!-- НАТИВНЕ МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ -->
+    <dialog id="modal-settings" class="pbd-dialog dialog-wide" closedby="any" aria-labelledby="settings-dialog-title">
+        <div class="dialog-head">
+            <h3 class="dialog-title" id="settings-dialog-title">
+                <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+                <span>Налаштування</span>
+            </h3>
+            <button type="button" onclick="closeNativeDialog('modal-settings')" class="btn-dialog-close" title="Закрити" aria-label="Закрити"><svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        </div>
+        <div class="dialog-body">
+            <div class="settings-grid">
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <label for="unit-name" class="settings-section-title">Назва підрозділу</label>
+                    </div>
+                    <input type="text" id="unit-name" value="1 мб 111 овмбр" placeholder="Вкажіть підрозділ (напр: 1 мб 111 овмбр)..." style="width: 100%; max-width: 340px; font-weight: 500;">
+                    <div class="dict-tip">
+                        <span>Використовується у зведених назвах файлів та шапках таблиць донесень.</span>
+                    </div>
+                </div>
+
+                <div class="settings-section settings-grid-split">
+                    <div>
+                        <div class="settings-section-header">
+                            <label for="pos-dict" class="settings-section-title">Словник позицій</label>
+                            <span id="pos-count-badge" class="dict-counter-text">0 позицій</span>
+                        </div>
+                        <textarea id="pos-dict" class="dict-textarea" rows="7"
+                            placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;"></textarea>
+                        <div class="dict-tip">
+                            <span>Формат: <code>Шукана назва = Як виводити</code> (регістр і лапки ігноруються).</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="settings-section-header">
+                            <label for="weapon-dict" class="settings-section-title">Словник зброї ОВгП</label>
+                            <span id="weapon-count-badge" class="dict-counter-text">0 зв'язок</span>
+                        </div>
+                        <textarea id="weapon-dict" class="dict-textarea" rows="7"
+                            placeholder="ОМЕГА = КБА-222 (120мм)&#10;ОМЕГА = МВ81/024 (81 мм)&#10;СОКІЛ = УПІК 82 (82мм)"></textarea>
+                        <div class="dict-tip">
+                            <span>Формат: <code>Назва позиції = Зброя</code> (кожен калібр з нового рядка).</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <span class="settings-section-title">Синхронізація та бекап налаштувань</span>
+                    </div>
+                    <div class="security-actions">
+                        <button type="button" onclick="openSettingsExportModal()" class="btn-export" title="Зберегти налаштування у зашифрований .enc файл">
+                            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <span>Експорт (.enc)</span>
+                        </button>
+                        <button type="button" onclick="triggerSettingsImport()" class="btn-import" title="Завантажити налаштування з .enc файлу">
+                            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Імпорт (.enc)</span>
+                        </button>
+                        <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dialog-foot dialog-foot-between">
+            <span class="dialog-hint">Автозбереження активне</span>
+            <button type="button" class="btn-small btn-add" onclick="closeNativeDialog('modal-settings')">Готово</button>
+        </div>
+    </dialog>
+
     <!-- МОДАЛЬНЕ ВІКНО CHANGELOG ЗВІТУ ПБД -->
     <dialog id="modal-changelog" class="pbd-dialog dialog-wide" closedby="any" aria-labelledby="changelog-dialog-title">
         <div class="dialog-head">
             <h3 class="dialog-title" id="changelog-dialog-title">
                 <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
                 <span>Історія оновлень (Звіт ПБД)</span>
-                <span class="badge-tactical badge-tactical-accent">v1.4.0</span>
+                <span class="badge-tactical badge-tactical-accent">v1.4.1</span>
             </h3>
             <button type="button" onclick="closeChangelogModal()" class="btn-dialog-close" title="Закрити" aria-label="Закрити"><svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
         </div>
