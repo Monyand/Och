@@ -218,7 +218,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         #table-bro-container { view-transition-name: d6-vt-bro; }
         #table-zab-container { view-transition-name: d6-vt-zab; }
         #table-utoch-container { view-transition-name: d6-vt-utoch; }
-        #dispatcherWidget { view-transition-name: d6-vt-dispatcher; }
         #archive-date-filter-bar { view-transition-name: d6-vt-archive; }
 
         ::view-transition-old(d6-vt-vop),
@@ -321,7 +320,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                         <svg class="w-3.5 h-3.5 text-[#4c8ed9]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>v2.2.2</span>
+                        <span>v2.3.0</span>
                     </button>
                 </div>
             </div>
@@ -375,72 +374,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 <!-- Ліва колонка: Штабний диспетчер + Drag & Drop + Панель інструментів -->
                 <div class="lg:col-span-8 flex flex-col gap-3">
                     
-                    <!-- ВІДЖЕТ ШТАБНОГО ДИСПЕТЧЕРА -->
-                    <section id="dispatcherWidget"
-                        class="bg-[#181c22] rounded-[2px] p-3.5 border border-[#2b3340] transition-colors">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="relative flex items-center justify-center shrink-0">
-                                    <span id="dispPulseDot" class="w-2.5 h-2.5 rounded-[1px] bg-[#4cc38a]"></span>
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <h3 class="font-semibold text-xs sm:text-sm tracking-wide text-[#e6e8eb] flex items-center gap-1.5">
-                                            <span>Штабний диспетчер</span>
-                                        </h3>
-                                        <span id="dispDateBadge" class="text-xs font-mono font-semibold px-2 py-0.5 rounded-[2px] bg-[#182230] text-[#a5adb8] border border-[#2d4a6d] tabular-nums">--.--</span>
-                                        <span id="dispStatusBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-[2px] bg-[#11261c] text-[#4cc38a] border border-[#265c41] inline-flex items-center gap-1.5 font-mono">
-                                            <span class="w-1.5 h-1.5 rounded-[1px] bg-[#4cc38a]"></span>
-                                            <span>ГОТОВО</span>
-                                        </span>
-                                    </div>
-                                    <p id="dispSummaryText" class="text-xs text-[#a5adb8] mt-1 flex flex-wrap items-center gap-2">
-                                        Перевірка зв'язку з локальним сервісом...
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Кнопки дій Диспетчера -->
-                            <div class="flex flex-wrap items-center gap-2 shrink-0">
-                                <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[2px] bg-[#151920] border border-[#2b3340] hover:border-[#394455] cursor-pointer select-none transition-colors"
-                                    title="Автоматично синхронізувати Додаток 6 при додаванні, оновленні чи видаленні файлів у папці">
-                                    <input type="checkbox" id="chkDispAutoSync" onchange="toggleDispatcherAutoSync(this.checked)"
-                                        class="w-3.5 h-3.5 accent-[#4c8ed9] rounded-[2px] cursor-pointer">
-                                    <span class="relative flex h-2 w-2">
-                                        <span id="dispAutoSyncPing" class="hidden"></span>
-                                        <span id="dispAutoSyncDot" class="relative inline-flex rounded-[1px] h-2 w-2 bg-[#4cc38a]"></span>
-                                    </span>
-                                    <span class="text-xs font-medium text-[#e6e8eb]">Авто-синхронізація</span>
-                                </label>
-
-                                <button type="button" id="btnDispLoad" onclick="loadDispatcherReports()"
-                                    class="flex items-center gap-1.5 bg-[#2b67ab] hover:bg-[#245791] text-[#f4f6f8] font-semibold py-1.5 px-3 rounded-[2px] border border-[#4c8ed9] transition-colors cursor-pointer disabled:opacity-50 disabled:pointer-events-none text-xs"
-                                    title="Миттєво завантажити підготовлені файли за поточну добу без ручного вибору">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    <span>Прийняти день</span>
-                                </button>
-
-                                <button type="button" id="btnDispModal" onclick="openDispatcherModal()"
-                                    class="flex items-center bg-[#20262f] hover:bg-[#28303b] text-[#e6e8eb] text-xs font-medium py-1.5 px-3 rounded-[2px] border border-[#343f50] transition-colors cursor-pointer"
-                                    title="Шаховка здачі звітів та аналіз дублікатів">
-                                    <span>Шаховка</span>
-                                    <span id="dispMissingBadge" class="ml-1.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-[2px] bg-[#151920] text-[#a5adb8] border border-[#2b3340] tabular-nums">--/--</span>
-                                </button>
-
-                                <button type="button" onclick="checkDispatcherStatus(true)"
-                                    class="p-1.5 rounded-[2px] bg-[#20262f] hover:bg-[#28303b] text-[#a5adb8] hover:text-[#e6e8eb] border border-[#343f50] transition-colors cursor-pointer"
-                                    title="Оновити дані диспетчера">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-
                     <!-- Зона Drag and Drop -->
                     <div id="drop-zone"
                         class="w-full border border-dashed border-[#394455] hover:border-[#4c8ed9] bg-[#151920] hover:bg-[#182230] rounded-[2px] p-3.5 text-center cursor-pointer transition-colors flex flex-col sm:flex-row items-center justify-center gap-3.5"
@@ -461,85 +394,8 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                             class="hidden" onchange="handleFilesSelect(event)">
                     </div>
 
-                    <!-- Панель інструментів (Дворядкова структура) -->
-                    <section class="p-3 bg-[#181c22] rounded-[2px] border border-[#2b3340] flex flex-col gap-2.5">
-                        <!-- Ряд 1: Вхідні дані та Стандартизація -->
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="text-[11px] font-semibold text-[#8892a0] uppercase tracking-wider mr-1">Джерела:</span>
-                                <!-- БЧС -->
-                                <button type="button" onclick="document.getElementById('masterFileInput').click()"
-                                    title="Звірка з БЧС (Загублені та описки)"
-                                    class="flex items-center bg-[#20262f] hover:bg-[#28303b] text-[#e6e8eb] font-medium py-1.5 px-2.5 rounded-[2px] border border-[#343f50] hover:border-[#4c8ed9] transition-colors text-xs cursor-pointer">
-                                    <svg class="w-3.5 h-3.5 mr-1.5 text-[#4c8ed9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
-                                        </path>
-                                    </svg>
-                                    <span>БЧС</span>
-                                </button>
-                                <input type="file" id="masterFileInput" multiple
-                                    accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document, .xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                                    class="hidden" onchange="handleMasterFilesSelect(event)">
-
-                                <!-- СЗЧ -->
-                                <button type="button" onclick="document.getElementById('blacklistFileInput').click()"
-                                    title="Чорний список (СЗЧ / Відпустки / Втрати)"
-                                    class="flex items-center bg-[#20262f] hover:bg-[#28303b] text-[#e6e8eb] font-medium py-1.5 px-2.5 rounded-[2px] border border-[#343f50] hover:border-[#6e4e16] transition-colors text-xs cursor-pointer">
-                                    <svg class="w-3.5 h-3.5 mr-1.5 text-[#f0b44c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                        </path>
-                                    </svg>
-                                    <span>СЗЧ</span>
-                                </button>
-                                <input type="file" id="blacklistFileInput" multiple
-                                    accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                    class="hidden" onchange="handleBlacklistFilesSelect(event)">
-
-                                <!-- Посади -->
-                                <button type="button" onclick="document.getElementById('importPosFileInput').click()"
-                                    title="Імпорт посад і звань"
-                                    class="flex items-center bg-[#20262f] hover:bg-[#28303b] text-[#e6e8eb] font-medium py-1.5 px-2.5 rounded-[2px] border border-[#343f50] hover:border-[#265c41] transition-colors text-xs cursor-pointer">
-                                    <svg class="w-3.5 h-3.5 mr-1.5 text-[#4cc38a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12">
-                                        </path>
-                                    </svg>
-                                    <span>Посади</span>
-                                </button>
-                                <input type="file" id="importPosFileInput" multiple
-                                    accept=".docx, .dotx, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                    class="hidden" onchange="handleImportPosFilesSelect(event)">
-                            </div>
-
-                            <!-- Стандартизація та Очищення -->
-                            <div class="flex flex-wrap items-center gap-2">
-                                <button type="button" onclick="standardizeTasks()"
-                                    title="Стандартизувати та нормалізувати всі позиції ВОП/РОП за словником автозамін"
-                                    class="flex items-center bg-[#20262f] hover:bg-[#28303b] text-[#e6e8eb] font-semibold py-1.5 px-3 rounded-[2px] border border-[#4c8ed9]/70 hover:border-[#4c8ed9] transition-colors text-xs cursor-pointer">
-                                    <svg class="w-3.5 h-3.5 mr-1.5 text-[#4c8ed9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    <span>Стандартизувати позиції</span>
-                                </button>
-
-                                <button type="button" onclick="clearData()" title="Очистити всі завантажені дані з пам'яті"
-                                    class="flex items-center bg-[#20262f] hover:bg-[#2b1416] text-[#a5adb8] hover:text-[#f27474] font-medium py-1.5 px-2.5 rounded-[2px] border border-[#343f50] hover:border-[#7c2a30] transition-colors text-xs cursor-pointer">
-                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                        </path>
-                                    </svg>
-                                    <span>Очистити дані</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="h-px bg-[#222933] w-full"></div>
-
-                        <!-- Ряд 2: Експорт звітів -->
+                    <!-- Панель інструментів -->
+                    <section class="p-3 bg-[#181c22] rounded-[2px] border border-[#2b3340]">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="text-[11px] font-semibold text-[#8892a0] uppercase tracking-wider mr-1">Експорт:</span>
@@ -550,7 +406,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
-                                    <span>Наказ Word (.docx)</span>
+                                    <span>Додаток 6 (.docx)</span>
                                 </button>
 
                                 <!-- Зведена Матриця -->
@@ -595,6 +451,29 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                                     <span>Місячний табель (.xlsx)</span>
                                 </button>
                             </div>
+
+                            <!-- Стандартизація та Очищення -->
+                            <div class="flex flex-wrap items-center gap-2 ml-auto">
+                                <button type="button" onclick="standardizeTasks()"
+                                    title="Стандартизувати та нормалізувати всі позиції ВОП/РОП за словником автозамін"
+                                    class="flex items-center bg-[#20262f] hover:bg-[#28303b] text-[#e6e8eb] font-semibold py-1.5 px-3 rounded-[2px] border border-[#4c8ed9]/70 hover:border-[#4c8ed9] transition-colors text-xs cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-[#4c8ed9]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span>Стандартизувати позиції</span>
+                                </button>
+
+                                <button type="button" onclick="clearData()" title="Очистити всі завантажені дані з пам'яті"
+                                    class="flex items-center bg-[#20262f] hover:bg-[#2b1416] text-[#a5adb8] hover:text-[#f27474] font-medium py-1.5 px-2.5 rounded-[2px] border border-[#343f50] hover:border-[#7c2a30] transition-colors text-xs cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                        </path>
+                                    </svg>
+                                    <span>Очистити дані</span>
+                                </button>
+                            </div>
                         </div>
                     </section>
 
@@ -610,7 +489,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                     </div>
 
                     <!-- СТАТУС ДАНИХ -->
-                    <div id="statusRibbonBar" class="bg-[#151920] p-2.5 px-3.5 rounded-[2px] border border-[#2b3340] flex flex-wrap items-center gap-2 min-h-[44px]">
+                    <div id="statusRibbonBar" class="hidden bg-[#151920] p-2.5 px-3.5 rounded-[2px] border border-[#2b3340] flex-wrap items-center gap-2 min-h-[44px]">
                         <span class="text-[11px] font-semibold text-[#8892a0] uppercase tracking-wider mr-1 flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 text-[#4c8ed9]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -643,33 +522,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             </button>
                             <button type="button" onclick="toggleAlertDetails('emptyFieldsAlert', 'emptyDetailsList')" class="bg-[#6e4e16] hover:bg-[#8a621c] text-[#f4f6f8] px-2 py-0.5 rounded-[2px] text-[11px] font-semibold transition-colors cursor-pointer">Деталі</button>
-                        </div>
-
-                        <!-- Чіп 4: Чорний список (СЗЧ) -->
-                        <div id="blacklistAlert" class="hidden items-center gap-1.5 px-2.5 py-1 bg-[#281f0f] border border-[#6e4e16] text-[#f0b44c] rounded-[2px] text-xs font-medium">
-                            <span>СЗЧ / Чорний список: <b id="blacklistCount" class="font-bold tabular-nums">0</b></span>
-                            <button type="button" onclick="downloadBlacklistReport()" title="Завантажити Excel-звіт" class="text-[#f0b44c] hover:text-[#e6e8eb] ml-1 p-0.5 rounded-[2px] hover:bg-[#3a2d15] cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            </button>
-                            <button type="button" onclick="toggleAlertDetails('blacklistAlert', 'blacklistDetailsList')" class="bg-[#6e4e16] hover:bg-[#8a621c] text-[#f4f6f8] px-2 py-0.5 rounded-[2px] text-[11px] font-semibold transition-colors cursor-pointer">Деталі</button>
-                        </div>
-
-                        <!-- Чіп 5: Загублені бійці (БЧС) -->
-                        <div id="missingAlert" class="hidden items-center gap-1.5 px-2.5 py-1 bg-[#182230] border border-[#2d4a6d] text-[#4c8ed9] rounded-[2px] text-xs font-medium">
-                            <span>Загублені: <b id="missingCount" class="font-bold tabular-nums">0</b></span>
-                            <button type="button" onclick="downloadMissingReport()" title="Завантажити Excel-звіт" class="text-[#4c8ed9] hover:text-[#e6e8eb] ml-1 p-0.5 rounded-[2px] hover:bg-[#202d40] cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            </button>
-                            <button type="button" onclick="toggleAlertDetails('missingAlert', 'missingDetailsList')" class="bg-[#2b67ab] hover:bg-[#245791] text-[#f4f6f8] px-2 py-0.5 rounded-[2px] text-[11px] font-semibold transition-colors cursor-pointer">Деталі</button>
-                        </div>
-
-                        <!-- Чіп 6: Описки ПІБ (БЧС) -->
-                        <div id="bchsDiscrepanciesAlert" class="hidden items-center gap-1.5 px-2.5 py-1 bg-[#182230] border border-[#2d4a6d] text-[#4c8ed9] rounded-[2px] text-xs font-medium">
-                            <span>Описки ПІБ: <b id="bchsDiscrepanciesCount" class="font-bold tabular-nums">0</b></span>
-                            <button type="button" onclick="downloadBchsDiscrepanciesReport()" title="Завантажити Excel-звіт" class="text-[#4c8ed9] hover:text-[#e6e8eb] ml-1 p-0.5 rounded-[2px] hover:bg-[#202d40] cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            </button>
-                            <button type="button" onclick="toggleAlertDetails('bchsDiscrepanciesAlert', 'bchsDiscrepanciesDetailsList')" class="bg-[#2b67ab] hover:bg-[#245791] text-[#f4f6f8] px-2 py-0.5 rounded-[2px] text-[11px] font-semibold transition-colors cursor-pointer">Деталі</button>
                         </div>
                     </div>
                 </div>
@@ -725,9 +577,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                         </button>
                     </div>
                     <div id="alertDrawerContent" class="max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
-                        <ul id="bchsDiscrepanciesDetailsList" class="hidden space-y-2 text-xs"></ul>
-                        <ul id="blacklistDetailsList" class="hidden space-y-2 text-xs"></ul>
-                        <ul id="missingDetailsList" class="hidden space-y-2 text-xs"></ul>
                         <ul id="emptyDetailsList" class="hidden space-y-1.5 text-xs"></ul>
                         <ul id="invalidDetailsList" class="hidden space-y-1.5 text-xs"></ul>
                         <ul id="dupDetailsList" class="hidden space-y-2.5 text-xs"></ul>
@@ -1561,7 +1410,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] font-mono font-semibold px-2 py-0.5 rounded-[2px] ml-1 tabular-nums">v2.2.2</span>
+                    <span class="text-xs bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] font-mono font-semibold px-2 py-0.5 rounded-[2px] ml-1 tabular-nums">v2.3.0</span>
                 </h3>
                 <button type="button" onclick="closeChangelogModal()"
                     class="text-[#8892a0] hover:text-[#e6e8eb] focus:outline-none p-1.5 rounded-[2px] hover:bg-[#20262f] transition-colors cursor-pointer">
@@ -1587,9 +1436,24 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
-                version: "2.2.2",
+                version: "2.3.0",
                 date: "14.11.2026",
                 isCurrent: true,
+                sections: [
+                    {
+                        title: "Автозбереження сесії та спрощення інтерфейсу",
+                        color: "blue",
+                        items: [
+                            "<b>Автозбереження сесії (<code>IndexedDB</code> + fallback <code>localStorage</code>)</b>: завантажені дані, список опрацьованих файлів, режим та ручні правки автоматично зберігаються і відновлюються після оновлення сторінки (<code>F5</code>); кнопка «Очистити дані» скидає збережену сесію.",
+                            "<b>Видалення зайвих модулів</b>: повністю прибрано блок <code>Джерела: БЧС / СЗЧ / Посади</code> та віджет/модалку «Штабний диспетчер» з фоновим поллінгом.",
+                            "<b>Компактна панель дій і дата Додатка 6</b>: кнопки зведено в один ряд, порожня плашка «Контроль даних» приховується автоматично, кнопку експорту перейменовано на <code>Додаток 6 (.docx)</code>, а модалка експорту коректно виставляє вчорашню і сьогоднішню дати."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "2.2.2",
+                date: "14.11.2026",
                 sections: [
                     {
                         title: "Контроль порожніх звітів та гомогліфів",
@@ -2193,7 +2057,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 if (typeof closeChangelogModal === 'function') closeChangelogModal();
                 if (typeof closeEditModal === 'function') closeEditModal();
                 if (typeof closeDocxExportModal === 'function') closeDocxExportModal();
-                if (typeof closeDispatcherModal === 'function') closeDispatcherModal();
             }
         });
 
@@ -2202,7 +2065,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             const changelogModal = document.getElementById('changelogModal');
             const editRecordModal = document.getElementById('editRecordModal');
             const docxExportModal = document.getElementById('modal-docx-export');
-            const dispatcherModal = document.getElementById('dispatcherModal');
             const pExport = document.getElementById('modal-settings-export-pwd');
             const pImport = document.getElementById('modal-settings-import-pwd');
 
@@ -2212,11 +2074,10 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             if (e.target === changelogModal && typeof closeChangelogModal === 'function') closeChangelogModal();
             if (e.target === editRecordModal && typeof closeEditModal === 'function') closeEditModal();
             if (e.target === docxExportModal && typeof closeDocxExportModal === 'function') closeDocxExportModal();
-            if (e.target === dispatcherModal && typeof closeDispatcherModal === 'function') closeDispatcherModal();
         });
 
         // Modern Web Guidance: Автоматичний контроль блокування прокручування body при відкритті будь-якої модалки
-        const trackedModalIds = ['settingsModal', 'changelogModal', 'editRecordModal', 'modal-docx-export', 'dispatcherModal', 'modal-settings-export-pwd', 'modal-settings-import-pwd'];
+        const trackedModalIds = ['settingsModal', 'changelogModal', 'editRecordModal', 'modal-docx-export', 'modal-settings-export-pwd', 'modal-settings-import-pwd'];
         const modalScrollObserver = new MutationObserver(() => {
             const anyOpen = trackedModalIds.some(id => {
                 const el = document.getElementById(id);
@@ -2900,7 +2761,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 const btnArchive = document.getElementById('btn-mode-archive');
                 const dropTitle = document.getElementById('drop-zone-title');
                 const dropSub = document.getElementById('drop-zone-sub');
-                const dispWidget = document.getElementById('dispatcherWidget');
                 const modeStatus = document.getElementById('mode-status-info');
 
                 if (mode === 'archive') {
@@ -2912,7 +2772,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                     }
                     if (dropTitle) dropTitle.innerText = "Натисніть або перетягніть файли Додатків 6 сюди";
                     if (dropSub) dropSub.innerText = "Крок 1: Завантажте готові Додатки 6 за місяць або період (.docx, .xlsx)";
-                    if (dispWidget) dispWidget.classList.add('hidden');
                     if (modeStatus) modeStatus.innerHTML = `<span class="px-2.5 py-1 rounded-[2px] bg-[#2b1f0e] text-[#f0b44c] border border-[#6e4e16] text-[11px] font-mono font-semibold">АРХІВ ДОДАТКІВ 6</span>`;
                 } else {
                     if (btnPbd) {
@@ -2923,7 +2782,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                     }
                     if (dropTitle) dropTitle.innerText = "Натисніть або перетягніть файли сюди";
                     if (dropSub) dropSub.innerText = "Крок 1: Завантажте добові звіти ПБД рот (.docx, .xlsx)";
-                    if (dispWidget) dispWidget.classList.remove('hidden');
                     if (modeStatus) modeStatus.innerHTML = `<span class="px-2.5 py-1 rounded-[2px] bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] text-[11px] font-mono font-semibold">ДОБОВИЙ ЗБІР ПБД</span>`;
                 }
 
@@ -3015,10 +2873,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             const detectedDates = getAllDetectedDates();
             let defaultStart = '';
             let defaultEnd = '';
-            if (detectedDates.length === 1) {
-                defaultStart = detectedDates[0];
-                defaultEnd = detectedDates[0];
-            } else if (detectedDates.length > 1) {
+            if (detectedDates.length > 1) {
                 defaultStart = detectedDates[0];
                 defaultEnd = detectedDates[detectedDates.length - 1];
             } else {
@@ -4310,6 +4165,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 recalculateEmptyFields();
                 renderTables();
                 filterTables();
+                scheduleSessionSave();
                 if (!silent) {
                     alert(`Успішно автоматично виправлено ${replacedCount} позицій згідно правил автозаміни.`);
                 }
@@ -5048,23 +4904,12 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         let emptyFieldsWarnings = [];
         let currentDuplicateGroups = [];
 
-        let missingPersonnelData = [];
-        let currentMasterRecords = []; // Еталонні імена для звірки
-
-        let currentBlacklistRecords = [];
-        let blacklistedResults = [];
-        let blacklistedIds = new Set();
-
         let invalidTasksList = [];
         let processedDocsCount = 0;
         let processedFileNames = new Set();
 
-        let bchsFuzzyNameDiscrepancies = [];
-
         // Ігнорування помилкових спрацьовувань
         let ignoredGroups = new Set();
-        let ignoredBlacklistIds = new Set();
-        let ignoredMissingIds = new Set();
 
         const dropZone = document.getElementById('drop-zone');
 
@@ -5185,22 +5030,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         }
 
         async function processFiles(files) {
-            // Перевірка на JSON пакет від Диспетчера
-            const jsonFile = Array.from(files).find(f => f.name.toLowerCase().endsWith('.json'));
-            if (jsonFile) {
-                try {
-                    const text = await jsonFile.text();
-                    const bundle = JSON.parse(text);
-                    if (bundle && bundle.active_files) {
-                        await loadDispatcherBundle(bundle);
-                        return;
-                    }
-                } catch (err) {
-                    console.error("Помилка читання JSON пакету:", err);
-                    showToast("Некоректний JSON пакет: " + err.message, "error");
-                }
-            }
-
             const loadingStatus = document.getElementById('loadingStatus');
             const loadingStatusBar = document.getElementById('loadingStatusBar');
             const loadingStatusCount = document.getElementById('loadingStatusCount');
@@ -5297,13 +5126,12 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 checkDuplicates();
                 recalculateEmptyFields();
                 checkInvalidTasks();
-                if (currentBlacklistRecords.length > 0) checkBlacklist();
-                if (currentMasterRecords.length > 0) checkMissing();
                 checkMissingFiles();
                 renderArchiveDateButtons();
                 renderTables();
                 filterTables();
             }
+            scheduleSessionSave();
         }
 
         function removeProcessedFile(fileName, liElement) {
@@ -5336,192 +5164,20 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             checkDuplicates();
             recalculateEmptyFields();
             checkInvalidTasks();
-            if (currentBlacklistRecords.length > 0) checkBlacklist();
-            if (currentMasterRecords.length > 0) checkMissing();
             checkMissingFiles();
             renderArchiveDateButtons();
             renderTables();
             filterTables();
+            scheduleSessionSave();
         }
 
         // --- КРОК 2: ЗАГУБЛЕНІ (ЕТАЛОН) ---
-        async function handleMasterFilesSelect(event) {
-            if (event.target.files.length === 0) return;
-            const loadingStatus = document.getElementById('loadingStatus');
-            const loadingStatusBar = document.getElementById('loadingStatusBar');
-            const loadingStatusCount = document.getElementById('loadingStatusCount');
-
-            loadingStatus.classList.remove('hidden');
-            document.getElementById('resultsArea').classList.remove('hidden');
-
-            let totalFound = 0;
-            let processedCount = 0;
-            const totalFiles = event.target.files.length;
-
-            const updateProgress = () => {
-                processedCount++;
-                const percent = Math.round((processedCount / totalFiles) * 100);
-                if (loadingStatusCount) loadingStatusCount.innerText = `${processedCount} / ${totalFiles}`;
-                if (loadingStatusBar) loadingStatusBar.style.width = `${percent}%`;
-            };
-
-            const promises = Array.from(event.target.files).map(async (file) => {
-                try {
-                    const htmlString = await extractHtmlFromDocument(file);
-                    const masterRecords = parseDocumentRecords(htmlString, file.name);
-
-                    if (masterRecords.length === 0) {
-                        showToast(`У файлі "${file.name}" не знайдено записів. Перевірте формат таблиці (має бути ПІБ і звання).`, "warning");
-                    } else {
-                        totalFound += masterRecords.length;
-                    }
-
-                    currentMasterRecords = [...currentMasterRecords, ...masterRecords];
-                } catch (error) {
-                    console.error("Помилка читання еталонного файлу:", error);
-                    if (error.message === 'FORMAT_ERROR') {
-                        // ignore silently or warning
-                    } else {
-                        showToast("Помилка при читанні еталонного файлу " + file.name, "error");
-                    }
-                } finally {
-                    updateProgress();
-                }
-            });
-
-            await Promise.all(promises);
-
-            if (totalFound > 0) {
-                showToast(`Еталон завантажено! Знайдено ${totalFound} записів.`, "success");
-            }
-
-            checkMissing();
-            loadingStatus.classList.add('hidden');
-        }
-
-        function checkMissing() {
-            missingPersonnelData = [];
-            if (currentMasterRecords.length === 0) return;
-
-            let allExistingData = [...vopData, ...btgrData, ...broData, ...zabData].filter(p => p.name !== "[ВІДСУТНІЙ В/С]");
-            const existingNormNamesSet = new Set(allExistingData.map(p => p.normName));
-
-            currentMasterRecords.forEach(masterPerson => {
-                if (ignoredMissingIds.has(masterPerson.id)) return; // Якщо ми вручну підтвердили, що він є
-
-                let mNorm = masterPerson.normName;
-                let exactMatch = existingNormNamesSet.has(mNorm);
-
-                if (!exactMatch) {
-                    let fuzzyMatches = allExistingData.filter(p => isFuzzyMatch(p.normName, mNorm));
-                    // Якщо немає ані точного збігу, ані описки/схожого ПІБ — бієць дійсно повністю загублений
-                    if (fuzzyMatches.length === 0) {
-                        missingPersonnelData.push({
-                            masterPerson: masterPerson,
-                            fuzzyMatches: []
-                        });
-                    }
-                }
-            });
-
-            renderMissingAlert();
-            checkBchsDiscrepancies();
-        }
-
-        function ignoreMissingMatch(masterId) {
-            ignoredMissingIds.add(masterId);
-            checkMissing();
-        }
-
-        // --- КРОК 7: ЗВІРКА ПІБ З БЧС (ОПИСКИ ТА НЕОДНОЗНАЧНОСТІ) ---
-        function checkBchsDiscrepancies(isManual = false) {
-            bchsFuzzyNameDiscrepancies = [];
-
-            if (currentMasterRecords.length === 0) {
-                if (isManual) {
-                    alert("Увага: БЧС / Еталон не завантажено. Спочатку завантажте файл Еталону.");
-                    document.getElementById('masterFileInput').click();
-                }
-                renderBchsDiscrepanciesAlert();
-                return;
-            }
-
-            let allUnitData = [...vopData, ...btgrData, ...broData, ...zabData].filter(p => p.name !== "[ВІДСУТНІЙ В/С]");
-
-            allUnitData.forEach(unitPerson => {
-                let uNorm = unitPerson.normName;
-                if (!uNorm) return;
-
-                // Шукаємо точно такий же ПІБ після нормалізації (ігноруємо типи апострофів, крапки та регістр)
-                let exactMasterMatch = currentMasterRecords.find(m => m.normName === uNorm);
-
-                // Якщо точного збігу немає — шукаємо неточний збіг (справжню описку)
-                if (!exactMasterMatch) {
-                    let fuzzyMasterMatch = currentMasterRecords.find(m => isFuzzyMatch(m.normName, uNorm));
-                    if (fuzzyMasterMatch) {
-                        bchsFuzzyNameDiscrepancies.push({
-                            unitPerson: unitPerson,
-                            masterPerson: fuzzyMasterMatch
-                        });
-                    }
-                }
-            });
-
-            renderBchsDiscrepanciesAlert();
-
-            if (isManual) {
-                let totalCount = bchsFuzzyNameDiscrepancies.length;
-                if (totalCount > 0) {
-                    alert(`Звірку ПІБ з БЧС успішно завершено.\n\nЗнайдено ймовірних описок у ПІБ: ${totalCount}`);
-                } else {
-                    alert("Звірку ПІБ успішно завершено. Описок у прізвищах та іменах не виявлено.");
-                }
-            }
-        }
-
-        function renderBchsDiscrepanciesAlert() {
-            const alertBox = document.getElementById('bchsDiscrepanciesAlert');
-            const list = document.getElementById('bchsDiscrepanciesDetailsList');
-            if (!alertBox || !list) return;
-
-            list.innerHTML = '';
-            const total = bchsFuzzyNameDiscrepancies.length;
-
-            if (total > 0) {
-                document.getElementById('bchsDiscrepanciesCount').innerText = total;
-                alertBox.classList.remove('hidden');
-
-                // Рендеримо описки ПІБ
-                bchsFuzzyNameDiscrepancies.forEach(item => {
-                    const u = item.unitPerson;
-                    const m = item.masterPerson;
-                    const li = document.createElement('li');
-                    li.className = "bg-[#151920] p-3 rounded-[2px] border border-[#2d4a6d]";
-                    li.innerHTML = `
-                        <div class="flex items-center gap-2 mb-1.5">
-                            <span class="bg-[#182230] text-[#4c8ed9] text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded-[2px] border border-[#2d4a6d]">
-                                Схожий ПІБ (Ймовірна описка)
-                            </span>
-                            <b class="text-[#e6e8eb]">${u.name}</b>
-                        </div>
-                        <div class="text-xs text-[#a5adb8] space-y-0.5">
-                            <div><b class="text-[#e6e8eb]">У БЧС (Еталон):</b> <span class="text-[#4cc38a] font-semibold">${m.name}</span> (${m.rank || 'без звання'}, ${m.pos || 'без посади'})</div>
-                            <div><b class="text-[#e6e8eb]">У звіті підрозділу:</b> <span class="text-[#4c8ed9] font-semibold">${u.name}</span> (${u.rank || 'без звання'}, ${u.pos || 'без посади'}) | <b class="text-[#e6e8eb]">Позиція:</b> ${u.task} | <b class="text-[#e6e8eb]">Файл:</b> <span class="font-mono">${u.fileName}</span></div>
-                        </div>
-                    `;
-                    list.appendChild(li);
-                });
-            } else {
-                alertBox.classList.add('hidden');
-            }
-        }
-
         function toggleAlertDetails(alertId, listId) {
             const drawer = document.getElementById('alertDrawerPanel');
             const targetList = document.getElementById(listId);
             if (!drawer || !targetList) return;
 
-            const allLists = ['bchsDiscrepanciesDetailsList', 'blacklistDetailsList', 'missingDetailsList', 'emptyDetailsList', 'invalidDetailsList', 'dupDetailsList'];
+            const allLists = ['emptyDetailsList', 'invalidDetailsList', 'dupDetailsList'];
 
             const isSameListOpen = !drawer.classList.contains('hidden') && !targetList.classList.contains('hidden');
 
@@ -5542,9 +5198,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 if (alertId === 'duplicatesAlert') titleEl.textContent = 'Детальний список дублювань та опечаток';
                 else if (alertId === 'invalidTasksAlert') titleEl.textContent = 'Детальний список невідомих позицій';
                 else if (alertId === 'emptyFieldsAlert') titleEl.textContent = 'Детальний список неповних даних';
-                else if (alertId === 'blacklistAlert') titleEl.textContent = 'Детальний список осіб з Чорного списку (СЗЧ)';
-                else if (alertId === 'missingAlert') titleEl.textContent = 'Детальний список загублених бійців';
-                else if (alertId === 'bchsDiscrepanciesAlert') titleEl.textContent = 'Детальний список описок ПІБ (БЧС)';
 
                 drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
@@ -5553,484 +5206,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         function closeAlertDrawer() {
             const drawer = document.getElementById('alertDrawerPanel');
             if (drawer) drawer.classList.add('hidden');
-        }
-
-        function toggleBchsDiscrepanciesDetails() { toggleAlertDetails('bchsDiscrepanciesAlert', 'bchsDiscrepanciesDetailsList'); }
-
-        function downloadBchsDiscrepanciesReport() {
-            if (typeof XLSX === 'undefined') {
-                alert("Бібліотека XLSX не завантажена.");
-                return;
-            }
-            const wb = XLSX.utils.book_new();
-
-            const ws1Data = [["№ п/п", "ПІБ у БЧС (Еталон)", "ПІБ у звіті підрозділу", "Звання (БЧС)", "Звання (Звіт)", "Посада (БЧС)", "Посада (Звіт)", "Позиція", "Джерело (Файл)"]];
-            bchsFuzzyNameDiscrepancies.forEach((item, idx) => {
-                const u = item.unitPerson;
-                const m = item.masterPerson;
-                ws1Data.push([idx + 1, m.name, u.name, m.rank || '', u.rank || '', m.pos || '', u.pos || '', u.task || '', u.fileName || '']);
-            });
-            const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-            ws1['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 28 }, { wch: 14 }, { wch: 14 }, { wch: 28 }, { wch: 28 }, { wch: 20 }, { wch: 22 }];
-            styleExcelSheet(ws1);
-            XLSX.utils.book_append_sheet(wb, ws1, "Описки в ПІБ");
-
-            const dateStr = getDetectedDateStr();
-            XLSX.writeFile(wb, `ЗВІТ_Описки_ПІБ_БЧС_${dateStr}.xlsx`);
-        }
-
-        // --- КРОК 3: ЧОРНИЙ СПИСОК ---
-        async function handleBlacklistFilesSelect(event) {
-            if (event.target.files.length === 0) return;
-            document.getElementById('loadingStatus').classList.remove('hidden');
-            document.getElementById('resultsArea').classList.remove('hidden');
-
-            let totalFound = 0;
-
-            for (let i = 0; i < event.target.files.length; i++) {
-                await new Promise(resolve => setTimeout(resolve, 0));
-                const file = event.target.files[i];
-                if (!file.name.endsWith('.docx') && !file.name.endsWith('.dotx')) continue;
-
-                try {
-                    const arrayBuffer = await readFileAsArrayBuffer(file);
-                    const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-
-                    const blacklistNames = parseBlacklistNames(result.value, file.name);
-                    if (blacklistNames.length === 0) {
-                        alert(`Увага: у файлі "${file.name}" не знайдено ПІБ для Чорного списку. Перевірте формат таблиці.`);
-                    } else {
-                        totalFound += blacklistNames.length;
-                    }
-
-                    currentBlacklistRecords = [...currentBlacklistRecords, ...blacklistNames];
-                } catch (error) {
-                    console.error("Помилка читання файлу чорного списку:", error);
-                    alert("Помилка при читанні файлу " + file.name);
-                }
-            }
-
-            if (totalFound > 0) {
-                alert(`Чорний список успішно завантажено. Знайдено ${totalFound} записів.`);
-            }
-
-            checkBlacklist();
-            checkMissing();
-            document.getElementById('loadingStatus').classList.add('hidden');
-        }
-
-        function checkBlacklist() {
-            blacklistedResults = [];
-            blacklistedIds.clear();
-
-            if (currentBlacklistRecords.length === 0) {
-                renderBlacklistAlert();
-                return;
-            }
-
-            let allData = [...vopData, ...btgrData, ...broData, ...zabData].filter(p => p.name !== "[ВІДСУТНІЙ В/С]");
-            const nameToPersonsMap = new Map();
-            allData.forEach(person => {
-                if (!nameToPersonsMap.has(person.normName)) nameToPersonsMap.set(person.normName, []);
-                nameToPersonsMap.get(person.normName).push(person);
-            });
-
-            currentBlacklistRecords.forEach(bPerson => {
-                let matches = [];
-                let bNorm = bPerson.normName;
-
-                // 1. Точні збіги
-                if (nameToPersonsMap.has(bNorm)) {
-                    nameToPersonsMap.get(bNorm).forEach(person => {
-                        if (!ignoredBlacklistIds.has(person.id)) {
-                            matches.push({ reportPerson: person, isExact: true });
-                            blacklistedIds.add(person.id);
-                        }
-                    });
-                }
-
-                // 2. Неточні збіги
-                for (let [normName, persons] of nameToPersonsMap.entries()) {
-                    if (normName === bNorm) continue;
-                    if (isFuzzyMatch(normName, bNorm)) {
-                        persons.forEach(person => {
-                            if (!ignoredBlacklistIds.has(person.id)) {
-                                matches.push({ reportPerson: person, isExact: false });
-                                blacklistedIds.add(person.id);
-                            }
-                        });
-                    }
-                }
-
-                if (matches.length > 0) {
-                    blacklistedResults.push({ blacklistPerson: bPerson, matches: matches });
-                }
-            });
-
-            renderBlacklistAlert();
-            renderTables();
-        }
-
-        function ignoreBlacklistMatch(personId) {
-            ignoredBlacklistIds.add(personId);
-            checkBlacklist();
-        }
-
-        // --- ІМПОРТ ПОСАД (КРОК 4) ---
-        async function handleImportPosFilesSelect(event) {
-            if (event.target.files.length === 0) return;
-            document.getElementById('loadingStatus').classList.remove('hidden');
-
-            let importedRecords = [];
-            for (let i = 0; i < event.target.files.length; i++) {
-                await new Promise(resolve => setTimeout(resolve, 0));
-                const file = event.target.files[i];
-                if (!file.name.endsWith('.docx') && !file.name.endsWith('.dotx')) continue;
-
-                try {
-                    const arrayBuffer = await readFileAsArrayBuffer(file);
-                    const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-                    const parsedRecords = parseDocumentRecords(result.value, file.name);
-                    importedRecords.push(...parsedRecords);
-                } catch (error) {
-                    console.error("Помилка читання файлу імпорту:", error);
-                }
-            }
-
-            let updatedPosCount = 0;
-            let updatedRankCount = 0;
-            let allExistingData = [...vopData, ...btgrData, ...broData, ...zabData];
-
-            allExistingData.forEach(person => {
-                let needsPos = !person.pos || person.pos.trim() === '';
-                let needsRank = !person.rank || person.rank.trim() === '';
-
-                if (needsPos || needsRank) {
-                    let pNorm = person.normName;
-                    let bestMatchPos = null;
-                    let bestMatchRank = null;
-
-                    for (let imp of importedRecords) {
-                        let iNorm = imp.normName;
-                        if (pNorm === iNorm || isFuzzyMatch(pNorm, iNorm)) {
-                            if (imp.pos && imp.pos.trim() !== '') bestMatchPos = imp.pos;
-                            if (imp.rank && imp.rank.trim() !== '') bestMatchRank = imp.rank;
-                            break;
-                        }
-                    }
-
-                    if (needsPos && bestMatchPos) { person.pos = bestMatchPos; updatedPosCount++; }
-                    if (needsRank && bestMatchRank) { person.rank = bestMatchRank; updatedRankCount++; }
-                }
-            });
-
-            recalculateEmptyFields();
-            checkInvalidTasks();
-            renderTables();
-            filterTables();
-
-            document.getElementById('loadingStatus').classList.add('hidden');
-            event.target.value = '';
-
-            if (updatedPosCount > 0 || updatedRankCount > 0) {
-                alert(`Успішно оновлено з Еталону:\n- Посад: ${updatedPosCount} шт.\n- Звань: ${updatedRankCount} шт.`);
-            } else {
-                alert("На жаль, не знайдено посад чи звань для оновлення. Можливо, вони вже заповнені, або імен немає у файлі імпорту.");
-            }
-        }
-
-        // --- ВІДОБРАЖЕННЯ І ЕКСПОРТИ ---
-        function renderInvalidTasksAlert() {
-            const alertBox = document.getElementById('invalidTasksAlert');
-            const list = document.getElementById('invalidDetailsList');
-            list.innerHTML = '';
-
-            if (invalidTasksList.length > 0) {
-                document.getElementById('invalidCount').innerText = invalidTasksList.length;
-                alertBox.classList.remove('hidden');
-                alertBox.classList.add('flex');
-
-                invalidTasksList.forEach(p => {
-                    let li = document.createElement('li');
-                    li.className = "flex flex-col sm:flex-row sm:items-center justify-between p-2 px-3 rounded-[2px] bg-[#151920] border border-[#7c2a30] gap-2";
-
-                    let reasonBadge = "";
-                    if (p.name === "[ВІДСУТНІЙ В/С]") {
-                        reasonBadge = `<span class="text-xs font-semibold text-[#f27474] bg-[#2b1416] px-2 py-0.5 rounded-[2px] border border-[#7c2a30]">на позиції <b class="font-bold">${p.task}</b> не вписано о/с</span>`;
-                    } else if (p.task === "[НЕ ВКАЗАНО]") {
-                        reasonBadge = `<span class="text-xs font-semibold text-[#f27474] bg-[#2b1416] px-2 py-0.5 rounded-[2px] border border-[#7c2a30]">Не вказано назву позиції</span>`;
-                    } else {
-                        reasonBadge = `<span class="text-xs font-semibold text-[#f27474] bg-[#2b1416] px-2 py-0.5 rounded-[2px] border border-[#7c2a30]">Невідома позиція: <b class="font-bold">${p.task}</b></span>`;
-                    }
-
-                    li.innerHTML = `
-                        <div class="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
-                            <span class="font-bold text-[#e6e8eb]">${p.name}</span>
-                            <span class="text-xs text-[#a5adb8] font-mono bg-[#20262f] px-1.5 py-0.5 rounded-[2px] border border-[#343f50]">${p.fileName}</span>
-                            ${p.rank || p.pos ? `<span class="text-xs text-[#8892a0]">(${[p.rank, p.pos].filter(Boolean).join(', ')})</span>` : ''}
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            ${reasonBadge}
-                            <button onclick="openEditModal('${p.id}')" title="Редагувати" class="text-[#a5adb8] hover:text-[#e6e8eb] bg-[#20262f] hover:bg-[#28303b] p-1.5 rounded-[2px] transition-colors focus:outline-none border border-[#343f50] hover:border-[#4c8ed9] flex items-center justify-center cursor-pointer">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            </button>
-                        </div>
-                    `;
-                    list.appendChild(li);
-                });
-            } else {
-                alertBox.classList.add('hidden');
-                alertBox.classList.remove('flex');
-            }
-        }
-
-        function checkInvalidTasks() {
-            invalidTasksList = [];
-            let validList = getValidTasks();
-            let allData = [...vopData, ...btgrData, ...broData, ...zabData];
-
-            allData.forEach(p => {
-                // 1. Позиція є, але немає в/с
-                if (p.name === "[ВІДСУТНІЙ В/С]") {
-                    invalidTasksList.push(p);
-                    return;
-                }
-
-                // 2. В/с є, але не вказана назва позиції
-                if (!p.task || p.task.trim() === '') {
-                    invalidTasksList.push({
-                        ...p,
-                        task: "[НЕ ВКАЗАНО]"
-                    });
-                    return;
-                }
-
-                // 3. Невідома позиція (відсебенька)
-                if (validList.length > 0) {
-                    let lowerTask = p.task.toLowerCase();
-                    let isValid = validList.some(v => lowerTask.includes(v.toLowerCase()));
-                    if (!isValid) invalidTasksList.push(p);
-                }
-            });
-            renderInvalidTasksAlert();
-        }
-
-        function toggleInvalidDetails() { toggleAlertDetails('invalidTasksAlert', 'invalidDetailsList'); }
-        function downloadInvalidReport() {
-            const wsData = [["№ п/п", "Звання", "ПІБ", "Помилкова позиція (відсебенька)", "Джерело (Файл)"]];
-            invalidTasksList.forEach((p, i) => wsData.push([i + 1, p.rank, p.name, p.task, p.fileName]));
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            ws['!cols'] = [{ wch: 5 }, { wch: 12 }, { wch: 25 }, { wch: 35 }, { wch: 25 }];
-            styleExcelSheet(ws);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Невідомі позиції");
-            XLSX.writeFile(wb, "ЗВІТ_Невідомі_Позиції.xlsx");
-        }
-
-        function recalculateEmptyFields() {
-            emptyFieldsWarnings = [];
-            let allData = [...vopData, ...btgrData, ...broData, ...zabData].filter(r => r.name !== "[ВІДСУТНІЙ В/С]");
-            allData.forEach(r => {
-                let missingFields = [];
-                if (!r.rank) missingFields.push('Звання');
-                if (!r.pos) missingFields.push('Посада');
-                if (!r.task) missingFields.push('Завдання');
-                if (missingFields.length > 0) emptyFieldsWarnings.push({ name: r.name, fileName: r.fileName, missingFields });
-            });
-            renderEmptyFieldsWarnings();
-        }
-
-        function parseBlacklistNames(htmlString, fileName = '') {
-            let names = [];
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlString, 'text/html');
-            const tables = doc.querySelectorAll('table');
-
-            tables.forEach(table => {
-                const rows = table.querySelectorAll('tr');
-                let nameColIndex = -1;
-
-                for (let i = 0; i < Math.min(rows.length, 3); i++) {
-                    const cells = Array.from(rows[i].querySelectorAll('td, th')).map(c => cleanString(getCellText(c)).toLowerCase());
-                    cells.forEach((text, idx) => {
-                        if (text.includes('піб') || text.includes('прізвище') || text.includes("ім'я") || text.includes('особовий склад')) {
-                            nameColIndex = idx;
-                        }
-                    });
-                    if (nameColIndex !== -1) break;
-                }
-
-                if (nameColIndex === -1 && rows.length > 0) {
-                    let colScores = {};
-                    let rankKeywords = ['солдат', 'сержант', 'офіцер', 'лейтенант', 'капітан', 'майор', 'підполковник', 'полковник', 'генерал', 'матрос', 'старшина', 'прапорщик', 'мічман', 'рекрут', 'курсант', 'ст.', 'мол.', 'гол.', 'с-т'];
-
-                    for (let i = 0; i < Math.min(rows.length, 10); i++) {
-                        const cells = Array.from(rows[i].querySelectorAll('td, th')).map(c => cleanString(getCellText(c)));
-                        if (cells.length < 1) continue;
-
-                        cells.forEach((cellText, idx) => {
-                            colScores[idx] = colScores[idx] || 0;
-                            let txt = cellText.trim();
-                            let lower = txt.toLowerCase();
-
-                            if (!txt) return;
-                            if (/^\d+$/.test(txt) || txt === '№' || txt.length <= 3) colScores[idx] -= 10;
-                            if (rankKeywords.some(r => lower.includes(r))) colScores[idx] -= 10;
-
-                            let words = txt.split(/\s+/);
-                            if (words.length >= 2 && words.length <= 4) colScores[idx] += 5;
-                            if (txt.length > 8) colScores[idx] += 2;
-
-                            let firstWord = words[0];
-                            if (firstWord && firstWord === firstWord.toUpperCase() && firstWord.length > 3 && isNaN(Number(firstWord))) colScores[idx] += 5;
-                        });
-                    }
-
-                    let bestCol = -1; let maxScore = -999;
-                    for (let col in colScores) {
-                        if (colScores[col] > maxScore) { maxScore = colScores[col]; bestCol = parseInt(col); }
-                    }
-                    if (bestCol !== -1 && maxScore > 0) nameColIndex = bestCol;
-                }
-
-                rows.forEach(row => {
-                    const cells = Array.from(row.querySelectorAll('td, th')).map(c => cleanString(getCellText(c)));
-                    if (cells.length === 0) return;
-
-                    let activeCol = -1;
-                    if (nameColIndex !== -1 && nameColIndex < cells.length) {
-                        activeCol = nameColIndex;
-                    } else {
-                        if (cells.length === 1) activeCol = 0;
-                        else {
-                            let startIndex = (/^\d+$/.test(cells[0].trim()) || cells[0].trim().length <= 3) ? 1 : 0;
-                            let rankKeywords = ['солдат', 'сержант', 'офіцер', 'лейтенант', 'капітан', 'майор', 'підполковник', 'полковник', 'генерал', 'матрос', 'старшина', 'прапорщик', 'мічман', 'рекрут', 'курсант', 'ст.', 'мол.', 'гол.', 'с-т'];
-                            for (let i = startIndex; i < cells.length; i++) {
-                                let cellText = cells[i].trim();
-                                if (cellText === '') continue;
-                                if (rankKeywords.some(r => cellText.toLowerCase().includes(r))) continue;
-                                activeCol = i;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (activeCol !== -1 && cells[activeCol]) {
-                        let n = cells[activeCol].trim();
-                        let nLower = n.toLowerCase();
-
-                        if (nLower.includes('прізвище') || nLower.includes('піб') || nLower === "ім'я" || nLower.includes('звання')) return;
-
-                        if (n.length > 4 && !/^\d+$/.test(n)) {
-                            names.push({
-                                originalName: n.replace(/\s+/g, ' ').trim(),
-                                normName: normalizeName(n),
-                                fileName: fileName
-                            });
-                        }
-                    }
-                });
-            });
-            return names;
-        }
-
-        function renderBlacklistAlert() {
-            const alertBox = document.getElementById('blacklistAlert');
-            const list = document.getElementById('blacklistDetailsList');
-            list.innerHTML = '';
-
-            if (blacklistedResults.length > 0) {
-                let totalMatches = blacklistedResults.reduce((sum, item) => sum + item.matches.length, 0);
-                document.getElementById('blacklistCount').innerText = totalMatches;
-                alertBox.classList.remove('hidden');
-                alertBox.classList.add('flex');
-
-                blacklistedResults.forEach(item => {
-                    let b = item.blacklistPerson;
-
-                    let matchesHtml = item.matches.map(m => {
-                        let p = m.reportPerson;
-                        let matchTypeBadge = m.isExact
-                            ? '<span class="bg-[#2b1416] text-[#f27474] text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded-[2px] border border-[#7c2a30] whitespace-nowrap">Точний збіг</span>'
-                            : '<span class="bg-[#2b1f0e] text-[#f0b44c] text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded-[2px] border border-[#6e4e16] whitespace-nowrap">Можливий збіг</span>';
-
-                        return `
-                            <li class="text-xs sm:text-sm flex flex-col xl:flex-row xl:justify-between xl:items-center bg-[#181c22] p-3 rounded-[2px] border ${m.isExact ? 'border-[#7c2a30]' : 'border-[#6e4e16]'}">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-1">
-                                        ${matchTypeBadge}
-                                        <b class="text-[#e6e8eb]">${p.name}</b>
-                                    </div>
-                                    <div class="text-xs text-[#a5adb8] mt-1">
-                                        <span class="font-medium text-[#e6e8eb]">Позиція:</span> ${p.task} <span class="mx-1 text-[#8892a0]">|</span> <span class="font-medium text-[#e6e8eb]">Файл:</span> <span class="font-mono">${p.fileName}</span>
-                                    </div>
-                                </div>
-                                <div class="flex gap-2 mt-3 xl:mt-0">
-                                    <button onclick="ignoreBlacklistMatch('${p.id}')" class="flex-1 xl:flex-none text-xs bg-[#20262f] hover:bg-[#28303b] text-[#e6e8eb] py-1.5 px-3 rounded-[2px] transition-colors border border-[#343f50] hover:border-[#4c8ed9] font-medium flex items-center justify-center cursor-pointer">
-                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z"></path></svg>
-                                        Ігнорувати (Інший)
-                                    </button>
-                                    <button onclick="deleteRecord('${p.id}')" class="flex-1 xl:flex-none text-xs bg-[#7c2a30] hover:bg-[#99333a] text-[#f4f6f8] border border-[#f27474]/50 py-1.5 px-3 rounded-[2px] transition-colors font-medium flex items-center justify-center cursor-pointer">
-                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        Видалити зі звіту
-                                    </button>
-                                </div>
-                            </li>
-                        `;
-                    }).join('');
-
-                    let bFileBadge = b.fileName ? `<span class="text-xs font-mono font-semibold text-[#f0b44c] bg-[#181c22] border border-[#6e4e16] px-2 py-0.5 rounded-[2px]">Файл СЗЧ: ${b.fileName}</span>` : '';
-
-                    let li = document.createElement('li');
-                    li.className = "bg-[#151920] rounded-[2px] p-3.5 border border-[#6e4e16]";
-
-                    li.innerHTML = `
-                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                            <div class="text-sm text-[#e6e8eb] flex-1">
-                                <div class="font-bold text-[#f0b44c] mb-1 text-sm flex items-center flex-wrap gap-2">
-                                    <span>Особа з Чорного списку: ${b.originalName}</span>
-                                    ${bFileBadge}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-2.5 bg-[#111418] p-3 rounded-[2px] border border-[#2b3340]">
-                            <span class="font-semibold text-[#f0b44c] flex items-center text-[11px] uppercase tracking-wider mb-2">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Знайдені збіги у поданих звітах підрозділів:
-                            </span>
-                            <ul class="space-y-2">
-                                ${matchesHtml}
-                            </ul>
-                        </div>
-                    `;
-                    list.appendChild(li);
-                });
-            } else {
-                alertBox.classList.add('hidden');
-                alertBox.classList.remove('flex');
-            }
-        }
-
-        function toggleBlacklistDetails() { toggleAlertDetails('blacklistAlert', 'blacklistDetailsList'); }
-
-        function downloadBlacklistReport() {
-            const wsData = [["№ п/п", "ПІБ з Чорного списку", "Файл Чорного списку", "Тип збігу", "Звання (Звіт)", "ПІБ (Звіт)", "Займана посада", "Завдання які виконувались", "Джерело (Файл)"]];
-            let index = 1;
-            blacklistedResults.forEach(item => {
-                let b = item.blacklistPerson;
-                item.matches.forEach(m => {
-                    let p = m.reportPerson;
-                    let matchType = m.isExact ? "Точний збіг" : "Можливий збіг (схоже ім'я)";
-                    wsData.push([index++, b.originalName, b.fileName || '—', matchType, p.rank, p.name, p.pos, p.task, p.fileName]);
-                });
-            });
-
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            ws['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 28 }, { wch: 30 }, { wch: 25 }, { wch: 22 }];
-            styleExcelSheet(ws);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Порушники");
-            XLSX.writeFile(wb, "ЗВІТ_Чорний_Список.xlsx");
         }
 
         function readFileAsArrayBuffer(file) {
@@ -6230,100 +5405,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                     }
                 }
             });
-        }
-
-        function renderMissingAlert() {
-            const alertBox = document.getElementById('missingAlert');
-            const list = document.getElementById('missingDetailsList');
-            if (!alertBox || !list) return;
-            list.innerHTML = '';
-
-            if (missingPersonnelData.length > 0) {
-                document.getElementById('missingCount').innerText = missingPersonnelData.length;
-                alertBox.classList.remove('hidden');
-                alertBox.classList.add('flex');
-
-                missingPersonnelData.forEach(p => {
-                    let m = p.masterPerson;
-                    let fuzzyHtml = '';
-
-                    let otherCtrlFiles = [
-                        ...currentMasterRecords
-                            .filter(other => other.fileName !== m.fileName && (other.normName === m.normName || isFuzzyMatch(other.normName, m.normName)))
-                            .map(other => other.fileName),
-                        ...currentBlacklistRecords
-                            .filter(b => b.normName === m.normName || isFuzzyMatch(b.normName, m.normName))
-                            .map(b => b.fileName || 'Чорний список (СЗЧ)')
-                    ];
-
-                    let ctrlFilesBadge = '';
-                    if (otherCtrlFiles.length > 0) {
-                        const uniqueFiles = Array.from(new Set(otherCtrlFiles)).join(', ');
-                        ctrlFilesBadge = `<div class="mt-1.5"><span class="bg-[#2b1f0e] text-[#f0b44c] text-xs font-semibold px-2 py-0.5 rounded-[2px] border border-[#6e4e16]">Знайдено у контрольному/Чорному файлі: ${uniqueFiles}</span></div>`;
-                    }
-
-                    if (p.fuzzyMatches && p.fuzzyMatches.length > 0) {
-                        let fuzzyItems = p.fuzzyMatches.map(f => `
-                            <div class="text-xs bg-[#182230] text-[#e6e8eb] p-2 rounded-[2px] mb-1 border border-[#2d4a6d]">
-                                <b>Ймовірна помилка у звіті:</b> ${f.name} <span class="text-[#a5adb8] font-mono">(Файл: ${f.fileName})</span>
-                            </div>
-                        `).join('');
-
-                        fuzzyHtml = `
-                            <div class="mt-2 pl-3 border-l-2 border-[#4c8ed9]">
-                                ${fuzzyItems}
-                            </div>
-                        `;
-                    }
-
-                    let li = document.createElement('li');
-                    li.className = "bg-[#151920] rounded-[2px] p-3 border border-[#2b3340]";
-
-                    li.innerHTML = `
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div class="text-sm text-[#e6e8eb] flex-1 pr-4">
-                                <div class="font-bold text-[#4c8ed9] mb-1">${m.name} <span class="font-normal text-xs text-[#8892a0] ml-2 font-mono">(з Еталону: ${m.fileName})</span></div>
-                                <div class="text-xs text-[#a5adb8]"><span class="font-medium text-[#e6e8eb]">Звання:</span> ${m.rank || '—'} | <span class="font-medium text-[#e6e8eb]">Посада:</span> ${m.pos || '—'}</div>
-                                ${ctrlFilesBadge}
-                                ${fuzzyHtml}
-                            </div>
-                            <button onclick="ignoreMissingMatch('${m.id}')" class="mt-2 sm:mt-0 whitespace-nowrap bg-[#2b67ab] hover:bg-[#245791] text-[#f4f6f8] border border-[#4c8ed9] text-xs py-1.5 px-3 rounded-[2px] transition-colors flex items-center justify-center focus:outline-none cursor-pointer">
-                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Прибрати зі списку (Знайдено)
-                            </button>
-                        </div>
-                    `;
-                    list.appendChild(li);
-                });
-            } else {
-                alertBox.classList.add('hidden');
-                alertBox.classList.remove('flex');
-            }
-        }
-
-        function toggleMissingDetails() { toggleAlertDetails('missingAlert', 'missingDetailsList'); }
-
-        function downloadMissingReport() {
-            const wsData = [["№ п/п", "Звання", "ПІБ", "Займана посада", "Завдання які виконувались", "Джерельний файл", "Знайдено у контрольних/Чорному файлах"]];
-            missingPersonnelData.forEach((p, index) => {
-                let m = p.masterPerson;
-                let otherCtrlFiles = [
-                    ...currentMasterRecords
-                        .filter(other => other.fileName !== m.fileName && (other.normName === m.normName || isFuzzyMatch(other.normName, m.normName)))
-                        .map(other => other.fileName),
-                    ...currentBlacklistRecords
-                        .filter(b => b.normName === m.normName || isFuzzyMatch(b.normName, m.normName))
-                        .map(b => b.fileName || 'Чорний список (СЗЧ)')
-                ];
-                let foundInOthers = Array.from(new Set(otherCtrlFiles)).join(', ') || '—';
-                wsData.push([index + 1, m.rank || '', m.name, m.pos || '', m.task || '', m.fileName, foundInOthers]);
-            });
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            ws['!cols'] = [{ wch: 5 }, { wch: 12 }, { wch: 28 }, { wch: 30 }, { wch: 20 }, { wch: 22 }, { wch: 35 }];
-            styleExcelSheet(ws);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Загублені Бійці");
-            XLSX.writeFile(wb, "ЗВІТ_Загублені_Бійці.xlsx");
         }
 
         function renderEmptyFieldsWarnings() {
@@ -6561,25 +5642,23 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             zabData = zabData.filter(p => p.id !== id);
 
             checkDuplicates();
-            checkBlacklist();
-            checkMissing();
             recalculateEmptyFields();
             checkInvalidTasks();
             renderTables();
             filterTables();
+            scheduleSessionSave();
         }
 
         function ignoreDuplicateGroup(groupId) {
             ignoredGroups.add(groupId);
             checkDuplicates();
             renderTables();
+            scheduleSessionSave();
         }
 
         function toggleDupDetails() { toggleAlertDetails('duplicatesAlert', 'dupDetailsList'); }
 
         function generateTableRowHtml(p, index, isDup) {
-            let isBlacklisted = blacklistedIds.has(p.id);
-
             let rowBg = 'bg-[#181c22] hover:bg-[#20262f]';
             let warnIcon = '';
             let nameColor = 'text-[#e6e8eb] font-semibold';
@@ -6588,10 +5667,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 rowBg = 'bg-[#261420] hover:bg-[#311828]';
                 warnIcon = '<span title="Увага: Відсутній військовослужбовець" class="ml-1 inline-flex items-center justify-center px-1 py-0.5 text-[10px] font-mono bg-[#7c2a30] text-[#f4f6f8] rounded-[2px] cursor-help">?</span>';
                 nameColor = 'text-[#f27474] font-bold';
-            } else if (isBlacklisted) {
-                rowBg = 'bg-[#2b1f0e] hover:bg-[#362712]';
-                warnIcon = '<span title="Увага: Чорний список (СЗЧ)" class="ml-1 inline-flex items-center justify-center px-1 py-0.5 text-[10px] font-mono bg-[#6e4e16] text-[#f0b44c] rounded-[2px] cursor-help">СЗЧ</span>';
-                nameColor = 'text-[#f0b44c] font-bold';
             } else if (isDup) {
                 rowBg = 'bg-[#2b1416] hover:bg-[#38191c]';
                 warnIcon = '<span title="Увага: Можливий дублікат або опечатка" class="ml-1 inline-flex items-center justify-center w-4 h-4 text-[10px] font-mono bg-[#7c2a30] text-[#f4f6f8] rounded-[2px] cursor-help">!</span>';
@@ -7022,9 +6097,6 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 
         function clearData() {
             document.getElementById('fileInput').value = '';
-            document.getElementById('masterFileInput').value = '';
-            document.getElementById('blacklistFileInput').value = '';
-            document.getElementById('importPosFileInput').value = '';
             document.getElementById('searchInput').value = '';
             document.getElementById('resultsArea').classList.add('hidden');
             document.getElementById('processedFilesList').classList.add('hidden');
@@ -7032,35 +6104,28 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             document.getElementById('duplicatesAlert').classList.add('hidden');
             document.getElementById('dupDetailsList').classList.add('hidden');
             document.getElementById('emptyFieldsAlert').classList.add('hidden');
-            document.getElementById('missingAlert').classList.add('hidden');
-            document.getElementById('blacklistAlert').classList.add('hidden');
             document.getElementById('invalidTasksAlert').classList.add('hidden');
             document.getElementById('docsCountDisplay').innerText = '0';
 
-            vopData = []; btgrData = []; broData = []; zabData = [];
+            vopData = []; btgrData = []; broData = []; zabData = []; utochData = [];
             duplicateNames.clear();
             emptyFieldsWarnings = [];
             currentDuplicateGroups = [];
-
-            missingPersonnelData = [];
-            currentMasterRecords = [];
-
-            currentBlacklistRecords = [];
-            blacklistedResults = [];
-            blacklistedIds.clear();
-
             invalidTasksList = [];
 
             ignoredGroups.clear();
-            ignoredBlacklistIds.clear();
-            ignoredMissingIds.clear();
             processedDocsCount = 0;
             processedFileNames.clear();
+            if (typeof _loadedDispatcherFileNames !== 'undefined' && _loadedDispatcherFileNames instanceof Set) {
+                _loadedDispatcherFileNames.clear();
+            }
             selectedDateFilter = 'all';
             const dateFilterBar = document.getElementById('archive-date-filter-bar');
             if (dateFilterBar) dateFilterBar.classList.add('hidden');
             const alertContainer = document.getElementById('missingFilesAlert');
             if (alertContainer) alertContainer.classList.add('hidden');
+
+            clearSessionStorage();
         }
 
         function populateEditTasksDatalist() {
@@ -7225,12 +6290,11 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 else broData.push(newRecord);
                 closeEditModal();
                 checkDuplicates();
-                checkBlacklist();
-                checkMissing();
                 recalculateEmptyFields();
                 checkInvalidTasks();
                 renderTables();
                 filterTables();
+                scheduleSessionSave();
                 showToast("Військовослужбовця успішно додано!", "success");
                 return;
             }
@@ -7280,12 +6344,11 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             closeEditModal();
 
             checkDuplicates();
-            checkBlacklist();
-            checkMissing();
             recalculateEmptyFields();
             checkInvalidTasks();
             renderTables();
             filterTables();
+            scheduleSessionSave();
         }
 
         // ─── ЛОГІКА МОДУЛЯ УТОЧНЕНЬ ДОДОТКУ 6 ──────────────────────────────────────
@@ -7687,613 +6750,269 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         </div>
     </div>
 
-    <!-- МОДАЛЬНЕ ВІКНО: ШТАБНИЙ ДИСПЕТЧЕР -->
-    <div id="dispatcherModal"
-        class="modal-overlay fixed inset-0 bg-black/75 z-[200] hidden items-center justify-center p-3 sm:p-6">
-        <div class="bg-[#181c22] border border-[#343f50] rounded-[2px] w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden text-[#e6e8eb]">
-            <div class="px-5 py-3.5 border-b border-[#2b3340] flex flex-wrap justify-between items-center bg-[#141922] shrink-0 gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-[2px] bg-[#182230] border border-[#2d4a6d] flex items-center justify-center text-[#4c8ed9]">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-[#e6e8eb] flex items-center gap-2">
-                            <span>Штабний диспетчер</span>
-                            <span class="text-[#8892a0] font-normal">Контроль здачі та шаховка підрозділів</span>
-                        </h3>
-                        <p class="text-xs text-[#a5adb8]">Автоматичний моніторинг щоденних файлів звітів ПБД</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <div class="flex items-center gap-1.5 bg-[#0e1218] px-2.5 py-1 rounded-[2px] border border-[#394455]">
-                        <span class="text-[11px] text-[#8892a0] font-mono uppercase">Дата:</span>
-                        <select id="dispModalDateSelect" onchange="changeDispatcherDate(this.value)"
-                            class="bg-[#0e1218] text-[#4c8ed9] text-xs font-mono font-semibold focus:outline-none cursor-pointer">
-                            <option value="">Завантаження...</option>
-                        </select>
-                    </div>
-                    <button type="button" onclick="closeDispatcherModal()" class="p-1.5 rounded-[2px] text-[#8892a0] hover:text-[#e6e8eb] hover:bg-[#20262f] transition-colors cursor-pointer">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
-            </div>
-
-            <div class="p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div class="bg-[#151920] border border-[#2b3340] rounded-[2px] p-3 text-center">
-                        <span class="text-[10px] font-mono text-[#8892a0] uppercase tracking-wider block">Здано підрозділів</span>
-                        <span id="dispModalStatsUnits" class="text-lg font-mono font-bold text-[#4cc38a] tabular-nums">-- / --</span>
-                    </div>
-                    <div class="bg-[#151920] border border-[#2b3340] rounded-[2px] p-3 text-center">
-                        <span class="text-[10px] font-mono text-[#8892a0] uppercase tracking-wider block">Військовослужбовців</span>
-                        <span id="dispModalStatsSoldiers" class="text-lg font-mono font-bold text-[#4c8ed9] tabular-nums">--</span>
-                    </div>
-                    <div class="bg-[#151920] border border-[#2b3340] rounded-[2px] p-3 text-center">
-                        <span class="text-[10px] font-mono text-[#8892a0] uppercase tracking-wider block">Міжпідроздільні дублі</span>
-                        <span id="dispModalStatsDups" class="text-lg font-mono font-bold text-[#f0b44c] tabular-nums">0</span>
-                    </div>
-                    <div class="bg-[#151920] border border-[#2b3340] rounded-[2px] p-3 text-center">
-                        <span class="text-[10px] font-mono text-[#8892a0] uppercase tracking-wider block">Швидкість парсингу</span>
-                        <span id="dispModalStatsTime" class="text-lg font-mono font-bold text-[#e6e8eb] tabular-nums">--</span>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 class="text-xs font-mono font-semibold text-[#e6e8eb] uppercase tracking-wider mb-2.5 flex items-center justify-between">
-                        <span>Шаховка здачі звітів (Штатна структура)</span>
-                        <span id="dispModalMissingSummary" class="text-xs font-normal text-[#f0b44c]"></span>
-                    </h4>
-                    <div id="dispModalUnitsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2"></div>
-                </div>
-
-                <div id="dispModalDupsWrapper" class="hidden">
-                    <h4 class="text-xs font-mono font-semibold text-[#f0b44c] uppercase tracking-wider mb-2">
-                        Виявлені міжпідроздільні перетини (одна особа у кількох ротах)
-                    </h4>
-                    <div id="dispModalDupsList" class="space-y-2"></div>
-                </div>
-
-                <div id="dispModalSupersededWrapper" class="hidden">
-                    <h4 class="text-xs font-mono font-semibold text-[#4c8ed9] uppercase tracking-wider mb-2">
-                        Кореговані та оновлені звіти (автоматична заміна старих)
-                    </h4>
-                    <div id="dispModalSupersededList" class="space-y-1.5"></div>
-                </div>
-            </div>
-
-            <div class="px-5 py-3 border-t border-[#2b3340] bg-[#141922] flex flex-wrap justify-between items-center shrink-0 gap-3">
-                <div class="text-[11px] text-[#8892a0] font-mono">
-                    Папка: <span id="dispModalFolderText" class="text-[#a5adb8] break-all select-all">--</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="closeDispatcherModal()"
-                        class="px-3.5 py-1.5 text-xs rounded-[2px] bg-[#20262f] hover:bg-[#28303b] border border-[#343f50] text-[#e6e8eb] transition-colors cursor-pointer">
-                        Закрити
-                    </button>
-                    <button type="button" onclick="loadDispatcherReports()"
-                        class="px-4 py-1.5 text-xs font-semibold rounded-[2px] bg-[#2b67ab] hover:bg-[#245791] border border-[#4c8ed9] text-[#f4f6f8] transition-colors flex items-center gap-1.5 cursor-pointer">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        <span>Прийняти у Додаток 6</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- TOAST CONTAINER -->
     <div id="toast-container" class="fixed top-4 right-4 z-[220] flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
-        // ==========================================
-        // ШТАБНИЙ ДИСПЕТЧЕР // AUTO-INGEST AGENT
-        // ==========================================
-        const DISPATCHER_API_BASE = 'http://127.0.0.1:8780';
-        let _dispatcherBundle = null;
-        let _dispatcherStatusData = null;
-        let _dispatcherHeartbeatTimer = null;
-        let _dispatcherPollInterval = 3500;
-        let _dispatcherOfflineCount = 0;
-        let _lastLoadedSignature = null;
-        let _isAutoSyncEnabled = localStorage.getItem('dispatcher_auto_sync') !== 'false';
-        let _loadedDispatcherFileNames = new Set();
-        let _isSyncing = false;
+        // --- АВТОЗБЕРЕЖЕННЯ СЕСІЇ (IndexedDB + fallback localStorage) ---
+        const SESSION_IDB_NAME = 'dodatok6_session_db';
+        const SESSION_IDB_STORE = 'session';
+        const SESSION_IDB_KEY = 'latest';
+        const SESSION_LS_KEY = 'dodatok6_session_fallback_v1';
+        let _sessionSaveTimer = null;
 
-        function setDispatcherPollInterval(ms) {
-            if (_dispatcherPollInterval === ms && _dispatcherHeartbeatTimer) return;
-            _dispatcherPollInterval = ms;
-            if (_dispatcherHeartbeatTimer) {
-                clearInterval(_dispatcherHeartbeatTimer);
-                _dispatcherHeartbeatTimer = setInterval(() => checkDispatcherStatus(false), _dispatcherPollInterval);
-            }
-        }
-
-        function toggleDispatcherAutoSync(enabled) {
-            _isAutoSyncEnabled = enabled;
-            localStorage.setItem('dispatcher_auto_sync', enabled ? 'true' : 'false');
-            const ping = document.getElementById('dispAutoSyncPing');
-            const dot = document.getElementById('dispAutoSyncDot');
-            if (ping && dot) {
-                ping.classList.add('hidden');
-                dot.className = enabled
-                    ? "relative inline-flex rounded-[1px] h-2 w-2 bg-[#4cc38a]"
-                    : "relative inline-flex rounded-[1px] h-2 w-2 bg-[#8892a0]";
-            }
-            showToast(enabled ? "Авто-синхронізацію увімкнено (моніторинг папки)" : "Авто-синхронізацію призупинено", "info");
-            if (enabled) {
-                setDispatcherPollInterval(3500);
-                checkDispatcherStatus(false);
-            }
-        }
-
-        async function checkDispatcherStatus(showToasts = false) {
-            if (showToasts) {
-                setDispatcherPollInterval(3500);
-            }
-            const dot = document.getElementById('dispPulseDot');
-            const dateBadge = document.getElementById('dispDateBadge');
-            const statusBadge = document.getElementById('dispStatusBadge');
-            const summaryText = document.getElementById('dispSummaryText');
-            const btnLoad = document.getElementById('btnDispLoad');
-
-            try {
-                const res = await fetch(`${DISPATCHER_API_BASE}/api/status`, { signal: AbortSignal.timeout(1800) });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const data = await res.json();
-                _dispatcherStatusData = data;
-                _dispatcherOfflineCount = 0;
-                setDispatcherPollInterval(3500);
-
-                if (dot) {
-                    dot.className = "w-2.5 h-2.5 rounded-[1px] bg-[#4cc38a]";
+        function openSessionIDB() {
+            return new Promise((resolve, reject) => {
+                if (typeof indexedDB === 'undefined') {
+                    reject(new Error('IndexedDB unavailable'));
+                    return;
                 }
-                if (dateBadge) {
-                    dateBadge.innerText = data.target_date || '--.--';
-                }
-                if (statusBadge && !_isSyncing) {
-                    statusBadge.className = "text-[11px] font-mono font-semibold px-2 py-0.5 rounded-[2px] bg-[#11261c] text-[#4cc38a] border border-[#265c41] inline-flex items-center gap-1.5";
-                    statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-[1px] bg-[#4cc38a]"></span><span>ГОТОВО</span>`;
-                }
-                if (summaryText) {
-                    const dupsBadge = data.duplicates_count > 0 
-                        ? `<span class="text-[#f0b44c] font-semibold ml-1.5 tabular-nums">${data.duplicates_count} дублів</span>` 
-                        : '';
-                    summaryText.innerHTML = `
-                        <span>Знайдено: <b class="text-[#e6e8eb] font-mono tabular-nums">${data.total_files}</b> звітів (<b class="text-[#e6e8eb] font-mono tabular-nums">${data.total_soldiers}</b> о/с)</span>
-                        <span class="text-[#8892a0]">|</span>
-                        <span>Час: <span class="text-[#4c8ed9] font-mono tabular-nums">${data.parse_duration_sec}с</span></span>
-                        ${dupsBadge}
-                    `;
-                }
-                if (btnLoad && !_isSyncing) {
-                    btnLoad.classList.remove('opacity-50', 'pointer-events-none');
-                    btnLoad.innerHTML = `
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        <span>Прийняти день (${data.total_files})</span>
-                    `;
-                }
-
-                const badge = document.getElementById('dispMissingBadge');
-                if (badge) {
-                    const missing = (data.missing_units || []).length;
-                    if (missing === 0) {
-                        badge.className = "ml-1.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-[2px] bg-[#11261c] text-[#4cc38a] border border-[#265c41] tabular-nums";
-                        badge.innerText = "20/20";
-                    } else {
-                        badge.className = "ml-1.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-[2px] bg-[#2b1f0e] text-[#f0b44c] border border-[#6e4e16] tabular-nums";
-                        badge.innerText = `${20 - missing}/20`;
+                const req = indexedDB.open(SESSION_IDB_NAME, 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(SESSION_IDB_STORE)) {
+                        db.createObjectStore(SESSION_IDB_STORE);
                     }
-                }
-
-                if (showToasts) showToast(`Диспетчер активний: ${data.target_date} (${data.total_files} файлів, ${data.total_soldiers} о/с)`, "info");
-
-                // --- РЕАКТИВНИЙ ЖИВИЙ МОНІТОРИНГ ПАПКИ (AUTO-SYNC) ---
-                if (_isAutoSyncEnabled && data.status === 'ready' && data.folder_signature && !_isSyncing) {
-                    const isEmptyTable = (vopData.length === 0 && btgrData.length === 0 && broData.length === 0 && zabData.length === 0);
-                    const isFirstRun = (_lastLoadedSignature === null);
-                    const isSignatureChanged = (_lastLoadedSignature !== null && _lastLoadedSignature !== data.folder_signature);
-
-                    if (isSignatureChanged || (isFirstRun && isEmptyTable)) {
-                        loadDispatcherReports(true);
-                    } else if (isFirstRun) {
-                        _lastLoadedSignature = data.folder_signature;
-                    }
-                }
-            } catch (err) {
-                _dispatcherOfflineCount++;
-                if (_dispatcherOfflineCount >= 2) {
-                    setDispatcherPollInterval(15000); // Розумний backoff: 15с замість 3.5с при відсутності сервера
-                }
-
-                if (dot) {
-                    dot.className = "w-2.5 h-2.5 rounded-[1px] bg-[#8892a0]";
-                }
-                if (statusBadge) {
-                    statusBadge.className = "text-[11px] font-mono font-semibold px-2 py-0.5 rounded-[2px] bg-[#20262f] text-[#8892a0] border border-[#343f50] inline-flex items-center gap-1.5";
-                    statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-[1px] bg-[#8892a0]"></span><span>ОФЛАЙН</span>`;
-                }
-                if (summaryText) {
-                    summaryText.innerHTML = `<span class="text-[#8892a0]">Запустіть <code class="text-[#4c8ed9] font-mono font-semibold bg-[#20262f] px-1.5 py-0.5 rounded-[2px] border border-[#343f50]">Запустити_Диспетчер.bat</code> для авто-прийому звітів з папки</span>`;
-                }
-                if (btnLoad) {
-                    btnLoad.classList.add('opacity-50', 'pointer-events-none');
-                }
-                if (showToasts) showToast("Штабний диспетчер офлайн. Запустіть Запустити_Диспетчер.bat", "warning");
-            }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error || new Error('IDB open error'));
+            });
         }
 
-        async function loadDispatcherReports(isAutoSync = false) {
-            if (_isSyncing) return;
-            _isSyncing = true;
-            const btn = document.getElementById('btnDispLoad');
-            const statusBadge = document.getElementById('dispStatusBadge');
-            if (btn && !isAutoSync) {
-                btn.disabled = true;
-                btn.innerHTML = `<span>Завантаження...</span>`;
-            }
-            if (statusBadge) {
-                statusBadge.className = "text-[11px] font-mono font-semibold px-2 py-0.5 rounded-[2px] bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] inline-flex items-center gap-1.5";
-                statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-[1px] bg-[#4c8ed9]"></span><span>СИНХРОНІЗАЦІЯ...</span>`;
-            }
-
-            try {
-                const res = await fetch(`${DISPATCHER_API_BASE}/api/bundle`);
-                if (!res.ok) throw new Error('Помилка HTTP ' + res.status);
-                const bundle = await res.json();
-                _lastLoadedSignature = bundle.folder_signature || _lastLoadedSignature;
-                await loadDispatcherBundle(bundle, isAutoSync);
-            } catch (err) {
-                console.error("Помилка завантаження від диспетчера:", err);
-                if (!isAutoSync) showToast("Помилка підключення до диспетчера: " + err.message, "error");
-            } finally {
-                _isSyncing = false;
-                if (btn) btn.disabled = false;
-                checkDispatcherStatus(false);
-            }
+        function buildSessionSnapshot() {
+            return {
+                vopData,
+                btgrData,
+                broData,
+                zabData,
+                utochData: typeof utochData !== 'undefined' ? utochData : [],
+                processedFileNames: Array.from(processedFileNames),
+                processedDocsCount,
+                currentAppMode,
+                selectedDateFilter,
+                ignoredGroups: Array.from(ignoredGroups),
+                loadedDispatcherFileNames: typeof _loadedDispatcherFileNames !== 'undefined' ? Array.from(_loadedDispatcherFileNames) : [],
+                savedAt: Date.now()
+            };
         }
 
-        async function loadDispatcherBundle(bundle, isAutoSync = false) {
-            if (!bundle || !bundle.active_files || bundle.active_files.length === 0) {
-                if (!isAutoSync) showToast("Пакет порожній або файли не знайдено", "warning");
+        async function saveSessionToStorage() {
+            const hasAny = vopData.length > 0 || btgrData.length > 0 || broData.length > 0 || zabData.length > 0 || processedFileNames.size > 0;
+            if (!hasAny) {
+                await clearSessionStorage();
                 return;
             }
-
-            _dispatcherBundle = bundle;
-            const kw = getKeywords();
-            const compiledRules = getCompiledTaskRules();
-            const currentActiveNames = new Set(bundle.active_files.map(f => f.fileName));
-
-            // 1. Атомарне очищення видалених/замінених файлів (крім рядків із ручними правками оператора)
-            _loadedDispatcherFileNames.forEach(oldFn => {
-                if (!currentActiveNames.has(oldFn)) {
-                    vopData = vopData.filter(r => r.fileName !== oldFn || r.isManualEdit);
-                    btgrData = btgrData.filter(r => r.fileName !== oldFn || r.isManualEdit);
-                    broData = broData.filter(r => r.fileName !== oldFn || r.isManualEdit);
-                    zabData = zabData.filter(r => r.fileName !== oldFn || r.isManualEdit);
-                    processedFileNames.delete(oldFn);
-                }
-            });
-
-            let totalImported = 0;
-            let autoStandardizedCount = 0;
-
-            // 2. Оновлення та імпорт активних файлів
-            bundle.active_files.forEach(fileInfo => {
-                const fileName = fileInfo.fileName;
-                const records = fileInfo.records || [];
-                processedFileNames.add(fileName);
-
-                // Видаляємо попередню версію цього ж файлу (якщо він був змінений/перезаписаний), зберігаючи ручні правки
-                vopData = vopData.filter(r => r.fileName !== fileName || r.isManualEdit);
-                btgrData = btgrData.filter(r => r.fileName !== fileName || r.isManualEdit);
-                broData = broData.filter(r => r.fileName !== fileName || r.isManualEdit);
-                zabData = zabData.filter(r => r.fileName !== fileName || r.isManualEdit);
-
-                records.forEach(r => {
-                    const uniqueId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2);
-                    const standardizedTask = applyTaskAutoReplace(r.task || '', compiledRules);
-                    if (standardizedTask !== (r.task || '')) autoStandardizedCount++;
-                    const taskLower = (standardizedTask || '').toLowerCase();
-                    const isVop = kw.vop.some(k => taskLower.includes(k));
-                    const isBtgr = kw.btgr.some(k => taskLower.includes(k));
-                    const isZab = kw.zab.some(k => taskLower.includes(k));
-
-                    let type = 'bro';
-                    if (isVop) type = 'vop';
-                    else if (isBtgr) type = 'btgr';
-                    else if (isZab) type = 'zab';
-
-                    const entry = {
-                        id: uniqueId,
-                        rank: r.rank || '',
-                        name: r.name,
-                        normName: normalizeName(r.name),
-                        pos: r.pos || '',
-                        task: standardizedTask,
-                        fileName: fileName,
-                        type: type,
-                        isDispatcher: true
-                    };
-
-                    if (type === 'vop') vopData.push(entry);
-                    else if (type === 'btgr') btgrData.push(entry);
-                    else if (type === 'zab') zabData.push(entry);
-                    else broData.push(entry);
-
-                    totalImported++;
+            const snapshot = buildSessionSnapshot();
+            try {
+                const db = await openSessionIDB();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(SESSION_IDB_STORE, 'readwrite');
+                    tx.objectStore(SESSION_IDB_STORE).put(snapshot, SESSION_IDB_KEY);
+                    tx.oncomplete = () => { db.close(); resolve(); };
+                    tx.onerror = () => { db.close(); reject(tx.error); };
                 });
-            });
-
-            // Оновлюємо реєстр завантажених файлів
-            _loadedDispatcherFileNames = currentActiveNames;
-
-            // 3. Синхронізація списку файлів в інтерфейсі (fileNamesList)
-            const fileRecordCounts = new Map();
-            [...vopData, ...btgrData, ...broData, ...zabData].forEach(p => {
-                fileRecordCounts.set(p.fileName, (fileRecordCounts.get(p.fileName) || 0) + 1);
-            });
-
-            const allActiveFilesSet = getUploadedFileNamesSet();
-            const fileNamesList = document.getElementById('fileNames');
-            if (fileNamesList) {
-                fileNamesList.innerHTML = '';
-                const allActiveFiles = [...allActiveFilesSet].sort();
-                allActiveFiles.forEach(fn => {
-                    const isDisp = _loadedDispatcherFileNames.has(fn);
-                    const recCount = fileRecordCounts.get(fn) || 0;
-                    const li = document.createElement('li');
-                    li.className = "group flex items-center justify-between hover:bg-[#20262f] p-1.5 rounded-[2px] transition-colors mb-0.5 border border-transparent hover:border-[#2b3340]";
-                    li.innerHTML = `
-                        <div class="flex items-center gap-2 overflow-hidden">
-                            <svg class="w-3.5 h-3.5 ${isDisp ? 'text-[#4c8ed9]' : 'text-[#4cc38a]'} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="font-medium text-[#e6e8eb] truncate text-[11px]" title="${fn}">${fn}</span>
-                            ${isDisp ? '<span class="text-[9px] font-mono text-[#4c8ed9] bg-[#182230] px-1 py-0.5 rounded-[2px] border border-[#2d4a6d] shrink-0">диск</span>' : ''}
-                            ${recCount === 0 ? '<span class="px-1.5 py-0.5 rounded-[2px] text-[10px] font-mono bg-[#2b1f0e] text-[#f0b44c] border border-[#6e4e16] flex-shrink-0 font-semibold tabular-nums" title="Файл успішно опрацьовано, але записів у таблицях не знайдено">0 записів</span>' : ''}
-                        </div>
-                        <button class="text-[#8892a0] hover:text-[#f27474] opacity-0 group-hover:opacity-100 p-1 rounded-[2px] transition-opacity focus:outline-none flex-shrink-0 cursor-pointer" title="Видалити цей файл">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    `;
-                    const delBtn = li.querySelector('button');
-                    if (delBtn) delBtn.addEventListener('click', () => removeProcessedFile(fn, li));
-                    fileNamesList.appendChild(li);
-                });
+            } catch (e) {
+                try {
+                    localStorage.setItem(SESSION_LS_KEY, JSON.stringify(snapshot));
+                } catch (_) {}
             }
+        }
 
-            // 4. Оновлення лічильників та відображення областей результатів
-            const allFilesCount = allActiveFilesSet.size;
-            processedDocsCount = allFilesCount;
+        function scheduleSessionSave() {
+            if (_sessionSaveTimer) clearTimeout(_sessionSaveTimer);
+            _sessionSaveTimer = setTimeout(() => {
+                _sessionSaveTimer = null;
+                saveSessionToStorage();
+            }, 300);
+        }
+
+        async function clearSessionStorage() {
+            if (_sessionSaveTimer) {
+                clearTimeout(_sessionSaveTimer);
+                _sessionSaveTimer = null;
+            }
+            try {
+                const db = await openSessionIDB();
+                await new Promise((resolve) => {
+                    const tx = db.transaction(SESSION_IDB_STORE, 'readwrite');
+                    tx.objectStore(SESSION_IDB_STORE).delete(SESSION_IDB_KEY);
+                    tx.oncomplete = () => { db.close(); resolve(); };
+                    tx.onerror = () => { db.close(); resolve(); };
+                });
+            } catch (_) {}
+            try { localStorage.removeItem(SESSION_LS_KEY); } catch (_) {}
+        }
+
+        async function loadSessionFromStorage() {
+            try {
+                const db = await openSessionIDB();
+                const data = await new Promise((resolve) => {
+                    const tx = db.transaction(SESSION_IDB_STORE, 'readonly');
+                    const req = tx.objectStore(SESSION_IDB_STORE).get(SESSION_IDB_KEY);
+                    req.onsuccess = () => { db.close(); resolve(req.result || null); };
+                    req.onerror = () => { db.close(); resolve(null); };
+                });
+                if (data) return data;
+            } catch (_) {}
+            try {
+                const raw = localStorage.getItem(SESSION_LS_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function renderProcessedFilesListFromState() {
+            const fileNamesList = document.getElementById('fileNames');
+            if (!fileNamesList) return;
+            fileNamesList.innerHTML = '';
+
+            const fileStats = new Map();
+            [...vopData, ...btgrData, ...broData, ...zabData].forEach(p => {
+                const fn = p.fileName || '';
+                if (!fn) return;
+                const entry = fileStats.get(fn) || { count: 0, docDate: '' };
+                entry.count++;
+                if (!entry.docDate && p.docDate) entry.docDate = p.docDate;
+                fileStats.set(fn, entry);
+            });
+
+            const allFiles = Array.from(getUploadedFileNamesSet()).sort();
+            allFiles.forEach(fn => {
+                const stat = fileStats.get(fn) || { count: 0, docDate: '' };
+                const isDisp = typeof _loadedDispatcherFileNames !== 'undefined' && _loadedDispatcherFileNames.has(fn);
+
+                const li = document.createElement('li');
+                li.className = "group flex items-center justify-between hover:bg-[#20262f] p-1.5 rounded-[2px] transition-colors mb-0.5 border border-transparent hover:border-[#2b3340]";
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = "flex items-center gap-2 overflow-hidden";
+
+                const checkSvg = `<svg class="w-3.5 h-3.5 ${isDisp ? 'text-[#4c8ed9]' : 'text-[#4cc38a]'} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                infoDiv.insertAdjacentHTML('beforeend', checkSvg);
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = "font-medium text-[#e6e8eb] truncate text-[11px]";
+                nameSpan.title = fn;
+                nameSpan.textContent = fn;
+                infoDiv.appendChild(nameSpan);
+
+                if (stat.docDate) {
+                    const dateSpan = document.createElement('span');
+                    dateSpan.className = "px-1.5 py-0.5 rounded-[2px] text-[10px] font-mono bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] flex-shrink-0 font-semibold tabular-nums";
+                    dateSpan.title = "Визначена дата документа";
+                    dateSpan.textContent = stat.docDate;
+                    infoDiv.appendChild(dateSpan);
+                }
+                if (isDisp) {
+                    infoDiv.insertAdjacentHTML('beforeend', '<span class="text-[9px] font-mono text-[#4c8ed9] bg-[#182230] px-1 py-0.5 rounded-[2px] border border-[#2d4a6d] shrink-0">диск</span>');
+                }
+                if (stat.count === 0) {
+                    infoDiv.insertAdjacentHTML('beforeend', '<span class="px-1.5 py-0.5 rounded-[2px] text-[10px] font-mono bg-[#2b1f0e] text-[#f0b44c] border border-[#6e4e16] flex-shrink-0 font-semibold tabular-nums" title="Файл успішно опрацьовано, але записів у таблицях не знайдено">0 записів</span>');
+                }
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = "text-[#8892a0] hover:text-[#f27474] opacity-0 group-hover:opacity-100 p-1 rounded-[2px] transition-opacity focus:outline-none flex-shrink-0 cursor-pointer";
+                deleteBtn.title = "Видалити цей файл та його дані";
+                deleteBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+                deleteBtn.addEventListener('click', () => removeProcessedFile(fn, li));
+
+                li.appendChild(infoDiv);
+                li.appendChild(deleteBtn);
+                fileNamesList.appendChild(li);
+            });
+        }
+
+        async function restoreSessionFromStorage() {
+            const saved = await loadSessionFromStorage();
+            if (!saved) return;
+
+            const savedVop = Array.isArray(saved.vopData) ? saved.vopData : [];
+            const savedBtgr = Array.isArray(saved.btgrData) ? saved.btgrData : [];
+            const savedBro = Array.isArray(saved.broData) ? saved.broData : [];
+            const savedZab = Array.isArray(saved.zabData) ? saved.zabData : [];
+            const savedFiles = Array.isArray(saved.processedFileNames) ? saved.processedFileNames : [];
+
+            const totalRecords = savedVop.length + savedBtgr.length + savedBro.length + savedZab.length;
+            if (totalRecords === 0 && savedFiles.length === 0) return;
+
+            vopData = savedVop;
+            btgrData = savedBtgr;
+            broData = savedBro;
+            zabData = savedZab;
+            if (typeof utochData !== 'undefined' && Array.isArray(saved.utochData)) {
+                utochData = saved.utochData;
+            }
+            processedFileNames = new Set(savedFiles);
+            if (typeof _loadedDispatcherFileNames !== 'undefined' && Array.isArray(saved.loadedDispatcherFileNames)) {
+                _loadedDispatcherFileNames = new Set(saved.loadedDispatcherFileNames);
+            }
+            ignoredGroups = new Set(Array.isArray(saved.ignoredGroups) ? saved.ignoredGroups : []);
+            processedDocsCount = typeof saved.processedDocsCount === 'number' && saved.processedDocsCount > 0
+                ? saved.processedDocsCount
+                : getUploadedFileNamesSet().size;
+
+            if (saved.currentAppMode && saved.currentAppMode !== currentAppMode) {
+                setAppMode(saved.currentAppMode, true);
+            }
+            if (saved.selectedDateFilter) {
+                selectedDateFilter = saved.selectedDateFilter;
+            }
 
             const docsCountEl = document.getElementById('docsCountDisplay');
             if (docsCountEl) docsCountEl.innerText = processedDocsCount;
-
             const procListEl = document.getElementById('processedFilesList');
             if (procListEl) procListEl.classList.toggle('hidden', processedDocsCount <= 0);
-
             const resAreaEl = document.getElementById('resultsArea');
-            if (resAreaEl) resAreaEl.classList.toggle('hidden', processedDocsCount <= 0);
+            if (resAreaEl) resAreaEl.classList.remove('hidden');
 
-            // 5. Повний перерахунок та оновлення таблиць
+            renderProcessedFilesListFromState();
             checkDuplicates();
             recalculateEmptyFields();
             checkInvalidTasks();
-            if (typeof currentBlacklistRecords !== 'undefined' && currentBlacklistRecords.length > 0) checkBlacklist();
-            if (typeof currentMasterRecords !== 'undefined' && currentMasterRecords.length > 0) checkMissing();
             checkMissingFiles();
+            renderArchiveDateButtons();
             renderTables();
             filterTables();
 
-            closeDispatcherModal();
-
-            if (isAutoSync) {
-                showToast(`Авто-синхронізація: оновлено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}`, "info");
-            } else {
-                const toastMsg = autoStandardizedCount > 0
-                    ? `Диспетчер: завантажено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}. Автозамінено: ${autoStandardizedCount}.`
-                    : `Диспетчер: завантажено ${bundle.active_files.length} файлів (${totalImported} о/с) за ${bundle.target_date}.`;
-                showToast(toastMsg, "success");
-            }
+            showToast(`Відновлено попередню сесію (${totalRecords} о/с, ${processedDocsCount} файлів)`, 'info');
         }
 
-        async function openDispatcherModal() {
-            const modal = document.getElementById('dispatcherModal');
-            if (!modal) return;
-
-            modal.classList.remove('hidden');
-
-            try {
-                const datesRes = await fetch(`${DISPATCHER_API_BASE}/api/dates`);
-                if (datesRes.ok) {
-                    const datesData = await datesRes.json();
-                    const sel = document.getElementById('dispModalDateSelect');
-                    if (sel && datesData.available_dates) {
-                        const autoOpt = `<option value="auto" ${datesData.is_auto_mode ? 'selected' : ''}>АВТО-РЕЖИМ (найновіша/сьогодні)</option>`;
-                        const dateOpts = datesData.available_dates.map(d => 
-                            `<option value="${d.date}" ${(!datesData.is_auto_mode && d.date === datesData.current_date) ? 'selected' : ''}>${d.date} (${d.file_count} файлів)</option>`
-                        ).join('');
-                        sel.innerHTML = autoOpt + dateOpts;
-                    }
-                }
-
-                const bundleRes = await fetch(`${DISPATCHER_API_BASE}/api/bundle`);
-                if (bundleRes.ok) {
-                    const bundle = await bundleRes.json();
-                    renderDispatcherModalContent(bundle);
-                }
-            } catch (e) {
-                console.warn("Не вдалося завантажити деталі диспетчера:", e);
-            }
-        }
-
-        function closeDispatcherModal() {
-            const modal = document.getElementById('dispatcherModal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function renderDispatcherModalContent(bundle) {
-            _dispatcherBundle = bundle;
-
-            const uStats = document.getElementById('dispModalStatsUnits');
-            const sStats = document.getElementById('dispModalStatsSoldiers');
-            const dStats = document.getElementById('dispModalStatsDups');
-            const tStats = document.getElementById('dispModalStatsTime');
-            const fText = document.getElementById('dispModalFolderText');
-
-            if (uStats) {
-                const submitted = (bundle.units_status || []).filter(u => u.submitted).length;
-                uStats.innerText = `${submitted} / ${(bundle.units_status || []).length}`;
-            }
-            if (sStats) sStats.innerText = `${bundle.total_soldiers || 0} о/с`;
-            if (dStats) dStats.innerText = (bundle.cross_unit_duplicates || []).length;
-            if (tStats) tStats.innerText = `${bundle.parse_duration_sec || 0} с`;
-            if (fText) fText.innerText = bundle.target_folder || '—';
-
-            // Шаховка підрозділів
-            const grid = document.getElementById('dispModalUnitsGrid');
-            const missSum = document.getElementById('dispModalMissingSummary');
-            if (grid && bundle.units_status) {
-                grid.innerHTML = bundle.units_status.map(u => {
-                    const isOk = u.submitted;
-                    const bgClass = isOk 
-                        ? 'bg-[#11261c] border-[#265c41]' 
-                        : 'bg-[#2b1416] border-[#7c2a30]';
-                    const badgeClass = isOk
-                        ? 'bg-[#181c22] text-[#4cc38a] border-[#265c41]'
-                        : 'bg-[#181c22] text-[#f27474] border-[#7c2a30]';
-                    const statusText = isOk ? 'ЗДАНО' : 'ОЧІКУЄТЬСЯ';
-                    const fnText = u.fileName ? `<span class="truncate block text-[11px] text-[#a5adb8] font-mono mt-1" title="${escapeHtml(u.fileName)}">${escapeHtml(u.fileName)}</span>` : '';
-
-                    return `
-                        <div class="p-2.5 rounded-[2px] border ${bgClass} transition-colors flex flex-col justify-between">
-                            <div class="flex items-center justify-between gap-1">
-                                <span class="font-bold text-xs text-[#e6e8eb]">${escapeHtml(u.name)}</span>
-                                <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-[2px] border ${badgeClass}">${statusText}</span>
-                            </div>
-                            ${fnText}
-                        </div>
-                    `;
-                }).join('');
-
-                const missingList = bundle.units_status.filter(u => !u.submitted);
-                if (missSum) {
-                    missSum.innerText = missingList.length > 0 
-                        ? `(Не здали: ${missingList.map(m => m.name).join(', ')})`
-                        : 'Усі 20 підрозділів подали звіти.';
-                }
-            }
-
-            // Дублікати між підрозділами
-            const dupsWrap = document.getElementById('dispModalDupsWrapper');
-            const dupsList = document.getElementById('dispModalDupsList');
-            const dups = bundle.cross_unit_duplicates || [];
-            if (dupsWrap && dupsList) {
-                if (dups.length > 0) {
-                    dupsWrap.classList.remove('hidden');
-                    dupsList.innerHTML = dups.map(d => {
-                        const count = d.occurrencesCount || (d.files ? d.files.length : 2);
-                        const entries = d.entries || d.details || [];
-                        const detailsStr = entries.map(entry => 
-                            `<div class="flex flex-col bg-[#151920] border border-[#2b3340] rounded-[2px] p-2.5 text-xs">
-                                <div class="flex items-center justify-between gap-1 mb-1">
-                                    <span class="px-1.5 py-0.5 rounded-[2px] bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] font-mono font-semibold text-[10px] truncate max-w-[240px]" title="${escapeHtml(entry.fileName)}">${escapeHtml(entry.fileName)}</span>
-                                    <span class="text-[#4cc38a] font-medium">${escapeHtml(entry.rank || '—')}</span>
-                                </div>
-                                <div class="text-[#a5adb8] text-[11px] line-clamp-2">${escapeHtml(entry.pos || 'Без посади')}</div>
-                                ${entry.task ? `<div class="text-[#8892a0] text-[11px] mt-1 pt-1 border-t border-[#222933]">Позиція/завдання: <span class="text-[#e6e8eb] font-mono">${escapeHtml(entry.task)}</span></div>` : ''}
-                            </div>`
-                        ).join('');
-
-                        return `
-                            <div class="p-3.5 bg-[#2b1f0e] border border-[#6e4e16] rounded-[2px] space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-[1px] bg-[#f0b44c]"></span>
-                                        <span class="font-bold text-sm text-[#e6e8eb]">${escapeHtml(d.name)}</span>
-                                    </div>
-                                    <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-[2px] bg-[#181c22] text-[#f0b44c] border border-[#6e4e16] tabular-nums">у ${count} файлах</span>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${detailsStr}</div>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    dupsWrap.classList.add('hidden');
-                }
-            }
-
-            // Кореговані файли
-            const supWrap = document.getElementById('dispModalSupersededWrapper');
-            const supList = document.getElementById('dispModalSupersededList');
-            const sups = bundle.superseded_files || [];
-            if (supWrap && supList) {
-                if (sups.length > 0) {
-                    supWrap.classList.remove('hidden');
-                    supList.innerHTML = sups.map(s => `
-                        <div class="p-2.5 bg-[#151920] border border-[#2d4a6d] rounded-[2px] text-xs flex items-center justify-between">
-                            <span class="text-[#a5adb8]">Файл <s class="text-[#f27474] font-mono">${escapeHtml(s.fileName)}</s> замінено на <b class="text-[#4cc38a] font-mono">${escapeHtml(s.supersededBy)}</b></span>
-                            <span class="text-[10px] font-mono text-[#4c8ed9] px-2 py-0.5 rounded-[2px] bg-[#182230] border border-[#2d4a6d]">КОРЕГОВАНИЙ</span>
-                        </div>
-                    `).join('');
-                } else {
-                    supWrap.classList.add('hidden');
-                }
-            }
-        }
-
-        async function changeDispatcherDate(newDate) {
-            if (!newDate) return;
-            try {
-                const label = newDate === 'auto' ? 'Авто-режим' : newDate;
-                showToast(`Перемикання: ${label}...`, 'info');
-                const res = await fetch(`${DISPATCHER_API_BASE}/api/set_date`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date: newDate })
-                });
-                if (res.ok) {
-                    const bundleRes = await fetch(`${DISPATCHER_API_BASE}/api/bundle`);
-                    if (bundleRes.ok) {
-                        const bundle = await bundleRes.json();
-                        renderDispatcherModalContent(bundle);
-                        checkDispatcherStatus();
-                        showToast(`Успішно активовано дату ${bundle.target_date || newDate}`, 'success');
-                    }
-                }
-            } catch (e) {
-                showToast('Помилка перемикання дати: ' + e.message, 'error');
-            }
-        }
-
-        // Авто-перевірка диспетчера при завантаженні сторінки
+        // Відновлення налаштувань і сесії при завантаженні сторінки
         window.addEventListener('DOMContentLoaded', () => {
             setAppMode(currentAppMode, true);
-            const chk = document.getElementById('chkDispAutoSync');
-            if (chk) chk.checked = _isAutoSyncEnabled;
-            const ping = document.getElementById('dispAutoSyncPing');
-            const dot = document.getElementById('dispAutoSyncDot');
-            if (ping && dot) {
-                ping.classList.add('hidden');
-                dot.className = _isAutoSyncEnabled
-                    ? "relative inline-flex rounded-[1px] h-2 w-2 bg-[#4cc38a]"
-                    : "relative inline-flex rounded-[1px] h-2 w-2 bg-[#8892a0]";
-            }
-
-            checkDispatcherStatus(false);
-            if (!_dispatcherHeartbeatTimer) {
-                _dispatcherHeartbeatTimer = setInterval(() => checkDispatcherStatus(false), _dispatcherPollInterval);
-            }
 
             // Автоматичне відновлення налаштувань Додатка 6 з диска (якщо в LocalStorage порожньо)
             autoHydrateDod6SettingsFromDisk();
 
-            // Захист від випадкового закриття вкладки або оновлення сторінки (F5/Ctrl+W)
-            window.addEventListener('beforeunload', (e) => {
-                const hasData = (vopData.length > 0 || btgrData.length > 0 || broData.length > 0 || zabData.length > 0);
-                if (hasData) {
-                    e.preventDefault();
-                    e.returnValue = '';
+            // Автоматичне приховування порожньої панелі «Контроль даних»
+            const statusRibbon = document.getElementById('statusRibbonBar');
+            const alertChipIds = ['duplicatesAlert', 'invalidTasksAlert', 'emptyFieldsAlert'];
+            const syncStatusRibbonVisibility = () => {
+                if (!statusRibbon) return;
+                const hasVisibleChip = alertChipIds.some(id => {
+                    const el = document.getElementById(id);
+                    return el && !el.classList.contains('hidden');
+                });
+                statusRibbon.classList.toggle('hidden', !hasVisibleChip);
+                statusRibbon.classList.toggle('flex', hasVisibleChip);
+            };
+            const ribbonObserver = new MutationObserver(syncStatusRibbonVisibility);
+            alertChipIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) ribbonObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+            });
+            syncStatusRibbonVisibility();
+
+            // Відновлення останньої робочої сесії після оновлення сторінки
+            restoreSessionFromStorage();
+
+            // Негайне збереження перед оновленням/закриттям сторінки
+            window.addEventListener('pagehide', () => {
+                if (_sessionSaveTimer) {
+                    clearTimeout(_sessionSaveTimer);
+                    _sessionSaveTimer = null;
+                    saveSessionToStorage();
                 }
             });
         });
