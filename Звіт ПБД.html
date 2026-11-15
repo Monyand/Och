@@ -629,15 +629,221 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 
         .dict-textarea {
             width: 100%;
+            min-height: 300px;
             background: var(--shell-inset);
             color: var(--ink-primary);
             border: 1px solid var(--border-input);
             border-radius: var(--radius-sm);
-            padding: 9px 10px;
+            padding: 10px 12px;
             font-family: var(--font-mono);
             font-size: 12.5px;
-            line-height: 1.5;
+            line-height: 1.55;
+            white-space: pre;
+            overflow-x: auto;
             resize: vertical;
+            outline: none;
+        }
+
+        .dict-textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .settings-top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-rule);
+        }
+
+        .settings-unit-wrap {
+            flex: 1 1 280px;
+            max-width: 460px;
+        }
+
+        .settings-unit-wrap input {
+            width: 100%;
+            font-weight: 500;
+            outline: none;
+        }
+
+        .settings-unit-wrap input:focus {
+            border-color: var(--accent);
+        }
+
+        .settings-tabs-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding-top: 12px;
+            border-bottom: 1px solid var(--border-rule);
+        }
+
+        .settings-tabs-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .settings-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--ink-secondary);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: color 0.12s ease, border-color 0.12s ease;
+        }
+
+        .settings-tab-btn:hover {
+            color: var(--ink-primary);
+        }
+
+        .settings-tab-btn.active {
+            color: var(--ink-primary);
+            border-bottom-color: var(--accent);
+        }
+
+        .dict-mode-switch {
+            display: inline-flex;
+            align-items: center;
+            background: var(--shell-inset);
+            border: 1px solid var(--border-rule);
+            border-radius: var(--radius-sm);
+            padding: 2px;
+            margin-bottom: 6px;
+        }
+
+        .dict-mode-btn {
+            padding: 4px 10px;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: var(--ink-muted);
+            background: transparent;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .dict-mode-btn.active {
+            background: var(--bg-surface);
+            color: var(--ink-primary);
+        }
+
+        .dict-toolbar {
+            display: grid;
+            grid-template-columns: minmax(150px, 0.9fr) minmax(140px, 1fr) auto minmax(180px, 1.35fr) auto;
+            gap: 8px;
+            align-items: center;
+            padding: 12px 0 10px;
+        }
+
+        @media (max-width: 820px) {
+            .dict-toolbar {
+                grid-template-columns: 1fr;
+            }
+            .dict-toolbar-arrow {
+                display: none;
+            }
+        }
+
+        .dict-toolbar input {
+            width: 100%;
+            font-size: 12.5px;
+            padding: 6px 9px;
+            outline: none;
+        }
+
+        .dict-toolbar input:focus {
+            border-color: var(--accent);
+        }
+
+        .dict-toolbar-arrow {
+            color: var(--ink-muted);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            user-select: none;
+        }
+
+        .dict-table-wrap {
+            max-height: 310px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border-rule);
+            border-bottom: 1px solid var(--border-rule);
+            background: var(--shell-inset);
+        }
+
+        .dict-row {
+            display: grid;
+            grid-template-columns: minmax(140px, 1fr) 18px minmax(220px, 1.5fr) 30px;
+            gap: 8px;
+            align-items: center;
+            padding: 5px 8px;
+            border-bottom: 1px solid var(--border-rule);
+        }
+
+        .dict-row:last-child {
+            border-bottom: none;
+        }
+
+        .dict-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .dict-row input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            padding: 4px 6px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--ink-primary);
+            outline: none;
+        }
+
+        .dict-row input:hover {
+            border-color: var(--border-rule);
+        }
+
+        .dict-row input:focus {
+            background: var(--bg-surface);
+            border-color: var(--accent);
+        }
+
+        .dict-row-del {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            color: var(--ink-muted);
+            cursor: pointer;
+        }
+
+        .dict-row-del:hover {
+            color: #f27474;
+            background: rgba(124, 42, 48, 0.28);
+            border-color: #7c2a30;
+        }
+
+        .dict-empty-hint {
+            padding: 24px 12px;
+            text-align: center;
+            color: var(--ink-muted);
+            font-size: 12.5px;
         }
 
         .dict-tip {
@@ -1354,7 +1560,12 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         }
 
         dialog.pbd-dialog.dialog-wide {
-            width: min(92vw, 600px);
+            width: min(92vw, 720px);
+        }
+
+        dialog.pbd-dialog.dialog-xl {
+            width: min(94vw, 980px);
+            max-height: 90vh;
         }
 
         dialog.pbd-dialog[open] {
@@ -1650,7 +1861,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
                     <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                    <span>v1.4.1</span>
+                    <span>v1.4.2</span>
                 </button>
             </h1>
         </div>
@@ -4210,6 +4421,153 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 const count = weaponInput.value.split('\n').filter(l => l.trim().length > 0 && !l.trim().startsWith('#')).length;
                 weaponBadge.textContent = `${count} зв'язок`;
             }
+            if (typeof renderDictTable === 'function') {
+                renderDictTable('pos');
+                renderDictTable('weapon');
+            }
+        }
+
+        let _activeSettingsDictTab = 'pos';
+        let _dictViewMode = 'table';
+
+        function switchSettingsDictTab(tab) {
+            _activeSettingsDictTab = tab === 'weapon' ? 'weapon' : 'pos';
+            ['pos', 'weapon'].forEach(t => {
+                const btn = document.getElementById(`stab-btn-${t}`);
+                const panel = document.getElementById(`stab-panel-${t}`);
+                if (btn) btn.classList.toggle('active', t === _activeSettingsDictTab);
+                if (panel) panel.style.display = t === _activeSettingsDictTab ? '' : 'none';
+            });
+            renderDictTable(_activeSettingsDictTab);
+        }
+
+        function switchDictViewMode(mode) {
+            _dictViewMode = mode === 'raw' ? 'raw' : 'table';
+            const tableBtn = document.getElementById('dmode-btn-table');
+            const rawBtn = document.getElementById('dmode-btn-raw');
+            if (tableBtn) tableBtn.classList.toggle('active', _dictViewMode === 'table');
+            if (rawBtn) rawBtn.classList.toggle('active', _dictViewMode === 'raw');
+
+            ['pos', 'weapon'].forEach(t => {
+                const te = document.getElementById(`${t}-table-editor`);
+                const re = document.getElementById(`${t}-raw-editor`);
+                if (te) te.style.display = _dictViewMode === 'table' ? '' : 'none';
+                if (re) re.style.display = _dictViewMode === 'raw' ? '' : 'none';
+            });
+            if (_dictViewMode === 'table') {
+                renderDictTable('pos');
+                renderDictTable('weapon');
+            }
+        }
+
+        function parseDictLines(rawText) {
+            return rawText.split('\n').map((line, idx) => ({ line, idx }))
+                .filter(item => item.line.trim().length > 0 && !item.line.trim().startsWith('#'))
+                .map(item => {
+                    const eqPos = item.line.indexOf('=');
+                    if (eqPos === -1) return { idx: item.idx, key: item.line.trim(), val: '' };
+                    return {
+                        idx: item.idx,
+                        key: item.line.slice(0, eqPos).trim(),
+                        val: item.line.slice(eqPos + 1).trim()
+                    };
+                });
+        }
+
+        function updateDictLine(type, lineIdx, newKey, newVal) {
+            const ta = document.getElementById(`${type}-dict`);
+            if (!ta) return;
+            const lines = ta.value.split('\n');
+            if (lineIdx < 0 || lineIdx >= lines.length) return;
+            lines[lineIdx] = `${newKey.trim()} = ${newVal.trim()}`;
+            ta.value = lines.join('\n');
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function deleteDictLine(type, lineIdx) {
+            const ta = document.getElementById(`${type}-dict`);
+            if (!ta) return;
+            const lines = ta.value.split('\n');
+            if (lineIdx < 0 || lineIdx >= lines.length) return;
+            lines.splice(lineIdx, 1);
+            ta.value = lines.join('\n').replace(/^\n+|\n+$/g, '');
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function addDictEntry(type) {
+            const keyEl = document.getElementById(`${type}-add-key`);
+            const valEl = document.getElementById(`${type}-add-val`);
+            const ta = document.getElementById(`${type}-dict`);
+            if (!keyEl || !valEl || !ta) return;
+            const k = keyEl.value.trim();
+            const v = valEl.value.trim();
+            if (!k || !v) {
+                (k ? valEl : keyEl).focus();
+                return;
+            }
+            const cleanExisting = ta.value.trimEnd();
+            ta.value = cleanExisting ? `${cleanExisting}\n${k} = ${v}` : `${k} = ${v}`;
+            keyEl.value = '';
+            valEl.value = '';
+            keyEl.focus();
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function renderDictTable(type) {
+            const ta = document.getElementById(`${type}-dict`);
+            const listEl = document.getElementById(`${type}-table-list`);
+            const searchEl = document.getElementById(`${type}-dict-search`);
+            if (!ta || !listEl) return;
+
+            const query = (searchEl?.value || '').trim().toLowerCase();
+            const entries = parseDictLines(ta.value).filter(e =>
+                !query || e.key.toLowerCase().includes(query) || e.val.toLowerCase().includes(query)
+            );
+
+            listEl.innerHTML = '';
+            if (entries.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'dict-empty-hint';
+                empty.textContent = query ? 'За пошуком нічого не знайдено' : 'Словник порожній — додайте перший запис вище';
+                listEl.appendChild(empty);
+                return;
+            }
+
+            entries.forEach(entry => {
+                const row = document.createElement('div');
+                row.className = 'dict-row';
+
+                const keyInput = document.createElement('input');
+                keyInput.type = 'text';
+                keyInput.value = entry.key;
+                keyInput.title = 'Шукана назва';
+
+                const arrow = document.createElement('span');
+                arrow.className = 'dict-toolbar-arrow';
+                arrow.textContent = '→';
+
+                const valInput = document.createElement('input');
+                valInput.type = 'text';
+                valInput.value = entry.val;
+                valInput.title = 'Як виводити';
+
+                const commitEdit = () => updateDictLine(type, entry.idx, keyInput.value, valInput.value);
+                keyInput.addEventListener('change', commitEdit);
+                valInput.addEventListener('change', commitEdit);
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'dict-row-del';
+                delBtn.title = 'Видалити рядок';
+                delBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+                delBtn.addEventListener('click', () => deleteDictLine(type, entry.idx));
+
+                row.appendChild(keyInput);
+                row.appendChild(arrow);
+                row.appendChild(valInput);
+                row.appendChild(delBtn);
+                listEl.appendChild(row);
+            });
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -4558,9 +4916,23 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
+                version: "1.4.2",
+                date: "15.11.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "Сучасний табличний редактор словників у налаштуваннях",
+                        items: [
+                            "<b>Вкладки та компактна верхня панель</b>: <code>Назва підрозділу</code> та кнопки <code>Експорт (.enc)</code> / <code>Імпорт (.enc)</code> зведено в компактний верхній рядок, а словники розділено на окремі вкладки <code>Словник позицій</code> і <code>Словник зброї ОВгП</code> із живими лічильниками.",
+                            "<b>Таблиця ↔ Текстом (Raw)</b>: додано табличний режим із живим пошуком, швидким додаванням нового запису (по <code>Enter</code>), плоскими рядками Paper-Rule та повною синхронізацією з raw-текстовими полями й автозбереженням."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.4.1",
                 date: "14.11.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "Завантаження файлів, статистика та Word-форматування",
@@ -4902,7 +5274,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
     </script>
 
     <!-- НАТИВНЕ МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ -->
-    <dialog id="modal-settings" class="pbd-dialog dialog-wide" closedby="any" aria-labelledby="settings-dialog-title">
+    <dialog id="modal-settings" class="pbd-dialog dialog-xl" closedby="any" aria-labelledby="settings-dialog-title">
         <div class="dialog-head">
             <h3 class="dialog-title" id="settings-dialog-title">
                 <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
@@ -4912,46 +5284,15 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         </div>
         <div class="dialog-body">
             <div class="settings-grid">
-                <div class="settings-section">
-                    <div class="settings-section-header">
-                        <label for="unit-name" class="settings-section-title">Назва підрозділу</label>
-                    </div>
-                    <input type="text" id="unit-name" value="1 мб 111 овмбр" placeholder="Вкажіть підрозділ (напр: 1 мб 111 овмбр)..." style="width: 100%; max-width: 340px; font-weight: 500;">
-                    <div class="dict-tip">
-                        <span>Використовується у зведених назвах файлів та шапках таблиць донесень.</span>
-                    </div>
-                </div>
-
-                <div class="settings-section settings-grid-split">
-                    <div>
-                        <div class="settings-section-header">
-                            <label for="pos-dict" class="settings-section-title">Словник позицій</label>
-                            <span id="pos-count-badge" class="dict-counter-text">0 позицій</span>
+                <div class="settings-top-bar">
+                    <div class="settings-unit-wrap">
+                        <div class="settings-section-header" style="margin-bottom: 6px;">
+                            <label for="unit-name" class="settings-section-title">Назва підрозділу</label>
+                            <span class="dict-counter-text" style="color: var(--ink-muted);">для звітів та шапок</span>
                         </div>
-                        <textarea id="pos-dict" class="dict-textarea" rows="7"
-                            placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;"></textarea>
-                        <div class="dict-tip">
-                            <span>Формат: <code>Шукана назва = Як виводити</code> (регістр і лапки ігноруються).</span>
-                        </div>
+                        <input type="text" id="unit-name" value="1 мб 111 овмбр" placeholder="Вкажіть підрозділ (напр: 1 мб 111 овмбр)...">
                     </div>
 
-                    <div>
-                        <div class="settings-section-header">
-                            <label for="weapon-dict" class="settings-section-title">Словник зброї ОВгП</label>
-                            <span id="weapon-count-badge" class="dict-counter-text">0 зв'язок</span>
-                        </div>
-                        <textarea id="weapon-dict" class="dict-textarea" rows="7"
-                            placeholder="ОМЕГА = КБА-222 (120мм)&#10;ОМЕГА = МВ81/024 (81 мм)&#10;СОКІЛ = УПІК 82 (82мм)"></textarea>
-                        <div class="dict-tip">
-                            <span>Формат: <code>Назва позиції = Зброя</code> (кожен калібр з нового рядка).</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <div class="settings-section-header">
-                        <span class="settings-section-title">Синхронізація та бекап налаштувань</span>
-                    </div>
                     <div class="security-actions">
                         <button type="button" onclick="openSettingsExportModal()" class="btn-export" title="Зберегти налаштування у зашифрований .enc файл">
                             <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -4962,6 +5303,65 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                             <span>Імпорт (.enc)</span>
                         </button>
                         <input type="file" id="settingsFileInput" accept=".enc" style="display: none;" onchange="handleSettingsFileSelected(event)" />
+                    </div>
+                </div>
+
+                <div class="settings-tabs-bar">
+                    <div class="settings-tabs-group">
+                        <button type="button" id="stab-btn-pos" class="settings-tab-btn active" onclick="switchSettingsDictTab('pos')">
+                            <span>Словник позицій</span>
+                            <span id="pos-count-badge" class="dict-counter-text">0 позицій</span>
+                        </button>
+                        <button type="button" id="stab-btn-weapon" class="settings-tab-btn" onclick="switchSettingsDictTab('weapon')">
+                            <span>Словник зброї ОВгП</span>
+                            <span id="weapon-count-badge" class="dict-counter-text">0 зв'язок</span>
+                        </button>
+                    </div>
+                    <div class="dict-mode-switch" role="group" aria-label="Режим перегляду словника">
+                        <button type="button" id="dmode-btn-table" class="dict-mode-btn active" onclick="switchDictViewMode('table')">Таблиця</button>
+                        <button type="button" id="dmode-btn-raw" class="dict-mode-btn" onclick="switchDictViewMode('raw')">Текстом (Raw)</button>
+                    </div>
+                </div>
+
+                <!-- Вкладка: Словник позицій -->
+                <div id="stab-panel-pos">
+                    <div id="pos-table-editor">
+                        <div class="dict-toolbar">
+                            <input type="search" id="pos-dict-search" placeholder="Пошук у словнику..." oninput="renderDictTable('pos')">
+                            <input type="text" id="pos-add-key" placeholder="Шукана назва (напр. ЧЛЄНІН)" onkeydown="if(event.key==='Enter'){event.preventDefault();addDictEntry('pos');}">
+                            <span class="dict-toolbar-arrow">&rarr;</span>
+                            <input type="text" id="pos-add-val" placeholder="Як виводити (напр. СП &quot;ЧЛЄНІН&quot;)" onkeydown="if(event.key==='Enter'){event.preventDefault();addDictEntry('pos');}">
+                            <button type="button" class="btn-small btn-add" onclick="addDictEntry('pos')">+ Додати</button>
+                        </div>
+                        <div id="pos-table-list" class="dict-table-wrap"></div>
+                    </div>
+                    <div id="pos-raw-editor" style="display: none; padding-top: 12px;">
+                        <textarea id="pos-dict" class="dict-textarea" rows="13"
+                            placeholder="ЧЛЄНІН = СП &quot;ЧЛЄНІН&quot;&#10;БУМНТ = ПВ &quot;БУМНТ&quot;&#10;ЛОХУС = КСП &quot;ЛОХУС&quot;"></textarea>
+                        <div class="dict-tip">
+                            <span>Формат: <code>Шукана назва = Як виводити</code> (регістр і лапки ігноруються).</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Вкладка: Словник зброї ОВгП -->
+                <div id="stab-panel-weapon" style="display: none;">
+                    <div id="weapon-table-editor">
+                        <div class="dict-toolbar">
+                            <input type="search" id="weapon-dict-search" placeholder="Пошук у словнику..." oninput="renderDictTable('weapon')">
+                            <input type="text" id="weapon-add-key" placeholder="Назва позиції (напр. ПІПІСЬКА)" onkeydown="if(event.key==='Enter'){event.preventDefault();addDictEntry('weapon');}">
+                            <span class="dict-toolbar-arrow">&rarr;</span>
+                            <input type="text" id="weapon-add-val" placeholder="Зброя (напр. МК-19 (40мм))" onkeydown="if(event.key==='Enter'){event.preventDefault();addDictEntry('weapon');}">
+                            <button type="button" class="btn-small btn-add" onclick="addDictEntry('weapon')">+ Додати</button>
+                        </div>
+                        <div id="weapon-table-list" class="dict-table-wrap"></div>
+                    </div>
+                    <div id="weapon-raw-editor" style="display: none; padding-top: 12px;">
+                        <textarea id="weapon-dict" class="dict-textarea" rows="13"
+                            placeholder="ПІПІСЬКА = МК-19 (40мм)&#10;БУЛЬБУЛЯТОР = СПГ-9 (73мм)&#10;ШМОНЬКА = УПІК 82 (82мм)"></textarea>
+                        <div class="dict-tip">
+                            <span>Формат: <code>Назва позиції = Зброя</code> (кожен калібр з нового рядка).</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -4978,7 +5378,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             <h3 class="dialog-title" id="changelog-dialog-title">
                 <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
                 <span>Історія оновлень (Звіт ПБД)</span>
-                <span class="badge-tactical badge-tactical-accent">v1.4.1</span>
+                <span class="badge-tactical badge-tactical-accent">v1.4.2</span>
             </h3>
             <button type="button" onclick="closeChangelogModal()" class="btn-dialog-close" title="Закрити" aria-label="Закрити"><svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
         </div>
