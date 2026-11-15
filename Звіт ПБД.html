@@ -1861,7 +1861,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 <button type="button" onclick="openChangelogModal()" class="btn-version"
                     title="Відкрити історію оновлень програми">
                     <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                    <span>v1.4.2</span>
+                    <span>v1.4.3</span>
                 </button>
             </h1>
         </div>
@@ -3917,12 +3917,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 .replace(/>/g, '&gt;');
         }
 
-        async function copyTextWithYellowDigits(plainText) {
-            const htmlLines = plainText.split('\n').map(line =>
-                escapeHtmlForClipboard(line).replace(/\b(\d+)\b/g, '<span style="background-color:#ffff00;mso-highlight:yellow;">$1</span>')
-            );
-            const htmlText = `<div style="font-size:13pt;font-weight:bold;"><b>${htmlLines.join('<br>')}</b></div>`;
-
+        async function writeClipboardWithHtml(plainText, htmlText) {
             if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
                 try {
                     const item = new ClipboardItem({
@@ -3947,6 +3942,14 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
                 await navigator.clipboard.writeText(plainText);
             }
+        }
+
+        async function copyTextWithYellowDigits(plainText) {
+            const htmlLines = plainText.split('\n').map(line =>
+                escapeHtmlForClipboard(line).replace(/\b(\d+)\b/g, '<span style="background-color:#ffff00;mso-highlight:yellow;">$1</span>')
+            );
+            const htmlText = `<div style="font-size:13pt;font-weight:bold;"><b>${htmlLines.join('<br>')}</b></div>`;
+            await writeClipboardWithHtml(plainText, htmlText);
         }
 
         window.copyCrewStats = async function (btn) {
@@ -4356,6 +4359,14 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             }
         }
 
+        const YELLOW_HIGHLIGHT_LIST_IDS = new Set([
+            'report-2-fpv', 'report-2-drop', 'report-2-mortar', 'report-2-art', 'report-2-other',
+            'report-4-gen',
+            'report-3-fpv', 'report-3-drop', 'report-3-heavy',
+            'report-4-ovgp',
+            'report-3-delivery'
+        ]);
+
         window.copyReportList = async function (id, btn) {
             const container = document.getElementById(id);
             if (!container) return;
@@ -4371,7 +4382,12 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             const plainText = lines.join('\n');
 
             try {
-                if (navigator.clipboard && window.isSecureContext) {
+                if (YELLOW_HIGHLIGHT_LIST_IDS.has(id)) {
+                    const htmlLines = lines.map(line =>
+                        `<p style="margin:0;text-align:justify;font-size:13pt;font-style:italic;"><span style="background-color:#ffff00;mso-highlight:yellow;"><i>${escapeHtmlForClipboard(line)}</i></span></p>`
+                    );
+                    await writeClipboardWithHtml(plainText, htmlLines.join(''));
+                } else if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(plainText);
                 } else {
                     const copyListener = function(e) {
@@ -4916,9 +4932,22 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         // ─── AUTONOMOUS CHANGELOG DATA (ЗВІТ ПБД) ─────────────────────────────────
         const APP_CHANGELOG = [
             {
-                version: "1.4.2",
+                version: "1.4.3",
                 date: "15.11.2026",
                 isCurrent: true,
+                sections: [
+                    {
+                        title: "Word-форматування при копіюванні списків",
+                        items: [
+                            "<b>Жовтий маркер, 13pt курсив і вирівнювання по ширині</b>: при натисканні «Копіювати» у розділах <code>3.1.5</code>, <code>3.2.1</code>, <code>3.2.2</code>, <code>3.2.3</code>, <code>3.2.7</code> у буфер передається HTML-розмітка для Word (<code>13pt</code>, курсив, <code>Justify</code>, <code>#ffff00</code> / <code>mso-highlight:yellow</code>) через спільний хелпер <code>writeClipboardWithHtml()</code>."
+                        ]
+                    }
+                ]
+            },
+            {
+                version: "1.4.2",
+                date: "15.11.2026",
+                isCurrent: false,
                 sections: [
                     {
                         title: "Сучасний табличний редактор словників у налаштуваннях",
@@ -5378,7 +5407,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             <h3 class="dialog-title" id="changelog-dialog-title">
                 <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
                 <span>Історія оновлень (Звіт ПБД)</span>
-                <span class="badge-tactical badge-tactical-accent">v1.4.2</span>
+                <span class="badge-tactical badge-tactical-accent">v1.4.3</span>
             </h3>
             <button type="button" onclick="closeChangelogModal()" class="btn-dialog-close" title="Закрити" aria-label="Закрити"><svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
         </div>
