@@ -322,7 +322,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
                             <button type="button" onclick="openChangelogModal()" title="Історія оновлень"
                                 class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#181c22] hover:bg-[#20262f] text-[#e6e8eb] border border-[#343f50] rounded-[2px] text-xs font-mono font-semibold cursor-pointer transition-colors">
                                 <i data-lucide="history" class="w-3 h-3 text-[#4c8ed9]"></i>
-                                <span>v1.5.0</span>
+                                <span>v1.5.1</span>
                             </button>
                             <span class="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#0e1218] border border-[#343f50] rounded-[2px] text-xs font-mono text-[#a5adb8]">
                                 <span class="w-2 h-2 rounded-full bg-[#34a86e]"></span>
@@ -572,7 +572,7 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
 
     <footer class="max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#8892a0] border-t border-[#222933]">
         <span>Автономна локальна обробка. Дані не залишають ваш браузер.</span>
-        <span class="font-mono">Калькулятор БК v1.5.0 &bull; Графітова матова Відомість</span>
+        <span class="font-mono">Калькулятор БК v1.5.1 &bull; Графітова матова Відомість</span>
     </footer>
 
     <!-- Нативне модальне вікно Changelog -->
@@ -596,7 +596,17 @@ lucide.createIcons({icons});\``);if(typeof c>"u")throw new Error("`createIcons()
         <div class="py-2 overflow-y-auto space-y-5 flex-1 text-xs sm:text-sm pr-1">
             <div class="pl-4 border-l-2 border-[#4cc38a] space-y-2">
                 <div class="flex items-center justify-between gap-2">
-                    <span class="font-bold text-[#4cc38a] font-mono text-sm">v1.5.0 (Графітова матова Відомість &amp; 100% Offline)</span>
+                    <span class="font-bold text-[#4cc38a] font-mono text-sm">v1.5.1 (Фікс розпізнавання РГД-5 без «-5»)</span>
+                    <span class="text-xs font-mono text-[#a5adb8] bg-[#151920] px-2 py-0.5 rounded-[2px] border border-[#2b3340] shrink-0">15.11.2026</span>
+                </div>
+                <ul class="space-y-1.5 text-[#a5adb8] list-disc list-inside">
+                    <li><strong class="text-[#e6e8eb]">Розпізнавання <code>РГД -2 шт</code> і <code>граната РГД-2 шт</code>:</strong> усунуто конфлікт між правилами <code>RGD5</code> та димової <code>RDG_2</code> — скорочений запис без <code>-5</code> більше не блокується і не перехоплюється як димова <code>РДГ-2</code>, а <code>димова граната РГД-2</code> і <code>РГД-2Б</code>/<code>2Ч</code>/<code>2П</code> і далі розпізнаються як димові.</li>
+                </ul>
+            </div>
+
+            <div class="pl-4 border-l-2 border-[#343f50] space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="font-bold text-[#e6e8eb] font-mono text-sm">v1.5.0 (Графітова матова Відомість &amp; 100% Offline)</span>
                     <span class="text-xs font-mono text-[#a5adb8] bg-[#151920] px-2 py-0.5 rounded-[2px] border border-[#2b3340] shrink-0">13.11.2026</span>
                 </div>
                 <ul class="space-y-1.5 text-[#a5adb8] list-disc list-inside">
@@ -856,7 +866,7 @@ GHO - 2
             { id: 'M67', name: 'Граната М67', icon: 'flame', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*|grenade[\\s,:-]*)?(?:hand[\\s\\-_]*frag(?:mentation)?(?:[\\s\\-_]*(?:m|м)[- ]?67)?|m[- ]?67|м[- ]?67)' },
             { id: 'RGN', name: 'Граната РГН', icon: 'flame', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[rр][gг][nн])[а-яіїєґ]*' },
             { id: 'RGO', name: 'Граната РГО', icon: 'flame', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[rр][gг][oо0])[а-яіїєґ]*' },
-            { id: 'RGD5', name: 'Граната РГД-5', icon: 'flame', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[rр][gг][dд])(?![\\s\\-_]*[гg])(?![\\s\\-_]*0?2(?:[\\s\\-_]*(?:[бb]|ч|ch|[пp]))?)[\\s\\-]*5?' },
+            { id: 'RGD5', name: 'Граната РГД-5', icon: 'flame', category: 'grenade', idPattern: '(?<!димов[а-яіїєґ]*\\s*(?:(?:ручна\\s*)?(?:гранат[аи]?|шашк[аи]?)\\s*[-–—]*)?)(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[rр][gг][dд])(?![\\s\\-_]*[гg])(?![\\s\\-_]*(?:02(?:[\\s\\-_]*(?:[бb]|ч|ch|[пp]))?|2[\\s\\-_]*(?:[бb]|ч|ch|[пp])))[\\s\\-]*5?' },
             { id: 'RG42', name: 'Граната РГ-42', icon: 'flame', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:rg|рг|pg|пг|рg|pг)[\\s\\-_]*42' },
             { id: 'RGT27S', name: 'Граната РГТ-27С', icon: 'flame', category: 'grenade', idPattern: '(?:(?:ручна\\s*)?термобарична\\s*гранат[аи]?\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:р[гт]т|r[gt]t|ртбг|rtbg)[\\s\\-_]*(?:27[\\s\\-_]*[сsс2]*)?(?:[\\s\\-_]*[\'\"«»„“”\']{0,2}(?:грут|groot|1|15)?[\'\"«»„“”\']{0,2})?|(?:грут|groot))' },
 
@@ -866,7 +876,7 @@ GHO - 2
             // Димові засоби: РДГ (РДГ-М83, РДГ-55Б, РДГ-2, неуточнені)
             { id: 'RDG_M83', name: 'РДГ-М83 (димова)', icon: 'wind', category: 'smoke', idPattern: '(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:(?:[рp][дd][гg])[\\s\\-_]*(?:[мm][\\s\\-_]*)?83|(?:an[\\s\\-_/]*|[мm][\\s\\-_]*)83)' },
             { id: 'RDG_55', name: 'РДГ-55Б / РДГ-55 (димова)', icon: 'wind', category: 'smoke', idPattern: '(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[рp][дd][гg])[\\s\\-_]*55(?:[\\s\\-_]*[бbмmчch])?' },
-            { id: 'RDG_2', name: 'РДГ-2 (димова)', icon: 'wind', category: 'smoke', idPattern: '(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)\\s*[-–—]*|(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[рp](?:[дd][гg]|[гg][дd][гg]|[гg][дd]))[\\s\\-_]*0?2(?:[\\s\\-_]*(?:[бb]|ч|ch|[пp]))?' },
+            { id: 'RDG_2', name: 'РДГ-2 (димова)', icon: 'wind', category: 'smoke', idPattern: '(?:(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)\\s*[-–—]*)(?:[рp](?:[дd][гg]|[гg][дd][гg]|[гg][дd]))[\\s\\-_]*0?2(?:[\\s\\-_]*(?:[бb]|ч|ch|[пp]))?|(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[рp](?:[дd][гg]|[гg][дd][гg]))[\\s\\-_]*0?2(?:[\\s\\-_]*(?:[бb]|ч|ch|[пp]))?|(?:(?:ручна\\s*)?гранат[аи]?\\s*[-–—]*)?(?:[рp][гg][дd])(?:[\\s\\-_]*02(?:[\\s\\-_]*(?:[бb]|ч|ch|[пp]))?|[\\s\\-_]*2[\\s\\-_]*(?:[бb]|ч|ch|[пp])))' },
             { id: 'RDG_GEN', name: 'РДГ (неуточнена димова)', icon: 'wind', category: 'smoke', idPattern: '(?:(?:ручна\\s*)?димов[а-яіїєґ]*\\s*(?:гранат[аи]?|шашк[аи]?)|[рp](?:[дd][гg]|[гg][дd][гg])(?:[\\s\\-_]*[пp])?)(?![\\s\\-_]*(?:55|83|0?2[бbчchпp]?|[мm]\\s*83|[aа][nн]))(?![0-9a-zA-Zа-яА-ЯіІїЇєЄґҐ])' }
         ];
 
