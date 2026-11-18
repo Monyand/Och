@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ШД Автоматизатор — Генератор донесень штурмових дій</title>
+    <script src="v8/tailwind.js"></script>
+    <script src="v8/lucide.js"></script>
+    <script src="v8/xlsx.js"></script>
+    <script src="v8/docx.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Segoe UI', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Consolas', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root {
+            --bg-app: #111418;
+            --bg-surface: #181c22;
+            --bg-inset: #0e1218;
+            --bg-hover: #20262f;
+            --border-rule: #2b3340;
+            --accent: #4c8ed9;
+            --accent-solid: #2b67ab;
+            --ok: #4cc38a;
+            --warn: #f0b44c;
+            --ink-primary: #e6e8eb;
+            --ink-secondary: #a5adb8;
+            --ink-muted: #788291;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg-app);
+            color: var(--ink-primary);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-inset); }
+        ::-webkit-scrollbar-thumb { background: #343f50; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .dropzone {
+            border: 1px dashed #394455;
+            background: var(--bg-inset);
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+        .dropzone.is-dragover {
+            border-color: var(--accent);
+            background: #142030;
+        }
+        .shd-textarea {
+            width: 100%;
+            background: var(--bg-inset);
+            color: var(--ink-primary);
+            border: 1px solid var(--border-rule);
+            padding: 8px 10px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 13px;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+        .shd-textarea:focus {
+            border-color: var(--accent);
+        }
+        .btn-copied {
+            background: #143325 !important;
+            border-color: #265c41 !important;
+            color: var(--ok) !important;
+        }
+        dialog.app-dialog {
+            margin: auto;
+            padding: 16px 20px;
+            gap: 12px;
+            border: 1px solid var(--border-rule);
+            border-radius: 0;
+            background: var(--bg-surface);
+            color: var(--ink-primary);
+            width: min(calc(100vw - 32px), 660px);
+            max-height: 86vh;
+            overflow: hidden;
+        }
+        dialog.app-dialog[open] { display: flex; flex-direction: column; }
+        dialog.app-dialog::backdrop { background: rgba(10, 13, 18, 0.78); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Верхня панель -->
+    <header class="sticky top-0 z-40 w-full bg-[#141922] border-b border-[#0a0d12]">
+        <div class="max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-2.5 min-h-[54px] flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <a href="index.html"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#343f50] rounded-[2px] text-xs font-medium transition-colors shrink-0"
+                    title="Повернутися в HUB">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-[#a5adb8]"></i>
+                    <span class="hidden sm:inline">Назад до HUB</span>
+                </a>
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-[2px] bg-[#182638] border border-[#2b67ab] flex items-center justify-center shrink-0">
+                        <i data-lucide="swords" class="w-4 h-4 text-[#4c8ed9]"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="font-bold text-sm sm:text-base text-[#e6e8eb] tracking-tight truncate">ШД Автоматизатор</h1>
+                            <button type="button" onclick="openChangelogModal()" title="Історія оновлень"
+                                class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#181c22] hover:bg-[#20262f] text-[#e6e8eb] border border-[#343f50] rounded-[2px] text-xs font-mono font-semibold cursor-pointer transition-colors tabular-nums">
+                                <i data-lucide="history" class="w-3 h-3 text-[#4c8ed9]"></i>
+                                <span>v1.0.0</span>
+                            </button>
+                            <span class="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#0e1218] border border-[#343f50] rounded-[2px] text-xs font-mono text-[#a5adb8]">
+                                <span class="w-2 h-2 rounded-full bg-[#34a86e]"></span>
+                                <span>OFFLINE</span>
+                            </span>
+                        </div>
+                        <p class="text-xs text-[#a5adb8] truncate hidden md:block">Автоматичне формування текстових донесень про штурмові дії з Excel</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap shrink-0">
+                <button type="button" onclick="loadSampleData()"
+                    class="px-3 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#343f50] rounded-[2px] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-[#a5adb8]"></i>
+                    <span>Зразок</span>
+                </button>
+                <button type="button" onclick="clearAllData()" id="btn-clear" disabled
+                    class="px-3 py-1.5 bg-[#2b1416] hover:bg-[#3d1c20] text-[#f27474] border border-[#7c2a30] rounded-[2px] text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span>Очистити</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-4 space-y-4 flex-1">
+
+        <!-- Завантаження та налаштування -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-7 bg-[#181c22] border border-[#2b3340] p-4 flex flex-col justify-between">
+                <div id="dropzone" class="dropzone p-5 flex flex-col items-center justify-center text-center cursor-pointer min-h-[124px]" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" accept=".xlsx,.xls" class="hidden" onchange="handleFileSelect(event)">
+                    <i data-lucide="file-spreadsheet" class="w-7 h-7 text-[#4c8ed9] mb-2"></i>
+                    <div class="text-sm font-semibold text-[#e6e8eb]">Натисніть або перетягніть Excel-файл ШД (`.xlsx`)</div>
+                    <div id="file-status" class="text-xs text-[#a5adb8] mt-1">Очікується файл із листом «вих район» або стандартними колонками ШГр</div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 bg-[#181c22] border border-[#2b3340] p-4 space-y-3">
+                <div class="flex items-center justify-between border-b border-[#222933] pb-2">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-[#a5adb8] flex items-center gap-1.5">
+                        <i data-lucide="sliders" class="w-3.5 h-3.5 text-[#4c8ed9]"></i>
+                        <span>Параметри генерації</span>
+                    </h2>
+                    <span class="text-[11px] font-mono text-[#788291]">Автозбереження</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="cfg-brigade" class="block text-xs text-[#a5adb8] mb-1">Бригада (дописувати до підрозділу)</label>
+                        <input type="text" id="cfg-brigade" value="125 овмбр" oninput="onSettingsChanged()"
+                            placeholder="напр. 125 овмбр"
+                            class="w-full px-2.5 py-1.5 bg-[#0e1218] border border-[#2b3340] focus:border-[#4c8ed9] outline-none text-xs text-[#e6e8eb] rounded-[2px]">
+                    </div>
+                    <div>
+                        <label for="cfg-word-font" class="block text-xs text-[#a5adb8] mb-1">Шрифт для вставки у Word</label>
+                        <select id="cfg-word-font" onchange="onSettingsChanged()"
+                            class="w-full px-2.5 py-1.5 bg-[#0e1218] border border-[#2b3340] focus:border-[#4c8ed9] outline-none text-xs text-[#e6e8eb] rounded-[2px]">
+                            <option value="13">13 pt · Times New Roman · по ширині</option>
+                            <option value="14">14 pt · Times New Roman · по ширині</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4 pt-1 text-xs text-[#a5adb8]">
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" id="cfg-include-losses" checked onchange="onSettingsChanged()" class="accent-[#4c8ed9]">
+                        <span>Додавати втрати (наші / противника)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" id="cfg-clean-ipn" onchange="onSettingsChanged()" class="accent-[#4c8ed9]">
+                        <span>Сховати помітку (ІПН)</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Стійкий 2-рядний тулбар фільтрів та експорту (Zoom 125-175% safe) -->
+        <section class="bg-[#181c22] border border-[#2b3340] p-3 space-y-2.5">
+            <!-- Ряд 1: Фільтри і пошук -->
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="relative flex-1 min-w-[200px]">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-[#788291] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    <input type="search" id="filter-search" oninput="renderRecords()" placeholder="Пошук за ШГр, ПІБ, підрозділом або текстом..."
+                        class="w-full pl-8 pr-3 py-1.5 bg-[#0e1218] border border-[#2b3340] focus:border-[#4c8ed9] outline-none text-xs text-[#e6e8eb] rounded-[2px]">
+                </div>
+                <select id="filter-date" onchange="renderRecords()"
+                    class="px-2.5 py-1.5 bg-[#0e1218] border border-[#2b3340] focus:border-[#4c8ed9] outline-none text-xs text-[#e6e8eb] rounded-[2px] min-w-[140px]">
+                    <option value="">Усі дати</option>
+                </select>
+                <select id="filter-unit" onchange="renderRecords()"
+                    class="px-2.5 py-1.5 bg-[#0e1218] border border-[#2b3340] focus:border-[#4c8ed9] outline-none text-xs text-[#e6e8eb] rounded-[2px] min-w-[140px]">
+                    <option value="">Усі підрозділи</option>
+                </select>
+            </div>
+
+            <!-- Ряд 2: Підсумки та кнопки експорту -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#222933]">
+                <div class="flex items-center gap-2 text-xs text-[#a5adb8] tabular-nums">
+                    <span>Показано: <strong id="stat-shown" class="text-[#e6e8eb] font-mono">0</strong></span>
+                    <span class="text-[#343f50]">|</span>
+                    <span>Усього в файлі: <strong id="stat-total" class="text-[#e6e8eb] font-mono">0</strong></span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" id="btn-copy-all" onclick="copyAllFormatted(this)" disabled
+                        class="px-3 py-1.5 bg-[#2b67ab] hover:bg-[#245791] text-white border border-[#4c8ed9]/50 rounded-[2px] text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                        <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
+                        <span>Копіювати все (Word)</span>
+                    </button>
+                    <button type="button" id="btn-export-docx" onclick="exportDocx()" disabled
+                        class="px-3 py-1.5 bg-[#11261c] hover:bg-[#193829] text-[#4cc38a] border border-[#265c41] rounded-[2px] text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                        <i data-lucide="file-down" class="w-3.5 h-3.5"></i>
+                        <span>Експорт .docx</span>
+                    </button>
+                    <button type="button" id="btn-export-txt" onclick="exportTxt()" disabled
+                        class="px-3 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#343f50] rounded-[2px] text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                        <i data-lucide="download" class="w-3.5 h-3.5 text-[#4c8ed9]"></i>
+                        <span>.txt</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Список сформованих ШД -->
+        <section id="records-container" class="bg-[#181c22] border border-[#2b3340] divide-y divide-[#222933]">
+            <div class="p-10 text-center text-xs text-[#788291]">
+                Завантажте Excel-файл або натисніть <strong>«Зразок»</strong>, щоб перевірити формування донесення ШД.
+            </div>
+        </section>
+    </main>
+
+    <!-- Модалка Changelog -->
+    <dialog id="changelog-modal" closedby="any" class="app-dialog">
+        <div class="pb-3 border-b border-[#2b3340] flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-[2px] bg-[#182638] border border-[#4c8ed9] flex items-center justify-center">
+                    <i data-lucide="history" class="w-4 h-4 text-[#4c8ed9]"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-sm text-[#e6e8eb]">Історія оновлень</h2>
+                    <p class="text-xs text-[#a5adb8]">ШД Автоматизатор</p>
+                </div>
+            </div>
+            <button type="button" onclick="document.getElementById('changelog-modal').close()" aria-label="Закрити"
+                class="w-8 h-8 rounded-[2px] bg-[#20262f] hover:bg-[#2b3340] border border-[#343f50] text-[#a5adb8] hover:text-[#e6e8eb] flex items-center justify-center cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div class="py-2 overflow-y-auto space-y-4 flex-1 text-xs">
+            <div class="pl-3.5 border-l-2 border-[#4cc38a] space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-[#4cc38a] font-mono text-sm">v1.0.0 (Перший реліз)</span>
+                    <span class="font-mono text-[#a5adb8] bg-[#151920] px-2 py-0.5 border border-[#2b3340]">17.11.2026</span>
+                </div>
+                <ul class="space-y-1 text-[#a5adb8] list-disc list-inside">
+                    <li>Парсинг Excel-файлів ШД (лист <code>вих район</code>, колонки <code>початок</code> .. <code>втрати_противника_</code>).</li>
+                    <li>Автодоповнення бригади з налаштувань (<code>125 овмбр</code>) без дублювання.</li>
+                    <li>Генерація еталонного тексту, копіювання в буфер для Word (<code>Times New Roman</code>, <code>13pt</code>/<code>14pt</code>, по ширині) та експорт у <code>.docx</code> / <code>.txt</code>.</li>
+                </ul>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        const STORAGE_KEY_CFG = 'shd_automator_cfg_v1';
+        let parsedRows = [];
+        let currentFileName = '';
+
+        function initSettings() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY_CFG);
+                if (raw) {
+                    const cfg = JSON.parse(raw);
+                    if (cfg.brigade !== undefined) document.getElementById('cfg-brigade').value = cfg.brigade;
+                    if (cfg.wordFont) document.getElementById('cfg-word-font').value = cfg.wordFont;
+                    if (typeof cfg.includeLosses === 'boolean') document.getElementById('cfg-include-losses').checked = cfg.includeLosses;
+                    if (typeof cfg.cleanIpn === 'boolean') document.getElementById('cfg-clean-ipn').checked = cfg.cleanIpn;
+                }
+            } catch (_) {}
+        }
+
+        function saveSettings() {
+            try {
+                localStorage.setItem(STORAGE_KEY_CFG, JSON.stringify({
+                    brigade: document.getElementById('cfg-brigade').value,
+                    wordFont: document.getElementById('cfg-word-font').value,
+                    includeLosses: document.getElementById('cfg-include-losses').checked,
+                    cleanIpn: document.getElementById('cfg-clean-ipn').checked
+                }));
+            } catch (_) {}
+        }
+
+        function onSettingsChanged() {
+            saveSettings();
+            if (parsedRows.length) {
+                parsedRows.forEach(r => { r.generatedText = buildShdSentence(r.raw); });
+                renderRecords();
+            }
+        }
+
+        function openChangelogModal() {
+            const dlg = document.getElementById('changelog-modal');
+            if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function cleanCellStr(val) {
+            if (val === null || val === undefined) return '';
+            return String(val).replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+
+        function formatExcelDate(val) {
+            if (val === null || val === undefined || val === '') return '';
+            if (val instanceof Date && !isNaN(val.getTime())) {
+                const d = String(val.getDate()).padStart(2, '0');
+                const m = String(val.getMonth() + 1).padStart(2, '0');
+                const y = val.getFullYear();
+                return `${d}.${m}.${y}`;
+            }
+            if (typeof val === 'number' && window.XLSX && XLSX.SSF) {
+                const parsed = XLSX.SSF.parse_date_code(val);
+                if (parsed && parsed.y) {
+                    const d = String(parsed.d).padStart(2, '0');
+                    const m = String(parsed.m).padStart(2, '0');
+                    return `${d}.${m}.${parsed.y}`;
+                }
+            }
+            const s = cleanCellStr(val);
+            const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (iso) return `${iso[3]}.${iso[2]}.${iso[1]}`;
+            return s;
+        }
+
+        function formatTimeStr(val) {
+            if (val === null || val === undefined || val === '') return '';
+            if (typeof val === 'number' && val > 0 && val < 1) {
+                const totalMins = Math.round(val * 24 * 60);
+                const hh = String(Math.floor(totalMins / 60) % 24).padStart(2, '0');
+                const mm = String(totalMins % 60).padStart(2, '0');
+                return `${hh}.${mm}`;
+            }
+            return cleanCellStr(val).replace(':', '.');
+        }
+
+        function ensurePeriod(sentence) {
+            const s = cleanCellStr(sentence);
+            if (!s) return '';
+            return /[.!?]$/.test(s) ? s : `${s}.`;
+        }
+
+        function stripTrailingPunct(str) {
+            return cleanCellStr(str).replace(/[.,;:\s]+$/, '').trim();
+        }
+
+        function formatUnitWithBrigade(unitStr) {
+            const unit = cleanCellStr(unitStr);
+            if (!unit) return '';
+            const brigade = cleanCellStr(document.getElementById('cfg-brigade').value);
+            if (!brigade) return unit;
+            if (/(?:овмбр|омбр|одшбр|обр|омпбр|оаебр|бр\b)/i.test(unit)) {
+                return unit;
+            }
+            return `${unit} ${brigade}`;
+        }
+
+        function buildShdSentence(row) {
+            const includeLosses = document.getElementById('cfg-include-losses').checked;
+            const cleanIpn = document.getElementById('cfg-clean-ipn').checked;
+
+            const dateStr = row.date;
+            const tStart = row.timeStart;
+            const tEnd = row.timeEnd;
+            const unitFull = formatUnitWithBrigade(row.unit);
+            const groupName = cleanCellStr(row.groupName);
+            const qty = cleanCellStr(row.qty);
+
+            let squad = cleanCellStr(row.squad).replace(/[;,\s]+$/, '').trim();
+            if (cleanIpn) {
+                squad = squad.replace(/\s*\(ІПН\)/gi, '').replace(/\s+/g, ' ').trim();
+            }
+
+            const pbdAction = stripTrailingPunct(row.pbdActions);
+            const fallbackAction = stripTrailingPunct(row.actionType);
+            let actionPhrase = pbdAction || fallbackAction || 'проводили штурмові дії на позиції противника';
+            if (pbdAction && !/^(?:проводил|здійснювал|вел|виконувал)/i.test(pbdAction)) {
+                actionPhrase = `проводили ${pbdAction}`;
+            }
+            const srcArea = stripTrailingPunct(row.srcArea);
+            const assaultDir = stripTrailingPunct(row.assaultDir);
+
+            let headParts = [];
+            if (dateStr) headParts.push(dateStr);
+            if (tStart && tEnd) headParts.push(`з ${tStart} до ${tEnd}`);
+            else if (tStart) headParts.push(`о ${tStart}`);
+
+            if (unitFull) headParts.push(`силами ${unitFull}`);
+            if (groupName) headParts.push(groupName);
+            if (qty) headParts.push(`(${qty} в/сл.)`);
+            if (squad) headParts.push(`в складі: ${squad},`);
+            headParts.push(actionPhrase);
+
+            if (srcArea && assaultDir && srcArea !== assaultDir) {
+                headParts.push(`із вихідного району ${srcArea} в напрямку ${assaultDir}`);
+            } else if (srcArea) {
+                headParts.push(`із вихідного району ${srcArea}`);
+            } else if (assaultDir) {
+                headParts.push(`із вихідного району ${assaultDir}`);
+            }
+
+            const sentences = [];
+            sentences.push(ensurePeriod(headParts.join(' ')));
+
+            if (row.targetObj) sentences.push(ensurePeriod(row.targetObj));
+            if (row.clash) sentences.push(ensurePeriod(row.clash));
+
+            const закрепились = stripTrailingPunct(row.outcome);
+            const нові = stripTrailingPunct(row.newPositions);
+            if (закрепились && нові) {
+                sentences.push(ensurePeriod(`${закрепились}, ${нові}`));
+            } else if (закрепились) {
+                sentences.push(ensurePeriod(закрепились));
+            } else if (нові) {
+                sentences.push(ensurePeriod(нові));
+            }
+
+            if (includeLosses) {
+                if (row.lossesOur) sentences.push(ensurePeriod(row.lossesOur));
+                if (row.lossesEnemy) sentences.push(ensurePeriod(row.lossesEnemy));
+            }
+
+            return sentences.join(' ').replace(/\.\.+/g, '.').trim();
+        }
+
+        function normalizeHeaderKey(h) {
+            return cleanCellStr(h).toLowerCase().replace(/[\s_]+/g, '');
+        }
+
+        function findHeaderRowAndMap(matrix) {
+            for (let r = 0; r < Math.min(matrix.length, 15); r++) {
+                const row = matrix[r] || [];
+                const colMap = {};
+                row.forEach((cell, idx) => {
+                    const key = normalizeHeaderKey(cell);
+                    if (!key) return;
+                    if (key === 'початок') colMap.date = idx;
+                    else if (key === 'початокчас') colMap.timeStart = idx;
+                    else if (key === 'закінченнячас') colMap.timeEnd = idx;
+                    else if (key === 'назвашгр') colMap.groupName = idx;
+                    else if (key === 'підрозділ') colMap.unit = idx;
+                    else if (key === 'к-тьвшгр' || key === 'ктвшгр') colMap.qty = idx;
+                    else if (key === 'складшгр') colMap.squad = idx;
+                    else if (key === 'виддій') colMap.actionType = idx;
+                    else if (key === 'діїВПБД'.toLowerCase() || key === 'діївпбд') colMap.pbdActions = idx;
+                    else if (key === 'вихіднийр') colMap.srcArea = idx;
+                    else if (key === 'напрямокштурму') colMap.assaultDir = idx;
+                    else if (key.startsWith('обєктш') || key.startsWith('об\'єктш')) colMap.targetObj = idx;
+                    else if (key === 'боєзіткнення') colMap.clash = idx;
+                    else if (key.startsWith('закріпились')) colMap.outcome = idx;
+                    else if (key.startsWith('новіпозиц')) colMap.newPositions = idx;
+                    else if (key === 'втратиос') colMap.lossesOur = idx;
+                    else if (key.startsWith('втратипротивника')) colMap.lossesEnemy = idx;
+                });
+                if (colMap.groupName !== undefined || (colMap.date !== undefined && colMap.unit !== undefined)) {
+                    return { headerRowIdx: r, colMap };
+                }
+            }
+            return null;
+        }
+
+        function parseWorkbook(wb) {
+            let bestMatch = null;
+            let bestSheetName = '';
+
+            // Пріоритет листу "вих район"
+            const sheetOrder = [...wb.SheetNames].sort((a, b) => {
+                if (a.toLowerCase().includes('вих')) return -1;
+                if (b.toLowerCase().includes('вих')) return 1;
+                return 0;
+            });
+
+            for (const sName of sheetOrder) {
+                const ws = wb.Sheets[sName];
+                const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+                const found = findHeaderRowAndMap(matrix);
+                if (found) {
+                    bestMatch = { matrix, ...found };
+                    bestSheetName = sName;
+                    break;
+                }
+            }
+
+            if (!bestMatch) {
+                alert('Не знайдено таблицю ШД (очікуються колонки: початок, назва_ШГр, підрозділ, склад_ШГр тощо).');
+                return;
+            }
+
+            const { matrix, headerRowIdx, colMap } = bestMatch;
+            const items = [];
+            for (let r = headerRowIdx + 1; r < matrix.length; r++) {
+                const cells = matrix[r] || [];
+                const get = (k) => (colMap[k] !== undefined ? cells[colMap[k]] : '');
+
+                const date = formatExcelDate(get('date'));
+                const timeStart = formatTimeStr(get('timeStart'));
+                const timeEnd = formatTimeStr(get('timeEnd'));
+                const groupName = cleanCellStr(get('groupName'));
+                const unit = cleanCellStr(get('unit'));
+                const qty = cleanCellStr(get('qty'));
+                const squad = cleanCellStr(get('squad'));
+
+                if (!date && !groupName && !unit && !squad) continue;
+
+                const raw = {
+                    excelRow: r + 1,
+                    date,
+                    timeStart,
+                    timeEnd,
+                    groupName,
+                    unit,
+                    qty,
+                    squad,
+                    actionType: cleanCellStr(get('actionType')),
+                    pbdActions: cleanCellStr(get('pbdActions')),
+                    srcArea: cleanCellStr(get('srcArea')),
+                    assaultDir: cleanCellStr(get('assaultDir')),
+                    targetObj: cleanCellStr(get('targetObj')),
+                    clash: cleanCellStr(get('clash')),
+                    outcome: cleanCellStr(get('outcome')),
+                    newPositions: cleanCellStr(get('newPositions')),
+                    lossesOur: cleanCellStr(get('lossesOur')),
+                    lossesEnemy: cleanCellStr(get('lossesEnemy'))
+                };
+
+                items.push({
+                    id: items.length + 1,
+                    raw,
+                    generatedText: buildShdSentence(raw)
+                });
+            }
+
+            parsedRows = items;
+            populateFilterSelects();
+            renderRecords();
+
+            const statusEl = document.getElementById('file-status');
+            statusEl.innerHTML = `<span class="text-[#4cc38a] font-semibold">${escapeHtml(currentFileName)}</span> · лист «${escapeHtml(bestSheetName)}» · записів: <strong class="font-mono">${items.length}</strong>`;
+        }
+
+        function populateFilterSelects() {
+            const dateSel = document.getElementById('filter-date');
+            const unitSel = document.getElementById('filter-unit');
+            const prevDate = dateSel.value;
+            const prevUnit = unitSel.value;
+
+            const dates = [...new Set(parsedRows.map(r => r.raw.date).filter(Boolean))];
+            const units = [...new Set(parsedRows.map(r => r.raw.unit).filter(Boolean))];
+
+            dateSel.innerHTML = '<option value="">Усі дати</option>' + dates.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+            unitSel.innerHTML = '<option value="">Усі підрозділи</option>' + units.map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+
+            if (dates.includes(prevDate)) dateSel.value = prevDate;
+            if (units.includes(prevUnit)) unitSel.value = prevUnit;
+        }
+
+        function getFilteredRows() {
+            const q = document.getElementById('filter-search').value.trim().toLowerCase();
+            const fDate = document.getElementById('filter-date').value;
+            const fUnit = document.getElementById('filter-unit').value;
+
+            return parsedRows.filter(item => {
+                if (fDate && item.raw.date !== fDate) return false;
+                if (fUnit && item.raw.unit !== fUnit) return false;
+                if (q) {
+                    const hay = (item.generatedText + ' ' + item.raw.pbdActions + ' ' + item.raw.unit).toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
+                return true;
+            });
+        }
+
+        function renderRecords() {
+            const container = document.getElementById('records-container');
+            const filtered = getFilteredRows();
+
+            document.getElementById('stat-total').textContent = parsedRows.length;
+            document.getElementById('stat-shown').textContent = filtered.length;
+
+            const hasAny = parsedRows.length > 0;
+            const hasFiltered = filtered.length > 0;
+            document.getElementById('btn-clear').disabled = !hasAny;
+            document.getElementById('btn-copy-all').disabled = !hasFiltered;
+            document.getElementById('btn-export-docx').disabled = !hasFiltered;
+            document.getElementById('btn-export-txt').disabled = !hasFiltered;
+
+            if (!hasAny) {
+                container.innerHTML = `<div class="p-10 text-center text-xs text-[#788291]">Завантажте Excel-файл або натисніть <strong>«Зразок»</strong>, щоб перевірити формування донесення ШД.</div>`;
+                return;
+            }
+            if (!hasFiltered) {
+                container.innerHTML = `<div class="p-8 text-center text-xs text-[#788291]">За вибраними фільтрами записів не знайдено.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => `
+                <article class="p-3.5 space-y-2 hover:bg-[#1b2028] transition-colors">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <span class="font-mono font-bold text-[#4c8ed9] bg-[#142030] border border-[#2b4c73] px-1.5 py-0.5 tabular-nums">#${item.id}</span>
+                            ${item.raw.date ? `<span class="font-mono text-[#e6e8eb] bg-[#141922] border border-[#2b3340] px-2 py-0.5 tabular-nums">${escapeHtml(item.raw.date)}</span>` : ''}
+                            ${item.raw.timeStart ? `<span class="font-mono text-[#a5adb8] tabular-nums">${escapeHtml(item.raw.timeStart)}${item.raw.timeEnd ? '–' + escapeHtml(item.raw.timeEnd) : ''}</span>` : ''}
+                            ${item.raw.unit ? `<span class="font-semibold text-[#e6e8eb]">${escapeHtml(formatUnitWithBrigade(item.raw.unit))}</span>` : ''}
+                            ${item.raw.groupName ? `<span class="text-[#f0b44c] font-mono">${escapeHtml(item.raw.groupName)}</span>` : ''}
+                            ${item.raw.qty ? `<span class="text-[#a5adb8] font-mono tabular-nums">(${escapeHtml(item.raw.qty)} в/сл.)</span>` : ''}
+                        </div>
+                        <button type="button" onclick="copySingleRecord(${item.id}, this)"
+                            class="px-2.5 py-1 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#343f50] rounded-[2px] text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer transition-colors">
+                            <i data-lucide="copy" class="w-3 h-3 text-[#4c8ed9]"></i>
+                            <span>Копіювати</span>
+                        </button>
+                    </div>
+                    <textarea class="shd-textarea" rows="3" oninput="updateRecordText(${item.id}, this.value)">${escapeHtml(item.generatedText)}</textarea>
+                    ${item.raw.pbdActions ? `<div class="text-[11px] text-[#788291] leading-snug"><span class="text-[#a5adb8] font-semibold">У ПБД:</span> ${escapeHtml(item.raw.pbdActions)}</div>` : ''}
+                </article>
+            `).join('');
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function updateRecordText(id, val) {
+            const item = parsedRows.find(r => r.id === id);
+            if (item) item.generatedText = val;
+        }
+
+        async function writeClipboardWordAndText(lines, btn) {
+            const plainText = lines.map(l => '\t' + l).join('\n');
+            const pt = document.getElementById('cfg-word-font').value || '13';
+            const htmlText = lines.map(l =>
+                `<p style="margin:0;text-indent:1.25cm;text-align:justify;font-family:'Times New Roman',serif;font-size:${pt}pt;">${escapeHtml(l)}</p>`
+            ).join('');
+
+            try {
+                if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+                    const item = new ClipboardItem({
+                        'text/plain': new Blob([plainText], { type: 'text/plain' }),
+                        'text/html': new Blob([htmlText], { type: 'text/html' })
+                    });
+                    await navigator.clipboard.write([item]);
+                } else {
+                    const listener = (e) => {
+                        e.clipboardData.setData('text/plain', plainText);
+                        e.clipboardData.setData('text/html', htmlText);
+                        e.preventDefault();
+                    };
+                    document.addEventListener('copy', listener);
+                    const ok = document.execCommand('copy');
+                    document.removeEventListener('copy', listener);
+                    if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(plainText);
+                    }
+                }
+
+                if (btn) {
+                    const orig = btn.innerHTML;
+                    btn.textContent = 'Скопійовано!';
+                    btn.classList.add('btn-copied');
+                    setTimeout(() => {
+                        btn.innerHTML = orig;
+                        btn.classList.remove('btn-copied');
+                        if (window.lucide) lucide.createIcons();
+                    }, 1800);
+                }
+            } catch (err) {
+                alert('Не вдалося скопіювати: ' + err);
+            }
+        }
+
+        function copySingleRecord(id, btn) {
+            const item = parsedRows.find(r => r.id === id);
+            if (!item || !item.generatedText.trim()) return;
+            writeClipboardWordAndText([item.generatedText.trim()], btn);
+        }
+
+        function copyAllFormatted(btn) {
+            const lines = getFilteredRows().map(r => r.generatedText.trim()).filter(Boolean);
+            if (!lines.length) return;
+            writeClipboardWordAndText(lines, btn);
+        }
+
+        async function exportDocx() {
+            const lines = getFilteredRows().map(r => r.generatedText.trim()).filter(Boolean);
+            if (!lines.length) return;
+            if (!window.docx) {
+                alert('Бібліотека docx.js (v8/docx.js) не завантажена.');
+                return;
+            }
+            try {
+                const pt = parseInt(document.getElementById('cfg-word-font').value || '13', 10);
+                const { Document, Packer, Paragraph, TextRun, AlignmentType } = window.docx;
+
+                const children = lines.map(text => new Paragraph({
+                    alignment: AlignmentType.JUSTIFIED,
+                    spacing: { before: 0, after: 0 },
+                    indent: { firstLine: 709 },
+                    children: [
+                        new TextRun({
+                            text,
+                            font: 'Times New Roman',
+                            size: pt * 2
+                        })
+                    ]
+                }));
+
+                const doc = new Document({ sections: [{ children }] });
+                const blob = await Packer.toBlob(doc);
+                const dateTag = new Date().toISOString().slice(0, 10);
+                await triggerBlobDownload(blob, `ШД_Донесення_${dateTag}.docx`);
+            } catch (err) {
+                console.error(err);
+                alert('Помилка експорту .docx: ' + (err && err.message ? err.message : err));
+            }
+        }
+
+        async function exportTxt() {
+            const lines = getFilteredRows().map(r => r.generatedText.trim()).filter(Boolean);
+            if (!lines.length) return;
+            const blob = new Blob([lines.map(l => '\t' + l).join('\n')], { type: 'text/plain;charset=utf-8' });
+            const dateTag = new Date().toISOString().slice(0, 10);
+            await triggerBlobDownload(blob, `ШД_Донесення_${dateTag}.txt`);
+        }
+
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const res = String(reader.result || '');
+                    const idx = res.indexOf(',');
+                    resolve(idx >= 0 ? res.slice(idx + 1) : res);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        async function triggerBlobDownload(blob, filename) {
+            try {
+                const api = (window.top && window.top.pywebview && window.top.pywebview.api)
+                    || (window.pywebview && window.pywebview.api);
+                if (api && typeof api.save_file === 'function') {
+                    const b64 = await blobToBase64(blob);
+                    await api.save_file(filename, b64);
+                    return;
+                }
+            } catch (_) {
+                // Fallback до браузерного завантаження
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function handleFile(file) {
+            if (!file) return;
+            currentFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array', cellDates: true });
+                    parseWorkbook(wb);
+                } catch (err) {
+                    alert('Помилка читання Excel: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files && e.target.files[0];
+            if (file) handleFile(file);
+            e.target.value = '';
+        }
+
+        function loadSampleData() {
+            currentFileName = 'Зразок (тест)';
+            const raw = {
+                excelRow: 3,
+                date: '21.08.2026',
+                timeStart: '05.20',
+                timeEnd: '05.45',
+                groupName: 'ШГр "11"',
+                unit: '888 мб',
+                qty: '2',
+                squad: 'старший сержант Гагарін Іван Миколайович (ІПН), стрілець;',
+                actionType: 'проводили штурмові дії на позиції противника',
+                pbdActions: 'штурмові (наступальні) дії на позиції противника, безпосередньо на лінії бойового зіткнення та у глибині оборони противника',
+                srcArea: '37......',
+                assaultDir: '',
+                targetObj: "Об'єкт штурму: жива сила противника в окопах (37.....)",
+                clash: 'Відбувся стрілецький бій, противник (2 в/сл.) відступив.',
+                outcome: 'ШГр "11" закріпилась',
+                newPositions: 'виставили БП "11" (37....)',
+                lossesOur: 'Втрати: всього 0 в/сл., з них безповоротний 0 в/сл., санітарний 0 в/сл.',
+                lossesEnemy: 'Втрати противника: безповоротні 0 в/сл., санітарні 0 в/сл.'
+            };
+            parsedRows = [{ id: 1, raw, generatedText: buildShdSentence(raw) }];
+            populateFilterSelects();
+            renderRecords();
+            document.getElementById('file-status').innerHTML = `<span class="text-[#4cc38a] font-semibold">Завантажено тестовий зразок</span> · записів: <strong class="font-mono">1</strong>`;
+        }
+
+        function clearAllData() {
+            parsedRows = [];
+            currentFileName = '';
+            document.getElementById('filter-search').value = '';
+            populateFilterSelects();
+            renderRecords();
+            document.getElementById('file-status').textContent = 'Очікується файл із листом «вих район» або стандартними колонками ШГр';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSettings();
+            if (window.lucide) lucide.createIcons();
+
+            const dz = document.getElementById('dropzone');
+            dz.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dz.classList.add('is-dragover');
+            });
+            dz.addEventListener('dragleave', () => dz.classList.remove('is-dragover'));
+            dz.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dz.classList.remove('is-dragover');
+                const file = e.dataTransfer.files && e.dataTransfer.files[0];
+                if (file) handleFile(file);
+            });
+        });
+    </script>
+</body>
+</html>

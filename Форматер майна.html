@@ -720,7 +720,7 @@
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
-                            <span>v1.6.0</span>
+                            <span>v1.6.1</span>
                         </button>
                     </div>
                     <p class="brand-subtitle">Вставте будь-який сирий текст списків майна — отримайте стандартизований перелік із точними одиницями виміру.</p>
@@ -958,7 +958,18 @@
         <div class="dialog-body">
             <div class="cl-entry cl-entry--current">
                 <div class="cl-head">
-                    <span class="cl-ver cl-ver--current">v1.6.0 (Поточна)</span>
+                    <span class="cl-ver cl-ver--current">v1.6.1 (Поточна)</span>
+                    <span class="cl-date">18.11.2026</span>
+                </div>
+                <ul class="cl-list">
+                    <li><strong>Зведення служб та Word-форматування:</strong> <code>Інвентарне</code> та <code>Речова служба</code> автоматично об'єднуються в єдиний алфавітний блок <code>По речовій службі:</code> (так само <code>Майно медичного пункту</code> → <code>По медичній службі:</code>), прибрано зайві порожні рядки між секціями, а копіювання передає <code>text/html</code> для Word (<code>Times New Roman</code> <code>13pt</code>, курсив заголовків, по ширині, маркери <code>•</code> без інтервалів).</li>
+                    <li><strong>Чистка ПІБ у дужках:</strong> <code>cleanItemName()</code> додатково відсікає хвости формату <code>(Прізвище І.Б.)</code>.</li>
+                </ul>
+            </div>
+
+            <div class="cl-entry">
+                <div class="cl-head">
+                    <span class="cl-ver">v1.6.0</span>
                     <span class="cl-date">13.11.2026</span>
                 </div>
                 <ul class="cl-list">
@@ -1121,9 +1132,24 @@
         function isSectionHeader(text) {
             if (!text) return false;
             if (text.endsWith(':')) return true;
-            if (/^(?:по\s+служб[іе]|служб[ае]|майно|по\s+груп[іе]|груп[ае]|відділення|взвод|рота|батальйон|підрозділ|склад|розділ|блок|частина)\b/i.test(text)) return true;
+            if (/^(?:по\s+(?:[а-яіїєґ']+\s+)?служб[іе]|служб[ае]|майно|інвентарне|по\s+груп[іе]|груп[ае]|відділення|взвод|рота|батальйон|підрозділ|склад|розділ|блок|частина)\b/i.test(text)) return true;
             if (/^(?:ЗББР|ОВТ|МСВ|ПММ|РАО|ЗВ'ЯЗОК|БПЛА|РЕР|РЕБ|МЕДПУНКТ)\b/i.test(text) && text.length < 35) return true;
             return false;
+        }
+
+        function normalizeSectionHeader(headerText) {
+            const clean = (headerText || '').replace(/[:.;,\s]+$/, '').trim();
+            const low = clean.toLowerCase();
+            if (/^(?:речов[ае]\s+служба|речов[еі]\s+майно|по\s+речовій\s+службі|інвентарн[еі](?:\s+майно)?)$/.test(low)) {
+                return 'По речовій службі:';
+            }
+            if (/^(?:медичн[ае]\s+служба|майно\s+медичного\s+пункту|медслужба|по\s+медичній\s+службі)$/.test(low)) {
+                return 'По медичній службі:';
+            }
+            if (/^(?:служба\s+рхбз|по\s+службі\s+рхбз)$/.test(low)) {
+                return 'По службі РХБЗ:';
+            }
+            return clean + ':';
         }
 
         // Базова категорія одиниці виміру для коректного об'єднання дублікатів
@@ -1288,6 +1314,7 @@
             if (!str) return '';
             let name = str.trim().replace(/\s+/g, ' ');
             name = name.replace(/\s*\((?:солдат|сержант|офіцер|втрачено|знищено|під час|в результаті|на позиції|без повернення|списано)[^)]*\)\s*$/i, '').trim();
+            name = name.replace(/\s*\([А-ЯІЇЄҐ][а-яіїєґ'’ʼ]+\s+[А-ЯІЇЄҐ]\.\s*[А-ЯІЇЄҐ]\.\)\s*$/u, '').trim();
             name = name.replace(/(?:втрачено|знищено|під час|в результаті|на позиції).*$/i, '').trim();
             name = name.replace(/^[-–—\s:.,;▪▫►▶▷▸▹▼▽◀◁◄◅◆◇◈◉◊○◌◍◎●◦·✔✓✕✖✗✘\u25A0-\u25FF\u2600-\u26FF\u2700-\u27BF\uE000-\uF8FF\[\]\(\)]+/, '').trim();
             name = name.replace(/[-–—\s:.,;]+$/, '').trim();
@@ -1528,7 +1555,7 @@
             lines.forEach(line => {
                 const parsed = parseLine(line);
                 if (!parsed) {
-                    if (currentSection.items.length > 0 || currentSection.header) {
+                    if (currentSection.items.length > 0) {
                         sections.push(currentSection);
                         currentSection = { header: null, items: [] };
                     }
@@ -1539,7 +1566,8 @@
                     if (currentSection.items.length > 0 || currentSection.header) {
                         sections.push(currentSection);
                     }
-                    currentSection = { header: parsed.text, items: [] };
+                    const hdr = shouldNormalize ? normalizeSectionHeader(parsed.text) : parsed.text;
+                    currentSection = { header: hdr, items: [] };
                 } else if (parsed.type === 'item') {
                     if (shouldNormalize) {
                         parsed.name = normalizeNomenclature(parsed.name);
@@ -1553,15 +1581,29 @@
                 sections.push(currentSection);
             }
 
+            // Об'єднуємо секції з однаковими заголовками (напр. Речова служба + Інвентарне -> По речовій службі:)
+            const finalSections = [];
+            if (shouldMerge) {
+                const secByHeader = new Map();
+                sections.forEach(sec => {
+                    const hKey = sec.header ? sec.header.toLowerCase() : '__no_header__';
+                    if (sec.header && secByHeader.has(hKey)) {
+                        secByHeader.get(hKey).items.push(...sec.items);
+                    } else {
+                        const clone = { header: sec.header, items: [...sec.items] };
+                        if (sec.header) secByHeader.set(hKey, clone);
+                        finalSections.push(clone);
+                    }
+                });
+            } else {
+                finalSections.push(...sections);
+            }
+
             const resultLines = [];
             let processedItemsCount = 0;
             let globalItemIndex = 1;
 
-            sections.forEach((sec, sIdx) => {
-                if (sIdx > 0 && resultLines.length > 0 && resultLines[resultLines.length - 1] !== '') {
-                    resultLines.push('');
-                }
-
+            finalSections.forEach((sec) => {
                 if (sec.header) {
                     resultLines.push(sec.header);
                 }
@@ -1592,6 +1634,7 @@
                 if (shouldSort) {
                     items.sort((a, b) => a.name.localeCompare(b.name, 'uk'));
                 }
+                sec.items = items;
 
                 items.forEach(it => {
                     let pfx = '';
@@ -1611,6 +1654,7 @@
 
             outputArea.value = resultLines.join('\n');
             const hasData = resultLines.length > 0;
+            lastFormattedSections = hasData ? { sections: finalSections, prefixStyle, delimiter } : null;
             btnCopy.disabled = !hasData;
             btnDownload.disabled = !hasData;
 
@@ -1652,9 +1696,56 @@
             openModal('modal-confirm-clear');
         });
 
-        // Безпечне копіювання в буфер обміну
-        btnCopy.addEventListener('click', () => {
-            if (!outputArea.value) return;
+        let lastFormattedSections = null;
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function buildWordHtml(formatted) {
+            if (!formatted || !formatted.sections.length) return '';
+            const { sections, prefixStyle, delimiter } = formatted;
+            const baseStyle = "font-family:'Times New Roman',serif;font-size:13pt;";
+            const chunks = [];
+            let globalIdx = 1;
+
+            sections.forEach((sec) => {
+                if (sec.header) {
+                    chunks.push(`<p style="margin:0;text-align:justify;${baseStyle}"><i>${escapeHtml(sec.header)}</i></p>`);
+                }
+                if (!sec.items.length) return;
+
+                if (prefixStyle === 'bullet') {
+                    sec.items.forEach(it => {
+                        const body = (it.quantity !== null && it.unit)
+                            ? `${it.name} – ${it.quantity} ${it.unit}${delimiter}`
+                            : `${it.name}${delimiter}`;
+                        chunks.push(`<p style="margin:0 0 0 36pt;text-indent:-18pt;text-align:justify;${baseStyle}"><span style="font-size:13pt;">&#8226;</span>&nbsp;&nbsp;&nbsp;${escapeHtml(body)}</p>`);
+                    });
+                } else {
+                    sec.items.forEach(it => {
+                        let pfx = '';
+                        if (prefixStyle === 'dash') pfx = '– ';
+                        else if (prefixStyle === 'numbered') pfx = `${globalIdx}. `;
+                        const body = (it.quantity !== null && it.unit)
+                            ? `${pfx}${it.name} – ${it.quantity} ${it.unit}${delimiter}`
+                            : `${pfx}${it.name}${delimiter}`;
+                        chunks.push(`<p style="margin:0;text-align:justify;${baseStyle}">${escapeHtml(body)}</p>`);
+                        globalIdx++;
+                    });
+                }
+            });
+            return `<div>${chunks.join('')}</div>`;
+        }
+
+        // Безпечне копіювання в буфер обміну (HTML для Word + PlainText)
+        btnCopy.addEventListener('click', async () => {
+            const plainText = outputArea.value;
+            if (!plainText) return;
 
             function onCopySuccess() {
                 copyText.textContent = "Скопійовано!";
@@ -1667,8 +1758,38 @@
                 }, 2000);
             }
 
+            const htmlText = buildWordHtml(lastFormattedSections);
+            if (htmlText && navigator?.clipboard && window.ClipboardItem && window.isSecureContext) {
+                try {
+                    const item = new ClipboardItem({
+                        'text/plain': new Blob([plainText], { type: 'text/plain' }),
+                        'text/html': new Blob([htmlText], { type: 'text/html' })
+                    });
+                    await navigator.clipboard.write([item]);
+                    onCopySuccess();
+                    return;
+                } catch (_) {
+                    // Fallback нижче
+                }
+            }
+
+            if (htmlText) {
+                const copyListener = (e) => {
+                    e.clipboardData.setData('text/plain', plainText);
+                    e.clipboardData.setData('text/html', htmlText);
+                    e.preventDefault();
+                };
+                document.addEventListener('copy', copyListener);
+                const ok = document.execCommand('copy');
+                document.removeEventListener('copy', copyListener);
+                if (ok) {
+                    onCopySuccess();
+                    return;
+                }
+            }
+
             if (navigator?.clipboard?.writeText) {
-                navigator.clipboard.writeText(outputArea.value)
+                navigator.clipboard.writeText(plainText)
                     .then(onCopySuccess)
                     .catch(() => {
                         outputArea.select();

@@ -31,9 +31,11 @@ check_pc.ps1
 
 
 # Military Suite (monolithic suite & encrypted backups)
+MilitarySuite/
 MilitarySuite.html
 *.mils.enc
 military_suite_backup_*.mils.enc
+Таблиця втрат_ПРОГРАМА/
 
 # Personal notes (local only)
 WARDROBE.md
