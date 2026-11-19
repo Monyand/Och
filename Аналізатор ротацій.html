@@ -232,7 +232,7 @@
                             </span>
                             <button type="button" onclick="openChangelogModal()" class="inline-flex items-center gap-1 text-[11px] bg-[#20262f] hover:bg-[#2b3340] text-[#4c8ed9] border border-[#394455] font-mono font-bold px-2 py-0.5 rounded-[2px] transition-colors cursor-pointer" title="Історія оновлень та версій">
                                 <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                                <span>v1.7.0</span>
+                                <span>v1.7.1</span>
                             </button>
                         </div>
                         <!-- Інформаційні чіпи бази (показуються коли завантажені списки) -->
@@ -876,10 +876,22 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto custom-scrollbar space-y-5 flex-1 text-xs">
-                <!-- v1.7.0 -->
+                <!-- v1.7.1 -->
                 <div class="relative pl-4 border-l-2 border-[#4c8ed9] space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-[#4c8ed9] font-mono text-sm">v1.7.0 (Поточна версія)</span>
+                        <span class="font-bold text-[#4c8ed9] font-mono text-sm">v1.7.1 (Поточна версія)</span>
+                        <span class="text-[11px] font-mono text-[#8892a0]">19.11.2026</span>
+                    </div>
+                    <ul class="space-y-1 text-[#a5adb8] list-disc list-inside">
+                        <li><strong class="text-[#e6e8eb]">Перейменування модуля:</strong> Файл перейменовано з <code>Ротації (дод6).html</code> на <code>Аналізатор ротацій.html</code> із повною синхронізацією в HUB.</li>
+                        <li><strong class="text-[#e6e8eb]">Чиста статистика без дублів та українські відмінки:</strong> Додано коректне відмінювання числівників (<code>23 доби</code>, <code>боєць/бійці/бійців</code>, <code>файл/файли/файлів</code>), скорочено бейдж локальної пам'яті до <code>У пам'яті</code> та прибрано повтор періоду й дат у нижньому рядку під пошуком.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.7.0 -->
+                <div class="relative pl-4 border-l-2 border-[#2b3340] space-y-1.5 opacity-85">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-[#a5adb8] font-mono text-sm">v1.7.0</span>
                         <span class="text-[11px] font-mono text-[#8892a0]">12.11.2026</span>
                     </div>
                     <ul class="space-y-1 text-[#a5adb8] list-disc list-inside">
@@ -1442,7 +1454,17 @@
                 timestamp: Date.now()
             };
             await saveStateToDB(state);
-            showStorageStatus(`Пам'ять: ${uploadedFiles.length} ф. (${successDatesCount.size} дат)`);
+            showStorageStatus('У пам\'яті');
+        }
+
+        function pluralUk(n, one, few, many) {
+            const abs = Math.abs(Number(n) || 0);
+            const mod100 = abs % 100;
+            const mod10 = abs % 10;
+            if (mod100 >= 11 && mod100 <= 14) return many;
+            if (mod10 === 1) return one;
+            if (mod10 >= 2 && mod10 <= 4) return few;
+            return many;
         }
 
         // Глобальний стан
@@ -1926,13 +1948,17 @@
             const periodText = (globalMinDateStr && globalMaxDateStr)
                 ? `${formatDateDisplay(globalMinDateStr)} — ${formatDateDisplay(globalMaxDateStr)}`
                 : 'не визначено';
-            const fileCount = uploadedFiles.length || successDatesCount.size;
+            const datesCount = successDatesCount.size;
+            const fileCount = uploadedFiles.length || datesCount;
             const soldiersCount = database.size;
 
             const elTitle = document.getElementById('compactBarTitle');
-            if (elTitle) elTitle.innerText = `${soldiersCount} бійців`;
+            if (elTitle) elTitle.innerText = `${soldiersCount} ${pluralUk(soldiersCount, 'боєць', 'бійці', 'бійців')}`;
             const elDates = document.getElementById('compactBarDates');
-            if (elDates) elDates.innerText = `${successDatesCount.size} діб (${fileCount} ф.)`;
+            if (elDates) {
+                const daysStr = `${datesCount} ${pluralUk(datesCount, 'доба', 'доби', 'діб')}`;
+                elDates.innerText = fileCount !== datesCount ? `${daysStr} (${fileCount} ф.)` : daysStr;
+            }
             const elPeriod = document.getElementById('compactBarPeriod');
             if (elPeriod) elPeriod.innerText = periodText;
             const cmpFiles = document.getElementById('compactFilesCount');
@@ -5763,20 +5789,19 @@
             };
 
             function updateStatsSummaryText() {
-                const periodText = (globalMinDateStr && globalMaxDateStr)
-                    ? `${formatDateDisplay(globalMinDateStr)} — ${formatDateDisplay(globalMaxDateStr)}`
-                    : 'Не визначено';
+                const totalInDb = database.size;
+                const filteredCount = activeFilteredRows.length;
+                const shownCountStr = currentlyRenderedCount < filteredCount
+                    ? `<strong class="text-[#e6e8eb]">${currentlyRenderedCount}</strong> із <strong class="text-[#e6e8eb]">${filteredCount}</strong>`
+                    : `<strong class="text-[#e6e8eb]">${filteredCount}</strong>`;
 
-                const shownCountStr = currentlyRenderedCount < activeFilteredRows.length
-                    ? `<strong class="text-[#e6e8eb]">${currentlyRenderedCount}</strong> із <strong class="text-[#e6e8eb]">${activeFilteredRows.length}</strong>`
-                    : `<strong class="text-[#e6e8eb]">${activeFilteredRows.length}</strong>`;
+                const filterNote = filteredCount !== totalInDb
+                    ? ` <span class="text-[#697485]">(всього в базі: <strong class="text-[#a5adb8]">${totalInDb}</strong>)</span>`
+                    : '';
 
+                const unitWord = pluralUk(filteredCount, 'боєць', 'бійці', 'бійців');
                 document.getElementById('statsSummary').innerHTML = `
-                    <span>Показано: ${shownCountStr} (в базі: <strong class="text-[#a5adb8]">${database.size}</strong> бійців)</span>
-                    <span class="text-[#394455]">•</span>
-                    <span>Період обліку: <strong class="text-[#e6e8eb]">${periodText}</strong></span>
-                    <span class="text-[#394455]">•</span>
-                    <span>Опрацьовано дат: <strong class="text-[#4cc38a]">${successDatesCount.size}</strong></span>
+                    <span>Показано: ${shownCountStr} ${unitWord}${filterNote}</span>
                 `;
             }
 
@@ -5853,8 +5878,8 @@
                     clearBtn.classList.remove('hidden');
                     toggleUploadPanel(false);
                     renderUploadedFilesList();
-                    showStorageStatus(`Пам'ять: ${uploadedFiles.length} ф.`);
-                    logMessage(`💾 Базу успішно відновлено з локальної пам'яті (${uploadedFiles.length} файлів, ${successDatesCount.size} дат, ${database.size} бійців)`, 'text-sky-300 font-bold');
+                    showStorageStatus('У пам\'яті');
+                    logMessage(`💾 Базу успішно відновлено з локальної пам'яті (${uploadedFiles.length} ${pluralUk(uploadedFiles.length, 'файл', 'файли', 'файлів')}, ${successDatesCount.size} ${pluralUk(successDatesCount.size, 'дата', 'дати', 'дат')}, ${database.size} ${pluralUk(database.size, 'боєць', 'бійці', 'бійців')})`, 'text-sky-300 font-bold');
                     if (window.lucide) lucide.createIcons();
                 } catch(err) {
                     console.error("Error restoring from memory:", err);
