@@ -866,7 +866,7 @@
                         <path d="M12 16v-4"></path>
                         <path d="M12 8h.01"></path>
                     </svg>
-                    <span>HUB v2.1.0</span>
+                    <span>HUB v2.1.1</span>
                 </button>
             </div>
 
@@ -875,14 +875,6 @@
                     <span id="dispatcher-status-dot" class="status-dot"></span>
                     <span id="dispatcher-status-text">ДИСПЕТЧЕР :8780 · ПЕРЕВІРКА...</span>
                 </span>
-                <a href="Кіберзахист.html" target="_blank" class="btn-shell">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        <path d="M12 8v4"></path>
-                        <path d="M12 16h.01"></path>
-                    </svg>
-                    <span>Кіберзахист</span>
-                </a>
                 <button type="button" onclick="lockHub()" class="btn-shell btn-shell--danger" title="Заблокувати HUB">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -914,17 +906,17 @@
                 </div>
 
                 <div class="contour-tabs" role="group" aria-label="Фільтр контурів">
-                    <button type="button" class="tab-btn" data-contour-filter="all" aria-pressed="true" onclick="setContourFilter('all')">Усі контури (16)</button>
-                    <button type="button" class="tab-btn" data-contour-filter="A" aria-pressed="false" onclick="setContourFilter('A')">А · Дод. 6 (5)</button>
-                    <button type="button" class="tab-btn" data-contour-filter="B" aria-pressed="false" onclick="setContourFilter('B')">Б · Звіти (4)</button>
-                    <button type="button" class="tab-btn" data-contour-filter="C" aria-pressed="false" onclick="setContourFilter('C')">В · БР і втрати (3)</button>
-                    <button type="button" class="tab-btn" data-contour-filter="D" aria-pressed="false" onclick="setContourFilter('D')">Г · Розрахунки (4)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="all" aria-pressed="true" onclick="setContourFilter('all')">Усі контури (12)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="A" aria-pressed="false" onclick="setContourFilter('A')">А · Дод. 6 (4)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="B" aria-pressed="false" onclick="setContourFilter('B')">Б · Звіти (3)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="C" aria-pressed="false" onclick="setContourFilter('C')">В · БР і контроль (2)</button>
+                    <button type="button" class="tab-btn" data-contour-filter="D" aria-pressed="false" onclick="setContourFilter('D')">Г · Розрахунки (3)</button>
                 </div>
             </div>
 
             <div class="toolbar-stats">
                 <div class="stat-cluster">
-                    <span>ВІДОБРАЖЕНО МОДУЛІВ: <strong id="visibleCountStat">16 / 16</strong></span>
+                    <span>ВІДОБРАЖЕНО МОДУЛІВ: <strong id="visibleCountStat">12 / 12</strong></span>
                     <span>КОНТУРІВ: <strong>4</strong></span>
                     <span>ПРІОРИТЕТ: <strong>М-01 Аналізатор ротацій</strong></span>
                 </div>
@@ -942,7 +934,7 @@
             <section class="contour-section" data-contour="A">
                 <div class="contour-head">
                     <h2 class="contour-title">01 · Додаток 6 та чергування</h2>
-                    <span class="contour-code">КОНТУР А · 5 УТИЛІТ</span>
+                    <span class="contour-code">КОНТУР А · 4 УТИЛІТИ</span>
                 </div>
 
                 <!-- М-01: Аналізатор ротацій -->
@@ -999,36 +991,9 @@
                     </div>
                 </div>
 
-                <!-- М-03: Переміщення (дод6) -->
-                <div class="module-row app-item" data-contour="A" data-title="аналізатор переміщень додаток 6 воп роп бро заббд неподані ротація порівняння">
-                    <span class="module-code">М-03</span>
-                    <div class="module-info">
-                        <div class="module-head-line">
-                            <span class="module-name">Переміщення (дод6)</span>
-                            <span class="module-tag">О/С & Позиції</span>
-                            <span class="module-tag">XLSX</span>
-                        </div>
-                        <p class="module-desc">Контроль та порівняння списків Додатка 6: фіксація переміщень з бойових позицій (ВОП/РОП) в БРО (100), Забезпечення (30) та виявлення неподаних бійців.</p>
-                    </div>
-                    <div class="module-actions">
-                        <div class="module-meta">
-                            <span class="module-ver">v1.0.0</span>
-                            <span class="module-date">28.08.2026</span>
-                        </div>
-                        <a href="Переміщення (дод6).html" target="_blank" class="btn-open">Відкрити →</a>
-                        <a href="Переміщення (дод6).html" download="Переміщення (дод6).html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Переміщення (дод6).html">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- М-04: Облік періодів -->
+                <!-- М-03: Облік періодів -->
                 <div class="module-row app-item" data-contour="A" data-title="облік періодів завдань бз дв 30 роп воп ксп щоденні звіти інтервали діб">
-                    <span class="module-code">М-04</span>
+                    <span class="module-code">М-03</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">Облік періодів</span>
@@ -1053,9 +1018,9 @@
                     </div>
                 </div>
 
-                <!-- М-05: ТАКТ-ОБЛІК -->
+                <!-- М-04: ТАКТ-ОБЛІК -->
                 <div class="module-row app-item" data-contour="A" data-title="такт облік v8 особовий склад позиції журнал виходів офлайн">
-                    <span class="module-code">М-05</span>
+                    <span class="module-code">М-04</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">ТАКТ-ОБЛІК</span>
@@ -1085,12 +1050,12 @@
             <section class="contour-section" data-contour="B">
                 <div class="contour-head">
                     <h2 class="contour-title">02 · Щоденні звіти та донесення</h2>
-                    <span class="contour-code">КОНТУР Б · 4 УТИЛІТИ</span>
+                    <span class="contour-code">КОНТУР Б · 3 УТИЛІТИ</span>
                 </div>
 
-                <!-- М-06: Звіт ПБД -->
+                <!-- М-05: Звіт ПБД -->
                 <div class="module-row app-item" data-contour="B" data-title="звіт пбд бойове зведення дашборд розвідка підрозділи">
-                    <span class="module-code">М-06</span>
+                    <span class="module-code">М-05</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">Звіт ПБД</span>
@@ -1115,9 +1080,9 @@
                     </div>
                 </div>
 
-                <!-- М-07: Звіт ОЧ (Доповідь) -->
+                <!-- М-06: Звіт ОЧ (Доповідь) -->
                 <div class="module-row app-item" data-contour="B" data-title="звіт оч доповідь ксп word docx бойове донесення">
-                    <span class="module-code">М-07</span>
+                    <span class="module-code">М-06</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">Звіт ОЧ (Доповідь)</span>
@@ -1142,36 +1107,9 @@
                     </div>
                 </div>
 
-                <!-- М-08: Генератор БЧС -->
-                <div class="module-row app-item" data-contour="B" data-title="генератор бчс матриця статуси docx zip">
-                    <span class="module-code">М-08</span>
-                    <div class="module-info">
-                        <div class="module-head-line">
-                            <span class="module-name">Генератор БЧС</span>
-                            <span class="module-tag">Парсер</span>
-                            <span class="module-tag">DOCX/ZIP</span>
-                        </div>
-                        <p class="module-desc">Пакетний парсер матричних таблиць БЧС: пошук о/с за категоріями, прев'ю знайдених людей та формування окремих .docx документів у .zip архів.</p>
-                    </div>
-                    <div class="module-actions">
-                        <div class="module-meta">
-                            <span class="module-ver">v1.2.0</span>
-                            <span class="module-date">07.10.2026</span>
-                        </div>
-                        <a href="БЧС.html" target="_blank" class="btn-open">Відкрити →</a>
-                        <a href="БЧС.html" download="БЧС.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити БЧС.html">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- М-17: ШД Автоматизатор -->
+                <!-- М-07: ШД Автоматизатор -->
                 <div class="module-row app-item" data-contour="B" data-title="шд автоматизатор штурмові дії шгр вих район docx excel">
-                    <span class="module-code">М-17</span>
+                    <span class="module-code">М-07</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">ШД Автоматизатор</span>
@@ -1195,45 +1133,18 @@
                         </a>
                     </div>
                 </div>
-
-                <!-- М-09: Оперативний журнал -->
-                <div class="module-row app-item" data-contour="B" data-title="оперативний журнал дій жбд завдання штурмові дії втрати противника овт статус позицій виконання бр">
-                    <span class="module-code">М-09</span>
-                    <div class="module-info">
-                        <div class="module-head-line">
-                            <span class="module-name">Оперативний журнал</span>
-                            <span class="module-tag">ЖБД / Штаб</span>
-                            <span class="module-tag">HTML/DOCX</span>
-                        </div>
-                        <p class="module-desc">Штабний журнал дій: облік завдань, штурмових дій, втрат о/с та ОВТ, стану позицій, виконання БР, генератор позатермінових донесень та БД.</p>
-                    </div>
-                    <div class="module-actions">
-                        <div class="module-meta">
-                            <span class="module-ver">v1.0.0</span>
-                            <span class="module-date">25.08.2026</span>
-                        </div>
-                        <a href="Оперативний журнал.html" target="_blank" class="btn-open">Відкрити →</a>
-                        <a href="Оперативний журнал.html" download="Оперативний журнал.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Оперативний журнал.html">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
             </section>
 
-            <!-- КОНТУР В: БР, втрати та контроль -->
+            <!-- КОНТУР В: БР та контроль -->
             <section class="contour-section" data-contour="C">
                 <div class="contour-head">
-                    <h2 class="contour-title">03 · БР, втрати та контроль</h2>
-                    <span class="contour-code">КОНТУР В · 3 УТИЛІТИ</span>
+                    <h2 class="contour-title">03 · БР та контроль</h2>
+                    <span class="contour-code">КОНТУР В · 2 УТИЛІТИ</span>
                 </div>
 
-                <!-- М-10: Облік перевіряючих -->
+                <!-- М-08: Облік перевіряючих -->
                 <div class="module-row app-item" data-contour="C" data-title="облік перевіряючих бр бойові розпорядження пбд docx подобові донесення аудит періоди excel xlsx">
-                    <span class="module-code">М-10</span>
+                    <span class="module-code">М-08</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">Облік перевіряючих</span>
@@ -1258,9 +1169,9 @@
                     </div>
                 </div>
 
-                <!-- М-11: Облік БР -->
+                <!-- М-09: Облік БР -->
                 <div class="module-row app-item" data-contour="C" data-title="облік бр бойові розпорядження element матриця штаб бро розпорядження доповіді контроль накази">
-                    <span class="module-code">М-11</span>
+                    <span class="module-code">М-09</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">Облік БР</span>
@@ -1284,45 +1195,18 @@
                         </a>
                     </div>
                 </div>
-
-                <!-- М-12: Облік втрат -->
-                <div class="module-row app-item" data-contour="C" data-title="облік втрат medtactical 200 300 сзч поранені евакуація медицина">
-                    <span class="module-code">М-12</span>
-                    <div class="module-info">
-                        <div class="module-head-line">
-                            <span class="module-name">Облік втрат</span>
-                            <span class="module-tag">Медицина / О/С</span>
-                            <span class="module-tag">XLSX</span>
-                        </div>
-                        <p class="module-desc">Комплексна система медично-санітарного обліку (200, 300, СЗЧ, евакуація, госпіталізація), аналітичні діаграми, фільтри та експорт в Excel.</p>
-                    </div>
-                    <div class="module-actions">
-                        <div class="module-meta">
-                            <span class="module-ver">v3.6.5</span>
-                            <span class="module-date">26.10.2026</span>
-                        </div>
-                        <a href="Облік втрат.html" target="_blank" class="btn-open">Відкрити →</a>
-                        <a href="Облік втрат.html" download="Облік втрат.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Облік втрат.html">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
             </section>
 
-            <!-- КОНТУР Г: Розрахунки та безпека -->
+            <!-- КОНТУР Г: Розрахунки та утиліти -->
             <section class="contour-section" data-contour="D">
                 <div class="contour-head">
-                    <h2 class="contour-title">04 · Розрахунки та безпека</h2>
-                    <span class="contour-code">КОНТУР Г · 4 УТИЛІТИ</span>
+                    <h2 class="contour-title">04 · Розрахунки та утиліти</h2>
+                    <span class="contour-code">КОНТУР Г · 3 УТИЛІТИ</span>
                 </div>
 
-                <!-- М-13: Калькулятор БК -->
+                <!-- М-10: Калькулятор БК -->
                 <div class="module-row app-item" data-contour="D" data-title="калькулятор бк витрата боєприпасів патрони вог рпг гранати м52п3 м52 рдг excel tsv">
-                    <span class="module-code">М-13</span>
+                    <span class="module-code">М-10</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">Калькулятор БК</span>
@@ -1347,9 +1231,9 @@
                     </div>
                 </div>
 
-                <!-- М-14: Калькулятор ВгЗ -->
+                <!-- М-11: Калькулятор ВгЗ -->
                 <div class="module-row app-item" data-contour="D" data-title="калькулятор вгз вогневі завдання координати цілі журнал">
-                    <span class="module-code">М-14</span>
+                    <span class="module-code">М-11</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">Калькулятор ВгЗ</span>
@@ -1374,9 +1258,9 @@
                     </div>
                 </div>
 
-                <!-- М-15: Форматер майна -->
+                <!-- М-12: Форматер майна -->
                 <div class="module-row app-item" data-contour="D" data-title="форматер майна списки спорядження очищення тексту">
-                    <span class="module-code">М-15</span>
+                    <span class="module-code">М-12</span>
                     <div class="module-info">
                         <div class="module-head-line">
                             <span class="module-name">Форматер майна</span>
@@ -1401,32 +1285,6 @@
                     </div>
                 </div>
 
-                <!-- М-16: Кіберзахист & DLP -->
-                <div class="module-row app-item" data-contour="D" data-title="кіберзахист безпека dlp edr usb флешки буфер мережа зачистка panic airgap">
-                    <span class="module-code">М-16</span>
-                    <div class="module-info">
-                        <div class="module-head-line">
-                            <span class="module-name">Кіберзахист & DLP</span>
-                            <span class="module-tag">Безпека / EDR</span>
-                            <span class="module-tag">LOCAL</span>
-                        </div>
-                        <p class="module-desc">Автономний моніторинг витоку даних: блокування та контроль USB-носіїв, авто-затирання буфера обміну, мережевий сторож, цілісність бекапів та екстрений Panic Kill Switch.</p>
-                    </div>
-                    <div class="module-actions">
-                        <div class="module-meta">
-                            <span class="module-ver">v1.0.0</span>
-                            <span class="module-date">10.09.2026</span>
-                        </div>
-                        <a href="Кіберзахист.html" target="_blank" class="btn-open">Відкрити →</a>
-                        <a href="Кіберзахист.html" download="Кіберзахист.html" title="Завантажити актуальний .html файл" class="btn-dl" aria-label="Завантажити Кіберзахист.html">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
             </section>
 
             <!-- Повідомлення про відсутність збігів -->
@@ -1463,6 +1321,15 @@
             </button>
         </div>
         <div class="dialog-body">
+            <div class="changelog-entry">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.375rem;">
+                    <strong class="mono-num" style="color: var(--ink-primary);">HUB v2.1.1</strong>
+                    <span class="mono-num" style="font-size: 0.75rem; color: var(--ink-muted);">19.11.2026</span>
+                </div>
+                <p style="font-size: 0.8125rem; color: var(--ink-secondary); line-height: 1.5;">
+                    Зачистка застарілих і видалених модулів: прибрано картки <code>Переміщення (дод6)</code>, <code>Генератор БЧС</code>, <code>Оперативний журнал</code>, <code>Облік втрат</code> і <code>Кіберзахист &amp; DLP</code> (плюс кнопку в шапці), перенумеровано модулі <code>М-01</code>–<code>М-12</code> та оновлено лічильники контурів (12 актуальних утиліт).
+                </p>
+            </div>
             <div class="changelog-entry">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.375rem;">
                     <strong class="mono-num" style="color: var(--ink-primary);">Аналізатор ротацій v1.7.1</strong>
