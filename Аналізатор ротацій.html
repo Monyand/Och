@@ -232,7 +232,7 @@
                             </span>
                             <button type="button" onclick="openChangelogModal()" class="inline-flex items-center gap-1 text-[11px] bg-[#20262f] hover:bg-[#2b3340] text-[#4c8ed9] border border-[#394455] font-mono font-bold px-2 py-0.5 rounded-[2px] transition-colors cursor-pointer" title="Історія оновлень та версій">
                                 <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                                <span>v1.7.1</span>
+                                <span>v1.8.0</span>
                             </button>
                         </div>
                         <!-- Інформаційні чіпи бази (показуються коли завантажені списки) -->
@@ -876,10 +876,23 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto custom-scrollbar space-y-5 flex-1 text-xs">
-                <!-- v1.7.1 -->
+                <!-- v1.8.0 -->
                 <div class="relative pl-4 border-l-2 border-[#4c8ed9] space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <span class="font-bold text-[#4c8ed9] font-mono text-sm">v1.7.1 (Поточна версія)</span>
+                        <span class="font-bold text-[#4c8ed9] font-mono text-sm">v1.8.0 (Поточна версія)</span>
+                        <span class="text-[11px] font-mono text-[#8892a0]">21.11.2026</span>
+                    </div>
+                    <ul class="space-y-1 text-[#a5adb8] list-disc list-inside">
+                        <li><strong class="text-[#e6e8eb]">Порівняння дат (Вчора ↔ Сьогодні) у модалці зрізу:</strong> Нова вкладка порівняння будь-яких 2 дат по обраних позиціях — 2 колонки «Було / Стало» зі списками бійців, мітками <code>+ЗАЙШОВ</code> / <code>-ВИЙШОВ</code> та перемикачем «Тільки зміни».</li>
+                        <li><strong class="text-[#e6e8eb]">Контроль підрозділів:</strong> Автовизначення підрозділів (<code>4 МР</code>, <code>РБпАК</code>, <code>МінБат</code>, <code>ІСВ</code>, <code>Прикомандирований</code> тощо) зі зведенням, хто завів/вивів людей, і швидким клік-фільтром по підрозділу.</li>
+                        <li><strong class="text-[#e6e8eb]">Сухий штабний Excel («Було і Стало» + «По підрозділах») та копіювання списком:</strong> Чорно-білий офісний експорт без зайвого декору (колонки <code>Підрозділ | Звання | ПІБ | Примітка</code> по кожній позиції) та копіювання текстом у буфер.</li>
+                    </ul>
+                </div>
+
+                <!-- v1.7.1 -->
+                <div class="relative pl-4 border-l-2 border-[#2b3340] space-y-1.5 opacity-85">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-[#a5adb8] font-mono text-sm">v1.7.1</span>
                         <span class="text-[11px] font-mono text-[#8892a0]">19.11.2026</span>
                     </div>
                     <ul class="space-y-1 text-[#a5adb8] list-disc list-inside">
@@ -1012,9 +1025,9 @@
         </div>
     </div>
 
-    <!-- 5. МОДАЛЬНЕ ВІКНО: ЕКСПОРТ ЗРІЗУ ПОЗИЦІЙ ЗА ПІДРОЗДІЛОМ (СПИСОК) -->
+    <!-- 5. МОДАЛЬНЕ ВІКНО: ЕКСПОРТ ЗРІЗУ ПОЗИЦІЙ ЗА ПІДРОЗДІЛОМ (СПИСОК ТА ПОРІВНЯННЯ ДАТ) -->
     <div id="exportPositionsModal" class="fixed inset-0 bg-[#06090d]/85 z-[200] hidden items-center justify-center p-3 sm:p-4">
-        <div class="bg-[#181c22] rounded-[2px] w-full max-w-4xl max-h-[90vh] border border-[#394455] overflow-hidden flex flex-col">
+        <div class="bg-[#181c22] rounded-[2px] w-full max-w-5xl max-h-[92vh] border border-[#394455] overflow-hidden flex flex-col">
             <!-- Шапка модалки -->
             <div class="p-4 border-b border-[#2b3340] flex justify-between items-center bg-[#20262f] shrink-0">
                 <div class="flex items-center gap-2.5">
@@ -1022,13 +1035,34 @@
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-sm text-[#e6e8eb]">Зріз бойового чергування (Список по підрозділу)</h3>
-                        <p class="text-[10px] text-[#8892a0]">Формування Excel-відомості бійців на позиціях із датами заходу (активний стрік)</p>
+                        <h3 class="font-bold text-sm text-[#e6e8eb]">Зріз бойового чергування та порівняння позицій</h3>
+                        <p class="text-[10px] text-[#8892a0]">Excel-відомість на дату або порівняння змін по позиціях і підрозділах (вчора ↔ сьогодні)</p>
                     </div>
                 </div>
                 <button onclick="closeModal('exportPositionsModal')" class="w-7 h-7 rounded-[2px] bg-[#151920] hover:bg-[#2b3340] text-[#a5adb8] hover:text-[#e6e8eb] border border-[#394455] flex items-center justify-center transition-colors cursor-pointer">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
+            </div>
+
+            <!-- Перемикач режимів модалки -->
+            <div class="px-4 py-2 bg-[#141922] border-b border-[#2b3340] flex items-center justify-between gap-2 flex-wrap shrink-0">
+                <div class="inline-flex items-center gap-1 bg-[#0e1218] p-0.5 rounded-[2px] border border-[#2b3340]">
+                    <button type="button" id="tabModeSliceBtn" class="px-3 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-[#2b67ab] text-[#f4f6f8] border border-[#4c8ed9] transition-colors cursor-pointer flex items-center gap-1.5">
+                        <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                        <span>Список (Зріз на дату)</span>
+                    </button>
+                    <button type="button" id="tabModeDiffBtn" class="px-3 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-transparent text-[#8892a0] hover:text-[#e6e8eb] border border-transparent transition-colors cursor-pointer flex items-center gap-1.5">
+                        <i data-lucide="git-compare" class="w-3.5 h-3.5"></i>
+                        <span>Порівняння дат (Вчора ↔ Сьогодні)</span>
+                    </button>
+                </div>
+                <div id="diffDatesInlineBar" class="hidden items-center gap-2 flex-wrap font-mono text-[11px]">
+                    <span class="text-[#8892a0]">Було:</span>
+                    <select id="diffDateASelect" class="bg-[#0e1218] text-[#e6e8eb] border border-[#394455] rounded-[2px] px-2 py-1 text-xs font-mono focus:border-[#4c8ed9] outline-none"></select>
+                    <span class="text-[#4c8ed9] font-bold">→</span>
+                    <span class="text-[#8892a0]">Стало:</span>
+                    <select id="diffDateBSelect" class="bg-[#0e1218] text-[#e6e8eb] border border-[#394455] rounded-[2px] px-2 py-1 text-xs font-mono focus:border-[#4c8ed9] outline-none"></select>
+                </div>
             </div>
 
             <!-- Тіло модалки -->
@@ -1144,61 +1178,109 @@
                     </div>
                 </section>
 
-                <!-- Налаштування та сортування -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[#8892a0] text-[11px] mb-1 font-mono">Сортування у файлі:</label>
-                        <select id="exportSortModeSelect" class="w-full bg-[#0e1218] text-[#e6e8eb] border border-[#2b3340] rounded-[2px] px-2.5 py-1.5 text-xs font-mono focus:border-[#4c8ed9] outline-none">
-                            <option value="pos_then_name">За позиціями, потім ПІБ (як у штабі)</option>
-                            <option value="name_asc">За ПІБ бійців (А — Я)</option>
-                            <option value="date_asc">За датою заходу (від найдавнішої)</option>
-                        </select>
+                <!-- РЕЖИМ 1: СПИСОК (ЗРІЗ НА ДАТУ) -->
+                <div id="sliceModeSection" class="space-y-3.5">
+                    <!-- Налаштування та сортування -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[#8892a0] text-[11px] mb-1 font-mono">Сортування у файлі:</label>
+                            <select id="exportSortModeSelect" class="w-full bg-[#0e1218] text-[#e6e8eb] border border-[#2b3340] rounded-[2px] px-2.5 py-1.5 text-xs font-mono focus:border-[#4c8ed9] outline-none">
+                                <option value="pos_then_name">За позиціями, потім ПІБ (як у штабі)</option>
+                                <option value="name_asc">За ПІБ бійців (А — Я)</option>
+                                <option value="date_asc">За датою заходу (від найдавнішої)</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1.5 pt-1 sm:pt-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="exportOnlyActiveCheckbox" checked class="w-3.5 h-3.5 rounded-[2px] bg-[#0e1218] border-[#394455] accent-[#2b67ab]">
+                                <span class="text-[#a5adb8] text-[11px]">Тільки бійці з активним стріком</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="exportCleanPositionCheckbox" checked class="w-3.5 h-3.5 rounded-[2px] bg-[#0e1218] border-[#394455] accent-[#2b67ab]">
+                                <span class="text-[#a5adb8] text-[11px]">Очищати суфікси (ВОП)/(РОП)</span>
+                            </label>
+                        </div>
                     </div>
-                    <div class="space-y-1.5 pt-1 sm:pt-4">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="exportOnlyActiveCheckbox" checked class="w-3.5 h-3.5 rounded-[2px] bg-[#0e1218] border-[#394455] accent-[#2b67ab]">
-                            <span class="text-[#a5adb8] text-[11px]">Тільки бійці з активним стріком</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="exportCleanPositionCheckbox" checked class="w-3.5 h-3.5 rounded-[2px] bg-[#0e1218] border-[#394455] accent-[#2b67ab]">
-                            <span class="text-[#a5adb8] text-[11px]">Очищати суфікси (ВОП)/(РОП)</span>
-                        </label>
-                    </div>
+
+                    <!-- Попередній перегляд / Статистика відбору -->
+                    <section class="p-3 bg-[#151920] border-t border-[#2b3340] space-y-2 font-mono text-[11px]">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[#8892a0]">Відібрано для вивантаження:</span>
+                            <span id="exportPreviewCount" class="text-[#4c8ed9] font-bold">0 осіб</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[#8892a0] text-[10px]">
+                            <span>Зріз на крайню дату списків:</span>
+                            <span id="exportPreviewLatestDate" class="text-[#e6e8eb] font-semibold">—</span>
+                        </div>
+
+                        <!-- Міні-прев'ю перших бійців -->
+                        <div class="pt-2 border-t border-[#222933]">
+                            <div class="text-[10px] uppercase font-bold text-[#8892a0] mb-1.5 flex items-center justify-between">
+                                <span>Зразок вивантаження (перші 3 бійці):</span>
+                                <span class="text-[#4c8ed9] font-normal">Аркуш: «Список»</span>
+                            </div>
+                            <div id="exportPreviewList" class="space-y-1 text-[11px] max-h-[100px] overflow-y-auto custom-scrollbar">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
-                <!-- Попередній перегляд / Статистика відбору -->
-                <section class="p-3 bg-[#151920] border-t border-[#2b3340] space-y-2 font-mono text-[11px]">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[#8892a0]">Відібрано для вивантаження:</span>
-                        <span id="exportPreviewCount" class="text-[#4c8ed9] font-bold">0 осіб</span>
-                    </div>
-                    <div class="flex items-center justify-between text-[#8892a0] text-[10px]">
-                        <span>Зріз на крайню дату списків:</span>
-                        <span id="exportPreviewLatestDate" class="text-[#e6e8eb] font-semibold">—</span>
+                <!-- РЕЖИМ 2: ПОРІВНЯННЯ ДАТ (ВЧОРА ↔ СЬОГОДНІ) -->
+                <div id="diffModeSection" class="hidden space-y-3">
+                    <!-- Панель підсумків та фільтра показу -->
+                    <div class="p-3 bg-[#151920] border border-[#2b3340] rounded-[2px] space-y-2.5 font-mono">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div id="diffTotalsBar" class="flex items-center gap-2 flex-wrap text-[11px]">
+                                <!-- Динамічно: Було X | Стало Y | +Зайшли | -Вийшли -->
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <select id="diffViewModeSelect" class="bg-[#0e1218] text-[#e6e8eb] border border-[#394455] rounded-[2px] px-2 py-1 text-[11px] font-mono focus:border-[#4c8ed9] outline-none">
+                                    <option value="all">Списки: Вчора і Сьогодні (усі)</option>
+                                    <option value="changes_only">Тільки зміни (+зайшли / -вийшли)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Зведення: які підрозділи завели / вивели людей -->
+                        <div id="diffUnitsSummaryWrap" class="pt-2 border-t border-[#222933] space-y-1.5">
+                            <div class="text-[10px] uppercase font-bold text-[#8892a0] tracking-wider flex items-center justify-between">
+                                <span>Які підрозділи завели / вивели людей на обраних позиціях:</span>
+                                <span id="diffUnitsCountHint" class="text-[#697485] font-normal"></span>
+                            </div>
+                            <div id="diffUnitsSummary" class="flex items-center gap-1.5 flex-wrap text-[11px]">
+                                <!-- Динамічні чіпи по підрозділах -->
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Міні-прев'ю перших бійців -->
-                    <div class="pt-2 border-t border-[#222933]">
-                        <div class="text-[10px] uppercase font-bold text-[#8892a0] mb-1.5 flex items-center justify-between">
-                            <span>Зразок вивантаження (перші 3 бійці):</span>
-                            <span class="text-[#4c8ed9] font-normal">Аркуш: «Список»</span>
-                        </div>
-                        <div id="exportPreviewList" class="space-y-1 text-[11px] max-h-[100px] overflow-y-auto custom-scrollbar">
-                            <!-- Populated dynamically -->
-                        </div>
+                    <!-- Детальний список по кожній обраній позиції (Було | Стало) -->
+                    <div id="diffPositionsResult" class="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar pr-0.5">
+                        <!-- Динамічні картки порівняння позицій -->
                     </div>
-                </section>
+                </div>
             </div>
 
             <!-- Підвал модалки -->
-            <div class="p-3.5 px-4 bg-[#151920] border-t border-[#2b3340] flex justify-end gap-2.5">
-                <button type="button" onclick="closeModal('exportPositionsModal')" class="px-3.5 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#394455] text-xs font-semibold rounded-[2px] transition-colors cursor-pointer">
-                    Скасувати
-                </button>
-                <button type="button" id="confirmExportPositionsBtn" class="px-4 py-1.5 bg-[#2b67ab] hover:bg-[#245791] text-[#f4f6f8] border border-[#4c8ed9] text-xs font-bold rounded-[2px] flex items-center gap-1.5 transition-colors cursor-pointer">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    <span>Завантажити Excel (Список)</span>
-                </button>
+            <div class="p-3.5 px-4 bg-[#151920] border-t border-[#2b3340] flex items-center justify-between gap-2.5 flex-wrap shrink-0">
+                <div id="diffCopyFeedback" class="text-[11px] font-mono text-[#4cc38a] opacity-0 transition-opacity">Скопійовано в буфер</div>
+                <div class="flex items-center justify-end gap-2.5 ml-auto flex-wrap">
+                    <button type="button" onclick="closeModal('exportPositionsModal')" class="px-3.5 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#394455] text-xs font-semibold rounded-[2px] transition-colors cursor-pointer">
+                        Закрити
+                    </button>
+                    <button type="button" id="confirmExportPositionsBtn" class="px-4 py-1.5 bg-[#2b67ab] hover:bg-[#245791] text-[#f4f6f8] border border-[#4c8ed9] text-xs font-bold rounded-[2px] flex items-center gap-1.5 transition-colors cursor-pointer">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Завантажити Excel (Список)</span>
+                    </button>
+                    <button type="button" id="copyDiffTextBtn" class="hidden px-3.5 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#394455] text-xs font-bold rounded-[2px] items-center gap-1.5 transition-colors cursor-pointer">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>Копіювати списком</span>
+                    </button>
+                    <button type="button" id="confirmExportDiffBtn" class="hidden px-4 py-1.5 bg-[#2b67ab] hover:bg-[#245791] text-[#f4f6f8] border border-[#4c8ed9] text-xs font-bold rounded-[2px] items-center gap-1.5 transition-colors cursor-pointer">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                        <span>Завантажити Excel (Порівняння)</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -4304,6 +4386,24 @@
 
             let activePositionsList = [];
             let selectedPositionsSet = new Set();
+            let currentPositionsModalMode = 'slice'; // 'slice' | 'diff'
+            let diffActiveUnitFilter = null;
+
+            const tabModeSliceBtn = document.getElementById('tabModeSliceBtn');
+            const tabModeDiffBtn = document.getElementById('tabModeDiffBtn');
+            const diffDatesInlineBar = document.getElementById('diffDatesInlineBar');
+            const diffDateASelect = document.getElementById('diffDateASelect');
+            const diffDateBSelect = document.getElementById('diffDateBSelect');
+            const sliceModeSection = document.getElementById('sliceModeSection');
+            const diffModeSection = document.getElementById('diffModeSection');
+            const diffViewModeSelect = document.getElementById('diffViewModeSelect');
+            const diffTotalsBar = document.getElementById('diffTotalsBar');
+            const diffUnitsSummary = document.getElementById('diffUnitsSummary');
+            const diffUnitsCountHint = document.getElementById('diffUnitsCountHint');
+            const diffPositionsResult = document.getElementById('diffPositionsResult');
+            const copyDiffTextBtn = document.getElementById('copyDiffTextBtn');
+            const confirmExportDiffBtn = document.getElementById('confirmExportDiffBtn');
+            const diffCopyFeedback = document.getElementById('diffCopyFeedback');
 
             function testCyrillicBoundary(term, text) {
                 if (!text) return false;
@@ -4530,24 +4630,53 @@
                 const customQuery = exportCustomUnitInput.value.trim().toLowerCase();
                 const posCountMap = new Map();
 
-                for (let [key, personData] of database) {
-                    if (unitKey === '__selected__' && !selectedSoldiers.has(key)) continue;
-                    if (unitKey === '__filtered__' && !tableDataForExport.some(r => r.key === key)) continue;
+                if (currentPositionsModalMode === 'diff' && diffDateASelect && diffDateBSelect && diffDateASelect.value && diffDateBSelect.value) {
+                    const dateA = diffDateASelect.value;
+                    const dateB = diffDateBSelect.value;
+                    const posSoldiersMap = new Map();
 
-                    const sortedDates = Array.from(personData.records.keys()).sort();
-                    if (sortedDates.length === 0) continue;
-                    const latestDate = sortedDates[sortedDates.length - 1];
+                    for (let [key, personData] of database) {
+                        if (unitKey === '__selected__' && !selectedSoldiers.has(key)) continue;
+                        if (unitKey === '__filtered__' && !tableDataForExport.some(r => r.key === key)) continue;
 
-                    if (globalMaxDateStr && getEpochDay(globalMaxDateStr) - getEpochDay(latestDate) > 1) {
-                        continue;
+                        const recA = personData.records.get(dateA);
+                        const recB = personData.records.get(dateB);
+                        if (!recA && !recB) continue;
+
+                        const app = (recB && recB.position) || (recA && recA.position) || '';
+                        if (!matchesUnitFilter(app, unitKey, customQuery)) continue;
+
+                        [recA, recB].forEach(rec => {
+                            if (!rec) return;
+                            const combatPos = rec.status || 'Не вказано';
+                            if (!posSoldiersMap.has(combatPos)) posSoldiersMap.set(combatPos, new Set());
+                            posSoldiersMap.get(combatPos).add(key);
+                        });
                     }
 
-                    const latestRecord = personData.records.get(latestDate);
-                    const pos = latestRecord.position || '';
-                    if (!matchesUnitFilter(pos, unitKey, customQuery)) continue;
+                    for (let [posName, keySet] of posSoldiersMap.entries()) {
+                        posCountMap.set(posName, keySet.size);
+                    }
+                } else {
+                    for (let [key, personData] of database) {
+                        if (unitKey === '__selected__' && !selectedSoldiers.has(key)) continue;
+                        if (unitKey === '__filtered__' && !tableDataForExport.some(r => r.key === key)) continue;
 
-                    const combatPos = latestRecord.status || 'Не вказано';
-                    posCountMap.set(combatPos, (posCountMap.get(combatPos) || 0) + 1);
+                        const sortedDates = Array.from(personData.records.keys()).sort();
+                        if (sortedDates.length === 0) continue;
+                        const latestDate = sortedDates[sortedDates.length - 1];
+
+                        if (globalMaxDateStr && getEpochDay(globalMaxDateStr) - getEpochDay(latestDate) > 1) {
+                            continue;
+                        }
+
+                        const latestRecord = personData.records.get(latestDate);
+                        const pos = latestRecord.position || '';
+                        if (!matchesUnitFilter(pos, unitKey, customQuery)) continue;
+
+                        const combatPos = latestRecord.status || 'Не вказано';
+                        posCountMap.set(combatPos, (posCountMap.get(combatPos) || 0) + 1);
+                    }
                 }
 
                 activePositionsList = Array.from(posCountMap.entries()).map(([posName, count]) => {
@@ -4783,6 +4912,10 @@
 
             // 7. Оновлення попереднього перегляду у модалці
             function updateExportPositionsPreview() {
+                if (currentPositionsModalMode === 'diff') {
+                    renderPositionsDiffView();
+                    return;
+                }
                 const soldiers = getFilteredSoldiersForExport();
                 exportPreviewCount.textContent = `${soldiers.length} осіб`;
                 exportPreviewLatestDate.textContent = globalMaxDateStr ? formatDateDisplay(globalMaxDateStr) : '—';
@@ -4902,9 +5035,15 @@
                     clearPosSearchBtn.classList.add('hidden');
                 }
 
+                // Заповнюємо селектори дат для режиму «Порівняння дат»
+                populateDiffDateSelects();
+                diffActiveUnitFilter = null;
+
                 // Оновлюємо чекліст позицій для обраного підрозділу
                 refreshPositionsChecklist();
+                setPositionsModalMode(currentPositionsModalMode, false);
                 openModal('exportPositionsModal');
+                if (window.lucide) lucide.createIcons();
             }
 
             if (exportPositionsListBtn) {
@@ -5142,6 +5281,669 @@
                 XLSX.writeFile(wb, filename);
                 closeModal('exportPositionsModal');
             });
+
+            // 10. РЕЖИМ ПОРІВНЯННЯ ДАТ (ВЧОРА ↔ СЬОГОДНІ) ПО ОБРАНИХ ПОЗИЦІЯХ ТА ПІДРОЗДІЛАХ
+            function populateDiffDateSelects() {
+                if (!diffDateASelect || !diffDateBSelect) return;
+                const dates = Array.from(successDatesCount).sort();
+                const prevA = diffDateASelect.value;
+                const prevB = diffDateBSelect.value;
+
+                diffDateASelect.innerHTML = '';
+                diffDateBSelect.innerHTML = '';
+
+                dates.forEach(d => {
+                    const label = formatDateDisplay(d);
+                    const optA = document.createElement('option');
+                    optA.value = d;
+                    optA.textContent = label;
+                    diffDateASelect.appendChild(optA);
+
+                    const optB = document.createElement('option');
+                    optB.value = d;
+                    optB.textContent = label;
+                    diffDateBSelect.appendChild(optB);
+                });
+
+                if (dates.length >= 2) {
+                    diffDateASelect.value = dates.includes(prevA) ? prevA : dates[dates.length - 2];
+                    diffDateBSelect.value = dates.includes(prevB) ? prevB : dates[dates.length - 1];
+                } else if (dates.length === 1) {
+                    diffDateASelect.value = dates[0];
+                    diffDateBSelect.value = dates[0];
+                }
+            }
+
+            function setPositionsModalMode(mode, shouldRefresh = true) {
+                currentPositionsModalMode = (mode === 'diff') ? 'diff' : 'slice';
+                const isDiff = currentPositionsModalMode === 'diff';
+
+                if (tabModeSliceBtn && tabModeDiffBtn) {
+                    if (isDiff) {
+                        tabModeSliceBtn.className = 'px-3 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-transparent text-[#8892a0] hover:text-[#e6e8eb] border border-transparent transition-colors cursor-pointer flex items-center gap-1.5';
+                        tabModeDiffBtn.className = 'px-3 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-[#2b67ab] text-[#f4f6f8] border border-[#4c8ed9] transition-colors cursor-pointer flex items-center gap-1.5';
+                    } else {
+                        tabModeSliceBtn.className = 'px-3 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-[#2b67ab] text-[#f4f6f8] border border-[#4c8ed9] transition-colors cursor-pointer flex items-center gap-1.5';
+                        tabModeDiffBtn.className = 'px-3 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-transparent text-[#8892a0] hover:text-[#e6e8eb] border border-transparent transition-colors cursor-pointer flex items-center gap-1.5';
+                    }
+                }
+
+                if (diffDatesInlineBar) {
+                    diffDatesInlineBar.classList.toggle('hidden', !isDiff);
+                    diffDatesInlineBar.classList.toggle('flex', isDiff);
+                }
+                if (sliceModeSection) sliceModeSection.classList.toggle('hidden', isDiff);
+                if (diffModeSection) diffModeSection.classList.toggle('hidden', !isDiff);
+
+                if (confirmExportPositionsBtn) {
+                    confirmExportPositionsBtn.classList.toggle('hidden', isDiff);
+                    confirmExportPositionsBtn.classList.toggle('flex', !isDiff);
+                }
+                if (copyDiffTextBtn) {
+                    copyDiffTextBtn.classList.toggle('hidden', !isDiff);
+                    copyDiffTextBtn.classList.toggle('flex', isDiff);
+                }
+                if (confirmExportDiffBtn) {
+                    confirmExportDiffBtn.classList.toggle('hidden', !isDiff);
+                    confirmExportDiffBtn.classList.toggle('flex', isDiff);
+                }
+
+                if (shouldRefresh) {
+                    refreshPositionsChecklist();
+                } else {
+                    updateExportPositionsPreview();
+                }
+            }
+
+            function extractShortSubunit(appointment) {
+                if (!appointment || appointment === 'Не вказано') return 'Без підрозділу';
+                const raw = String(appointment).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+                const low = raw.toLowerCase();
+
+                // Роти: 1-9 механізована / стрілецька / танкова / штурмова рота
+                const compMatch = low.match(/(\d+)\s*[-\s]?(?:ї|ої|а|ій)?\s*(механізован[а-яіїєґ]*|стрілецьк[а-яіїєґ]*|танков[а-яіїєґ]*|штурмов[а-яіїєґ]*|мотопіхотн[а-яіїєґ]*)\s+рот/);
+                if (compMatch) {
+                    const num = compMatch[1];
+                    const t = compMatch[2];
+                    if (t.startsWith('механ')) return `${num} МР`;
+                    if (t.startsWith('стріл')) return `${num} СР`;
+                    if (t.startsWith('танк')) return `${num} ТР`;
+                    if (t.startsWith('штурм')) return `${num} ШР`;
+                    if (t.startsWith('мотопіх')) return `${num} МПР`;
+                }
+                // Короткі абревіатури рот: 4 мр, 5 мр, 1 тр тощо
+                const shortComp = raw.match(/\b(\d+)\s*(МР|СР|ТР|ШР|МПР)\b/i);
+                if (shortComp) return `${shortComp[1]} ${shortComp[2].toUpperCase()}`;
+
+                if (/безпілотн[а-яіїєґ]*\s+авіаційн|рбпак|бпак/i.test(raw)) return 'РБпАК';
+                if (/безпілотн[а-яіїєґ]*\s+систем|ббс|нрк/i.test(raw)) return 'ББС / НРК';
+                if (/мінометн[а-яіїєґ]*\s+(батар|взвод)|мінбат/i.test(raw)) return 'МінБат';
+                if (/вогневої\s+підтримки|\bрвп\b/i.test(raw)) return 'РВП';
+                if (/розвідувальн[а-яіїєґ]*\s+(взвод|рот)|\bрв\b|\bрр\b/i.test(raw)) return /рот/i.test(raw) ? 'РР' : 'РВ';
+                if (/протитанков[а-яіїєґ]*|\bптрк\b/i.test(raw)) return 'Взвод ПТРК';
+                if (/гранатометн[а-яіїєґ]*/i.test(raw)) return 'Гран. взвод';
+                if (/кулеметн[а-яіїєґ]*/i.test(raw)) return 'Кул. взвод';
+                if (/інженерно-саперн|\bісв\b/i.test(raw)) return 'ІСВ';
+                if (/зв['’ʼ]?язку|\bвз\b/i.test(raw)) return 'Зв’язок';
+                if (/медичн[а-яіїєґ]*\s+(пункт|рот)|\bмп\b/i.test(raw)) return 'Медпункт';
+                if (/матеріальн[а-яіїєґ]*\s+забезпеч|\bвмз\b|\bрмз\b/i.test(raw)) return 'ВМЗ';
+                if (/технічн[а-яіїєґ]*\s+забезпеч|\bвтз\b/i.test(raw)) return 'ВТЗ';
+                if (/ремонтно-віднов|\bврб\b/i.test(raw)) return 'ВРБ';
+                if (/охорони|\bво\b/i.test(raw)) return 'ВО';
+                if (/бронегруп/i.test(raw)) return 'Бронегрупа';
+                if (/прикомандирован/i.test(raw)) return 'Прикомандирований';
+                if (/комендантськ/i.test(raw)) return 'Коменд. взвод';
+                if (/управління|штаб/i.test(raw)) return 'Управління';
+                if (/стрілецьк[а-яіїєґ]*\s+(взвод|відділен)/i.test(raw)) return 'Стріл. взвод';
+                if (/механізован[а-яіїєґ]*\s+(взвод|відділен)/i.test(raw)) return 'Мех. взвод';
+
+                // Батальйон як фолбек
+                const batMatch = low.match(/(\d+)\s*[-\s]?(?:й|ий|го)?\s*(механізован[а-яіїєґ]*|стрілецьк[а-яіїєґ]*|танков[а-яіїєґ]*|штурмов[а-яіїєґ]*)?\s*батальйон/);
+                if (batMatch) {
+                    const t = batMatch[2] || '';
+                    if (t.startsWith('механ')) return `${batMatch[1]} МБ`;
+                    if (t.startsWith('стріл')) return `${batMatch[1]} СБ`;
+                    if (t.startsWith('танк')) return `${batMatch[1]} ТБ`;
+                    return `${batMatch[1]} бат.`;
+                }
+
+                return 'Інший підр.';
+            }
+
+            function computePositionsDiff(dateA, dateB) {
+                const unitKey = exportUnitSelect.value;
+                const customQuery = exportCustomUnitInput.value.trim().toLowerCase();
+                const posMap = new Map();
+                const unitStats = new Map(); // subunit -> { entered: [], exited: [], countA: 0, countB: 0 }
+
+                const ensurePos = (posName) => {
+                    if (!posMap.has(posName)) {
+                        posMap.set(posName, { posName, listA: [], listB: [], entered: [], exited: [], stayed: [] });
+                    }
+                    return posMap.get(posName);
+                };
+                const ensureUnit = (u) => {
+                    if (!unitStats.has(u)) {
+                        unitStats.set(u, { unit: u, entered: [], exited: [], countA: 0, countB: 0 });
+                    }
+                    return unitStats.get(u);
+                };
+
+                // Ініціалізуємо всі обрані позиції (навіть якщо за однією з дат 0)
+                selectedPositionsSet.forEach(p => ensurePos(p));
+
+                for (let [key, personData] of database) {
+                    if (unitKey === '__selected__' && !selectedSoldiers.has(key)) continue;
+                    if (unitKey === '__filtered__' && !tableDataForExport.some(r => r.key === key)) continue;
+
+                    const recA = personData.records.get(dateA) || null;
+                    const recB = personData.records.get(dateB) || null;
+                    if (!recA && !recB) continue;
+
+                    const app = (recB && recB.position) || (recA && recA.position) || '';
+                    if (!matchesUnitFilter(app, unitKey, customQuery)) continue;
+
+                    const posA = recA ? (recA.status || 'Не вказано') : null;
+                    const posB = recB ? (recB.status || 'Не вказано') : null;
+
+                    const inA = posA && selectedPositionsSet.has(posA);
+                    const inB = posB && selectedPositionsSet.has(posB);
+                    if (!inA && !inB) continue;
+
+                    const subunit = extractShortSubunit(app);
+                    const rank = formatRankForExport((recB && recB.rank) || (recA && recA.rank) || '');
+                    const name = formatNameForExport(personData.name);
+
+                    if (inA && inB && posA === posB) {
+                        const item = { key, name, rank, appointment: app, subunit, posA, posB, state: 'stayed' };
+                        const p = ensurePos(posA);
+                        p.listA.push(item);
+                        p.listB.push(item);
+                        p.stayed.push(item);
+                        const u = ensureUnit(subunit);
+                        u.countA++;
+                        u.countB++;
+                    } else {
+                        if (inA) {
+                            const itemOut = { key, name, rank, appointment: app, subunit, posA, posB: posB || 'Відсутній у списку', state: 'exited' };
+                            const pA = ensurePos(posA);
+                            pA.listA.push(itemOut);
+                            pA.exited.push(itemOut);
+                            const u = ensureUnit(subunit);
+                            u.countA++;
+                            u.exited.push({ ...itemOut, targetPos: posA });
+                        }
+                        if (inB) {
+                            const itemIn = { key, name, rank, appointment: app, subunit, posA: posA || 'Не було в списку', posB, state: 'entered' };
+                            const pB = ensurePos(posB);
+                            pB.listB.push(itemIn);
+                            pB.entered.push(itemIn);
+                            const u = ensureUnit(subunit);
+                            u.countB++;
+                            u.entered.push({ ...itemIn, targetPos: posB });
+                        }
+                    }
+                }
+
+                // Сортуємо всередині кожної позиції: зміни зверху, далі по підрозділу й ПІБ
+                const positions = Array.from(posMap.values())
+                    .filter(p => p.listA.length > 0 || p.listB.length > 0)
+                    .map(p => {
+                        p.listA.sort((a, b) => (a.state === 'exited' ? 0 : 1) - (b.state === 'exited' ? 0 : 1) || a.subunit.localeCompare(b.subunit, 'uk') || a.name.localeCompare(b.name, 'uk'));
+                        p.listB.sort((a, b) => (a.state === 'entered' ? 0 : 1) - (b.state === 'entered' ? 0 : 1) || a.subunit.localeCompare(b.subunit, 'uk') || a.name.localeCompare(b.name, 'uk'));
+                        return p;
+                    })
+                    .sort((a, b) => (b.entered.length + b.exited.length) - (a.entered.length + a.exited.length) || b.listB.length - a.listB.length || a.posName.localeCompare(b.posName, 'uk'));
+
+                const unitsList = Array.from(unitStats.values()).sort((a, b) => b.entered.length - a.entered.length || b.exited.length - a.exited.length || b.countB - a.countB || a.unit.localeCompare(b.unit, 'uk'));
+
+                const totals = {
+                    countA: positions.reduce((acc, p) => acc + p.listA.length, 0),
+                    countB: positions.reduce((acc, p) => acc + p.listB.length, 0),
+                    entered: positions.reduce((acc, p) => acc + p.entered.length, 0),
+                    exited: positions.reduce((acc, p) => acc + p.exited.length, 0),
+                    stayed: positions.reduce((acc, p) => acc + p.stayed.length, 0)
+                };
+
+                return { dateA, dateB, positions, unitsList, totals };
+            }
+
+            function renderPositionsDiffView() {
+                if (!diffDateASelect || !diffDateBSelect || !diffPositionsResult) return;
+                const dateA = diffDateASelect.value;
+                const dateB = diffDateBSelect.value;
+
+                if (!dateA || !dateB) {
+                    diffTotalsBar.innerHTML = `<span class="text-[#8892a0]">Завантажте хоча б 2 дати для порівняння.</span>`;
+                    diffUnitsSummary.innerHTML = '';
+                    diffPositionsResult.innerHTML = '';
+                    return;
+                }
+
+                const diff = computePositionsDiff(dateA, dateB);
+                window.__lastPositionsDiff = diff;
+                const dALabel = formatDateDisplay(dateA);
+                const dBLabel = formatDateDisplay(dateB);
+                const onlyChanges = diffViewModeSelect && diffViewModeSelect.value === 'changes_only';
+
+                // 1. Загальна панель лічильників
+                diffTotalsBar.innerHTML = `
+                    <span class="px-2 py-0.5 rounded-[2px] bg-[#0e1218] border border-[#2b3340] text-[#a5adb8]">Було (${dALabel}): <strong class="text-[#e6e8eb]">${diff.totals.countA}</strong></span>
+                    <span class="px-2 py-0.5 rounded-[2px] bg-[#0e1218] border border-[#2b3340] text-[#a5adb8]">Стало (${dBLabel}): <strong class="text-[#e6e8eb]">${diff.totals.countB}</strong></span>
+                    <span class="px-2 py-0.5 rounded-[2px] bg-[#11261c] border border-[#1f4d36] text-[#4cc38a] font-bold">+${diff.totals.entered} зайшли</span>
+                    <span class="px-2 py-0.5 rounded-[2px] bg-[#2a1418] border border-[#5c232c] text-[#f07178] font-bold">-${diff.totals.exited} вийшли</span>
+                    <span class="px-2 py-0.5 rounded-[2px] bg-[#181c22] border border-[#2b3340] text-[#8892a0]">=${diff.totals.stayed} лишились</span>
+                `;
+
+                // 2. Зведення: які підрозділи завели / вивели людей
+                const unitsWithChanges = diff.unitsList.filter(u => u.entered.length > 0 || u.exited.length > 0);
+                if (diffActiveUnitFilter && !diff.unitsList.some(u => u.unit === diffActiveUnitFilter)) {
+                    diffActiveUnitFilter = null;
+                }
+
+                if (diffUnitsCountHint) {
+                    diffUnitsCountHint.textContent = diffActiveUnitFilter
+                        ? `Фільтр: ${diffActiveUnitFilter} (клік ще раз — скинути)`
+                        : (unitsWithChanges.length > 0 ? 'Клік по підрозділу — відфільтрувати список' : '');
+                }
+
+                if (unitsWithChanges.length === 0) {
+                    diffUnitsSummary.innerHTML = `<span class="text-[#8892a0] italic text-[11px]">Змін між ${dALabel} та ${dBLabel} по обраних позиціях не виявлено.</span>`;
+                } else {
+                    diffUnitsSummary.innerHTML = unitsWithChanges.map(u => {
+                        const isSelected = diffActiveUnitFilter === u.unit;
+                        const activeCls = isSelected
+                            ? 'bg-[#182638] border-[#4c8ed9] text-[#e6e8eb]'
+                            : 'bg-[#0e1218] border-[#2b3340] text-[#a5adb8] hover:border-[#4c8ed9]';
+                        const inPart = u.entered.length > 0 ? `<span class="text-[#4cc38a] font-bold">+${u.entered.length}</span>` : '';
+                        const outPart = u.exited.length > 0 ? `<span class="text-[#f07178] font-bold">-${u.exited.length}</span>` : '';
+                        const sep = (inPart && outPart) ? '<span class="text-[#394455]">/</span>' : '';
+                        return `<button type="button" data-diff-unit="${escapeHtml(u.unit)}" class="diff-unit-chip inline-flex items-center gap-1.5 px-2 py-1 rounded-[2px] border text-[11px] font-mono transition-colors cursor-pointer ${activeCls}">
+                            <span class="font-bold text-[#e6e8eb]">${escapeHtml(u.unit)}</span>
+                            <span class="inline-flex items-center gap-1">${inPart}${sep}${outPart}</span>
+                            <span class="text-[10px] text-[#697485]">(${u.countA}→${u.countB})</span>
+                        </button>`;
+                    }).join('');
+
+                    diffUnitsSummary.querySelectorAll('.diff-unit-chip').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const u = btn.getAttribute('data-diff-unit');
+                            diffActiveUnitFilter = (diffActiveUnitFilter === u) ? null : u;
+                            renderPositionsDiffView();
+                        });
+                    });
+                }
+
+                // 3. Детальні списки по кожній позиції (Було | Стало)
+                let visiblePositions = diff.positions;
+                if (diffActiveUnitFilter) {
+                    visiblePositions = visiblePositions.map(p => ({
+                        ...p,
+                        listA: p.listA.filter(x => x.subunit === diffActiveUnitFilter),
+                        listB: p.listB.filter(x => x.subunit === diffActiveUnitFilter),
+                        entered: p.entered.filter(x => x.subunit === diffActiveUnitFilter),
+                        exited: p.exited.filter(x => x.subunit === diffActiveUnitFilter),
+                        stayed: p.stayed.filter(x => x.subunit === diffActiveUnitFilter)
+                    })).filter(p => p.listA.length > 0 || p.listB.length > 0);
+                }
+                if (onlyChanges) {
+                    visiblePositions = visiblePositions.filter(p => p.entered.length > 0 || p.exited.length > 0);
+                }
+
+                const hasData = visiblePositions.length > 0;
+                if (confirmExportDiffBtn) {
+                    confirmExportDiffBtn.disabled = diff.positions.length === 0;
+                    confirmExportDiffBtn.classList.toggle('opacity-50', diff.positions.length === 0);
+                    confirmExportDiffBtn.classList.toggle('cursor-not-allowed', diff.positions.length === 0);
+                }
+                if (copyDiffTextBtn) {
+                    copyDiffTextBtn.disabled = diff.positions.length === 0;
+                    copyDiffTextBtn.classList.toggle('opacity-50', diff.positions.length === 0);
+                    copyDiffTextBtn.classList.toggle('cursor-not-allowed', diff.positions.length === 0);
+                }
+
+                if (!hasData) {
+                    diffPositionsResult.innerHTML = `<div class="p-6 bg-[#111418] border border-[#2b3340] rounded-[2px] text-center text-xs font-mono text-[#8892a0] italic">
+                        ${onlyChanges ? 'Немає змін (заходів/виходів) по обраних позиціях за ці дати.' : 'Оберіть хоча б одну позицію у списку вище.'}
+                    </div>`;
+                    return;
+                }
+
+                const renderPersonRow = (s, side) => {
+                    const isEntered = side === 'B' && s.state === 'entered';
+                    const isExited = side === 'A' && s.state === 'exited';
+                    const rowBg = isEntered
+                        ? 'bg-[#10231a] border-l-2 border-l-[#4cc38a]'
+                        : isExited
+                            ? 'bg-[#261317] border-l-2 border-l-[#f07178]'
+                            : 'bg-[#141922] border-l-2 border-l-[#2b3340]';
+
+                    const badge = isEntered
+                        ? `<span class="px-1.5 py-0.2 bg-[#163626] text-[#4cc38a] border border-[#1f4d36] rounded-[2px] text-[9px] font-bold shrink-0">+ЗАЙШОВ</span>`
+                        : isExited
+                            ? `<span class="px-1.5 py-0.2 bg-[#38181f] text-[#f07178] border border-[#5c232c] rounded-[2px] text-[9px] font-bold shrink-0">-ВИЙШОВ</span>`
+                            : '';
+
+                    return `<div class="px-2 py-1 border-b border-[#1f2630] ${rowBg} flex items-center justify-between gap-2 text-[11px] font-mono">
+                        <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                            ${badge}
+                            <span class="text-[#8892a0] text-[10px] shrink-0">${escapeHtml(s.rank)}</span>
+                            <span class="text-[#e6e8eb] font-bold truncate">${escapeHtml(s.name)}</span>
+                        </div>
+                        <span class="px-1.5 py-0.5 rounded-[2px] bg-[#0e1218] border border-[#2b3340] text-[#9ec4ee] text-[10px] font-bold shrink-0" title="${escapeHtml(s.appointment)}">${escapeHtml(s.subunit)}</span>
+                    </div>`;
+                };
+
+                diffPositionsResult.innerHTML = visiblePositions.map(p => {
+                    const rowsA = onlyChanges ? p.listA.filter(x => x.state === 'exited') : p.listA;
+                    const rowsB = onlyChanges ? p.listB.filter(x => x.state === 'entered') : p.listB;
+
+                    const inBadge = p.entered.length > 0 ? `<span class="px-1.5 py-0.5 rounded-[2px] bg-[#11261c] border border-[#1f4d36] text-[#4cc38a] font-bold">+${p.entered.length}</span>` : '';
+                    const outBadge = p.exited.length > 0 ? `<span class="px-1.5 py-0.5 rounded-[2px] bg-[#2a1418] border border-[#5c232c] text-[#f07178] font-bold">-${p.exited.length}</span>` : '';
+                    const sameBadge = (p.entered.length === 0 && p.exited.length === 0) ? `<span class="px-1.5 py-0.5 rounded-[2px] bg-[#181c22] border border-[#2b3340] text-[#8892a0]">без змін</span>` : '';
+
+                    return `<div class="border border-[#2b3340] rounded-[2px] overflow-hidden bg-[#111418]">
+                        <div class="px-3 py-1.5 bg-[#1b212b] border-b border-[#2b3340] flex items-center justify-between gap-2 flex-wrap font-mono text-[11px]">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="font-bold text-[#e6e8eb] truncate">${escapeHtml(p.posName)}</span>
+                                <span class="text-[#8892a0] text-[10px]">(${p.listA.length} → ${p.listB.length})</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[10px] shrink-0">
+                                ${inBadge}${outBadge}${sameBadge}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#2b3340]">
+                            <div>
+                                <div class="px-2.5 py-1 bg-[#141922] border-b border-[#222933] text-[10px] font-mono text-[#8892a0] flex items-center justify-between">
+                                    <span>БУЛО (${dALabel})</span>
+                                    <span class="font-bold text-[#a5adb8]">${rowsA.length}</span>
+                                </div>
+                                <div>
+                                    ${rowsA.length > 0 ? rowsA.map(s => renderPersonRow(s, 'A')).join('') : `<div class="px-2.5 py-2 text-[10px] font-mono text-[#697485] italic">— нікого</div>`}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="px-2.5 py-1 bg-[#141922] border-b border-[#222933] text-[10px] font-mono text-[#8892a0] flex items-center justify-between">
+                                    <span>СТАЛО (${dBLabel})</span>
+                                    <span class="font-bold text-[#e6e8eb]">${rowsB.length}</span>
+                                </div>
+                                <div>
+                                    ${rowsB.length > 0 ? rowsB.map(s => renderPersonRow(s, 'B')).join('') : `<div class="px-2.5 py-2 text-[10px] font-mono text-[#697485] italic">— нікого</div>`}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            if (tabModeSliceBtn) tabModeSliceBtn.addEventListener('click', () => setPositionsModalMode('slice', true));
+            if (tabModeDiffBtn) tabModeDiffBtn.addEventListener('click', () => setPositionsModalMode('diff', true));
+            if (diffDateASelect) diffDateASelect.addEventListener('change', () => refreshPositionsChecklist());
+            if (diffDateBSelect) diffDateBSelect.addEventListener('change', () => refreshPositionsChecklist());
+            if (diffViewModeSelect) diffViewModeSelect.addEventListener('change', renderPositionsDiffView);
+
+            if (copyDiffTextBtn) {
+                copyDiffTextBtn.addEventListener('click', async () => {
+                    const diff = window.__lastPositionsDiff;
+                    if (!diff || diff.positions.length === 0) return;
+                    const dA = formatDateDisplay(diff.dateA);
+                    const dB = formatDateDisplay(diff.dateB);
+                    const onlyChanges = diffViewModeSelect && diffViewModeSelect.value === 'changes_only';
+
+                    const lines = [];
+                    lines.push(`ПОРІВНЯННЯ ПОЗИЦІЙ: ${dA} → ${dB}`);
+                    lines.push(`Було: ${diff.totals.countA} | Стало: ${diff.totals.countB} | +${diff.totals.entered} зайшли | -${diff.totals.exited} вийшли | =${diff.totals.stayed} лишились`);
+
+                    const unitsChanged = diff.unitsList.filter(u => u.entered.length > 0 || u.exited.length > 0);
+                    if (unitsChanged.length > 0) {
+                        lines.push('');
+                        lines.push('ПІДРОЗДІЛИ (ХТО ЗАВІВ / ВИВІВ ЛЮДЕЙ):');
+                        unitsChanged.forEach(u => {
+                            const parts = [];
+                            if (u.entered.length > 0) parts.push(`+${u.entered.length} зайшли`);
+                            if (u.exited.length > 0) parts.push(`-${u.exited.length} вийшли`);
+                            lines.push(`• ${u.unit}: ${parts.join(', ')} (було ${u.countA} → стало ${u.countB})`);
+                        });
+                    }
+
+                    lines.push('');
+                    diff.positions.forEach(p => {
+                        if (onlyChanges && p.entered.length === 0 && p.exited.length === 0) return;
+                        const rowsA = onlyChanges ? p.listA.filter(x => x.state === 'exited') : p.listA;
+                        const rowsB = onlyChanges ? p.listB.filter(x => x.state === 'entered') : p.listB;
+                        lines.push(`=== ${p.posName} (${p.listA.length} → ${p.listB.length}) ===`);
+                        lines.push(`  Було (${dA}) — ${rowsA.length}:`);
+                        if (rowsA.length === 0) {
+                            lines.push('    — нікого');
+                        } else {
+                            rowsA.forEach((s, i) => {
+                                const mark = s.state === 'exited' ? ' [-ВИЙШОВ]' : '';
+                                lines.push(`    ${i + 1}. ${s.rank} ${s.name} [${s.subunit}]${mark}`);
+                            });
+                        }
+                        lines.push(`  Стало (${dB}) — ${rowsB.length}:`);
+                        if (rowsB.length === 0) {
+                            lines.push('    — нікого');
+                        } else {
+                            rowsB.forEach((s, i) => {
+                                const mark = s.state === 'entered' ? ' [+ЗАЙШОВ]' : '';
+                                lines.push(`    ${i + 1}. ${s.rank} ${s.name} [${s.subunit}]${mark}`);
+                            });
+                        }
+                        lines.push('');
+                    });
+
+                    try {
+                        await navigator.clipboard.writeText(lines.join('\n'));
+                        if (diffCopyFeedback) {
+                            diffCopyFeedback.classList.remove('opacity-0');
+                            setTimeout(() => diffCopyFeedback.classList.add('opacity-0'), 2200);
+                        }
+                    } catch (e) {
+                        alert('Не вдалося скопіювати в буфер обміну.');
+                    }
+                });
+            }
+
+            if (confirmExportDiffBtn) {
+                confirmExportDiffBtn.addEventListener('click', () => {
+                    const diff = window.__lastPositionsDiff;
+                    if (!diff || diff.positions.length === 0) {
+                        alert('Немає даних для вивантаження.');
+                        return;
+                    }
+                    const dA = formatDateDisplay(diff.dateA);
+                    const dB = formatDateDisplay(diff.dateB);
+                    const onlyChanges = diffViewModeSelect && diffViewModeSelect.value === 'changes_only';
+
+                    const thinBorder = {
+                        top: { style: 'thin', color: { rgb: 'BFBFBF' } },
+                        bottom: { style: 'thin', color: { rgb: 'BFBFBF' } },
+                        left: { style: 'thin', color: { rgb: 'BFBFBF' } },
+                        right: { style: 'thin', color: { rgb: 'BFBFBF' } }
+                    };
+                    const headBorder = {
+                        top: { style: 'thin', color: { rgb: '808080' } },
+                        bottom: { style: 'thin', color: { rgb: '808080' } },
+                        left: { style: 'thin', color: { rgb: '808080' } },
+                        right: { style: 'thin', color: { rgb: '808080' } }
+                    };
+
+                    // ===== АРКУШ 1: БУЛО І СТАЛО (сухий класичний штабний формат) =====
+                    const aoa1 = [];
+                    const merges1 = [];
+                    const rowMeta1 = [];
+
+                    // Рядок 0: Заголовок документа
+                    aoa1.push([`Порівняння позицій: ${dA} — ${dB} (було: ${diff.totals.countA}, стало: ${diff.totals.countB}, зайшли: ${diff.totals.entered}, вийшли: ${diff.totals.exited})`, '', '', '', '', '', '', '', '']);
+                    merges1.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } });
+                    rowMeta1.push({ type: 'title' });
+
+                    // Рядок 1: Групові шапки БУЛО | СТАЛО
+                    aoa1.push([`Було (${dA})`, '', '', '', '', `Стало (${dB})`, '', '', '']);
+                    merges1.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 3 } });
+                    merges1.push({ s: { r: 1, c: 5 }, e: { r: 1, c: 8 } });
+                    rowMeta1.push({ type: 'group' });
+
+                    // Рядок 2: Підзаголовки колонок
+                    aoa1.push(['Підрозділ', 'Звання', 'ПІБ', 'Примітка', '', 'Підрозділ', 'Звання', 'ПІБ', 'Примітка']);
+                    rowMeta1.push({ type: 'subhead' });
+
+                    let visiblePositions = diff.positions;
+                    if (diffActiveUnitFilter) {
+                        visiblePositions = visiblePositions.map(p => ({
+                            ...p,
+                            listA: p.listA.filter(x => x.subunit === diffActiveUnitFilter),
+                            listB: p.listB.filter(x => x.subunit === diffActiveUnitFilter),
+                            entered: p.entered.filter(x => x.subunit === diffActiveUnitFilter),
+                            exited: p.exited.filter(x => x.subunit === diffActiveUnitFilter),
+                            stayed: p.stayed.filter(x => x.subunit === diffActiveUnitFilter)
+                        })).filter(p => p.listA.length > 0 || p.listB.length > 0);
+                    }
+
+                    visiblePositions.forEach(p => {
+                        const rowsA = onlyChanges ? p.listA.filter(x => x.state === 'exited') : p.listA;
+                        const rowsB = onlyChanges ? p.listB.filter(x => x.state === 'entered') : p.listB;
+                        if (onlyChanges && rowsA.length === 0 && rowsB.length === 0) return;
+
+                        const posRowIdx = aoa1.length;
+                        const cleanTitle = cleanPositionForExport(p.posName) || p.posName;
+                        aoa1.push([`${cleanTitle} (було: ${p.listA.length}, стало: ${p.listB.length})`, '', '', '', '', '', '', '', '']);
+                        merges1.push({ s: { r: posRowIdx, c: 0 }, e: { r: posRowIdx, c: 8 } });
+                        rowMeta1.push({ type: 'pos' });
+
+                        const maxLen = Math.max(rowsA.length, rowsB.length, 1);
+                        for (let i = 0; i < maxLen; i++) {
+                            const left = rowsA[i] || null;
+                            const right = rowsB[i] || null;
+                            aoa1.push([
+                                left ? left.subunit : '',
+                                left ? left.rank : '',
+                                left ? left.name : '',
+                                left && left.state === 'exited' ? 'вийшов' : '',
+                                '',
+                                right ? right.subunit : '',
+                                right ? right.rank : '',
+                                right ? right.name : '',
+                                right && right.state === 'entered' ? 'зайшов' : ''
+                            ]);
+                            rowMeta1.push({ type: 'data' });
+                        }
+
+                        aoa1.push(['', '', '', '', '', '', '', '', '']);
+                        rowMeta1.push({ type: 'gap' });
+                    });
+
+                    const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
+                    ws1['!merges'] = merges1;
+                    ws1['!cols'] = [
+                        { wch: 16 }, { wch: 18 }, { wch: 32 }, { wch: 11 },
+                        { wch: 3 },
+                        { wch: 16 }, { wch: 18 }, { wch: 32 }, { wch: 11 }
+                    ];
+                    ws1['!rows'] = rowMeta1.map(m => {
+                        if (m.type === 'title') return { hpt: 22 };
+                        if (m.type === 'group') return { hpt: 20 };
+                        if (m.type === 'subhead') return { hpt: 19 };
+                        if (m.type === 'pos') return { hpt: 20 };
+                        if (m.type === 'gap') return { hpt: 8 };
+                        return { hpt: 18 };
+                    });
+                    ws1['!freeze'] = { ySplit: 3, topLeftCell: 'A4' };
+
+                    for (let R = 0; R < aoa1.length; R++) {
+                        const meta = rowMeta1[R];
+                        for (let C = 0; C <= 8; C++) {
+                            const ref = XLSX.utils.encode_cell({ r: R, c: C });
+                            if (!ws1[ref]) ws1[ref] = { t: 's', v: '' };
+
+                            if (meta.type === 'title') {
+                                ws1[ref].s = {
+                                    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '000000' } },
+                                    alignment: { vertical: 'center', horizontal: 'left' }
+                                };
+                            } else if (meta.type === 'group') {
+                                if (C === 4) {
+                                    ws1[ref].s = {};
+                                } else {
+                                    ws1[ref].s = {
+                                        fill: { fgColor: { rgb: 'E6E6E6' } },
+                                        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } },
+                                        alignment: { vertical: 'center', horizontal: 'center' },
+                                        border: headBorder
+                                    };
+                                }
+                            } else if (meta.type === 'subhead') {
+                                if (C === 4) {
+                                    ws1[ref].s = {};
+                                } else {
+                                    ws1[ref].s = {
+                                        fill: { fgColor: { rgb: 'F2F2F2' } },
+                                        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } },
+                                        alignment: { vertical: 'center', horizontal: (C === 3 || C === 8) ? 'center' : 'left' },
+                                        border: headBorder
+                                    };
+                                }
+                            } else if (meta.type === 'pos') {
+                                ws1[ref].s = {
+                                    fill: { fgColor: { rgb: 'F2F2F2' } },
+                                    font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '000000' } },
+                                    alignment: { vertical: 'center', horizontal: 'left' },
+                                    border: headBorder
+                                };
+                            } else if (meta.type === 'gap') {
+                                ws1[ref].s = {};
+                            } else if (meta.type === 'data') {
+                                if (C === 4) {
+                                    ws1[ref].s = {};
+                                } else {
+                                    const isNote = (C === 3 || C === 8);
+                                    ws1[ref].s = {
+                                        font: { name: 'Calibri', sz: 10, bold: isNote && !!ws1[ref].v, color: { rgb: '000000' } },
+                                        alignment: { vertical: 'center', horizontal: isNote ? 'center' : 'left' },
+                                        border: thinBorder
+                                    };
+                                }
+                            }
+                        }
+                    }
+
+                    // ===== АРКУШ 2: ЗВЕДЕННЯ ПО ПІДРОЗДІЛАХ =====
+                    const aoa2 = [[`Підрозділ`, `Зайшли`, `Вийшли`, `Було (${dA})`, `Стало (${dB})`, `Різниця`]];
+                    diff.unitsList.forEach(u => {
+                        aoa2.push([u.unit, u.entered.length, u.exited.length, u.countA, u.countB, u.countB - u.countA]);
+                    });
+                    aoa2.push(['Разом', diff.totals.entered, diff.totals.exited, diff.totals.countA, diff.totals.countB, diff.totals.countB - diff.totals.countA]);
+
+                    const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
+                    ws2['!cols'] = [{ wch: 24 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }];
+                    ws2['!rows'] = aoa2.map((_, i) => ({ hpt: i === 0 ? 22 : 19 }));
+                    ws2['!freeze'] = { ySplit: 1, topLeftCell: 'A2' };
+                    ws2['!autofilter'] = { ref: `A1:F${aoa2.length - 1}` };
+
+                    for (let R = 0; R < aoa2.length; R++) {
+                        const isHead = R === 0;
+                        const isTotal = R === aoa2.length - 1;
+                        for (let C = 0; C <= 5; C++) {
+                            const ref = XLSX.utils.encode_cell({ r: R, c: C });
+                            if (!ws2[ref]) continue;
+                            ws2[ref].s = {
+                                fill: isHead ? { fgColor: { rgb: 'E6E6E6' } } : (isTotal ? { fgColor: { rgb: 'F2F2F2' } } : undefined),
+                                font: { name: 'Calibri', sz: 10, bold: isHead || isTotal, color: { rgb: '000000' } },
+                                alignment: { vertical: 'center', horizontal: C === 0 ? 'left' : 'center' },
+                                border: (isHead || isTotal) ? headBorder : thinBorder
+                            };
+                        }
+                    }
+
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws1, 'Було і Стало');
+                    XLSX.utils.book_append_sheet(wb, ws2, 'По підрозділах');
+
+                    const stamp = `${dA.replace(/\./g, '_')}_${dB.replace(/\./g, '_')}`;
+                    XLSX.writeFile(wb, `Порівняння_позицій_${stamp}.xlsx`);
+                });
+            }
 
             async function processFiles(files) {
                 const filesArray = Array.from(files);
