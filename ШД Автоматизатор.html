@@ -114,7 +114,7 @@
                             <button type="button" onclick="openChangelogModal()" title="Історія оновлень"
                                 class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#181c22] hover:bg-[#20262f] text-[#e6e8eb] border border-[#343f50] rounded-[2px] text-xs font-mono font-semibold cursor-pointer transition-colors tabular-nums">
                                 <i data-lucide="history" class="w-3 h-3 text-[#4c8ed9]"></i>
-                                <span>v1.0.0</span>
+                                <span>v1.0.1</span>
                             </button>
                             <span class="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#0e1218] border border-[#343f50] rounded-[2px] text-xs font-mono text-[#a5adb8]">
                                 <span class="w-2 h-2 rounded-full bg-[#34a86e]"></span>
@@ -166,8 +166,8 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label for="cfg-brigade" class="block text-xs text-[#a5adb8] mb-1">Бригада (дописувати до підрозділу)</label>
-                        <input type="text" id="cfg-brigade" value="125 овмбр" oninput="onSettingsChanged()"
-                            placeholder="напр. 125 овмбр"
+                        <input type="text" id="cfg-brigade" value="" oninput="onSettingsChanged()"
+                            placeholder="напр. N омбр"
                             class="w-full px-2.5 py-1.5 bg-[#0e1218] border border-[#2b3340] focus:border-[#4c8ed9] outline-none text-xs text-[#e6e8eb] rounded-[2px]">
                     </div>
                     <div>
@@ -267,12 +267,21 @@
         <div class="py-2 overflow-y-auto space-y-4 flex-1 text-xs">
             <div class="pl-3.5 border-l-2 border-[#4cc38a] space-y-1.5">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-[#4cc38a] font-mono text-sm">v1.0.0 (Перший реліз)</span>
+                    <span class="font-bold text-[#4cc38a] font-mono text-sm">v1.0.1 (Поточна версія)</span>
+                    <span class="font-mono text-[#a5adb8] bg-[#151920] px-2 py-0.5 border border-[#2b3340]">21.11.2026</span>
+                </div>
+                <ul class="space-y-1 text-[#a5adb8] list-disc list-inside">
+                    <li><strong>OPSEC-очищення:</strong> Прибрано зашитий номер бригади з дефолту поля <code>#cfg-brigade</code> та журналу змін (робоче значення зберігається локально в <code>localStorage</code>).</li>
+                </ul>
+            </div>
+            <div class="pl-3.5 border-l-2 border-[#2b3340] space-y-1.5 opacity-85">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-[#a5adb8] font-mono text-sm">v1.0.0 (Перший реліз)</span>
                     <span class="font-mono text-[#a5adb8] bg-[#151920] px-2 py-0.5 border border-[#2b3340]">17.11.2026</span>
                 </div>
                 <ul class="space-y-1 text-[#a5adb8] list-disc list-inside">
                     <li>Парсинг Excel-файлів ШД (лист <code>вих район</code>, колонки <code>початок</code> .. <code>втрати_противника_</code>).</li>
-                    <li>Автодоповнення бригади з налаштувань (<code>125 овмбр</code>) без дублювання.</li>
+                    <li>Автодоповнення бригади з налаштувань (<code>localStorage</code>) без дублювання.</li>
                     <li>Генерація еталонного тексту, копіювання в буфер для Word (<code>Times New Roman</code>, <code>13pt</code>/<code>14pt</code>, по ширині) та експорт у <code>.docx</code> / <code>.txt</code>.</li>
                 </ul>
             </div>
