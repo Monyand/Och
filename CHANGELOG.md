@@ -1,5 +1,13 @@
 # 📋 Історія змін проєкту (Changelog)
 
+## [Suite QA Guard & Скіли — Оновлення CI-аудиту та стандартів комплексу] від 22.11.2026
+
+### 🛡️ QA & CI/CD (`suite_agent.py`):
+* **Динамічний реєстр з HUB:** `suite_agent.py` тепер автоматично зчитує всі 12 актуальних модулів (`М-01`–`М-12`) і їхні версії напряму з `index.html`, коректно визначає версії всередині single-file HTML (оминаючи вбудовані vendor-скрипти), перевіряє OPSEC-чистоту та прибирає застарілу вимогу Google Fonts CDN (`Inter`), що повернуло `Suite QA & Integrity Guard` у 100% зелений статус.
+
+### 📚 Скіли (`.agents/skills/`):
+* Оновлено `tactical_parsing_standards/SKILL.md` (`РГД-5` vs `РДГ-2`, `pluralUk`, `extractShortSubunit`, OPSEC-гігієна), `vanilla_js_patterns/SKILL.md` (100% offline `v8/`, `<dialog>`, 2-рядний тулбар, SVG) та `office_docs_standards/SKILL.md` (сухий ЧБ штабний Excel).
+
 ## [ШД Автоматизатор v1.0.1, Аналізатор ротацій v1.8.1 — Повне OPSEC-очищення репо] від 21.11.2026
 
 ### ⚔️ ШД Автоматизатор (`ШД Автоматизатор.html`) v1.0.1:
