@@ -320,7 +320,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                         <svg class="w-3.5 h-3.5 text-[#4c8ed9]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>v2.3.1</span>
+                        <span>v2.4.0</span>
                     </button>
                 </div>
             </div>
@@ -621,6 +621,14 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                                 <span id="countUtoch">0</span>
                             </span>
                         </button>
+                        <button type="button" id="tab-changes" onclick="switchTab('changes')"
+                            class="px-2.5 lg:px-3.5 py-2.5 border-b-2 border-transparent text-[#8892a0] hover:text-[#e6e8eb] font-semibold focus:outline-none text-xs uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer"
+                            title="Порівняння сьогоднішнього зрізу з учорашнім: хто з підрозділів і куди завів/вивів о/с">
+                            <span>Зміни за добу</span>
+                            <span class="bg-[#20262f] text-[#a5adb8] font-mono font-semibold text-xs px-1.5 py-0.5 rounded-[2px] border border-[#343f50] tabular-nums">
+                                <span id="countChanges">—</span>
+                            </span>
+                        </button>
                     </div>
 
                     <!-- Пошук та Додавання запису -->
@@ -880,6 +888,70 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Панель Змін за добу (Вчора ↔ Сьогодні: матриця дельт + поіменно) -->
+                <div id="table-changes-container" class="hidden flex-col space-y-3.5">
+                    <!-- Верхня панель керування базою порівняння -->
+                    <div class="p-3 bg-[#151920] border border-[#2b3340] rounded-[2px] flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 text-xs font-mono">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-[#8892a0]">База «вчора»:</span>
+                            <strong id="baselineStatusText" class="text-[#e6e8eb]">Не збережено</strong>
+                            <span id="changesTotalsInline" class="hidden items-center gap-1.5 ml-1"></span>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <input type="file" id="baselineFileInput" class="hidden" accept=".docx,.xlsx,.xls" onchange="handleBaselineFileUpload(event)">
+                            <button type="button" onclick="saveDailyBaselineSnapshot(true)"
+                                class="px-2.5 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#394455] rounded-[2px] text-[11px] font-semibold cursor-pointer transition-colors"
+                                title="Зберегти поточні завантажені дані як базу для порівняння на завтра">
+                                Зафіксувати сьогодні як базу
+                            </button>
+                            <button type="button" onclick="document.getElementById('baselineFileInput').click()"
+                                class="px-2.5 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#a5adb8] hover:text-[#e6e8eb] border border-[#394455] rounded-[2px] text-[11px] font-semibold cursor-pointer transition-colors"
+                                title="Підвантажити вчорашній готовий Додаток 6 (.docx або .xlsx)">
+                                Завантажити вчорашній Дод.6
+                            </button>
+                            <select id="changesMatrixFilterMode" onchange="renderDailyChangesTab()"
+                                class="bg-[#0e1218] text-[#e6e8eb] border border-[#394455] rounded-[2px] px-2 py-1.5 text-[11px] font-mono outline-none focus:border-[#4c8ed9]">
+                                <option value="changes_only">Тільки позиції зі змінами</option>
+                                <option value="all">Усі позиції</option>
+                            </select>
+                            <button type="button" onclick="copyDailyChangesText()"
+                                class="px-2.5 py-1.5 bg-[#20262f] hover:bg-[#2b3340] text-[#e6e8eb] border border-[#394455] rounded-[2px] text-[11px] font-semibold cursor-pointer transition-colors">
+                                Копіювати списком
+                            </button>
+                            <button type="button" onclick="downloadDailyChangesExcel()"
+                                class="px-2.5 py-1.5 bg-[#2b67ab] hover:bg-[#245791] text-[#f4f6f8] border border-[#4c8ed9] rounded-[2px] text-[11px] font-bold cursor-pointer transition-colors">
+                                Excel (Зміни)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Зведення по підрозділах: хто завів / вивів о/с -->
+                    <div id="changesUnitsSummaryBox" class="hidden p-3 bg-[#141922] border border-[#2b3340] rounded-[2px] space-y-2 font-mono">
+                        <div class="flex items-center justify-between text-[10px] uppercase tracking-wider text-[#8892a0]">
+                            <span>Які підрозділи завели / вивели людей:</span>
+                            <span id="changesUnitFilterHint" class="text-[#697485] normal-case">Клік по підрозділу — фільтр</span>
+                        </div>
+                        <div id="changesUnitsChips" class="flex items-center gap-1.5 flex-wrap text-[11px]"></div>
+                    </div>
+
+                    <!-- Матриця змін: Позиція × Підрозділ (клітинка: стало (+зайшли / -вийшли)) -->
+                    <div id="changesMatrixWrap" class="hidden border border-[#2b3340] rounded-[2px] overflow-hidden bg-[#181c22]">
+                        <div class="px-3.5 py-2 bg-[#20262f] border-b border-[#2b3340] flex items-center justify-between text-xs font-mono">
+                            <span class="font-bold text-[#e6e8eb] uppercase tracking-wider text-[11px]">Матриця змін (Позиція × Підрозділ)</span>
+                            <span class="text-[10px] text-[#8892a0]">формат клітинки: стало (+зайшли / -вийшли)</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-[#222933] text-xs font-mono tabular-nums" id="changesMatrixTable">
+                                <thead id="changesMatrixHead" class="bg-[#151920] border-b border-[#2b3340]"></thead>
+                                <tbody id="changesMatrixBody" class="divide-y divide-[#222933]"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Поіменний список змін по позиціях -->
+                    <div id="changesDetailsList" class="space-y-2.5"></div>
                 </div>
             </div>
         </div>
@@ -1410,7 +1482,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </span>
                     <span>Історія оновлень (Changelog)</span>
-                    <span class="text-xs bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] font-mono font-semibold px-2 py-0.5 rounded-[2px] ml-1 tabular-nums">v2.3.1</span>
+                    <span class="text-xs bg-[#182230] text-[#4c8ed9] border border-[#2d4a6d] font-mono font-semibold px-2 py-0.5 rounded-[2px] ml-1 tabular-nums">v2.4.0</span>
                 </h3>
                 <button type="button" onclick="closeChangelogModal()"
                     class="text-[#8892a0] hover:text-[#e6e8eb] focus:outline-none p-1.5 rounded-[2px] hover:bg-[#20262f] transition-colors cursor-pointer">
@@ -1436,9 +1508,25 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
         // ІСТОРІЯ ЗМІН (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "2.4.0",
+                date: "24.11.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "Вкладка «Зміни за добу» (Вчора ↔ Сьогодні)",
+                        color: "blue",
+                        items: [
+                            "<b>Автоматична історія баз по датах</b>: під час генерації офіційного <code>Додаток 6 (.docx)</code> поточний склад зберігається в <code>localStorage</code> за датою (зберігаються останні 3 дні; повторна генерація в той самий день не затирає вчорашню базу).",
+                            "<b>Матриця дельт та поіменний облік</b>: нова вкладка показує зведення по підрозділах (<code>+A/-B</code> із клік-фільтром), матрицю <code>Позиція × Підрозділ</code> із дельтами та поіменні списки <b>Зайшли сьогодні / Вийшли з учора</b>.",
+                            "<b>Сухий штабний Excel та копіювання</b>: кнопка копіювання списком, окремий чорно-білий <code>Excel (Зміни)</code> та автоматичне додавання аркушів <code>Зміни за добу</code> і <code>Зайшли-Вийшли</code> у <b>Зведену матрицю</b>."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "2.3.1",
                 date: "15.11.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "Відновлення валідації файлів ПБД",
@@ -3219,7 +3307,10 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
 
-                showToast(`Офіційний Додаток 6 успішно завантажено (${outFileName})!`, "success");
+                if (typeof saveDailyBaselineSnapshot === 'function') {
+                    saveDailyBaselineSnapshot(false, endDate);
+                }
+                showToast(`Офіційний Додаток 6 успішно завантажено (${outFileName})! Базу за ${endDate} збережено для завтрашнього порівняння.`, "success");
             } catch (err) {
                 console.error("Error generating docx:", err);
                 alert("Помилка під час генерації документа Word: " + err.message);
@@ -4893,6 +4984,9 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Зведена по позиціях");
             XLSX.utils.book_append_sheet(wb, ws2, "Додаток 2 (РОП та ПБД)");
+            if (typeof appendDailyChangesSheetToWorkbook === 'function') {
+                appendDailyChangesSheetToWorkbook(wb);
+            }
             XLSX.writeFile(wb, `ЗВІТ_Матриця_Позицій_${dateStr}.xlsx`);
         }
 
@@ -5856,6 +5950,11 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
             renderTable(activeZab, 'zab-body');
 
             filterTables();
+            if (typeof updateDailyChangesBadge === 'function') updateDailyChangesBadge();
+            const changesPane = document.getElementById('table-changes-container');
+            if (changesPane && !changesPane.classList.contains('hidden') && typeof renderDailyChangesTab === 'function') {
+                renderDailyChangesTab();
+            }
         }
 
 
@@ -6470,7 +6569,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
 
         function switchTab(type) {
             const updateDOM = () => {
-                ['vop', 'btgr', 'bro', 'zab', 'utoch'].forEach(t => {
+                ['vop', 'btgr', 'bro', 'zab', 'utoch', 'changes'].forEach(t => {
                     const btn = document.getElementById(`tab-${t}`);
                     const container = document.getElementById(`table-${t}-container`);
                     if (!btn || !container) return;
@@ -6489,6 +6588,9 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                             updateUtochSoldierDatalist();
                             updateUtochTasksDatalist();
                             renderUtochTables();
+                        } else if (t === 'changes') {
+                            container.classList.add('flex');
+                            if (typeof renderDailyChangesTab === 'function') renderDailyChangesTab();
                         }
                     } else {
                         btn.classList.remove('border-[#4c8ed9]', 'text-[#e6e8eb]');
@@ -6498,7 +6600,7 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                             pill.classList.add('bg-[#20262f]', 'text-[#a5adb8]', 'border-[#343f50]');
                         }
                         container.classList.add('hidden');
-                        if (t === 'utoch') container.classList.remove('flex');
+                        if (t === 'utoch' || t === 'changes') container.classList.remove('flex');
                     }
                 });
             };
@@ -7189,6 +7291,631 @@ var XLSX={};function make_xlsx_lib(a){a.version="0.18.5",a.style_version="1.2.0"
                 showToast(str, 'info');
             }
         };
+
+        // ─── МОДУЛЬ: ЗМІНИ ЗА ДОБУ (ВЧОРА ↔ СЬОГОДНІ: МАТРИЦЯ ДЕЛЬТ ТА ПІДРОЗДІЛИ) ───
+        const DAILY_BASELINE_KEY = 'dod6_daily_baseline_v1';
+        let activeChangesUnitFilter = null;
+
+        function extractUnitForChanges(rec) {
+            if (rec.fileName && typeof cleanUnitName === 'function') {
+                const cleaned = cleanUnitName(rec.fileName);
+                if (cleaned && !/^дод|\d+мб_\d+|5\.18/i.test(cleaned)) return cleaned;
+            }
+            const pos = String(rec.pos || rec.position || '').replace(/\s+/g, ' ').trim();
+            const low = pos.toLowerCase();
+            const compMatch = low.match(/(\d+)\s*[-\s]?(?:ї|ої|а|ій)?\s*(механізован[а-яіїєґ]*|стрілецьк[а-яіїєґ]*|танков[а-яіїєґ]*|штурмов[а-яіїєґ]*)\s+рот/);
+            if (compMatch) {
+                const t = compMatch[2];
+                if (t.startsWith('механ')) return `${compMatch[1]} мр`;
+                if (t.startsWith('стріл')) return `${compMatch[1]} ср`;
+                if (t.startsWith('танк')) return `${compMatch[1]} тр`;
+                if (t.startsWith('штурм')) return `${compMatch[1]} шр`;
+            }
+            const shortComp = pos.match(/\b(\d+)\s*(МР|СР|ТР|ШР)\b/i);
+            if (shortComp) return `${shortComp[1]} ${shortComp[2].toLowerCase()}`;
+            if (/безпілотн[а-яіїєґ]*\s+авіаційн|рбпак/i.test(pos)) return 'РБпАК';
+            if (/безпілотн[а-яіїєґ]*\s+систем|нрк/i.test(pos)) return 'НРК';
+            if (/мінометн|мінбат/i.test(pos)) return 'МінБат';
+            if (/вогневої\s+підтримки|\bрвп\b/i.test(pos)) return 'РВП';
+            if (/розвідувальн/i.test(pos)) return 'РВ';
+            if (/протитанков|\bптрк\b/i.test(pos)) return 'ПТРК';
+            if (/гранатометн/i.test(pos)) return 'ГранВ';
+            if (/кулеметн/i.test(pos)) return 'КулВ';
+            if (/інженерно-саперн|\bісв\b/i.test(pos)) return 'ІСВ';
+            if (/зв['’ʼ]?язку/i.test(pos)) return 'Зв’язок';
+            if (/медичн/i.test(pos)) return 'МП';
+            if (/матеріальн/i.test(pos)) return 'ВМЗ';
+            if (/технічн/i.test(pos)) return 'ВТЗ';
+            if (/ремонтно-віднов/i.test(pos)) return 'ВРБ';
+            if (/охорони/i.test(pos)) return 'ВО';
+            if (/бронегруп/i.test(pos)) return 'Бронегрупа';
+            if (/управління|штаб/i.test(pos)) return 'Упр';
+            if (/прикомандирован/i.test(pos)) return 'Придані';
+            return (rec.fileName && typeof cleanUnitName === 'function') ? (cleanUnitName(rec.fileName) || 'Інші') : 'Інші';
+        }
+
+        function getCurrentNormalizedRecords() {
+            const all = [...vopData, ...btgrData, ...broData, ...zabData]
+                .filter(d => d && d.name && d.name !== '[ВІДСУТНІЙ В/С]');
+            const byKey = new Map();
+            all.forEach(d => {
+                const key = normalizeName(d.name);
+                if (!key) return;
+                const task = (d.task && d.task.trim() !== '') ? d.task.trim() : 'НЕ ВКАЗАНО ПОЗИЦІЮ';
+                const unit = extractUnitForChanges(d);
+                byKey.set(key, {
+                    key,
+                    name: String(d.name).trim(),
+                    rank: String(d.rank || '').trim(),
+                    unit,
+                    task
+                });
+            });
+            return Array.from(byKey.values());
+        }
+
+        const DAILY_BASELINE_HISTORY_KEY = 'dod6_daily_baseline_history_v2';
+
+        function getCurrentWorkingDateStr() {
+            return (typeof getDetectedDateStr === 'function' ? getDetectedDateStr() : '').replace(/_/g, '.').trim()
+                || new Date().toLocaleDateString('uk-UA');
+        }
+
+        function loadDailyBaselineHistory() {
+            try {
+                const raw = localStorage.getItem(DAILY_BASELINE_HISTORY_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        return parsed.filter(item => item && Array.isArray(item.records) && item.dateStr);
+                    }
+                }
+                // Міграція зі старого формату v1 (якщо вже був збережений)
+                const legacyRaw = localStorage.getItem(DAILY_BASELINE_KEY);
+                if (legacyRaw) {
+                    const legacy = JSON.parse(legacyRaw);
+                    if (legacy && Array.isArray(legacy.records)) {
+                        const migrated = [{ ...legacy, savedTs: legacy.savedTs || Date.now() }];
+                        localStorage.setItem(DAILY_BASELINE_HISTORY_KEY, JSON.stringify(migrated));
+                        return migrated;
+                    }
+                }
+            } catch (e) {}
+            return [];
+        }
+
+        function upsertDailyBaselineHistory(entry) {
+            const history = loadDailyBaselineHistory();
+            const filtered = history.filter(item => item.dateStr !== entry.dateStr);
+            filtered.unshift({ ...entry, savedTs: Date.now() });
+            // Зберігаємо останні 3 дати (наприклад, позавчора / вчора / сьогодні)
+            const trimmed = filtered.slice(0, 3);
+            localStorage.setItem(DAILY_BASELINE_HISTORY_KEY, JSON.stringify(trimmed));
+            return trimmed;
+        }
+
+        function loadDailyBaselineSnapshot() {
+            const history = loadDailyBaselineHistory();
+            if (history.length === 0) return null;
+            const currDate = getCurrentWorkingDateStr();
+            // Пріоритет: останній збережений зліпок, дата якого НЕ дорівнює сьогоднішній
+            const prevDay = history.find(item => item.dateStr !== currDate);
+            return prevDay || history[0];
+        }
+
+        function saveDailyBaselineSnapshot(notify = true, overrideDateStr = '') {
+            const records = getCurrentNormalizedRecords();
+            if (records.length === 0) {
+                if (notify) showToast('Немає завантажених записів для збереження бази.', 'warning');
+                return false;
+            }
+            const dateStr = (overrideDateStr ? String(overrideDateStr).replace(/_/g, '.').trim() : '') || getCurrentWorkingDateStr();
+            const payload = {
+                dateStr,
+                savedAt: new Date().toLocaleString('uk-UA'),
+                records
+            };
+            try {
+                upsertDailyBaselineHistory(payload);
+                if (notify) showToast(`Базу за ${dateStr} зафіксовано (${records.length} в/с). Вчорашня база збережена окремо.`, 'success');
+                updateDailyChangesBadge();
+                const pane = document.getElementById('table-changes-container');
+                if (pane && !pane.classList.contains('hidden')) renderDailyChangesTab();
+                return true;
+            } catch (e) {
+                if (notify) showToast('Не вдалося зберегти базу в localStorage: ' + e.message, 'error');
+                return false;
+            }
+        }
+
+        async function handleBaselineFileUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            try {
+                let parsed = [];
+                const ext = file.name.split('.').pop().toLowerCase();
+                const buf = await file.arrayBuffer();
+                const docDate = (typeof extractDateFromDocInfo === 'function' ? extractDateFromDocInfo(file.name) : '') || new Date().toLocaleDateString('uk-UA');
+
+                if (ext === 'docx') {
+                    const res = await mammoth.convertToHtml({ arrayBuffer: buf });
+                    const rawRecs = parseDocumentRecords(res.value, file.name, docDate);
+                    parsed = rawRecs.filter(d => d && d.name && d.name !== '[ВІДСУТНІЙ В/С]').map(d => ({
+                        key: normalizeName(d.name),
+                        name: String(d.name).trim(),
+                        rank: String(d.rank || '').trim(),
+                        unit: extractUnitForChanges(d),
+                        task: (d.task && d.task.trim() !== '') ? d.task.trim() : 'НЕ ВКАЗАНО ПОЗИЦІЮ'
+                    })).filter(r => r.key);
+                } else if (ext === 'xlsx' || ext === 'xls') {
+                    const wb = XLSX.read(buf, { type: 'array' });
+                    wb.SheetNames.forEach(sName => {
+                        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sName], { header: 1, defval: '' });
+                        if (rows.length < 2) return;
+                        let hIdx = 0;
+                        for (let i = 0; i < Math.min(8, rows.length); i++) {
+                            const joined = rows[i].join(' ').toLowerCase();
+                            if (joined.includes('піб') || joined.includes('прізвище')) { hIdx = i; break; }
+                        }
+                        const hdr = rows[hIdx].map(c => String(c).toLowerCase().trim());
+                        const idxName = hdr.findIndex(h => h.includes('піб') || h.includes('прізвище'));
+                        const idxRank = hdr.findIndex(h => h.includes('зван'));
+                        const idxPos  = hdr.findIndex(h => h.includes('посад'));
+                        const idxTask = hdr.findIndex(h => h.includes('позиц') || h.includes('завдан') || h.includes('локац'));
+                        if (idxName === -1 || idxTask === -1) return;
+                        for (let r = hIdx + 1; r < rows.length; r++) {
+                            const name = String(rows[r][idxName] || '').trim();
+                            const task = String(rows[r][idxTask] || '').trim();
+                            if (!name || name.length < 4 || !task) continue;
+                            const pos = idxPos !== -1 ? String(rows[r][idxPos] || '').trim() : '';
+                            parsed.push({
+                                key: normalizeName(name),
+                                name,
+                                rank: idxRank !== -1 ? String(rows[r][idxRank] || '').trim() : '',
+                                unit: extractUnitForChanges({ pos, fileName: '' }),
+                                task
+                            });
+                        }
+                    });
+                }
+
+                // Дедуплікація по ключу
+                const uniq = new Map();
+                parsed.forEach(r => uniq.set(r.key, r));
+                const finalRecs = Array.from(uniq.values());
+
+                if (finalRecs.length === 0) {
+                    showToast('Не вдалося розпізнати жодного бійця у файлі бази.', 'warning');
+                    return;
+                }
+                const payload = { dateStr: docDate, savedAt: new Date().toLocaleString('uk-UA'), sourceFile: file.name, records: finalRecs };
+                upsertDailyBaselineHistory(payload);
+                showToast(`Завантажено базу «вчора»: ${file.name} (${finalRecs.length} в/с).`, 'success');
+                updateDailyChangesBadge();
+                renderDailyChangesTab();
+            } catch (err) {
+                showToast('Помилка читання файлу бази: ' + err.message, 'error');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        function computeDailyChanges() {
+            const baseline = loadDailyBaselineSnapshot();
+            const currList = getCurrentNormalizedRecords();
+            if (!baseline) return { baseline: null, currCount: currList.length };
+
+            const prevMap = new Map();
+            baseline.records.forEach(r => prevMap.set(r.key, r));
+            const currMap = new Map();
+            currList.forEach(r => currMap.set(r.key, r));
+
+            const unitsSet = new Set();
+            const tasksMap = new Map(); // task -> { task, prevCount, currCount, byUnit: Map<unit, {prev,curr,in,out}>, entered: [], exited: [] }
+            const unitStats = new Map(); // unit -> { unit, prev, curr, in, out }
+
+            const ensureTask = (t) => {
+                if (!tasksMap.has(t)) tasksMap.set(t, { task: t, prevCount: 0, currCount: 0, byUnit: new Map(), entered: [], exited: [] });
+                return tasksMap.get(t);
+            };
+            const ensureUnit = (u) => {
+                unitsSet.add(u);
+                if (!unitStats.has(u)) unitStats.set(u, { unit: u, prev: 0, curr: 0, in: 0, out: 0 });
+                return unitStats.get(u);
+            };
+            const ensureCell = (taskObj, u) => {
+                if (!taskObj.byUnit.has(u)) taskObj.byUnit.set(u, { prev: 0, curr: 0, in: 0, out: 0 });
+                return taskObj.byUnit.get(u);
+            };
+
+            const allKeys = new Set([...prevMap.keys(), ...currMap.keys()]);
+            let totalEntered = 0;
+            let totalExited = 0;
+
+            allKeys.forEach(k => {
+                const p = prevMap.get(k) || null;
+                const c = currMap.get(k) || null;
+
+                if (p && c && p.task === c.task) {
+                    const u = c.unit || p.unit || 'Інші';
+                    const tObj = ensureTask(c.task);
+                    tObj.prevCount++;
+                    tObj.currCount++;
+                    const cell = ensureCell(tObj, u);
+                    cell.prev++;
+                    cell.curr++;
+                    const uStat = ensureUnit(u);
+                    uStat.prev++;
+                    uStat.curr++;
+                } else {
+                    if (p) {
+                        const uP = (c && c.unit) || p.unit || 'Інші';
+                        const tObjP = ensureTask(p.task);
+                        tObjP.prevCount++;
+                        tObjP.exited.push({ ...p, unit: uP });
+                        const cellP = ensureCell(tObjP, uP);
+                        cellP.prev++;
+                        cellP.out++;
+                        const uStatP = ensureUnit(uP);
+                        uStatP.prev++;
+                        uStatP.out++;
+                        totalExited++;
+                    }
+                    if (c) {
+                        const uC = c.unit || (p && p.unit) || 'Інші';
+                        const tObjC = ensureTask(c.task);
+                        tObjC.currCount++;
+                        tObjC.entered.push({ ...c, unit: uC });
+                        const cellC = ensureCell(tObjC, uC);
+                        cellC.curr++;
+                        cellC.in++;
+                        const uStatC = ensureUnit(uC);
+                        uStatC.curr++;
+                        uStatC.in++;
+                        totalEntered++;
+                    }
+                }
+            });
+
+            const tasks = Array.from(tasksMap.values())
+                .sort((a, b) => (b.entered.length + b.exited.length) - (a.entered.length + a.exited.length) || b.currCount - a.currCount || a.task.localeCompare(b.task, 'uk'));
+            const units = Array.from(unitStats.values())
+                .sort((a, b) => b.in - a.in || b.out - a.out || b.curr - a.curr || a.unit.localeCompare(b.unit, 'uk'));
+
+            return {
+                baseline,
+                prevTotal: baseline.records.length,
+                currTotal: currList.length,
+                totalEntered,
+                totalExited,
+                tasks,
+                units
+            };
+        }
+
+        function updateDailyChangesBadge() {
+            const el = document.getElementById('countChanges');
+            if (!el) return;
+            const res = computeDailyChanges();
+            if (!res.baseline) {
+                el.textContent = '—';
+                return;
+            }
+            if (res.totalEntered === 0 && res.totalExited === 0) {
+                el.textContent = '0';
+            } else {
+                el.textContent = `+${res.totalEntered}/-${res.totalExited}`;
+            }
+        }
+
+        function renderDailyChangesTab() {
+            const res = computeDailyChanges();
+            const statusEl = document.getElementById('baselineStatusText');
+            const totalsEl = document.getElementById('changesTotalsInline');
+            const unitsBox = document.getElementById('changesUnitsSummaryBox');
+            const unitsChips = document.getElementById('changesUnitsChips');
+            const unitHint = document.getElementById('changesUnitFilterHint');
+            const matrixWrap = document.getElementById('changesMatrixWrap');
+            const mHead = document.getElementById('changesMatrixHead');
+            const mBody = document.getElementById('changesMatrixBody');
+            const detailsEl = document.getElementById('changesDetailsList');
+
+            if (!res.baseline) {
+                if (statusEl) statusEl.textContent = 'Не збережено (натисніть «Зафіксувати сьогодні як базу» або завантажте вчорашній Дод.6)';
+                if (totalsEl) totalsEl.classList.add('hidden');
+                if (unitsBox) unitsBox.classList.add('hidden');
+                if (matrixWrap) matrixWrap.classList.add('hidden');
+                if (detailsEl) {
+                    detailsEl.innerHTML = `<div class="p-6 bg-[#141922] border border-[#2b3340] rounded-[2px] text-center text-xs font-mono text-[#8892a0]">
+                        Щоб бачити щоденні зміни (хто з підрозділів і куди завів/вивів о/с), зафіксуйте поточний день як базу або згенеруйте Додаток 6 (.docx) — далі при кожній генерації Додатку 6 програма зберігатиме базу по датах автоматично (не затираючи вчорашній день).
+                    </div>`;
+                }
+                return;
+            }
+
+            if (statusEl) {
+                statusEl.textContent = `${res.baseline.dateStr} (${res.prevTotal} в/с)`;
+            }
+            if (totalsEl) {
+                totalsEl.classList.remove('hidden');
+                totalsEl.classList.add('inline-flex');
+                totalsEl.innerHTML = `
+                    <span class="px-2 py-0.5 bg-[#0e1218] border border-[#2b3340] rounded-[2px] text-[#a5adb8]">Сьогодні: <strong class="text-[#e6e8eb]">${res.currTotal}</strong></span>
+                    <span class="px-2 py-0.5 bg-[#11261c] border border-[#265c41] rounded-[2px] text-[#4cc38a] font-bold">+${res.totalEntered} зайшли</span>
+                    <span class="px-2 py-0.5 bg-[#2b1416] border border-[#7c2a30] rounded-[2px] text-[#f27474] font-bold">-${res.totalExited} вийшли</span>
+                `;
+            }
+
+            // 1. Чіпи підрозділів
+            const changedUnits = res.units.filter(u => u.in > 0 || u.out > 0);
+            if (activeChangesUnitFilter && !res.units.some(u => u.unit === activeChangesUnitFilter)) {
+                activeChangesUnitFilter = null;
+            }
+            if (unitsBox && unitsChips) {
+                unitsBox.classList.remove('hidden');
+                if (unitHint) {
+                    unitHint.textContent = activeChangesUnitFilter
+                        ? `Фільтр: ${activeChangesUnitFilter} (клік ще раз — скинути)`
+                        : 'Клік по підрозділу — фільтр';
+                }
+                if (changedUnits.length === 0) {
+                    unitsChips.innerHTML = `<span class="text-[#8892a0] italic">Змін по підрозділах не виявлено.</span>`;
+                } else {
+                    unitsChips.innerHTML = changedUnits.map(u => {
+                        const isSel = activeChangesUnitFilter === u.unit;
+                        const cls = isSel ? 'bg-[#182638] border-[#4c8ed9] text-[#e6e8eb]' : 'bg-[#0e1218] border-[#2b3340] text-[#a5adb8] hover:border-[#4c8ed9]';
+                        const inHtml = u.in > 0 ? `<span class="text-[#4cc38a] font-bold">+${u.in}</span>` : '';
+                        const outHtml = u.out > 0 ? `<span class="text-[#f27474] font-bold">-${u.out}</span>` : '';
+                        const sep = (inHtml && outHtml) ? '<span class="text-[#394455]">/</span>' : '';
+                        return `<button type="button" onclick="toggleChangesUnitFilter('${escapeHtml(u.unit).replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-[2px] border text-[11px] font-mono cursor-pointer transition-colors ${cls}">
+                            <span class="font-bold text-[#e6e8eb]">${escapeHtml(u.unit)}</span>
+                            <span class="inline-flex items-center gap-1">${inHtml}${sep}${outHtml}</span>
+                            <span class="text-[10px] text-[#697485]">(${u.prev}→${u.curr})</span>
+                        </button>`;
+                    }).join('');
+                }
+            }
+
+            // 2. Фільтрація задач та колонок підрозділів для матриці
+            const filterMode = document.getElementById('changesMatrixFilterMode')?.value || 'changes_only';
+            const displayedUnits = activeChangesUnitFilter
+                ? res.units.filter(u => u.unit === activeChangesUnitFilter)
+                : (filterMode === 'changes_only' ? changedUnits : res.units);
+
+            let displayedTasks = res.tasks;
+            if (activeChangesUnitFilter) {
+                displayedTasks = displayedTasks.filter(t => t.byUnit.has(activeChangesUnitFilter));
+            }
+            if (filterMode === 'changes_only') {
+                displayedTasks = displayedTasks.filter(t => {
+                    if (activeChangesUnitFilter) {
+                        const c = t.byUnit.get(activeChangesUnitFilter);
+                        return c && (c.in > 0 || c.out > 0);
+                    }
+                    return t.entered.length > 0 || t.exited.length > 0;
+                });
+            }
+
+            if (matrixWrap && mHead && mBody) {
+                if (displayedTasks.length === 0 || displayedUnits.length === 0) {
+                    matrixWrap.classList.add('hidden');
+                } else {
+                    matrixWrap.classList.remove('hidden');
+                    mHead.innerHTML = `<tr>
+                        <th class="px-3 py-2 text-left text-[11px] font-bold text-[#a5adb8] uppercase sticky left-0 bg-[#151920]">Позиція</th>
+                        ${displayedUnits.map(u => `<th class="px-2.5 py-2 text-center text-[11px] font-bold text-[#e6e8eb] whitespace-nowrap">${escapeHtml(u.unit)}</th>`).join('')}
+                        <th class="px-3 py-2 text-center text-[11px] font-bold text-[#4c8ed9] uppercase whitespace-nowrap">Разом</th>
+                    </tr>`;
+
+                    mBody.innerHTML = displayedTasks.map(t => {
+                        let rowCurr = 0, rowIn = 0, rowOut = 0;
+                        const cells = displayedUnits.map(u => {
+                            const c = t.byUnit.get(u.unit);
+                            if (!c) return `<td class="px-2.5 py-1.5 text-center text-[#394455]">·</td>`;
+                            rowCurr += c.curr; rowIn += c.in; rowOut += c.out;
+                            const parts = [];
+                            if (c.in > 0) parts.push(`<span class="text-[#4cc38a] font-bold">+${c.in}</span>`);
+                            if (c.out > 0) parts.push(`<span class="text-[#f27474] font-bold">-${c.out}</span>`);
+                            const delta = parts.length ? ` <span class="text-[10px]">(${parts.join('/')})</span>` : '';
+                            const bg = c.in > 0 && c.out === 0 ? 'bg-[#10231a]' : (c.out > 0 && c.in === 0 ? 'bg-[#261317]' : (c.in > 0 && c.out > 0 ? 'bg-[#1a1f29]' : ''));
+                            return `<td class="px-2.5 py-1.5 text-center whitespace-nowrap ${bg}"><span class="text-[#e6e8eb] font-semibold">${c.curr}</span>${delta}</td>`;
+                        }).join('');
+
+                        const rParts = [];
+                        if (rowIn > 0) rParts.push(`<span class="text-[#4cc38a]">+${rowIn}</span>`);
+                        if (rowOut > 0) rParts.push(`<span class="text-[#f27474]">-${rowOut}</span>`);
+                        const rDelta = rParts.length ? ` <span class="text-[10px]">(${rParts.join('/')})</span>` : '';
+
+                        return `<tr class="hover:bg-[#1e242e]">
+                            <td class="px-3 py-1.5 text-left font-semibold text-[#e6e8eb] whitespace-nowrap sticky left-0 bg-[#181c22]">${escapeHtml(t.task)}</td>
+                            ${cells}
+                            <td class="px-3 py-1.5 text-center font-bold text-[#e6e8eb] whitespace-nowrap bg-[#141922]">${rowCurr}${rDelta}</td>
+                        </tr>`;
+                    }).join('');
+                }
+            }
+
+            // 3. Поіменний список по позиціях зі змінами
+            const tasksWithPeopleChanges = displayedTasks.filter(t => {
+                const ent = activeChangesUnitFilter ? t.entered.filter(x => x.unit === activeChangesUnitFilter) : t.entered;
+                const ext = activeChangesUnitFilter ? t.exited.filter(x => x.unit === activeChangesUnitFilter) : t.exited;
+                return ent.length > 0 || ext.length > 0;
+            });
+
+            if (detailsEl) {
+                if (tasksWithPeopleChanges.length === 0) {
+                    detailsEl.innerHTML = `<div class="p-5 bg-[#141922] border border-[#2b3340] rounded-[2px] text-center text-xs font-mono text-[#8892a0]">
+                        Змін (заходів/виходів) по обраному фільтру немає.
+                    </div>`;
+                } else {
+                    detailsEl.innerHTML = tasksWithPeopleChanges.map(t => {
+                        const ent = activeChangesUnitFilter ? t.entered.filter(x => x.unit === activeChangesUnitFilter) : t.entered;
+                        const ext = activeChangesUnitFilter ? t.exited.filter(x => x.unit === activeChangesUnitFilter) : t.exited;
+                        return `<div class="border border-[#2b3340] rounded-[2px] overflow-hidden bg-[#141922] font-mono text-xs">
+                            <div class="px-3 py-1.5 bg-[#20262f] border-b border-[#2b3340] flex items-center justify-between gap-2">
+                                <span class="font-bold text-[#e6e8eb]">${escapeHtml(t.task)} <span class="text-[#8892a0] font-normal">(${t.prevCount} → ${t.currCount})</span></span>
+                                <span class="flex items-center gap-1.5 text-[11px]">
+                                    ${ent.length ? `<span class="text-[#4cc38a] font-bold">+${ent.length}</span>` : ''}
+                                    ${ext.length ? `<span class="text-[#f27474] font-bold">-${ext.length}</span>` : ''}
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#2b3340]">
+                                <div>
+                                    <div class="px-2.5 py-1 bg-[#151920] border-b border-[#222933] text-[10px] text-[#4cc38a] font-bold uppercase">Зайшли сьогодні (${ent.length})</div>
+                                    ${ent.length ? ent.map(s => `<div class="px-2.5 py-1 border-b border-[#1f2630] bg-[#10231a] flex items-center justify-between gap-2 text-[11px]">
+                                        <span class="truncate"><span class="text-[#8892a0] text-[10px]">${escapeHtml(s.rank)}</span> <strong class="text-[#e6e8eb]">${escapeHtml(s.name)}</strong></span>
+                                        <span class="px-1.5 py-0.5 bg-[#0e1218] border border-[#2b3340] text-[#9ec4ee] text-[10px] rounded-[2px] shrink-0">${escapeHtml(s.unit)}</span>
+                                    </div>`).join('') : `<div class="px-2.5 py-2 text-[10px] text-[#697485] italic">—</div>`}
+                                </div>
+                                <div>
+                                    <div class="px-2.5 py-1 bg-[#151920] border-b border-[#222933] text-[10px] text-[#f27474] font-bold uppercase">Вийшли з учора (${ext.length})</div>
+                                    ${ext.length ? ext.map(s => `<div class="px-2.5 py-1 border-b border-[#1f2630] bg-[#261317] flex items-center justify-between gap-2 text-[11px]">
+                                        <span class="truncate"><span class="text-[#8892a0] text-[10px]">${escapeHtml(s.rank)}</span> <strong class="text-[#e6e8eb]">${escapeHtml(s.name)}</strong></span>
+                                        <span class="px-1.5 py-0.5 bg-[#0e1218] border border-[#2b3340] text-[#9ec4ee] text-[10px] rounded-[2px] shrink-0">${escapeHtml(s.unit)}</span>
+                                    </div>`).join('') : `<div class="px-2.5 py-2 text-[10px] text-[#697485] italic">—</div>`}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+        }
+
+        function toggleChangesUnitFilter(unit) {
+            activeChangesUnitFilter = (activeChangesUnitFilter === unit) ? null : unit;
+            renderDailyChangesTab();
+        }
+
+        async function copyDailyChangesText() {
+            const res = computeDailyChanges();
+            if (!res.baseline) { showToast('Спочатку зафіксуйте базу «вчора».', 'warning'); return; }
+            const todayStr = (typeof getDetectedDateStr === 'function' ? getDetectedDateStr() : '').replace(/_/g, '.') || new Date().toLocaleDateString('uk-UA');
+            const lines = [];
+            lines.push(`ЗМІНИ ПО ПОЗИЦІЯХ: ${res.baseline.dateStr} → ${todayStr}`);
+            lines.push(`Було: ${res.prevTotal} | Стало: ${res.currTotal} | Зайшли: +${res.totalEntered} | Вийшли: -${res.totalExited}`);
+            const changedUnits = res.units.filter(u => u.in > 0 || u.out > 0);
+            if (changedUnits.length) {
+                lines.push('');
+                lines.push('ПІДРОЗДІЛИ:');
+                changedUnits.forEach(u => {
+                    const p = [];
+                    if (u.in) p.push(`+${u.in} зайшли`);
+                    if (u.out) p.push(`-${u.out} вийшли`);
+                    lines.push(`• ${u.unit}: ${p.join(', ')} (${u.prev} → ${u.curr})`);
+                });
+            }
+            lines.push('');
+            res.tasks.filter(t => t.entered.length || t.exited.length).forEach(t => {
+                lines.push(`${t.task} (${t.prevCount} → ${t.currCount}):`);
+                t.entered.forEach(s => lines.push(`  + ${s.rank} ${s.name} [${s.unit}]`));
+                t.exited.forEach(s => lines.push(`  - ${s.rank} ${s.name} [${s.unit}]`));
+            });
+            try {
+                await navigator.clipboard.writeText(lines.join('\n'));
+                showToast('Список змін скопійовано в буфер.', 'success');
+            } catch (e) {
+                showToast('Не вдалося скопіювати.', 'error');
+            }
+        }
+
+        function buildDailyChangesSheets() {
+            const res = computeDailyChanges();
+            if (!res.baseline) return null;
+            const todayStr = (typeof getDetectedDateStr === 'function' ? getDetectedDateStr() : '').replace(/_/g, '.') || new Date().toLocaleDateString('uk-UA');
+
+            const thinB = { top: { style: 'thin', color: { rgb: 'BFBFBF' } }, bottom: { style: 'thin', color: { rgb: 'BFBFBF' } }, left: { style: 'thin', color: { rgb: 'BFBFBF' } }, right: { style: 'thin', color: { rgb: 'BFBFBF' } } };
+            const headB = { top: { style: 'thin', color: { rgb: '808080' } }, bottom: { style: 'thin', color: { rgb: '808080' } }, left: { style: 'thin', color: { rgb: '808080' } }, right: { style: 'thin', color: { rgb: '808080' } } };
+
+            // Аркуш: Матриця змін (сухий ЧБ штабний формат)
+            const units = res.units.filter(u => u.in > 0 || u.out > 0);
+            const tasks = res.tasks.filter(t => t.entered.length > 0 || t.exited.length > 0);
+            const aoaM = [[`Позиція (${res.baseline.dateStr} → ${todayStr})`, ...units.map(u => u.unit), 'Разом']];
+
+            tasks.forEach(t => {
+                const row = [t.task];
+                let rCurr = 0, rIn = 0, rOut = 0;
+                units.forEach(u => {
+                    const c = t.byUnit.get(u.unit);
+                    if (!c) { row.push(''); return; }
+                    rCurr += c.curr; rIn += c.in; rOut += c.out;
+                    const d = [];
+                    if (c.in) d.push(`+${c.in}`);
+                    if (c.out) d.push(`-${c.out}`);
+                    row.push(d.length ? `${c.curr} (${d.join('/')})` : `${c.curr}`);
+                });
+                const rd = [];
+                if (rIn) rd.push(`+${rIn}`);
+                if (rOut) rd.push(`-${rOut}`);
+                row.push(rd.length ? `${rCurr} (${rd.join('/')})` : `${rCurr}`);
+                aoaM.push(row);
+            });
+
+            const foot = ['Разом зміни по підрозділу:'];
+            units.forEach(u => {
+                const d = [];
+                if (u.in) d.push(`+${u.in}`);
+                if (u.out) d.push(`-${u.out}`);
+                foot.push(d.join(' / ') || '0');
+            });
+            foot.push(`+${res.totalEntered} / -${res.totalExited}`);
+            aoaM.push(foot);
+
+            const wsM = XLSX.utils.aoa_to_sheet(aoaM);
+            wsM['!cols'] = [{ wch: 32 }, ...units.map(() => ({ wch: 15 })), { wch: 16 }];
+            for (let R = 0; R < aoaM.length; R++) {
+                const isH = R === 0, isF = R === aoaM.length - 1;
+                for (let C = 0; C < aoaM[0].length; C++) {
+                    const ref = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!wsM[ref]) wsM[ref] = { t: 's', v: '' };
+                    wsM[ref].s = {
+                        fill: isH ? { fgColor: { rgb: 'E6E6E6' } } : (isF ? { fgColor: { rgb: 'F2F2F2' } } : undefined),
+                        font: { name: 'Calibri', sz: 10, bold: isH || isF || C === aoaM[0].length - 1, color: { rgb: '000000' } },
+                        alignment: { vertical: 'center', horizontal: C === 0 ? 'left' : 'center', wrapText: true },
+                        border: (isH || isF) ? headB : thinB
+                    };
+                }
+            }
+
+            // Аркуш: Поіменний список змін
+            const aoaL = [['Позиція', 'Дія', 'Підрозділ', 'Звання', 'ПІБ']];
+            tasks.forEach(t => {
+                t.entered.forEach(s => aoaL.push([t.task, 'зайшов', s.unit, s.rank, s.name]));
+                t.exited.forEach(s => aoaL.push([t.task, 'вийшов', s.unit, s.rank, s.name]));
+            });
+            const wsL = XLSX.utils.aoa_to_sheet(aoaL);
+            wsL['!cols'] = [{ wch: 28 }, { wch: 11 }, { wch: 14 }, { wch: 18 }, { wch: 34 }];
+            for (let R = 0; R < aoaL.length; R++) {
+                const isH = R === 0;
+                for (let C = 0; C < 5; C++) {
+                    const ref = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!wsL[ref]) continue;
+                    wsL[ref].s = {
+                        fill: isH ? { fgColor: { rgb: 'E6E6E6' } } : undefined,
+                        font: { name: 'Calibri', sz: 10, bold: isH || C === 1, color: { rgb: '000000' } },
+                        alignment: { vertical: 'center', horizontal: C === 1 ? 'center' : 'left' },
+                        border: isH ? headB : thinB
+                    };
+                }
+            }
+            return { wsM, wsL, todayStr, prevStr: res.baseline.dateStr };
+        }
+
+        function appendDailyChangesSheetToWorkbook(wb) {
+            const built = buildDailyChangesSheets();
+            if (!built) return;
+            XLSX.utils.book_append_sheet(wb, built.wsM, 'Зміни за добу');
+            XLSX.utils.book_append_sheet(wb, built.wsL, 'Зайшли-Вийшли');
+        }
+
+        function downloadDailyChangesExcel() {
+            const built = buildDailyChangesSheets();
+            if (!built) { showToast('Спочатку зафіксуйте базу «вчора» або завантажте вчорашній Додаток 6.', 'warning'); return; }
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, built.wsM, 'Матриця змін');
+            XLSX.utils.book_append_sheet(wb, built.wsL, 'Зайшли-Вийшли');
+            const stamp = `${built.prevStr.replace(/\./g, '_')}_${built.todayStr.replace(/\./g, '_')}`;
+            XLSX.writeFile(wb, `Зміни_Додаток6_${stamp}.xlsx`);
+        }
     </script>
 </body>
 
