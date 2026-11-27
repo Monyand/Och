@@ -1586,7 +1586,7 @@
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        <span>v1.3.3</span>
+                        <span>v1.3.4</span>
                     </button>
                 </h1>
             </div>
@@ -1750,6 +1750,24 @@
                                     rows="3"></textarea>
                                 <textarea id="infPlan" placeholder="Заплановано: кожен пункт з нового рядка"
                                     rows="3"></textarea>
+
+                                <!-- Підпункт: Облік ШД / УПД -->
+                                <div style="margin-top: 0.35rem;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0.35rem;">
+                                        <span class="text-accent" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:0.82rem;font-weight:700;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline>
+                                                <line x1="13" y1="19" x2="19" y2="13"></line>
+                                                <line x1="16" y1="16" x2="20" y2="20"></line>
+                                                <line x1="19" y1="21" x2="21" y2="19"></line>
+                                            </svg>
+                                            <span>Облік ШД / УПД</span>
+                                        </span>
+                                        <button type="button" class="btn btn-outline mt-0" style="width: auto; white-space: nowrap; padding: 4px 12px; font-size: 0.78rem;" onclick="addDynRow('shdUpdList')">+ Додати ШД / УПД</button>
+                                    </div>
+                                    <div id="shdUpdList" class="dynamic-list"></div>
+                                </div>
+
                                 <textarea id="infInfo" placeholder="Інформаційно (Зачистки, лут, інше):"
                                     rows="2"></textarea>
                             </div>
@@ -2441,6 +2459,16 @@
             triggerPreview();
         }
 
+        function handleShdResChange(selectEl) {
+            const row = selectEl.closest('.dynamic-item');
+            if (!row) return;
+            const customInput = row.querySelector('.i-rescustom');
+            if (customInput) {
+                customInput.style.display = selectEl.value === 'Інше' ? 'inline-block' : 'none';
+            }
+            triggerPreview();
+        }
+
         function handleOpOption(groupName) {
             const radios = document.querySelectorAll(`input[name="${groupName}"]`);
             const partialTextarea = document.getElementById(`${groupName}PartialReason`);
@@ -2501,7 +2529,7 @@
                 if (getVal(id).length > 2) filledCount++;
             });
 
-            const lists = ['enemyLossList', 'contactsList', 'adjUnitsList', 'artyList', 'distributionList', 'weaponsList', 'rotationsList', 'evacuationsList', 'lossesList', 'lossEquipmentList', 'docsInList', 'docsOutList', 'fireList'];
+            const lists = ['enemyLossList', 'contactsList', 'adjUnitsList', 'shdUpdList', 'artyList', 'distributionList', 'weaponsList', 'rotationsList', 'evacuationsList', 'lossesList', 'lossEquipmentList', 'docsInList', 'docsOutList', 'fireList'];
             let hasListsCount = 0;
             lists.forEach(id => {
                 if (document.querySelectorAll(`#${id} .dynamic-item`).length > 0) {
@@ -2596,6 +2624,40 @@
             positionCategoriesList: `<input type="text" class="text-input i-name text-bold" placeholder="Назва категорії (напр. 'Боєготові позиції в БРО')"><span class="label-sm">позицій:</span><input type="number" class="num-input i-cnt" value="0" readonly class="input-disabled"><span class="label-sm">на них:</span><input type="number" class="num-input i-staff" value="0" readonly class="input-disabled"><div class="sub-positions-container mt-2"></div><button type="button" class="btn btn-outline mt-0" onclick="addSubPosition(this)">+ Додати позицію</button>`,
             customTasksList: `<input type="text" class="text-input i-name text-bold" placeholder="Назва підрозділу / завдання"><textarea class="text-input i-done" placeholder="Виконано / Виконується: кожен пункт з нового рядка" rows="3"></textarea><textarea class="text-input i-plan" placeholder="Заплановано: кожен пункт з нового рядка" rows="3"></textarea><textarea class="text-input i-info" placeholder="Інформаційно:" rows="1"></textarea>`,
             artyList: `<input type="text" class="text-input i-name" placeholder="Зброя (Міномет 120мм)"><input type="number" class="num-input i-msn" placeholder="ВгЗ"><input type="number" class="num-input i-ammo" placeholder="Шт">`,
+            shdUpdList: `
+                <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0;align-items:center;">
+                    <select class="i-kind select-auto text-bold" style="min-width:74px;" onchange="triggerPreview()">
+                        <option value="ШД">ШД</option>
+                        <option value="УПД">УПД</option>
+                    </select>
+                    <span class="label-sm">з</span>
+                    <input type="time" class="text-input i-tstart row-time" title="Час початку" oninput="triggerPreview()">
+                    <span class="label-sm">до</span>
+                    <input type="time" class="text-input i-tend row-time" title="Час закінчення" oninput="triggerPreview()">
+                    <input type="text" class="text-input i-calls" style="flex:1 1 180px;" placeholder="Позивні / о/с (напр. Кобзар, Лис — 2 в/сл.)" oninput="triggerPreview()">
+                    <input type="text" class="text-input i-loc" style="flex:1 1 180px;" placeholder="Де (район / позиція / MGRS)" oninput="triggerPreview()">
+                    <select class="i-res" style="flex:1 1 220px;" onchange="handleShdResChange(this)">
+                        <option value="">Оберіть результат...</option>
+                        <option value="зачистили позицію, закріпились">Зачистили позицію, закріпились</option>
+                        <option value="штурмова група закріпилась на визначеному рубежі">Закріпились на визначеному рубежі</option>
+                        <option value="відійшли на вихідний рубіж">Відійшли на вихідний рубіж</option>
+                        <option value="противника в районі об'єкта не виявлено">Противника в районі об'єкта не виявлено</option>
+                        <option value="в процесі виконання">В процесі виконання</option>
+                        <option value="Інше">Інше (вказати свій варіант)</option>
+                    </select>
+                    <input type="text" class="text-input i-rescustom row-hidden" style="flex:1 1 220px;" placeholder="Вкажіть свій варіант результату" oninput="triggerPreview()">
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%;padding-top:2px;">
+                        <span class="label-sm">Наші 200:</span>
+                        <input type="number" min="0" class="num-input i-o200" style="width:54px;" value="0" oninput="triggerPreview()">
+                        <span class="label-sm">300:</span>
+                        <input type="number" min="0" class="num-input i-o300" style="width:54px;" value="0" oninput="triggerPreview()">
+                        <span class="label-sm" style="margin-left:8px;">Ворог 200:</span>
+                        <input type="number" min="0" class="num-input i-e200" style="width:54px;" value="0" oninput="triggerPreview()">
+                        <span class="label-sm">300:</span>
+                        <input type="number" min="0" class="num-input i-e300" style="width:54px;" value="0" oninput="triggerPreview()">
+                    </div>
+                </div>
+            `,
             distributionList: `<input type="text" class="text-input i-name text-bold" placeholder="Назва (Піхота, БпАК...)" ><span class="label-sm">Поз:</span><input type="number" class="num-input i-pos i-pos-val" value="0"><span class="label-sm">о/с:</span><input type="number" class="num-input i-pers i-pers-val" value="0"><input type="text" class="text-input i-extra" placeholder="Деталі (з них 3 ІСВ...)">`,
             weaponsList: `<input type="text" class="text-input i-name" placeholder="Назва (Міномет 120мм)"><input type="number" class="num-input i-cnt" value="1">`,
             rotationsList: `<input type="text" class="text-input i-loc" placeholder="Локація/Підрозділ"><span class="label-sm">Зайш:</span><input type="number" class="num-input i-in" value="0"><span class="label-sm">Вийш:</span><input type="number" class="num-input i-out" value="0">`,
@@ -2622,6 +2684,10 @@
             if (containerId === 'fireList') {
                 const select = div.querySelector('.i-cond');
                 if (select) handleFireCondChange(select);
+            }
+            if (containerId === 'shdUpdList') {
+                const select = div.querySelector('.i-res');
+                if (select) handleShdResChange(select);
             }
 
             const firstInput = div.querySelector('input, select, textarea');
@@ -2851,6 +2917,50 @@
             if (infDoneStr) infParts.push(infDoneStr);
             const infPlanStr = addTaskLines('Заплановано', getVal('infPlan'));
             if (infPlanStr) infParts.push(infPlanStr);
+
+            // Підпункт: Облік ШД/УПД
+            const shdArr = collectDynamic('shdUpdList').filter(x => x.calls || x.loc || x.res || x.rescustom || x.tstart);
+            if (shdArr.length) {
+                let shdCnt = 0, updCnt = 0;
+                const shdLines = shdArr.map(x => {
+                    const kind = x.kind === 'УПД' ? 'УПД' : 'ШД';
+                    if (kind === 'УПД') updCnt++; else shdCnt++;
+                    const timeStr = (x.tstart && x.tend) ? ` (${esc(x.tstart)}–${esc(x.tend)})` : (x.tstart ? ` (о ${esc(x.tstart)})` : '');
+                    let head = `**${kind}**${timeStr}`;
+                    const meta = [];
+                    if (x.calls) meta.push(`позивні: ${esc(x.calls)}`);
+                    if (x.loc) meta.push(`р-н ${esc(x.loc)}`);
+                    if (meta.length) head += `, ${meta.join(', ')}`;
+                    const resText = x.res === 'Інше' ? (x.rescustom || '') : (x.res || '');
+                    if (resText) head += ` — ${esc(resText.replace(/\.$/, ''))}`;
+
+                    const o2 = parseInt(x.o200, 10) || 0;
+                    const o3 = parseInt(x.o300, 10) || 0;
+                    const e2 = parseInt(x.e200, 10) || 0;
+                    const e3 = parseInt(x.e300, 10) || 0;
+
+                    let ourLossStr = 'без втрат';
+                    if (o2 > 0 || o3 > 0) {
+                        const p = [];
+                        if (o2 > 0) p.push(`**${o2}** (200)`);
+                        if (o3 > 0) p.push(`**${o3}** (300)`);
+                        ourLossStr = p.join(', ');
+                    }
+                    let lossPart = `Наші втрати: ${ourLossStr}`;
+                    if (e2 > 0 || e3 > 0) {
+                        const ep = [];
+                        if (e2 > 0) ep.push(`**${e2}** (200)`);
+                        if (e3 > 0) ep.push(`**${e3}** (300)`);
+                        lossPart += `; втрати противника: ${ep.join(', ')}`;
+                    }
+                    return `- ${head}. ${lossPart}.`;
+                });
+                const cntParts = [];
+                if (shdCnt > 0) cntParts.push(`ШД — **${shdCnt}**`);
+                if (updCnt > 0) cntParts.push(`УПД — **${updCnt}**`);
+                infParts.push(`<b>Облік ШД/УПД (${cntParts.join(', ')}):</b><br>${shdLines.join('<br>')}`);
+            }
+
             const infInfoStr = addInfoLine('Інформаційно', getVal('infInfo'));
             if (infInfoStr) infParts.push(infInfoStr);
             let infHtml = `<b>3.1.1. Завдання піхоти:</b>` + (infParts.length ? '<br>' + infParts.join('<br>') : '');
@@ -3104,7 +3214,7 @@ ${customTasksHtml}
             document.querySelectorAll('input[id], textarea[id], select[id]').forEach(e => {
                 st.inp[e.id] = e.type === 'checkbox' ? e.checked : e.value;
             });
-            ['enemyLossList', 'contactsList', 'adjUnitsList', 'otherUnitsLlist', 'positionCategoriesList', 'customTasksList', 'artyList', 'weaponsList', 'rotationsList', 'evacuationsList', 'lossesList', 'lossEquipmentList', 'docsInList', 'docsOutList', 'fireList'].forEach(id => {
+            ['enemyLossList', 'contactsList', 'adjUnitsList', 'otherUnitsLlist', 'positionCategoriesList', 'customTasksList', 'shdUpdList', 'artyList', 'weaponsList', 'rotationsList', 'evacuationsList', 'lossesList', 'lossEquipmentList', 'docsInList', 'docsOutList', 'fireList'].forEach(id => {
                 st.dyn[id] = collectDynamic(id);
             });
             localStorage.setItem(storageKey, JSON.stringify(st));
@@ -3158,6 +3268,9 @@ ${customTasksHtml}
                 // Re-evaluate fireList consequences field visibilities after loading
                 document.querySelectorAll('#fireList .i-cond').forEach(select => {
                     handleFireCondChange(select);
+                });
+                document.querySelectorAll('#shdUpdList .i-res').forEach(select => {
+                    handleShdResChange(select);
                 });
 
                 // Re-evaluate section 8 radio button partial textareas visibility
@@ -3418,9 +3531,23 @@ ${customTasksHtml}
         // МОДАЛЬНЕ ВІКНО CHANGELOG (COMPACT AUTONOMOUS CHANGELOG DATA)
         const APP_CHANGELOG = [
             {
+                version: "1.3.4",
+                date: "27.11.2026",
+                isCurrent: true,
+                sections: [
+                    {
+                        title: "Розділ 3.1.1. Завдання піхоти",
+                        items: [
+                            "<b>Підпункт «Облік ШД / УПД»</b>: додано динамічний список записів (кнопка <code>+ Додати ШД / УПД</code>) із полями типу (<code>ШД</code> / <code>УПД</code>), часу (<code>з–до</code>), позивних/о/с, району/позиції, результату (стилізований <code>&lt;select&gt;</code> + «Інше») та втрат (наші / ворог 200/300).",
+                            "<b>Автопідрахунок та збереження</b>: автоматичний підсумок <code>ШД — N, УПД — M</code> у тексті доповіді (Word / <code>.docx</code>), повна інтеграція з <code>localStorage</code>, прогрес-баром та скиданням форми."
+                        ]
+                    }
+                ]
+            },
+            {
                 version: "1.3.3",
                 date: "25.11.2026",
-                isCurrent: true,
+                isCurrent: false,
                 sections: [
                     {
                         title: "Розділ 1.4. Вогневий вплив",
